@@ -120,3 +120,7 @@ src/nTrueVersion.h
 fingerprint
 wget-log*
 .worktrees/
+deps/emsdk/
+deps/build/
+web/build-m0/
+web/dist-m0/
