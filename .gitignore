@@ -119,3 +119,4 @@ src/nTrueVersion.h
 .changetag
 fingerprint
 wget-log*
+.worktrees/
