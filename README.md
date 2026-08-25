@@ -14,16 +14,36 @@ client prediction and lag compensation). Every previous attempt to bring the gam
 to the browser was a from-scratch rewrite that had to re-create that feel by hand —
 and none got there. Compiling the actual engine sidesteps the problem entirely.
 
+## Prior art
+
+We looked into several earlier attempts before choosing this approach:
+
+- [Armawebtron](https://github.com/Armawebtron/Armawebtron) — a from-scratch
+  JS/Three.js rewrite of the game; stalled, networking never finished.
+- Web-technology explorations (Godot, raylib) discussed around 2020–21 in the
+  [official project](http://armagetronad.net/)'s forums by the lead developer —
+  no follow-through.
+
+Nobody has compiled the real codebase to WebAssembly before. The reasoning is
+recorded in
+[ADR 0000](docs/adr/0000-port-real-codebase-via-emscripten.md).
+
 ## The plan
 
-Two phases — full details, milestones and risk analysis in **[PLAN.md](PLAN.md)**:
+The committed goal is **the Demo**: the complete single-player game vs. AI
+opponents, hosted on GitHub Pages — desktop Chrome + Firefox, keyboard
+required. Client-side only; offline mode opens no sockets. Full milestones and
+risk analysis in **[PLAN.md](PLAN.md)**; shared vocabulary in
+[CONTEXT.md](CONTEXT.md); founding decisions in [docs/adr/](docs/adr/).
 
-1. **Single-player in the browser** — the complete game vs. AI opponents,
-   running client-side only (menus, HUD, sound, persistent settings).
-   No servers involved; offline mode opens no sockets.
-2. **Multiplayer on real community servers** — a small UDP-over-WebSocket
-   bridge lets the browser client speak the game's native protocol to today's
-   unmodified public servers, including the in-game server browser.
+Beyond the Demo, two follow-ups are designed but deliberately **not
+committed** — each gets its own go/no-go decision once the Demo ships:
+
+- **Touch controls** — minimal mobile play via a JavaScript overlay that maps
+  taps to the game's existing keyboard controls (no C++ changes).
+- **Multiplayer on real community servers** — a small UDP-over-WebSocket
+  bridge lets the browser client speak the game's native protocol to today's
+  unmodified public servers, including the in-game server browser.
 
 ## Status
 
