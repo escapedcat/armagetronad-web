@@ -836,7 +836,13 @@ bool uMenuItemString::Event(SDL_Event &e){
         return false;
     bool ret=true;
     SDL_keysym &c=e.key.keysym;
+#ifdef __EMSCRIPTEN__
+    // keysym.mod is still a Uint16, but Emscripten's SDL makes SDLMod an enum,
+    // so the widening that SDL 1.2 did implicitly now has to be spelled out.
+    SDLMod mod = static_cast<SDLMod>(c.mod);
+#else
     SDLMod mod = c.mod;
+#endif
     bool moveWordLeft, moveWordRight, deleteWordLeft, deleteWordRight, moveBeginning, moveEnd, killForwards;
     moveWordLeft = moveWordRight = deleteWordLeft = deleteWordRight = moveBeginning = moveEnd = killForwards = false;
 
@@ -1016,7 +1022,12 @@ bool uMenuItemStringWithHistory::Event(SDL_Event &e)
     // flag indicating that the event was handled
     bool ret = false;
 #ifndef DEDICATED
+#ifdef __EMSCRIPTEN__
+    // As above: Uint16 to the SDLMod enum needs an explicit cast here.
+    SDLMod mod = static_cast<SDLMod>(e.key.keysym.mod);
+#else
     SDLMod mod = e.key.keysym.mod;
+#endif
 
     if (e.type == SDL_KEYDOWN
             && ((e.key.keysym.sym == SDLK_UP)
