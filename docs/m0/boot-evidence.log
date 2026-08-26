@@ -1,0 +1,12 @@
+Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+ 	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in /Users/user/data/src/armagetronad-web/.worktrees/m0-dedicated-server/web/dist-m0 and could not find out what this means for the prefix /usr/local.
+
+[0] Command HUD_CACHE_THRESHOLD unknown.
+[0] 
+[0] Bound socket to *.*.*.*:0.
+[0] Bound socket to *.*.*.*:4534.
+[0] Setting CYCLE_BRAKE_REFILL (Group: Annoying) deviates from its default value; clients older than 0.2.5.0 may experience problems.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/08/26 11:38:55
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.
