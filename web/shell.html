@@ -99,6 +99,50 @@
     window.onerror = (message) => showFailure(String(message));
     window.onunhandledrejection = (event) => showFailure(String(event.reason));
 
+    // Without preserveDrawingBuffer the canvas renders BLACK -- not "wrong
+    // colours", not "flickering", solid black -- while the game underneath is
+    // drawing a perfectly correct frame. Measured that way round: forcing the
+    // flag on and reading the framebuffer back showed 544849 of 786432 pixels
+    // non-black at a moment when Page.captureScreenshot returned an all-black
+    // image.
+    //
+    // Why: WebGL discards the drawing buffer after every composite unless this
+    // attribute is set. That is normally invisible, because a normal WebGL app
+    // draws its whole frame inside one requestAnimationFrame callback, so a
+    // composite can only ever happen at a frame boundary. This game does not
+    // have a frame callback at all -- it is a 2003 desktop main loop that
+    // Asyncify chops into pieces at every emscripten_sleep(), and those land
+    // *inside* the frame: rSysDep::SwapGL() yields before the buffer swap,
+    // tDelay()/sr_LimitFPS() yield again, and rConsoleGraph.cpp:67 yields once
+    // per line of console output. The browser therefore composites at an
+    // arbitrary mid-frame moment, discards the buffer, and the next composite
+    // shows only whatever was drawn since -- usually nothing, because the
+    // game's next act is glClear.
+    //
+    // Emscripten's SDL 1.2 shim builds the context attributes itself from the
+    // SDL_GL_* attributes (libsdl.js:407-412) and offers no Module hook to add
+    // to them, so the only place to inject this is the canvas's own
+    // getContext, which GL.createContext calls as an instance method
+    // (libwebgl.js:782-789). Patching the instance rather than
+    // HTMLCanvasElement.prototype keeps the change to this one element, and
+    // spreading the existing attributes rather than replacing them preserves
+    // the depth/stencil/alpha/antialias choices SDL derived from the game's
+    // own sr_SetGLAttributes call.
+    //
+    // This is a correctness fix, not a tuning knob: do not "optimise" it away.
+    // The real fix is to align rendering to requestAnimationFrame, which is
+    // M2/M5's problem; until then this is what makes the picture appear.
+    (() => {
+      const canvas = document.getElementById('canvas');
+      const realGetContext = canvas.getContext.bind(canvas);
+      canvas.getContext = (type, attrs) => realGetContext(
+        type,
+        String(type).startsWith('webgl')
+          ? Object.assign({}, attrs || {}, { preserveDrawingBuffer: true })
+          : attrs
+      );
+    })();
+
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
