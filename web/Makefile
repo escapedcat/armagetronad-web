@@ -227,8 +227,12 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 #     -> /data/<same-name>, matching --datadir /data.
 #   web/webdefaults
 #     -> /data/webdefaults, matching --userconfigdir /data/webdefaults.
-#     This ships settings_web.cfg into the bundle; see that file's own
-#     comment for what actually reads (or doesn't yet read) it.
+#     This ships web/webdefaults/autoexec.cfg into the bundle -- see that
+#     file's own comment for the load-order mechanics that make it work
+#     (tConfiguration.cpp loads autoexec.cfg unconditionally, last) and for
+#     why /data/webdefaults REPLACES rather than merges with the shipped
+#     config directory: anything else dropped in here (a settings.cfg, a
+#     keys_*.cfg) would silently shadow the real one, not extend it.
 #
 # The --exclude-file patterns drop ~1 MB of the ~1.6 MB source tree (raw file
 # bytes; du -sh reports higher due to block rounding) that no milestone reads
@@ -253,9 +257,26 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 # nothing at build time, it just ships the file anyway.
 #
 # --shell-file replaces Emscripten's stock loader page with web/shell.html.
+#
+# -sEXPORTED_RUNTIME_METHODS=callMain is not optional either, and for a
+# reason that will not show up as a build error: Emscripten never
+# auto-exports callMain (postamble.js says as much -- it is explicitly the
+# embedder's job, settings.js documents it the same way), so without this
+# flag it lands in the loader's unexportedSymbols list. The page still
+# links, still loads, still reaches "Ready" -- it dies the instant
+# web/shell.html's Play button calls Module.callMain(), because the
+# unexported-symbol getter's body is an abort(). Fixing this now rather
+# than at M5 matters because that abort's helpful message only exists while
+# ASSERTIONS defaults on; the moment -O2 (or any release flag that turns
+# ASSERTIONS off) reaches this link, the same bug degrades to a bare,
+# unattributed TypeError. Verify this one by grep, the same way the
+# --exclude-file bug above was actually caught: confirm "callMain" appears
+# outside of unexportedSymbols in the built armagetronad.js, do not trust
+# that adding the flag was enough.
 CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
                   -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
+                  -sEXPORTED_RUNTIME_METHODS=callMain \
                   $(EXCEPTIONS) \
                   --use-preload-plugins \
                   --preload-file config@/data/config \
@@ -275,9 +296,18 @@ CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
 
 # The primary output is the .html page (Task 6's actual deliverable); the
 # .js loader, .wasm binary and .data archive are generated alongside it by
-# the same emcc invocation. web/shell.html and the preloaded directories are
-# listed as prerequisites so editing any of them triggers a relink instead
-# of Make silently reusing a stale bundle.
+# the same emcc invocation.
+#
+# The prerequisite list below is NOT "every preloaded directory" -- it is
+# web/shell.html, web/webdefaults/autoexec.cfg, and the three generated data
+# files, because those are the only preload inputs whose paths this
+# Makefile can name without shelling out to `find`. Editing anything else
+# under config/, language/, textures/, models/, sound/ or resource/proto
+# (e.g. adding a texture, editing a map) does NOT trigger a relink -- Make
+# has no rule pointing at those files, so it will silently reuse a stale
+# .data archive. Run `make -f web/Makefile clean && make ... client` (or
+# just `rm -f web/dist-m1/armagetronad.*`) after touching any preloaded
+# asset that isn't one of the four named below.
 #
 # The three generated-data paths (spelled out here, not as $(DATA) -- that
 # variable isn't assigned until the "Runtime data" section further down, and
@@ -296,7 +326,7 @@ CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
 # earlier milestone's build; verify after touching this rule by running
 # `clean-data` first.
 web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/webdefaults/settings_web.cfg \
+                                web/shell.html web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion
 	@mkdir -p web/dist-m1

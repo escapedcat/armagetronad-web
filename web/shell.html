@@ -17,6 +17,12 @@
   defines `Module`, because armagetronad.js looks for a pre-existing global
   `Module` object as it starts up and merges its own runtime hooks into it.
   Defining Module later would just be ignored.
+
+  This must be served over HTTP, not opened as a file:// URL: the loader
+  fetches the .wasm and .data files with fetch()/XHR, which file:// pages
+  are not allowed to do in most browsers. The failure handling below exists
+  mainly to surface that specific mistake, since it is the single most
+  likely first thing anyone opening this page hits.
 -->
 <html lang="en">
 <head>
@@ -29,6 +35,7 @@
     #overlay { position:fixed; inset:0; display:grid; place-content:center;
                gap:1rem; text-align:center; background:#111; }
     #start[disabled] { opacity:.5; }
+    #status.error { color:#f77; max-width:32rem; }
   </style>
 </head>
 <body>
@@ -41,8 +48,44 @@
   <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
 
   <script>
-    const statusEl = document.getElementById('status');
-    const startEl  = document.getElementById('start');
+    const statusEl  = document.getElementById('status');
+    const startEl   = document.getElementById('start');
+    const overlayEl = document.getElementById('overlay');
+
+    // Both the .wasm and the .data package are fetched from inside
+    // armagetronad.js with plain fetch()/XHR calls that are never awaited
+    // with a .catch() by the generated loader itself -- a 404 or network
+    // failure on either one surfaces only as an unhandled promise
+    // rejection, not as a thrown exception armagetronad.js itself reports.
+    // Module.onAbort, by contrast, only fires for the runtime's OWN
+    // abort() calls (assertion failures, out-of-memory, a bad
+    // Module.instantiateWasm) -- it does not fire for a missing file.
+    // Without handling both, the failure mode looks identical to a slow
+    // load: the page just sits on "Loading..." forever with the button
+    // disabled and nothing else visible anywhere in the UI.
+    function showFailure(message) {
+      const text = 'Failed to load: ' + message +
+        '. If you opened this page directly from disk (a file:// URL), ' +
+        'that will not work -- serve it over HTTP instead.';
+      if (document.body.contains(overlayEl)) {
+        statusEl.textContent = text;
+        statusEl.classList.add('error');
+        startEl.disabled = true;
+      } else {
+        // The overlay was already removed by a successful Play click, so
+        // failure happened after the game was already running -- put the
+        // message somewhere visible instead of silently doing nothing.
+        const banner = document.createElement('div');
+        banner.textContent = text;
+        banner.style.cssText =
+          'position:fixed;top:0;left:0;right:0;padding:.5rem 1rem;' +
+          'background:#500;color:#fff;font:14px system-ui, sans-serif;z-index:9999';
+        document.body.prepend(banner);
+      }
+      console.error(message);
+    }
+    window.onerror = (message) => showFailure(String(message));
+    window.onunhandledrejection = (event) => showFailure(String(event.reason));
 
     var Module = {
       canvas: document.getElementById('canvas'),
@@ -60,6 +103,10 @@
       setStatus: (text) => { statusEl.textContent = text || 'Ready'; },
       print:    (text) => console.log(text),
       printErr: (text) => console.error(text),
+      // Fires on the runtime's own abort() (assertion failures, OOM, a
+      // rejected instantiateWasm) -- see the comment above showFailure for
+      // why this alone is not enough to catch a missing .wasm/.data file.
+      onAbort:  (what) => showFailure(String(what)),
       onRuntimeInitialized: () => {
         statusEl.textContent = 'Ready';
         startEl.disabled = false;
@@ -67,9 +114,21 @@
     };
 
     startEl.addEventListener('click', () => {
-      document.getElementById('overlay').remove();
+      overlayEl.remove();
       Module.canvas.focus();          // so the menu receives key events
-      Module.callMain(Module.arguments);
+      // .slice() matters: callMain(args) unshifts argv[0] onto whatever
+      // array it's given, mutating it in place, so passing Module.arguments
+      // directly would grow that same array by one on every call (harmless
+      // here since the button is gone after one click, but wrong to write).
+      // Calling callMain() with no argument is NOT the fix, despite
+      // looking like the obvious one: callMain's own default parameter is
+      // `args = []` (confirmed against the built armagetronad.js), not
+      // Module['arguments'] -- only the runtime's own internal auto-run
+      // path defaults to that (a separate `run(args = programArgs)`, which
+      // noInitialRun skips entirely). Calling callMain() bare would launch
+      // main() with none of --datadir/--userdatadir/--userconfigdir.
+      // A copy is both non-mutating and correct.
+      Module.callMain(Module.arguments.slice());
     });
   </script>
 
