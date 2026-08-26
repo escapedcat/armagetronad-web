@@ -48,12 +48,17 @@ committed** — each gets its own go/no-go decision once the Demo ships:
 ## Status
 
 🚧 M0 complete: the real dedicated server compiles to WebAssembly and boots
-under Node with its map parsed and DTD-validated through libxml2 — zero
-changes to game source, only new files under `src/emscripten/` and `web/`.
-Toolchain, libxml2, and C++ portability are proven (PLAN.md's M0 goal); a
-playback diagnostic covered only boot and idle, so floating-point agreement
-between native and wasm in actual gameplay (cycle physics, AI) is untested,
-not proven. Next: M1 — the client boots to the main menu in a browser.
+under Node. It parses and validates its map using libxml2, the same library
+the original game uses. It does not yet accept network connections — that's
+M1's job. Zero changes were made to the game's own source code: the only two
+files added under `src/` are new — `src/emscripten/config.h` and
+`src/emscripten/nTrueVersion.h`. This proves the build toolchain, libxml2,
+and the ~114k-line C++ codebase all port to WebAssembly without modification
+(PLAN.md's M0 goal). What it does *not* prove: a playback diagnostic checked
+only boot and idle behavior, not actual gameplay (cycle physics, AI), so
+whether native and wasm compute identical results during play is still
+untested. Full boot log: [docs/m0/boot-evidence.log](docs/m0/boot-evidence.log).
+Next: M1 — the client boots to the main menu in a browser.
 
 ## Repo layout
 

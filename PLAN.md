@@ -44,7 +44,12 @@ Estimates are relative effort, not calendar commitments.
 - New `src/emscripten/nTrueVersion.h` (`#define TRUE_ARMAGETRONAD_VERSION VERSION`)
 - New `web/Makefile` compiling `src/{tools,network,engine,render,ui,tron}/*.cpp` (+ `thirdparty/particles` for client), `-iquote` dirs mirroring `src/Makefile.am`, `-I src/emscripten` first
 - Link: `-sENVIRONMENT=node -sNODERAWFS=1 -sEXIT_RUNTIME=1 -sALLOW_MEMORY_GROWTH=1`
-- Verify: `--doc` output; boots to "Ready for connections" with map parsed; native-recorded demo plays back under Node (best-effort)
+- Verify: `--doc` output; boots with map parsed, reaching the idle loop's
+  "Nobody there. Taking a nap..." and settling into its `Closing socket bound
+  to *.*.*.*:4534` / `Bound socket to *.*.*.*:4534.` re-listen pair — that
+  pair, not just the absence of a crash, is the actual passing signal (no
+  "Ready for connections" string exists in this codebase); native-recorded
+  demo plays back under Node (best-effort)
 
 **M1 — Client links, boots to main menu in browser (4–7 days).**
 - Client config.h variant: + `HAVE_LIBSDL`, `HAVE_SDL_SDL_IMAGE_H`, `HAVE_LIBSDL_IMAGE`, `HAVE_LIBPNG`, − `DEDICATED`
