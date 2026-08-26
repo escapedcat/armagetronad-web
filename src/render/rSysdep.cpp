@@ -48,6 +48,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SDL_thread.h"
 #include "SDL_mutex.h"
 
+#ifdef __EMSCRIPTEN__
+// For emscripten_sleep(), the browser yield in SwapGL() below. Only the
+// browser client links with -sASYNCIFY; the M0 dedicated build does not, and
+// without it emscripten_sleep is a JS-side abort() (libasync.js:614) rather
+// than a link error -- so this include, and every call it enables, stays
+// inside #ifndef DEDICATED.
+#include <emscripten.h>
+#endif
+
 #include <png.h>
 #define SCREENSHOT_PNG_BITDEPTH 8
 #define SCREENSHOT_BYTES_PER_PIXEL 3
@@ -565,6 +574,42 @@ void sr_LimitFPS()
 }
 
 void rSysDep::SwapGL(){
+#ifdef __EMSCRIPTEN__
+    // THE browser yield point, and the reason the whole client is built with
+    // Asyncify. The game has no frame callback: every one of its loops --
+    // uMenu::Enter, gGame's round loop, the connection and download waits --
+    // is a plain while() that only returns when the activity it drives is
+    // over. In a browser that never gives the event loop a turn, so the tab
+    // freezes: no input, no repaint, eventually a "page unresponsive" prompt.
+    // emscripten_sleep() unwinds the C++ stack back to the JS caller, lets the
+    // browser run, and resumes this call where it left off.
+    //
+    // It has to be HERE, at the top, unconditionally, not at the end of the
+    // function. SwapGL() returns early from the `if (!sr_glOut)` block roughly
+    // sixty lines down, and that return skips the entire rest of the function
+    // -- the buffer swap, the breakpoint, and sr_LimitFPS(). !sr_glOut is not
+    // an edge case: the console turns rendering off while it auto-scrolls, and
+    // the recorder's frame-skip and fast-forward paths both drive it. A yield
+    // placed after that block would be silently skipped for exactly the loops
+    // that spin fastest. Placed here it is provably once per call, for every
+    // caller and every path. uMenu::Enter (uMenu.cpp) calls SwapGL()
+    // unconditionally at the bottom of its loop body, so both of the menu's
+    // paths -- rendering and the tDelay()-throttled idle one -- are covered.
+    //
+    // Deliberately NOT done in sr_LimitFPS(): that runs after the early return
+    // (so it would miss those callers entirely), and it does not need it --
+    // under Asyncify SDL_Delay is aliased straight to emscripten_sleep
+    // (libsdl.js:1712-1713), and at the default MAX_FPS of 360 its delay
+    // branch is usually not taken at all.
+    //
+    // Cost, so nobody is surprised later: emscripten_sleep is setTimeout
+    // (libasync.js:482), which browsers clamp to ~4ms once timeouts nest, so
+    // this caps the client near 250 FPS and does not align frames with
+    // requestAnimationFrame. Making the render loop rAF-driven is a bigger
+    // change than M1 wants; this is the placement that works today.
+    emscripten_sleep( 0 );
+#endif
+
     if ( s_benchmark )
     {
         static PerformanceCounter counter;
