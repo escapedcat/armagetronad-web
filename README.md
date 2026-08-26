@@ -76,13 +76,13 @@ The short version, once the toolchain and dependencies are in place:
 ```sh
 source deps/emsdk/emsdk_env.sh
 make -f web/Makefile dedicated -j8
-timeout 15 node web/dist-m0/armagetronad-dedicated.js \
+node web/dist-m0/armagetronad-dedicated.js \
     --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
 ```
 
 It idles at `Nobody there. Taking a nap...` rather than exiting — that is
-success. `web/README.md` explains the `--daemon` requirement, the harmless
-startup warnings, and why nothing answers on port 4534 yet.
+success; press Ctrl-C. `web/README.md` explains the `--daemon` requirement, the
+harmless startup warnings, and why nothing answers on port 4534 yet.
 
 ## Repo layout
 

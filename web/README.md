@@ -8,7 +8,7 @@ waiting on the Emscripten SDK download. The sections after this one explain
 each step and what can go wrong; this is the path that works.
 
 ```sh
-# 1. Toolchain (~1 GB download, several minutes). Once per checkout.
+# 1. Toolchain (~1.8 GB installed, several minutes). Once per checkout.
 git clone https://github.com/emscripten-core/emsdk.git deps/emsdk
 (cd deps/emsdk && ./emsdk install 6.0.8 && ./emsdk activate 6.0.8)
 
@@ -19,38 +19,53 @@ source deps/emsdk/emsdk_env.sh
 ./deps/build-libxml2.sh      # static wasm libxml2, a few minutes
 npm ci --prefix web          # the `ws` package, needed at RUNTIME by Node
 
-# 4. Build (100 translation units; minutes cold, seconds warm).
+# 4. Build (100 translation units; ~10 s once emcc's own cache is warm,
+#    a few minutes on the very first emcc run of a machine).
 make -f web/Makefile dedicated -j8
 
 # 5. Run.
 node web/dist-m0/armagetronad-dedicated.js --doc | head -20
-timeout 15 node web/dist-m0/armagetronad-dedicated.js \
+node web/dist-m0/armagetronad-dedicated.js \
     --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
 ```
 
 Day to day you only need steps 2, 4 and 5 — and step 2 only in a new terminal.
 
+**The server does not exit — press Ctrl-C once you have seen the idle loop.**
+(If you want it to stop on its own, prefix it with `timeout 15`. That is GNU
+coreutils, not stock macOS — `brew install coreutils` provides it.)
+
 **A successful run ends with the server idling, not exiting:**
 
 ```
 [0] Bound socket to *.*.*.*:4534.
+[0] Setting CYCLE_BRAKE_REFILL (Group: Annoying) deviates from its default value; clients older than 0.2.5.0 may experience problems.
 [0] Nobody there. Taking a nap...
 [0] Timestamp: 2026/08/26 12:00:03
 [0] Closing socket bound to *.*.*.*:4534
 [0] Bound socket to *.*.*.*:4534.
 ```
 
-Three things that look like failures and are not:
+Four things that look like failures and are not:
 
 - **It never exits.** `Taking a nap...` is the finish line, not a hang — it is
-  the idle serving loop. Use `timeout`, or Ctrl-C.
+  the idle serving loop.
+- **`[0] Command HUD_CACHE_THRESHOLD unknown.`** — the very first line printed.
+  That setting only exists in builds with a HUD (`gHud.cpp`, inside
+  `#ifndef DEDICATED`), and the shipped config files set it unconditionally, so
+  a dedicated server always reports it. Native dedicated builds print it too.
+- **`Setting CYCLE_BRAKE_REFILL … deviates from its default value`** — a
+  stock-config notice, not a port artifact: the value comes from
+  `config/settings.cfg`, which ships with the game.
 - **`Relocation error … found itself in web/dist-m0` on stderr.** The game
   checks whether it is installed where it expects, dislikes the answer, and
   falls back to the current directory. That fallback is exactly why every
   command runs from the repo root. Harmless — see *Expected startup noise*.
-- **Nothing answers on port 4534.** Correct for this milestone: the game's
-  synchronous loop never yields to Node's event loop, so the socket never
-  finishes listening. M1's Asyncify work is what fixes it.
+
+And one thing that is a real limitation, not a bug: **nothing answers on port
+4534.** Correct for this milestone — the game's synchronous loop never yields to
+Node's event loop, so the socket never finishes listening. M1's Asyncify work is
+what fixes it.
 
 **`--daemon < /dev/null` is mandatory, and dropping it is the one real trap.**
 Without it the process sits at ~0% CPU with a shorter log, looking calm — but
