@@ -62,10 +62,13 @@ extern "C" {
 // it is GL_QUADS; anything else aborts with "unsupported immediate mode". For
 // four vertices the two are equivalent.
 //
-// Opening a glBegin block here is safe only because all four call sites call
-// rRenderer's RenderEnd() on the line immediately before, so no batch is open.
-// Real glRect carries the same restriction (it is illegal between glBegin and
-// glEnd), so this shim is no more fragile than the function it replaces.
+// Opening a glBegin block here is safe only because all four call sites close
+// the rRenderer batch first and put nothing between that could reopen one.
+// RenderEnd() is two lines up at uMenu.cpp:555, rConsoleGraph.cpp:206 and
+// gMenus.cpp:911, with only a glColor call in between; at rViewport.cpp:231 it
+// is six lines up, and the lines between are two glDisable calls and a
+// glColor3f. Real glRect carries the same restriction (it is illegal between
+// glBegin and glEnd), so this shim is no more fragile than what it replaces.
 void GLAPIENTRY glRectf( GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2 )
 {
     glBegin( GL_QUADS );
@@ -95,15 +98,31 @@ void GLAPIENTRY glTexCoord2d( GLdouble s, GLdouble t )
 // that kind was drawn. The whole purpose of this file is to make the link
 // honest, so it must not smuggle an abort in behind a symbol.
 //
-// Dropping the third coordinate is correct here, not merely convenient. r
-// only reaches the sampler through the texture matrix, and this tree binds
-// nothing but GL_TEXTURE_2D and never leaves a texture matrix that mixes r
-// into s or t: rScreen.cpp:1091-1092 resets GL_TEXTURE to the identity each
-// frame, and the only other GL_TEXTURE manipulation -- gCycle.cpp:4548-4550,
-// under USE_HEADLIGHT -- is a glTranslatef(0,0,1), whose r column is zero in
-// the s and t rows. The data agrees: texVert's third component is the ASE
-// MESH_TVERT W coordinate (rModel.cpp:136), and is written as a literal 0 for
-// every model whose coordinates the loader generates itself (rModel.cpp:107).
+// Dropping the third coordinate is correct here, not merely convenient -- but
+// the justification is a whole-tree property, so it is spelled out rather than
+// asserted, because anyone extending this shim will want to recheck it. r can
+// only reach the sampler two ways, and neither carries it here:
+//
+//  1. The texture target. Nothing in src/ binds GL_TEXTURE_1D or
+//     GL_TEXTURE_3D, and 2D sampling ignores r outright.
+//
+//  2. The texture matrix. There are TWELVE places that touch GL_TEXTURE, not
+//     one: rScreen.cpp:1091 (a direct glMatrixMode) plus eleven
+//     rRenderer::TexMatrix() calls -- gFloor.cpp:197,220; gCycle.cpp:4035,4345;
+//     eDisplay.cpp:274,353,422,450,460,478,507. (gCycle.cpp:4548 would be a
+//     thirteenth, but it is inside USE_HEADLIGHT and is not compiled.) What
+//     was actually checked is that r's column is zero in the s and t rows at
+//     every one of them. Ten load the identity and then at most a glScalef,
+//     which is diagonal and so cannot mix r into s or t. The one that loads an
+//     arbitrary matrix is gFloor.cpp:197-198, via glLoadMatrixf -- and its
+//     source at gFloor.cpp:170-173 is
+//     {{.8,.2,0,0},{-.2,.8,0,0},{0,0,1,0},{0,0,0,1}}, whose r column in GL's
+//     column-major layout is (0,0,1,0); only tm[0][0] and tm[0][1] are
+//     modified afterwards, and both are in the s row.
+//
+// The source data agrees: texVert's third component is the ASE MESH_TVERT W
+// coordinate (rModel.cpp:136), and is written as a literal 0 for every model
+// whose coordinates the loader generates itself (rModel.cpp:107).
 void GLAPIENTRY glTexCoord3fv( const GLfloat * v )
 {
     glTexCoord2f( v[0], v[1] );
