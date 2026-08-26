@@ -10,7 +10,20 @@
 #error "src/emscripten/config.h is only for Emscripten builds"
 #endif
 
-#define DEDICATED 1
+/* Two build variants share this file. The dedicated server (M0) is the
+   default so that build is unaffected; the browser client (M1) is selected
+   by -DAA_WEB_CLIENT on the compiler command line. */
+#ifdef AA_WEB_CLIENT
+/* Client: SDL for window/input/audio, libpng for screenshots, SDL_image for
+   texture loading. DEDICATED must stay undefined — it is what selects the
+   headless code paths throughout the tree. */
+#  define HAVE_LIBSDL 1
+#  define HAVE_SDL_SDL_IMAGE_H 1
+#  define HAVE_LIBSDL_IMAGE 1
+#  define HAVE_LIBPNG 1
+#else
+#  define DEDICATED 1
+#endif
 
 #define PACKAGE "armagetronad"
 #define VERSION "0.2.9-wasm"
