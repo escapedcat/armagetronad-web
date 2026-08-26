@@ -20,6 +20,16 @@
 /* The tMemManager custom allocator predates modern toolchains; bypass it. */
 #define DONTUSEMEMMANAGER 1
 
+/* Install locations tools/tDirectories.cpp probes first. Natively these come
+   from the generated src/tUniversalVariables.h, which tDirectories.cpp only
+   includes under TOP_SOURCE_DIR — deliberately undefined here — yet uses
+   unconditionally in FindDataPath()/FindConfigurationPath(). Nothing is
+   "installed" under wasm, so these probes simply fail and the search falls
+   through to the "." / "./config" candidates that NODERAWFS resolves against
+   the process working directory. Values mirror PREFIX's own default. */
+#define AA_DATADIR "/usr/local/share/armagetronad"
+#define AA_SYSCONFDIR "/usr/local/etc/armagetronad"
+
 /* Float math: musl provides all of these. Without them, the fallbacks in
    src/defs.h collide with musl's own declarations. */
 #define HAVE_ATAN2F 1
