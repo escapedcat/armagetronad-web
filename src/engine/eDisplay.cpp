@@ -136,6 +136,45 @@ static void infinity_xy_plane(eCoord const & pos, const eCoord &dir,REAL h=0){
     // always use the rim if infinity rendering is turned off
     use_rim |= !sr_infinityPlane;
 
+#ifdef __EMSCRIPTEN__
+    // ...and always use it in the browser, whatever INFINITY_PLANE says.
+    //
+    // The else branch below is the only code in the tree that reaches
+    // glTexCoord4f, and Emscripten defines glTexCoord4f as
+    // `() => { abort('glTexCoord4f: TODO') }` (libglemu.js:3218) -- an abort of
+    // the whole runtime, so the tab dies rather than the floor rendering
+    // wrong. This one assignment makes those six call sites unreachable.
+    //
+    // It is written here, at the branch, rather than by pinning the setting,
+    // because this is the single place the setting is consumed for rendering.
+    // Forcing the bool instead would have to fight every writer of it: the
+    // INFINITY_PLANE config item (gMenus.cpp:168), the "$tweaks_infinity_text"
+    // toggle in the Tweaks menu (gMenus.cpp:589-592), and any future one. The
+    // toggle matters -- sr_infinityPlane defaults to false, so this is not a
+    // live crash today, but it is ONE CLICK away for any player who opens
+    // Tweaks, and one line away in any .cfg.
+    //
+    // Why not shim glTexCoord4f in src/emscripten/eCompat.cpp, the way that
+    // file handles glTexCoord3fv? Because there is no honest shim available
+    // from C++. A 4-component texture coordinate is projective: q must survive
+    // to the rasteriser and divide s and t PER FRAGMENT, and expressing that
+    // needs a 4-wide immediate-mode attribute that only libglemu's JS side can
+    // add. The C++-reachable approximation, glTexCoord2f(s/q, t/q), does the
+    // divide per vertex, and here it does not even produce a wrong picture --
+    // it produces NaN. Look at the call sites: `zero` is left at 0 exactly
+    // when sr_infinityPlane is true, and five of the six pass it as q. The
+    // whole point of the infinity plane is vertices at w=0, so q=0 is the
+    // normal case, not the edge case. Dividing by it is 0/0.
+    //
+    // What this does NOT claim: glTexCoord4f is still an abort, and
+    // rGLRender.cpp's rRenderer::TexCoord(u,v,w,t) still forwards to it. That
+    // overload has no callers anywhere in the tree today; if one is ever
+    // added, it will need its own answer. And the menu toggle still moves --
+    // it just no longer changes what is drawn. Making it stop lying to the
+    // player is a UI question, not a crash question.
+    use_rim = true;
+#endif
+
     if (use_rim){
         /*
           // the rim wall based rendering does not work properly for shaped arenas, so
