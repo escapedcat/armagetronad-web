@@ -7,6 +7,11 @@ cd "$(dirname "$0")"
 
 VERSION="${LIBXML2_VERSION:-2.12.10}"
 SERIES="${VERSION%.*}"
+[ "$SERIES" = "2.12" ] || {
+  echo "refusing libxml2 $VERSION: only the 2.12 line has nanoHTTP, which" >&2
+  echo "tResourceManager.cpp needs at compile time. Use a 2.12.x version." >&2
+  exit 1
+}
 BUILD="$PWD/build"
 SRC="$BUILD/libxml2-$VERSION"
 PREFIX="$BUILD/libxml2-install"
@@ -27,7 +32,7 @@ emconfigure ./configure \
   --without-modules --with-http \
   --host=wasm32-unknown-emscripten \
   --prefix="$PREFIX"
-emmake make -j"$(sysctl -n hw.ncpu)"
+emmake make -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
 emmake make install
 
 echo "OK: $PREFIX/lib/libxml2.a"
