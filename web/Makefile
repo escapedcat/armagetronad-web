@@ -2,6 +2,15 @@
 # M0: dedicated server for Node. Usage, from the repo root:
 #     source deps/emsdk/emsdk_env.sh
 #     make -f web/Makefile dedicated -j8
+#
+# Without the line below, a bare `make -f web/Makefile` builds the first target
+# in the file -- the link rule -- and stops there, silently skipping the runtime
+# data (see "Runtime data" further down). That failure is deferred and hard to
+# read: the binary links and boots, then prints raw message ids instead of
+# English text and tries to fetch its map over the network. `dedicated` is the
+# only correct default.
+.DEFAULT_GOAL := dedicated
+
 EMXX      := em++
 LIBXML2   := deps/build/libxml2-install
 
