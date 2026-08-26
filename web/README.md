@@ -176,3 +176,59 @@ instantly with descriptors falsely marked ready, and the idle loop spins. Note
 that the warning is *not* printed in this case, because the false-ready
 descriptors make `count` non-zero. Memory stays flat. Asyncify, in the next
 milestone, is what gives the loop a real yield point.
+
+## Playback diagnostic
+
+A one-off cross-check, not part of the build and not a gate: record a session
+with the **native** build's deterministic recorder, replay it under wasm, and
+see whether the two agree. Run once at M0; nothing here is automated.
+
+**The native build works on modern macOS.** On macOS 26.5 (arm64) with Homebrew
+`autoconf` 2.73 and `automake` 1.18.1 — plus the already-present `pkg-config`
+and keg-only `libxml2` — `./bootstrap.sh` succeeded and an out-of-tree
+`configure --enable-dedicated && make -j8` built clean on the first attempt, no
+patches. `bootstrap.sh` prints a wall of obsolescence warnings (`AC_HELP_STRING`,
+`AC_TRY_LINK`, `AC_HEADER_STDC`, `AC_CONFIG_HEADER` …); they are noise, not
+errors. `libxml2` needs
+`PKG_CONFIG_PATH=/opt/homebrew/opt/libxml2/lib/pkgconfig`. The binary lands at
+`<builddir>/src/armagetronad_main` — the `armagetronad-dedicated` name is
+applied at install time, so do not go looking for it in the build tree. All of
+this stays outside the repo: build in a scratch dir, and note that the autotools
+output `bootstrap.sh` drops in the *source* tree (`configure`, `aclocal.m4`,
+`Makefile.in`, `config.h.in`, `version.m4`, `COPYING`, `ChangeLog`) is already
+covered by `.gitignore`.
+
+**The recorder flags are `--record <file>` and `--playback <file>`** (also a bare
+`<file>.aarec`, which is inferred as playback) — `tRecorderInternal.cpp:311-337`.
+
+**What can be recorded is narrower than it sounds.** With a dedicated server on
+both sides there is no way to record an actual game round. `sg_HostGame()` naps
+in a loop until `sg_NumUsers() != 0` (`gGame.cpp:1931`), and `NUM_AIS` does not
+help — AI fill happens once a human has joined. Recording a round would need a
+graphical client, which this port does not build. So the recording used here is
+**boot plus ~30 s of the idle nap loop**: 454 `CONFIG` sections, 61 timer `T`,
+60 `READ` / 60 `NETERROR` / 59 `NETSELECT` / 3 `BIND`, 42 `FILE_READ` (all of
+them `config/aiplayers.cfg`), 4 `RANDOM`. No cycle physics, no AI, no
+trajectory math.
+
+**Result: native and wasm agreed exactly.** Against a native→native playback run
+as the control, the wasm playback log is identical line for line, and it is
+reproducible across repeated wasm runs. Two differences are expected and
+accounted for: the relocation banner described above, and the `Timestamp:` line,
+which is live wall-clock rather than replayed (`sg_PrintCurrentTime`, not a
+recorded section — the control run shows it differing from the recording too).
+Both builds replayed the recorded ephemeral port (`Bound socket to
+*.*.*.*:55947`), both printed the same `Uptime: 0 seconds.`, both ended the
+recording at the same point with `Recording ends abruptly here, prepare for a
+crash!` — the recording was cut mid-loop by the timeout — and neither crashed or
+exited afterwards; both kept spinning until killed. `--daemon` did not interfere
+with playback.
+
+**Read this for what it is.** It says that config resolution, locale, map
+verification through libxml2, and the network idle loop take the same path and
+produce the same output under wasm as natively, given identical replayed inputs.
+It says nothing about floating-point agreement in the game simulation, because
+the recording contains none — the divergence risk in the plan's register is
+untested, not retired. Also note that `Uptime: 0 seconds.` only appears when
+`tRecorder::IsRunning()` (`gGame.cpp:163`), so a recording or playback run is
+one line longer than a plain one; that is the recorder, not a divergence.
