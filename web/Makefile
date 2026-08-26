@@ -137,7 +137,16 @@ $(OBJDIR)/%.o: src/%.cpp web/Makefile
 # (native hides them in a .a) would add glCallList, glPushClientAttrib and
 # glPopClientAttrib as undefined symbols for no benefit.
 CLIENT_OBJDIR := web/build-m1
-CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o)
+# ...plus one translation unit the dedicated build does not have:
+# src/emscripten/eCompat.cpp, the compatibility shims for the symbols
+# Emscripten's SDL and GL emulation leave undefined. It has to be named here
+# because $(SRCS) above wildcards the six game source directories only, and
+# src/emscripten/ is not one of them (it holds the hand-written config.h, not
+# game source). No extra compile rule is needed for it: the
+# $(CLIENT_OBJDIR)/%.o: src/%.cpp rule below already matches, with a stem of
+# "emscripten/eCompat" -- pattern stems may contain slashes.
+CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
+                 $(CLIENT_OBJDIR)/emscripten/eCompat.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
