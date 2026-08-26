@@ -24,7 +24,25 @@ INCLUDES  := -I src/emscripten \
 # set and some the new. That kind of ODR mismatch links cleanly and misbehaves at
 # runtime. -MP adds phony targets for the headers, so deleting or renaming one
 # does not wedge the build with "No rule to make target".
-CXXFLAGS  := -std=gnu++14 -O2 -MMD -MP $(INCLUDES)
+# -fexceptions is not optional for this codebase. Emscripten's default is to let
+# `throw` compile but to DROP every catch block (-sDISABLE_EXCEPTION_CATCHING=1),
+# which turns the first throw into `Aborted(Assertion failed: Exception thrown,
+# but exception catching is not enabled)`. That is fatal here because exceptions
+# are structural, not just error paths: gCycleDeath (src/tron/gWall.cpp:679) and
+# eSensorFinished (src/tron/gSensor.cpp:42) are gameplay control flow, tCleanQuit
+# and tException are how gArmagetron.cpp:909-942 shuts down, nKillHim/nIgnore are
+# how nNetwork.cpp:621-624 rejects a bad packet without dropping the server, and
+# tRunningInBuildDirectory (tDirectories.cpp:1496) is part of path discovery.
+# There are 42 catch sites against 60 throws.
+#
+# It must be passed at compile AND link. We use -fexceptions (the JS-based
+# implementation) rather than -fwasm-exceptions deliberately: emcc itself warns
+# "ASYNCIFY=1 is not compatible with -fwasm-exceptions" (emcc.py:487), and a
+# later milestone needs Asyncify for the main loop. Revisit only if that plan
+# changes to JSPI, which does support wasm EH.
+EXCEPTIONS := -fexceptions
+
+CXXFLAGS  := -std=gnu++14 -O2 -MMD -MP $(EXCEPTIONS) $(INCLUDES)
 
 # The wildcards below sweep whole directories, so they also pick up files that
 # src/Makefile.am never compiles: extra main()s, stale demos/test harnesses,
@@ -70,7 +88,7 @@ OBJDIR    := web/build-m0
 OBJS      := $(SRCS:src/%.cpp=$(OBJDIR)/%.o)
 
 LDFLAGS   := -sENVIRONMENT=node -sNODERAWFS=1 -sEXIT_RUNTIME=1 \
-             -sALLOW_MEMORY_GROWTH=1
+             -sALLOW_MEMORY_GROWTH=1 $(EXCEPTIONS)
 
 web/dist-m0/armagetronad-dedicated.js: $(OBJS) $(LIBXML2)/lib/libxml2.a
 	@mkdir -p web/dist-m0
