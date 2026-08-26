@@ -82,6 +82,26 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 #endif
 
+// the ninth #endif above closed the #ifndef DEDICATED, so this needs its own
+// guard: the dedicated build is compiled by Emscripten too, and has no GL at all
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+// glGenerateMipmap replaces gluBuild2DMipmaps in Upload() below. It is a GL 3 /
+// GLES 2 entry point, so <GL/gl.h> does not declare it; <GL/glext.h> does, and
+// rGL.h leaves it includable -- it defines NO_SDL_GLEXT before <SDL_opengl.h>,
+// which then skips both its own bundled copy of glext and the #define of
+// __glext_h_ that would have suppressed the real header. Include the header
+// rather than hand-declaring the function, for the same reason rGL.h includes
+// emsdk's <GL/glu.h>: a declaration written here could drift from the one
+// Emscripten implements, and a header cannot.
+#include <GL/glext.h>
+
+//! true when the surface rISurfaceTexture::Upload last uploaded was not
+//! power-of-two, and so has no mip chain; read by OnSelect a few lines after it
+//! calls Upload. See the comment at the assignment for why a file static is
+//! sound here.
+static bool sr_uploadWasNPOT = false;
+#endif
+
 
 // ******************************************************************************************
 // *
@@ -540,8 +560,100 @@ void rISurfaceTexture::Upload( rSurface & surface )
         else
             format=GL_RGB5;
 
+#ifdef __EMSCRIPTEN__
+    // Emscripten declares gluBuild2DMipmaps but does not implement it. Plain
+    // glTexImage2D is the replacement, but GLU silently did three further
+    // things that have to be done by hand, and each of them renders every
+    // texture solid black if it is missed.
+
+    // (1) SIZED INTERNAL FORMATS. `format` above is always one of GL_RGBA8,
+    //     GL_RGB8, GL_RGBA4 or GL_RGB5 -- all *sized*. WebGL 1 accepts only the
+    //     unsized set for internalformat, and additionally requires
+    //     internalformat == format. So the only value that can ever be legal
+    //     here is texformat itself, which makes the invariant hold by
+    //     construction for every value rSurface::Create can put in format_
+    //     (GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA -- all four are in
+    //     WebGL 1's unsized set).
+    //
+    //     What that discards is the two things `format` also encoded: "store at
+    //     16 bits" (GL_RGBA4/GL_RGB5) and "drop the alpha channel"
+    //     (GL_RGB8/GL_RGB5). WebGL 1 can express neither without rewriting the
+    //     pixel data. The first is a memory/precision tradeoff for 2003 cards
+    //     and is no loss. The second is a behaviour change in principle --
+    //     alpha the game meant to discard is kept, so a texture could blend
+    //     where it used to be opaque -- but it is unobservable for everything
+    //     this game ships. The complete set of textures uploaded without
+    //     StoreAlpha is floor.png, floor_b.png (gFloor.cpp), rim_wall.png
+    //     (eAdvWall.cpp) -- none of which has an alpha channel at all --
+    //     floor_a.png, whose alpha is uniformly 255, and cycle_body.png /
+    //     cycle_wheel.png, which gTextureCycle::ProcessImage forces to alpha
+    //     255 in the ProcessImage call a few lines above. Everything with real
+    //     transparency (the three fonts, sky.png, shadow.png, dir_wall.png,
+    //     title.jpg) asks for alpha and gets it. A moviepack supplying a partly
+    //     transparent replacement for one of the first group would look
+    //     different; that is a documented limitation, not a regression here.
+    (void)format;
+    GLenum const internalFormat = texformat;
+
+    // (2) NON-POWER-OF-TWO RESCALING. GLU scaled NPOT sources up to the nearest
+    //     power of two before uploading. WebGL 1 refuses NPOT textures twice
+    //     over: with GL_REPEAT wrap (set just above) and with a mipmapped
+    //     minification filter. Either makes the texture incomplete, and an
+    //     incomplete texture samples as solid black.
+    //
+    //     Only one shipped texture is NPOT: textures/title.jpg at 800x600. It
+    //     is loaded (gLogo.cpp) into rTextureGroups::TEX_FONT with repx=repy=0,
+    //     so it already clamps, and rScreen.cpp forces TEX_FONT's mode down to
+    //     GL_LINEAR ("fonts look best in bilinear filtering, no mipmaps"), so
+    //     it already has no mipmapped filter. It is therefore legal as-is and
+    //     no resampler is needed for the content this build ships -- writing
+    //     one would be inventing a resampling filter for a case that does not
+    //     occur.
+    //
+    //     What is here instead is a degradation, not an assert: an NPOT texture
+    //     (a moviepack replacement, say) loses its mip chain and is forced to
+    //     clamp. That costs quality at distance and would tile wrongly if it
+    //     was meant to repeat, but it is never black, and it never takes the
+    //     title screen down the way an assert would.
+    bool const potWidth  = tex->w > 0 && ( tex->w & ( tex->w  - 1 ) ) == 0;
+    bool const potHeight = tex->h > 0 && ( tex->h & ( tex->h  - 1 ) ) == 0;
+    bool const powerOfTwo = potWidth && potHeight;
+
+    if ( !powerOfTwo )
+    {
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    }
+
+    glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, tex->w, tex->h, 0,
+                  texformat, GL_UNSIGNED_BYTE, tex->pixels );
+
+    // (3) THE MIP CHAIN. rTextureGroups::TextureMode defaults to
+    //     GL_LINEAR_MIPMAP_LINEAR for three of its four groups, and OnSelect
+    //     applies it to GL_TEXTURE_MIN_FILTER *after* this function returns. A
+    //     texture with a mipmapped min filter and no mip chain is incomplete in
+    //     WebGL 1, i.e. solid black, so the chain has to exist for every
+    //     texture that could get such a filter. This sits on the straight-line
+    //     path right after the game's only glTexImage2D, with no early return
+    //     between the two, so no successful upload can reach that filter
+    //     without it. The one case it does not cover is NPOT, handled below.
+    if ( powerOfTwo )
+    {
+        glGenerateMipmap( GL_TEXTURE_2D );
+    }
+
+    // glGenerateMipmap raises GL_INVALID_OPERATION on an NPOT texture and
+    // builds nothing, so an NPOT texture must not be given a mipmapped min
+    // filter either. OnSelect sets that filter after this returns and would
+    // overwrite anything set here, so hand the fact over to it. A file static
+    // is enough: OnSelect calls Upload (via the virtual OnSelect()) and then
+    // sets the filter a few lines later in the same call, with no rendering in
+    // between, and this code is only ever reached from the render thread.
+    sr_uploadWasNPOT = !powerOfTwo;
+#else
     gluBuild2DMipmaps(GL_TEXTURE_2D,format,tex->w,tex->h,
                       texformat,GL_UNSIGNED_BYTE,tex->pixels);
+#endif
 
     sr_UnlockSDL();
  #endif
@@ -584,6 +696,12 @@ void rISurfaceTexture::OnSelect( bool enforce )
 
                 if (textureModeLast_<0)
                 {
+#ifdef __EMSCRIPTEN__
+                    // cleared here rather than trusted from last time, so a
+                    // derived OnSelect() that uploads nothing (rSurfaceTexture
+                    // with a null surface) cannot leave a stale answer behind
+                    sr_uploadWasNPOT = false;
+#endif
                     // delegate core loading work to derived class
                     OnSelect();
                 }
@@ -591,8 +709,47 @@ void rISurfaceTexture::OnSelect( bool enforce )
                 //glEnable(GL_TEXTURE);
                 glEnable(GL_TEXTURE_2D);
 
+#ifdef __EMSCRIPTEN__
+                // WebGL 1 has no mip chain for a non-power-of-two texture --
+                // Upload() cannot build one, glGenerateMipmap rejects the
+                // target -- and a mipmapped min filter over a missing chain is
+                // an incomplete texture, which samples as solid black. Demote
+                // to the matching non-mipmapped filter. Nothing the game ships
+                // reaches this: its one NPOT texture, textures/title.jpg, is in
+                // TEX_FONT, which rScreen.cpp holds at GL_LINEAR. It exists for
+                // NPOT replacements a moviepack could supply.
+                //
+                // texmod itself must stay untouched: it is what textureModeLast_
+                // is compared against on the next Select, so demoting it would
+                // make every frame see a changed mode and unload/reupload the
+                // texture. Only the value handed to GL_TEXTURE_MIN_FILTER moves.
+                // The GL_TEXTURE_MAG_FILTER switch below is left on texmod for
+                // the same reason it always was: magnification never samples a
+                // mip level, so a missing chain does not concern it.
+                int minFilter = texmod;
+                if ( sr_uploadWasNPOT )
+                {
+                    switch( minFilter )
+                    {
+                    case GL_NEAREST_MIPMAP_NEAREST:
+                    case GL_NEAREST_MIPMAP_LINEAR:
+                        minFilter = GL_NEAREST;
+                        break;
+                    case GL_LINEAR_MIPMAP_NEAREST:
+                    case GL_LINEAR_MIPMAP_LINEAR:
+                        minFilter = GL_LINEAR;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
+                                minFilter);
+#else
                 glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
                                 texmod);
+#endif
 
                 switch(texmod)
                 {
