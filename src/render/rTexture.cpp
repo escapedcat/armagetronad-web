@@ -220,7 +220,16 @@ void rSurface::Create( char const * fileName )
     tString s = tDirectories::Data().GetReadPath( fileName );
 
     // Load image
+#ifdef __EMSCRIPTEN__
+    // Emscripten's SDL/SDL_image.h declares IMG_InvertAlpha() but nothing
+    // implements it, so the call is an undefined symbol at link time. That same
+    // header (SDL_image.h:88-89) says of it: "This function is now a no-op, and
+    // only provided for backwards compatibility." So dropping the call should
+    // change nothing. If that turns out to be wrong the symptom is unmistakable
+    // and global: every texture renders with its alpha channel inverted.
+#else
     IMG_InvertAlpha(true);
+#endif
     Create( IMG_Load(s) );
 
     //if ( surface_ )
