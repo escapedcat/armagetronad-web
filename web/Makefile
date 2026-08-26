@@ -116,6 +116,13 @@ $(OBJDIR)/%.o: src/%.cpp web/Makefile
 # autotools, so it has to do that work itself. All three outputs are already
 # covered by .gitignore (lines 49, 52, 54), so nothing generated here is
 # committable. Each rule below mirrors the autotools rule it replaces.
+#
+# Every rule also depends on this Makefile, for the same reason the object rules
+# do (see the comment above $(OBJDIR)/%.o): the substitution text and the
+# sortresources invocation live *here*, so editing them has to invalidate the
+# data they produced, or a flag edit silently leaves stale data behind. Upstream
+# agrees -- resource/Makefile.am:8 lists `Makefile` among the prerequisites of
+# its `included:` rule.
 DATA := language/languages.txt config/aiplayers.cfg resource/included/.mapversion
 
 # configure.ac:1059 lists language/languages.txt in AC_OUTPUT. @progtitle@ is its
@@ -123,13 +130,13 @@ DATA := language/languages.txt config/aiplayers.cfg resource/included/.mapversio
 # Without the generated file there is no language at all: tLocale::FindStrict
 # reports "Language British English not found" and every message afterwards
 # prints as its raw id ("config_command_unknown" rather than English text).
-language/languages.txt: language/languages.txt.in
+language/languages.txt: language/languages.txt.in web/Makefile
 	sed -e 's,@progtitle@,Armagetron Advanced,g' $< > $@
 
 # Also AC_OUTPUT (configure.ac:1060). aiplayers.cfg.in contains no @substitution@
 # at all, so configure only copies it. It carries the AI character table that
 # gAICharacter reads.
-config/aiplayers.cfg: config/aiplayers.cfg.in
+config/aiplayers.cfg: config/aiplayers.cfg.in web/Makefile
 	cp $< $@
 
 # resource/Makefile.am's `included:` rule, which its `all:` target depends on.
@@ -143,8 +150,20 @@ config/aiplayers.cfg: config/aiplayers.cfg.in
 # resource.armagetronad.net -- which under Node's socket emulation fails with
 # "Unknown IO error" and takes the map load down with it.
 # .mapversion is sortresources' own final output, so it stamps a complete run.
-resource/included/.mapversion: batch/make/sortresources batch/make/sortresources.py $(shell find resource/proto -type f 2>/dev/null)
-	sh batch/make/sortresources resource/proto resource/included batch/make/sortresources.py
+#
+# The `test -f $@` is not belt-and-braces. sortresources:11 opens with
+# `test -d $source || exit 0`, so a missing or renamed resource/proto makes it
+# report success having produced nothing at all -- after which the server finds
+# no local map and silently falls back to downloading from the network, which is
+# the exact failure this rule exists to prevent. Upstream guards the same recipe
+# with `|| { rm -rf $@; false; }` (resource/Makefile.am:9); this checks the
+# stamp too, because an exit status of 0 is not evidence here. On failure the
+# whole output directory goes, so a half-built tree can never look complete.
+resource/included/.mapversion: batch/make/sortresources batch/make/sortresources.py web/Makefile $(shell find resource/proto -type f 2>/dev/null)
+	@sh batch/make/sortresources resource/proto resource/included batch/make/sortresources.py && test -f $@ \
+	  || { rm -rf resource/included; \
+	       echo "web/Makefile: sortresources produced no resources - is resource/proto present?" >&2; \
+	       false; }
 
 .PHONY: dedicated data clean
 data: $(DATA)
