@@ -49,6 +49,12 @@ INCLUDES  := -I src/emscripten \
 # "ASYNCIFY=1 is not compatible with -fwasm-exceptions" (emcc.py:487), and a
 # later milestone needs Asyncify for the main loop. Revisit only if that plan
 # changes to JSPI, which does support wasm EH.
+#
+# It is not free, and the cost carries into every later build. Rebuilding all
+# 100 translation units with EXCEPTIONS empty and nothing else changed produces
+# a 1,661,113-byte wasm; with -fexceptions it is 2,488,298 (+827,185 bytes,
+# ~+50%; the .js glue adds a further +25,151). That is the single largest known
+# line item in PLAN.md's M5 size budget.
 EXCEPTIONS := -fexceptions
 
 CXXFLAGS  := -std=gnu++14 -O2 -MMD -MP $(EXCEPTIONS) $(INCLUDES)
