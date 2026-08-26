@@ -267,7 +267,23 @@ void rSurface::Create( SDL_Surface * surface )
             break;
 
         case 2:
+#ifdef __EMSCRIPTEN__
+            // format_ is handed to glTexImage2D's *external format* argument
+            // (see rISurfaceTexture::Upload), and GL_LUMINANCE8_ALPHA8 is a
+            // sized *internal* format. Desktop GL tolerated the confusion;
+            // WebGL 1 accepts only GL_ALPHA/GL_LUMINANCE/GL_LUMINANCE_ALPHA/
+            // GL_RGB/GL_RGBA there and rejects anything else with
+            // GL_INVALID_ENUM. Emscripten's glTexImage2D would also size the
+            // pixel read from it wrongly: libwebgl.js's
+            // colorChannelsInGlTextureFormat falls back to 1 byte per pixel for
+            // an unrecognised enum, so it would hand WebGL a half-length
+            // buffer. This branch is unreachable in the Emscripten build --
+            // SDL's IMG_Load_RW always returns a 32-bit surface, so
+            // BytesPerPixel is always 4 -- but it costs one line to be right.
+            format_ = GL_LUMINANCE_ALPHA;
+#else
             format_ = GL_LUMINANCE8_ALPHA8;
+#endif
             break;
 
         case 3:
