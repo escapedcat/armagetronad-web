@@ -67,3 +67,88 @@ runs before command-line options are parsed. See the comment on `AA_DATADIR` in
 Because of that fallback, **run the artifact from the repo root** (with
 `-sNODERAWFS=1` the paths resolve against the Node process's working directory),
 or the server will not find `config/`, `language/` and `resource/`.
+
+## Running the M0 server
+
+Both commands are run from the repo root, and both need `make -f web/Makefile
+dedicated` to have run first — that target also generates the runtime data
+(`language/languages.txt`, `config/aiplayers.cfg`, `resource/included/`) that a
+native build would get from `configure`. Node needs `web/node_modules`, so run
+`npm install --prefix web` once on a fresh checkout.
+
+    node web/dist-m0/armagetronad-dedicated.js --doc            # config self-test
+    node web/dist-m0/armagetronad-dedicated.js --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
+
+`--doc` prints 772 settings with their English descriptions and exits. If you
+see raw ids (`access_level_help`) instead of prose, `language/languages.txt` is
+missing. The list is 772 rather than 848 items because `--doc` deliberately
+hides settings whose help text is the literal `UNDOCUMENTED`
+(`tConfiguration.cpp:815`, keys in `language/english_base_notranslate.txt`);
+those settings still exist and still work.
+
+A successful boot ends with:
+
+    [0] Bound socket to *.*.*.*:4534.
+    [0] Nobody there. Taking a nap...
+    [0] Timestamp: ...
+    [0] Closing socket bound to *.*.*.*:4534
+    [0] Bound socket to *.*.*.*:4534.
+
+and then stays there. That is the idle serving loop, and it is the M0 success
+condition: the process does not exit on its own, so run it under a timeout.
+
+**The map is parsed even though nothing says so.** `$map_file_loading` is inside
+`#ifdef DEBUG` (`gGame.cpp:2899`) and map loading runs behind a console filter,
+so a successful parse is silent. `gGame::Verify()` parses and DTD-validates the
+default map through libxml2 before the server starts listening, and throws if it
+fails — so reaching "Taking a nap..." *is* the proof. To see the machinery work,
+point `MAP_FILE` at another map: with
+`Z-Man/fortress/sumo_4x4-0.1.1.aamap.xml` the boot log gains
+
+    [0] MAP_FILE_OVERRIDE changed from 3 to 0.
+    [0] FORTRESS_MAX_PER_TEAM changed from 0 to 1.
+    [0] SPAWN_POINT_GROUP_SIZE changed from 0 to 4.
+
+which are the three `<Setting>` elements inside that map file. (Set it from a
+`.cfg` in `<userdatadir>/config` and pass `-e <name>.cfg`; `--extraconfig`
+resolves against the config path, not the working directory.)
+
+### Known limitations at this milestone
+
+**It cannot accept real connections.** The C++ reports `Bound socket to
+*.*.*.*:4534`, and Emscripten does construct a `WebSocketServer` for it, but the
+server never reaches its `listening` event: the game loop runs synchronously
+inside `callMain()` and never yields, so Node's event loop never gets a turn to
+finish the async bind. Nothing is reachable on 4534. This is expected here and
+is one of the things the Asyncify work in the next milestone fixes.
+
+**Run it with `--daemon < /dev/null`, not on a terminal.** Without `--daemon`
+the server installs a stdin console, and that console assumes `O_NONBLOCK` makes
+`read()` return `EAGAIN` when no key has been pressed (`rConsoleCout.cpp:49-66`).
+Under `-sNODERAWFS=1` that assumption does not hold: `fcntl(F_SETFL, O_NONBLOCK)`
+succeeds and `F_GETFL` reports the flag set, but `read()` still blocks forever.
+Interactive commands do work (`PLAYERS`, `SAY` and friends all respond), but
+between commands the server is parked inside `read()` rather than in its network
+select, so it stops servicing the idle loop — and `QUIT` sets its flag without
+the loop ever getting to re-read it, so the server will not shut down. There is
+no C-level fix: `poll()` reports the descriptor readable when it is not (see
+below) and `ioctl(FIONREAD)` fails with `ENOTTY`. It needs JS-side stdin
+handling and is left for a later milestone. `--daemon` skips the console.
+
+**It burns 100% of one core while idle.** Both this and the `poll()` problem
+above come from one place — `___syscall_poll` in the generated glue:
+
+    function ___syscall_poll(fds, nfds, timeout) {
+      var count = doPollSync(fds, nfds);
+      if (!count && timeout != 0) warnOnce('non-zero poll() timeout not supported: ' + timeout)
+      return count;
+    }
+
+It polls once and returns; the timeout is never waited on, it only decides
+whether to warn. And `pollOne` treats any stream without a poll handler —
+"regular files, incl. NODERAWFS/NODEFS" per its own comment — as permanently
+readable and writable. So `sn_BasicNetworkSystem.Select(1.0f)` returns
+instantly with descriptors falsely marked ready, and the idle loop spins. Note
+that the warning is *not* printed in this case, because the false-ready
+descriptors make `count` non-zero. Memory stays flat. Asyncify, in the next
+milestone, is what gives the loop a real yield point.
