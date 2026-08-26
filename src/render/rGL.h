@@ -34,6 +34,16 @@
 #endif
 */
 
+#ifdef __EMSCRIPTEN__
+// SDL_opengl.h pulls in GL but not GLU, and the <GL/glu.h> this file would
+// otherwise have picked up sits in the commented-out block above. So nothing
+// declares gluLookAt (eCamera.cpp) or gluBuild2DMipmaps (rTexture.cpp).
+// Emscripten ships the header, so include it rather than hand-declaring
+// those functions: the declarations then cannot drift from the
+// implementations Emscripten provides in libglemu.js.
+#include <GL/glu.h>
+#endif
+
 #else
 
 typedef float GLfloat;
