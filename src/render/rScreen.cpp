@@ -817,11 +817,39 @@ static bool lowlevel_sr_InitDisplay(){
     }
 
     // wait for activation if we were ALT-Tabbed away:
+#ifndef __EMSCRIPTEN__
     while ( (SDL_GetAppState() & SDL_APPACTIVE) == 0)
     {
         SDL_Delay(100);
         SDL_PumpEvents();
     }
+#else
+    // Compiled out for two independent reasons, and the second is why it is a
+    // guard rather than a shrug.
+    //
+    // 1. It cannot do anything. There is no ALT-Tab in a browser, and
+    //    Emscripten's SDL_GetAppState ORs SDL_APPACTIVE into its result
+    //    unconditionally (src/lib/libsdl.js, grep "SDL_GetAppState"), so the
+    //    condition is always false and the body never runs. (Page visibility
+    //    is a different mechanism -- document.visibilityState -- and wiring it
+    //    up is M2/M4's, not a like-for-like replacement for this.)
+    //
+    // 2. The body calls SDL_Delay, which is unsafe under Asyncify however
+    //    rarely it runs -- see the long comment above sr_LimitFPS() in
+    //    rSysdep.cpp for the mechanism. Left in place, these two lines were the
+    //    only reason `WebAssembly.Module.imports()` on the client wasm listed
+    //    env.SDL_Delay (verified with llvm-nm: rScreen.o was the sole object in
+    //    the whole client link with an undefined SDL_Delay). They were dormant
+    //    only by reason 1, i.e. by the behaviour of a JS shim we do not own.
+    //
+    // Removing the call rather than adding -sASYNCIFY_IMPORTS=SDL_Delay to the
+    // link is deliberate. The link flag makes SDL_Delay work, but it would also
+    // silently legalise every future call site, and it would cost the cheap
+    // invariant this guard buys: the browser client's wasm imports no
+    // SDL_Delay, checkable in one line. Keep the flag as the escape hatch for
+    // third-party code that cannot be edited.
+    // docs/porting/browser-runtime-notes.md § 8.
+#endif
 
     if (software_renderer && !last_software_renderer)
         sr_LoadDefaultConfig();
@@ -830,11 +858,14 @@ static bool lowlevel_sr_InitDisplay(){
 
 
     // wait for activation if we were ALT-Tabbed away:
+#ifndef __EMSCRIPTEN__
+    // (the second of the two identical ALT-Tab waits; see the one above)
     while ( (SDL_GetAppState() & SDL_APPACTIVE) == 0)
     {
         SDL_Delay(100);
         SDL_PumpEvents();
     }
+#endif
 
     sr_ResetRenderState(true);
 
