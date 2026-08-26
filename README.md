@@ -52,12 +52,15 @@ under Node. It parses and validates its map using libxml2, the same library
 the original game uses. It does not yet accept network connections — that's
 M1's job. Zero changes were made to the game's own source code: the only two
 files added under `src/` are new — `src/emscripten/config.h` and
-`src/emscripten/nTrueVersion.h`. This proves the build toolchain, libxml2,
-and the ~114k-line C++ codebase all port to WebAssembly without modification
-(PLAN.md's M0 goal). What it does *not* prove: a playback diagnostic checked
-only boot and idle behavior, not actual gameplay (cycle physics, AI), so
-whether native and wasm compute identical results during play is still
-untested. Full boot log: [docs/m0/boot-evidence.log](docs/m0/boot-evidence.log).
+`src/emscripten/nTrueVersion.h`. This proves the build toolchain, libxml2, and
+the codebase's dedicated-server slice — 100 of its translation units — all port
+to WebAssembly without modification (PLAN.md's M0 goal). What it does *not*
+prove: a `DEDICATED` build preprocesses the GL/SDL/HUD paths away, so the
+graphics side of the port is still entirely untested — that is M1's job and its
+whole risk. Nor does it prove gameplay correctness: the playback diagnostic
+checked only boot and idle behavior, not cycle physics or AI, so whether native
+and wasm compute identical results during play is still open.
+Full boot log: [docs/m0/boot-evidence.log](docs/m0/boot-evidence.log).
 Next: M1 — the client boots to the main menu in a browser.
 
 ## Build and run it
