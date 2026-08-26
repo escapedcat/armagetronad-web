@@ -27,10 +27,16 @@ INCLUDES  := -I src/emscripten \
 CXXFLAGS  := -std=gnu++14 -O2 -MMD -MP $(INCLUDES)
 
 # The wildcards below sweep whole directories, so they also pick up files that
-# src/Makefile.am never compiles: extra main()s, stale demos/test harnesses and
-# one alternative implementation. Each is listed with the reason; the list was
-# cross-checked against the *_SOURCES lists in src/Makefile.am, and the set of
-# compiled files now matches a native dedicated build exactly.
+# src/Makefile.am never compiles: extra main()s, stale demos/test harnesses,
+# dead code, and one .cpp that is #included rather than compiled. Each is listed
+# with its reason below.
+#
+# The list was cross-checked against the *_SOURCES lists in src/Makefile.am. The
+# resulting 100 translation units are the same *.cpp set a native dedicated build
+# compiles. The one difference is thirdparty/binreloc/prefix.c, which
+# src/Makefile.am:63 puts in libtools_a_SOURCES unconditionally (so native
+# compiles 101 units): it is inert without ENABLE_BINRELOC, which this config
+# does not define, and the link confirms nothing references it.
 EXCLUDES  := \
   src/network/master.cpp        \
   src/network/astat.cpp         \

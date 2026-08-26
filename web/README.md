@@ -38,9 +38,32 @@ comment in the script for why. Re-run only after `rm -rf deps/build/libxml2-*`.
 Output: web/dist-m0/armagetronad-dedicated.{js,wasm}. `make -f web/Makefile clean` resets.
 
 The Makefile is hand-written and deliberately does not use autotools. It compiles
-the same 100 translation units a native *dedicated* build does — the file set was
-cross-checked against the `*_SOURCES` lists in `src/Makefile.am`. Its `EXCLUDES`
-list names the files the per-directory wildcards would otherwise sweep in (extra
-`main()`s, stale demos, and `render/rConsoleCout.cpp`, which is `EXTRA_DIST` only);
-each entry carries its reason in a comment. Grow that list only for further
-`main()`s, never to make an error go away.
+100 translation units — the same `*.cpp` set a native *dedicated* build does,
+cross-checked against the `*_SOURCES` lists in `src/Makefile.am`. (Native also
+compiles `thirdparty/binreloc/prefix.c` for 101; it is inert without
+`ENABLE_BINRELOC`, which this build does not define.) The `EXCLUDES` list names
+the files the per-directory wildcards would otherwise sweep in — extra `main()`s,
+stale demos, dead code, and `render/rConsoleCout.cpp`, which is `#include`d by
+`rConsoleGraph.cpp` rather than compiled on its own. Each entry carries its
+reason in a comment. Grow that list only for further `main()`s, never to make an
+error go away.
+
+Header dependencies are tracked (`-MMD -MP`), and objects depend on the Makefile
+itself, so editing `src/emscripten/config.h` or a compile flag rebuilds what it
+should.
+
+### Expected startup noise
+
+Running the server prints a `Relocation error. The binary was supposed to be
+installed into /usr/local/bin and found itself in web/dist-m0 …` line on stderr.
+**This is expected and harmless — the port is not broken.** The path code always
+compares the binary's actual location against the compiled-in `/usr/local/bin`,
+and a wasm artifact never lives there. The message is printed by a handler that
+returns rather than exits, and the data/config search then falls back to `.` and
+`./config`. It cannot be suppressed with `--datadir`, because the path search
+runs before command-line options are parsed. See the comment on `AA_DATADIR` in
+`src/emscripten/config.h` for the full trace.
+
+Because of that fallback, **run the artifact from the repo root** (with
+`-sNODERAWFS=1` the paths resolve against the Node process's working directory),
+or the server will not find `config/`, `language/` and `resource/`.

@@ -23,10 +23,23 @@
 /* Install locations tools/tDirectories.cpp probes first. Natively these come
    from the generated src/tUniversalVariables.h, which tDirectories.cpp only
    includes under TOP_SOURCE_DIR — deliberately undefined here — yet uses
-   unconditionally in FindDataPath()/FindConfigurationPath(). Nothing is
-   "installed" under wasm, so these probes simply fail and the search falls
-   through to the "." / "./config" candidates that NODERAWFS resolves against
-   the process working directory. Values mirror PREFIX's own default. */
+   unconditionally in FindDataPath()/FindConfigurationPath(). Values mirror the
+   file's own PREFIX default, so wasm behaves like an unconfigured native build.
+
+   Expect a "Relocation error" line on stderr at startup. It is unavoidable and
+   harmless; do NOT try to make it go away by changing these values. Why it
+   happens: st_RelocatePath() (:1416) calls GetPrefix() before it tests anything,
+   so GeneratePrefix() always runs. That compares where the binary actually sits
+   against BINDIR's "/bin" suffix; the wasm artifact sits in web/dist-m0, which
+   has no "/bin" suffix and no Makefile to trigger the tRunningInBuildDirectory
+   escape hatch, so it reaches the tERR_ERROR at :1380. tERR_ERROR resolves to
+   st_PresentError(), whose non-WIN32 body prints to stderr and returns — its
+   exit(-1) sits behind a `static bool error = false` — so startup continues and
+   the path search does fall back to "." / "./config", which NODERAWFS resolves
+   against the process working directory. --datadir cannot suppress the message
+   either: tCommandLine.cpp:125 runs every analyzer's Initialize(), which reaches
+   FindDataPath(), before the option loop at :141 that parses --datadir. No value
+   of these two macros avoids it. */
 #define AA_DATADIR "/usr/local/share/armagetronad"
 #define AA_SYSCONFDIR "/usr/local/etc/armagetronad"
 
