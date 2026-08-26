@@ -47,8 +47,13 @@ committed** — each gets its own go/no-go decision once the Demo ships:
 
 ## Status
 
-🚧 Planning complete, implementation not started. First milestone: the headless
-dedicated server running under Node as a toolchain proof.
+🚧 M0 complete: the real dedicated server compiles to WebAssembly and boots
+under Node with its map parsed and DTD-validated through libxml2 — zero
+changes to game source, only new files under `src/emscripten/` and `web/`.
+Toolchain, libxml2, and C++ portability are proven (PLAN.md's M0 goal); a
+playback diagnostic covered only boot and idle, so floating-point agreement
+between native and wasm in actual gameplay (cycle physics, AI) is untested,
+not proven. Next: M1 — the client boots to the main menu in a browser.
 
 ## Repo layout
 
