@@ -22,3 +22,9 @@ Everything below assumes the Emscripten environment is loaded in the current she
 Upgrading the SDK is a deliberate act: update this line in the same commit.
 
 Node: v22.x (any ≥ 18 works for running the M0 server).
+
+## Dependencies
+
+libxml2 (static, wasm): `./deps/build-libxml2.sh` (needs the emsdk env sourced).
+Output lands in `deps/build/libxml2-install/`. Pinned to 2.12.x — see the
+comment in the script for why. Re-run only after `rm -rf deps/build/libxml2-*`.
