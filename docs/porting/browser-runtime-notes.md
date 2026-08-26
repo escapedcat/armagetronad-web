@@ -4,8 +4,9 @@ Long-form reasoning behind the M1 changes that make the client survive a
 browser. The source files carry short pointers here rather than the whole
 argument; this is the file to read before undoing one of them.
 
-Scope: the Asyncify yield, the two `usleep` replacements, and the three GL
-traps. Each section is named so a comment can cite it.
+Scope: the Asyncify yield, the two `usleep` replacements, the rule about which
+sleep primitives are safe at all (§8 — read that one before adding any sleep),
+and the three GL traps. Each section is named so a comment can cite it.
 
 **On emsdk citations.** Line numbers into `deps/emsdk/upstream/emscripten` drift
 on every toolchain bump. Each one below is paired with a greppable token; if the
@@ -26,11 +27,21 @@ defines `DEDICATED` unless `-DAA_WEB_CLIENT` is passed. So:
 | everything except the browser client | `#if defined( DEDICATED ) \|\| !defined( __EMSCRIPTEN__ )` |
 
 A plain `#ifdef __EMSCRIPTEN__` is only correct when the surrounding code is
-already inside `#ifndef DEDICATED`. In M1 that is true at
-`rSysdep.cpp` (`SwapGL()`, inside `:456-721`), `rGLRender.cpp` (whole file,
-`:30-259`) and `eDisplay.cpp` (`infinity_xy_plane()`, inside `:70-615`), and it
+already inside `#ifndef DEDICATED`. Check per *site*, not per file — `rScreen.cpp`
+contains both kinds. In M1 it is true at `rSysdep.cpp` (`SwapGL()` and
+`sr_LimitFPS()`, both inside the region opened at `:465`), `rScreen.cpp` (the two
+ALT-Tab waits, inside the region opened at `:432`), `rGLRender.cpp` (whole file,
+`:30-259`) and `eDisplay.cpp` (`infinity_xy_plane()`, inside `:70-615`); and it
 is **not** true at `tSysTime.cpp` (`tDelay`/`tDelayForce`) or `rScreen.cpp`
 (`sr_LoadDefaultConfig()`).
+
+The mechanical check, rather than eyeballing `#endif`s:
+
+```bash
+awk '/^[ \t]*#[ \t]*(if|ifdef|ifndef)/ {d++; s[d]=NR"|"$0; next}
+     /^[ \t]*#[ \t]*endif/ {d--; next}
+     NR==822 {for(i=1;i<=d;i++) print "depth "i": "s[i]}' src/render/rScreen.cpp
+```
 
 ### Why getting this wrong is not caught by the build
 
@@ -56,9 +67,19 @@ server at the first call.
 the abort would be reached in normal operation, not in some corner.
 
 **Rule for M2 and later: any new `emscripten_*` call in a translation unit that
-is not already inside `#ifndef DEDICATED` must use the client-only guard.** The
-cheap check is `grep -c emscripten_ web/dist-m0/armagetronad-dedicated.js`; it
-must stay 0.
+is not already inside `#ifndef DEDICATED` must use the client-only guard.**
+
+The cheap check is **`grep -c emscripten_sleep web/dist-m0/armagetronad-dedicated.js`**,
+which must stay 0. An earlier revision of this note said to grep for
+`emscripten_` and expect 0; that can never be 0 in any Emscripten build and so
+tests nothing. The current dedicated build has 50 such hits and is correct —
+all of them are toolchain runtime internals (`emscripten_stack_get_end`,
+`emscripten_get_now`, `emscripten_resize_heap`, `emscripten_builtin_memalign`
+and similar), none of them a call this port introduced.
+
+The other cheap check, for the hazard in §8, is
+`grep -c SDL_Delay web/dist-m0/armagetronad-dedicated.js` — also 0, and 0 in
+the *client* wasm's imports too, which is the one that matters.
 
 ---
 
@@ -77,9 +98,11 @@ Placement is the whole decision:
   common, not exotic — the console clears it while auto-scrolling, and the
   recorder's frame-skip and fast-forward paths both drive it. A yield below
   that block is skipped for exactly the loops that spin hardest.
-- `sr_LimitFPS()` is doubly wrong: it is *after* the early return, and it does
-  not need help — under Asyncify `SDL_Delay` is aliased straight to
-  `emscripten_sleep` (`src/lib/libsdl.js`, grep `SDL_Delay: 'emscripten_sleep'`).
+- `sr_LimitFPS()` is the wrong place for *this* yield: it runs *after* that
+  early return, so it would miss exactly the callers that need it most. It does
+  yield too, when a frame finishes ahead of the cap — a second yield inside the
+  same `SwapGL()` call. That is fine; §8 has the measurement. What is not fine
+  is the primitive it used to yield with, which is also §8.
 - Every blocking loop reaches `SwapGL()` once per iteration. `uMenu::Enter`
   calls it unconditionally at `uMenu.cpp:390`, covering both the rendering path
   and the `tDelay(10000)`-throttled idle path at `uMenu.cpp:386`.
@@ -323,105 +346,165 @@ nothing else.
 
 ---
 
-## 8. One Asyncify yield per frame, and no more
+## 8. Never call `SDL_Delay` in the client
 
-`src/render/rSysdep.cpp`, `sr_LimitFPS()`. The whole function is compiled out of
-the browser client.
+`src/render/rSysdep.cpp` (`sr_LimitFPS()`), `src/render/rScreen.cpp` (two
+ALT-Tab waits). **The rule is about which sleep primitive you call, not about
+how many times per frame you call it.**
 
-This was the single thing standing between "the client links" and "the client
-works". It is worth reading before adding any other `emscripten_sleep()`,
-`SDL_Delay()`, `tDelay()` or `tDelayForce()` call to a code path that already
-yields — the failure mode is spectacular and points nowhere near the cause.
+> **Correction notice.** An earlier revision of this section said the rule was
+> "one Asyncify yield per frame, and no more", and had `sr_LimitFPS()` compiled
+> out of the client entirely. That was a working fix built on a wrong diagnosis.
+> Two yields per frame are fine. The hazard was `SDL_Delay` specifically. Both
+> the fix and the rule below replace it. If you find the old rule quoted
+> anywhere (it is in commit `1c156cc9`'s message, which is history and stays as
+> written), this section supersedes it.
+
+### The rule
+
+**Only call sleeps that appear in `ASYNCIFY_IMPORTS`.**
+
+| primitive | safe in the client? | why |
+|---|---|---|
+| `emscripten_sleep()` | **yes** | carries `emscripten_sleep__async: 'auto'` (`src/lib/libasync.js`, grep `emscripten_sleep__async`), so it reaches `ASYNCIFY_IMPORTS` and Binaryen instruments its call sites |
+| `tDelay()` / `tDelayForce()` | **yes** | they *are* `emscripten_sleep` in the client (`src/tools/tSysTime.cpp`, §3) |
+| `SDL_Delay()` | **NO** | aliased to `emscripten_sleep` on the JS side only; never reaches `ASYNCIFY_IMPORTS` |
+| `usleep()` | works, but don't | Emscripten busy-waits it: burns a core and freezes the tab for the full duration (§3) |
+
+The escape hatch, if a call site you cannot edit ever forces it, is
+**`-sASYNCIFY_IMPORTS=SDL_Delay`** at link. It is verified to work (below).
+Prefer deleting the call: with no `SDL_Delay` anywhere in the client,
+"`WebAssembly.Module.imports()` on `armagetronad.wasm` lists no `SDL_Delay`"
+is a one-line invariant anyone can check.
+
+```bash
+node -e "const fs=require('fs');
+  console.log(WebAssembly.Module.imports(new WebAssembly.Module(
+    fs.readFileSync('web/dist-m1/armagetronad.wasm')))
+    .filter(i=>/Delay|sleep/i.test(i.name)))"
+```
+
+### Why `SDL_Delay` is the one that breaks
+
+Emscripten's SDL declares it, under `#if ASYNCIFY`, as a plain alias:
+
+```js
+SDL_Delay: 'emscripten_sleep',
+```
+
+(`src/lib/libsdl.js`, grep `SDL_Delay: 'emscripten_sleep'`.) So at runtime
+`_SDL_Delay` genuinely *is* the wrapped function that starts an unwind.
+
+The alias is resolved in `src/jsifier.mjs` — grep `LibraryManager.isAlias` —
+and that resolution **does not copy the target's `__async` decorator**. The
+list that matters is built earlier in the same function, from
+`LibraryManager.library[symbol + '__async']` (grep `asyncFuncs.push`), and
+`SDL_Delay__async` does not exist. `tools/link.py` turns exactly that list into
+the Binaryen argument (grep `js_info\['asyncFuncs'\]`, and
+`--pass-arg=asyncify-imports@` just above it).
+
+So the two halves disagree. **JS side:** a real unwind starts. **Wasm side:**
+the caller of `SDL_Delay` was never instrumented, so it does not check
+`asyncify_state`, does not spill its frame, and runs on to return normally —
+while instrumented frames above it rewind anyway and restore
+`__stack_pointer` from an asyncify-stack slot that was never written. That is
+the reported "SP set to a tiny absolute address at every stack size": not stack
+exhaustion, not a memory-layout problem, just a stack pointer restored from
+garbage.
+
+### How that was verified
+
+Two ways, against the emsdk in `deps/` (6.0.8):
+
+**1. The Binaryen argument itself.** `emcc -v` prints the pass arguments:
+
+```
+asyncify-imports@env.invoke_*,env.__asyncjs__*,*.fd_sync,...,*.emscripten_sleep,
+*.emscripten_wget_data,*.emscripten_scan_registers,*.emscripten_fiber_swap
+```
+
+`*.emscripten_sleep` is there. `*.SDL_Delay` is not.
+
+**2. A reduction with `SwapGL()`'s shape** — one yield at the top, a nested
+call that yields again — built three ways from the *same* source and run under
+Node:
+
+| build | result |
+|---|---|
+| both yields `emscripten_sleep` | **SURVIVED 100 frames with TWO yields per frame** |
+| second yield `SDL_Delay` | `RuntimeError: unreachable`, immediately |
+| second yield `SDL_Delay`, plus `-sASYNCIFY_IMPORTS=SDL_Delay` | **SURVIVED 100 frames** |
+
+Row 1 disproves the yield-counting rule. Rows 2 and 3 together isolate the
+variable to `SDL_Delay`'s absence from `ASYNCIFY_IMPORTS`, since nothing else
+differs between them.
+
+### Why the original bisection pointed the wrong way
+
+It was sound as localisation and invalid as generalisation. Flipping `MAX_FPS`
+between 60 and 0 on an identical binary really does flip the failure — but
+`sr_LimitFPS()` returns early when `MAX_FPS` is 0, so what that flip actually
+controls is *whether `SDL_Delay` is reached at all*, not how many yields happen
+per frame. Both readings fit the data; only one survives the reduction above.
+
+Worth keeping as a method note: a bisection tells you which switch changes the
+outcome. It does not tell you what the switch is wired to.
 
 ### What the symptom looked like
 
-With the frame limiter on (`MAX_FPS 60`, which the web defaults set), the
-client:
+With the limiter on, the client:
 
 1. booted, initialised GL, loaded its textures, drew the title screen and drew
    the language menu correctly — one frame;
 2. then never updated the picture again;
-3. never responded to a keystroke — Emscripten's `_SDL_PollEvent` was called
-   **once in six seconds**, against ~60 times a second expected (counted by
-   patching the built `armagetronad.js` from the page);
-4. and, in most runs, died some seconds later with
-   `Attempt to set SP to 0xffffffb0` — the C stack pointer set to a tiny
-   absolute address, so the next function prologue trapped.
+3. never responded to a keystroke — `_SDL_PollEvent` was called **once in six
+   seconds**, against ~60 times a second expected;
+4. and, in most runs, died seconds later with
+   `Attempt to set SP to 0xffffffb0`.
 
-Throughout all of that the game loop was *running*: it yielded ~120 times a
-second (counted by hooking `setTimeout`), and the Asyncify sleep stack showed
-it parked in `uMenu::OnEnter -> rSysDep::SwapGL` exactly where it should be.
-That combination — alive, rendering nothing, deaf to input — is what makes this
-look like three separate bugs in the renderer, the input layer and the memory
-layout.
+Throughout, the game loop was *running*: ~120 yields a second, parked in
+`uMenu::OnEnter -> rSysDep::SwapGL` exactly where it should be. Alive,
+rendering nothing, deaf to input — which is what makes one bug look like three,
+in the renderer, the input layer and the memory layout.
 
-### What it was
+Things ruled out by measurement on the way, all of them still correctly ruled
+out: `-sSTACK_SIZE` at 64KB/1MB/4MB (identical failure each time),
+`-sGLOBAL_BASE=1024` (bogus SP still ~0, so nowhere near the stack),
+`-sASYNCIFY_STACK_SIZE` at 1MB, `-fwasm-exceptions`, and `SOUND_QUALITY 0`.
 
-`sr_LimitFPS()` called `SDL_Delay()`. Emscripten's SDL aliases `SDL_Delay`
-straight to `emscripten_sleep` (`src/lib/libsdl.js`, grep
-`SDL_Delay: 'emscripten_sleep'`), so that call was a **second** Asyncify
-unwind/rewind inside the same `rSysDep::SwapGL()` call as the deliberate one at
-the top of the function (§2) — two per frame instead of one.
+### Where the calls were, and what was done
 
-Deleting that one call fixes all four symptoms at once.
-
-### How that was established
-
-Bisected on identical binaries, changing only the value of `MAX_FPS` in the
-preloaded `autoexec.cfg` (`sr_LimitFPS` returns immediately when it is 0, so
-the `SDL_Delay` becomes unreachable while everything else is byte-identical):
-
-| build | `MAX_FPS 60` | `MAX_FPS 0` |
+| site | before | after |
 |---|---|---|
-| `-O0` link (as shipped through Task 6) | freezes in the language menu | boots and navigates |
-| `-O2` link | freezes after 1-2 keystrokes | boots and navigates |
+| `rSysdep.cpp`, `sr_LimitFPS()` | `SDL_Delay(...)`; whole function `return`ed early under `__EMSCRIPTEN__` | `emscripten_sleep(...)` under `__EMSCRIPTEN__`, `SDL_Delay` kept for native. Limiter works; `MAX_FPS` is live again |
+| `rScreen.cpp` ×2, the ALT-Tab waits | `while ((SDL_GetAppState() & SDL_APPACTIVE) == 0) SDL_Delay(100);` | compiled out under `__EMSCRIPTEN__` |
 
-So it is not an optimisation-level artefact, and the optimisation level is not
-the fix either. Things that were tried and did **not** help, each ruled out by
-measurement rather than reasoning:
+The `rScreen.cpp` pair were the *only* objects in the whole client link with an
+undefined `SDL_Delay` (checked with `llvm-nm` over every `.o`), and they were
+dormant purely by luck: `SDL_GetAppState` ORs `SDL_APPACTIVE` into its result
+unconditionally (`src/lib/libsdl.js`, grep `SDL_GetAppState`), so the loop
+never spun. Any change to that shim would have trapped immediately. There is no
+ALT-Tab in a browser; if page visibility is ever wanted it is
+`document.visibilityState` and a different design, M2/M4's.
 
-- `-sSTACK_SIZE` at 64KB (default), 1MB and 4MB — identical failure at the
-  identical instant every time. Not stack exhaustion.
-- `-sGLOBAL_BASE=1024`, which moves the stack off address 0 — the bogus stack
-  pointer was still ~0, i.e. nowhere near the stack. Conclusive: the pointer is
-  being *set* to a small absolute value, not decremented off the end.
-- `-sASYNCIFY_STACK_SIZE` at 1MB (8x) — no effect.
-- `-fwasm-exceptions` instead of `-fexceptions`, on the theory that the JS
-  `invoke_*` trampolines in the call chain were involved — no effect, and emcc
-  warns the combination is unsupported with ASYNCIFY anyway
-  (`emcc.py`, grep `not compatible with -fwasm-exceptions`).
-- disabling sound (`SOUND_QUALITY 0`), on the theory that the SDL audio
-  callback was re-entering wasm while the main stack was unwound — no effect.
-
-### What is NOT established
-
-Why two yields per frame breaks Asyncify. The transform's own shape is visible
-in a disassembly (`wasm-dis`) of any instrumented function: the stack-pointer
-prologue is wrapped in `if (asyncify_state == Normal)` and the frame-pointer
-local is restored from the asyncify stack on rewind, so `__stack_pointer` is
-never explicitly saved — the design depends on nothing moving it between the
-unwind and the matching rewind. That is consistent with the corruption seen but
-does not explain it, and no reduced test case was built. Emscripten issue
-[#20058](https://github.com/emscripten-core/emscripten/issues/20058) ("stack
-corruption in a concurrent suspension/unsuspension scenario") describes
-something with the same flavour and is open with no workaround.
-
-Treat "one yield per frame" as a rule with a measured basis and an unknown
-mechanism, not as a theory.
+Both guards are bare `#ifdef __EMSCRIPTEN__` / `#ifndef __EMSCRIPTEN__`, which
+§1 permits only inside an existing `#ifndef DEDICATED`. Checked, not assumed:
+`sr_LimitFPS()` is inside the region opened at `rSysdep.cpp:465`, and both
+`rScreen.cpp` waits are inside the one opened at `rScreen.cpp:432`. Neither
+appears in the dedicated build, whose wasm is unchanged at 2,488,298 bytes.
 
 ### What this costs, and what to watch for
 
-Nothing caps the frame rate in the browser now. In practice `emscripten_sleep`
-is `setTimeout`, which browsers clamp to ~4ms once timeouts nest, so the ceiling
-is ~250 FPS rather than unbounded. Aligning frames to `requestAnimationFrame`
-is M2/M5's job and would remove the need for a frame limiter at all.
+The frame rate is capped again, at `MAX_FPS` (60 in `web/webdefaults/autoexec.cfg`).
+It is still not `requestAnimationFrame`-aligned: `emscripten_sleep` is
+`setTimeout`, which browsers clamp to ~4ms once timeouts nest, so expect uneven
+pacing and treat 60 as a ceiling rather than a cadence. Converting the render
+loop to rAF — which would pace properly and remove the need for a frame limiter
+at all — is M2/M5's.
 
-**The residual risk is real and belongs to M2.** Disabling `sr_LimitFPS` removes
-the only *second* yield on the menu path, but it does not make the rule hold
-globally. `tDelay()` and `tDelayForce()` still yield (§3), and callers of them
-that run inside a frame that already reaches `SwapGL()` would reintroduce
-exactly this failure — `uMenu::OnEnter`'s `tDelay(10000)` idle branch
-(`uMenu.cpp`, the `if (!sr_glOut)` arm) and `SwapGL()`'s own recorder-playback
-`tDelayForce()` are both live examples that M1 simply never reaches. If the
-gameplay loop starts behaving like this section describes, count the yields per
-frame first.
+**For M2.** `tDelay()` and `tDelayForce()` are safe (§3) and need no special
+handling, including on paths that already reach `SwapGL()` —
+`uMenu::OnEnter`'s `tDelay(10000)` idle branch and `SwapGL()`'s own
+recorder-playback `tDelayForce()` are both fine, and neither needs counting.
+The thing to grep for before adding a sleep is `SDL_Delay`; the thing to check
+after linking is the `WebAssembly.Module.imports()` one-liner above.
