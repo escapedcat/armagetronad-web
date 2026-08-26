@@ -156,8 +156,50 @@ CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
 # to the dedicated build's CXXFLAGS above — see its definition for why.
 CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 
+# -sASYNCIFY is what lets this program run in a browser at all, and it is a
+# LINK-time transform: Binaryen rewrites the linked wasm so that a call stack
+# can be unwound to the JS caller and rebuilt later. It is deliberately absent
+# from CLIENT_CXXFLAGS -- passing it at compile time would do nothing.
+#
+# It is needed because the game has no frame callback. Every loop in it -- the
+# main menu, the round loop, the connection and download waits -- is a plain
+# while() that returns only when its work is done, and a browser tab that never
+# yields to the event loop is a frozen tab. The single yield point that makes
+# this pay off is emscripten_sleep(0) at the top of rSysDep::SwapGL()
+# (src/render/rSysdep.cpp); Asyncify is the machinery that makes that call able
+# to return.
+#
+# It is not free, and M5's size budget needs the number. Relinking the same 101
+# objects with and without these two flags:
+#     without   2,982,495 bytes wasm      584,996 bytes js
+#     with      8,871,099 bytes wasm      625,787 bytes js
+#     delta    +5,888,604 bytes (+197%)   +40,791 bytes (+7%)
+# The wasm very nearly triples. That makes Asyncify by a wide margin the single
+# largest line item in the size budget -- seven times -fexceptions' +827,185
+# (see the EXCEPTIONS comment above), and it displaces it as the figure to
+# quote first. The reason is that ASYNCIFY=1 instruments every function that
+# might be on the stack when an async call happens, and here that is reachable
+# from essentially the whole program: SwapGL() is called from the bottom of the
+# render tree, which is called from every game loop.
+#
+# The lever, if this has to come down, is ASYNCIFY_ONLY (or ASYNCIFY_REMOVE):
+# hand Binaryen the list of functions that really can be on the stack across a
+# yield, and it instruments only those. That needs a call-graph audit that is
+# only trustworthy once the client actually runs, so it belongs to M5 and not
+# here -- getting the list wrong produces an "unreachable" trap at runtime, not
+# a build error. JSPI is the other exit and would cost far less, but it is not
+# yet baseline across browsers, and taking it means giving up -fexceptions for
+# -fwasm-exceptions, which is the pairing this file already rejected.
+#
+# ASYNCIFY_STACK_SIZE is the side buffer the unwound frames are copied into,
+# and it is a fixed allocation, not a growing one -- overflowing it is a
+# runtime abort ("Asyncify stack overflow"), not a reallocation. The default is
+# 4096 bytes, which is not enough here: SwapGL() is called from the bottom of
+# deeply nested render code, and the whole chain from main() down has to fit.
+# 131072 (128KB) is 32x the default and costs 128KB of linear memory once.
 CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
+                  -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
                   $(EXCEPTIONS)
 
 web/dist-m1/armagetronad.js: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a
