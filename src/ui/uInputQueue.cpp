@@ -106,6 +106,14 @@ bool su_StoreSDLEvent(const SDL_Event &tEvent){
 // read and write operators for keysyms
 tRECORDING_ENUM( SDLKey );
 tRECORDING_ENUM( SDLMod );
+#ifdef __EMSCRIPTEN__
+// SDL 1.2 typed keysym.scancode as Uint8, which the recorder already knows to
+// archive as an int (tRECORD_AS(unsigned char, int) in tRecorder.h). Emscripten's
+// SDL types it as the enum SDL_Scancode, which has no stream operators, so say
+// it is archived as an int too. Recording it as an int is what the SDL 1.2 build
+// does, so recordings stay interchangeable between the two.
+tRECORDING_ENUM( SDL_Scancode );
+#endif
 #endif
 
 static char const * recordingSection = "INPUT";
@@ -203,7 +211,13 @@ void EventArchiver< tRecordingBlock >::ArchiveKey( tRecordingBlock & archive, SD
         default:
             key.keysym.mod = KMOD_NONE;
             key.keysym.sym = SDLK_x;
+#ifdef __EMSCRIPTEN__
+            // Emscripten's SDL types scancode as an enum, so 0 needs naming.
+            // SDL_SCANCODE_UNKNOWN is 0, the same value SDL 1.2 stored here.
+            key.keysym.scancode = SDL_SCANCODE_UNKNOWN;
+#else
             key.keysym.scancode = 0;
+#endif
             key.keysym.unicode = '*';
         }
     }
