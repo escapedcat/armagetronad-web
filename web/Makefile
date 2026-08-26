@@ -18,8 +18,35 @@ INCLUDES  := -I src/emscripten \
 
 CXXFLAGS  := -std=gnu++14 -O2 $(INCLUDES)
 
-# src/network/master.cpp has its own main() (master-server binary) — exclude.
-EXCLUDES  := src/network/master.cpp
+# The wildcards below sweep whole directories, so they also pick up files that
+# src/Makefile.am never compiles: extra main()s, stale demos/test harnesses and
+# one alternative implementation. Each is listed with the reason; the list was
+# cross-checked against the *_SOURCES lists in src/Makefile.am, and the set of
+# compiled files now matches a native dedicated build exactly.
+EXCLUDES  := \
+  src/network/master.cpp        \
+  src/network/astat.cpp         \
+  src/network/l2_demo.cpp       \
+  src/network/l3_demo.cpp       \
+  src/network/nettest_main.cpp  \
+  src/tools/memtest.cpp         \
+  src/tools/transfab.cpp        \
+  src/engine/test.cpp           \
+  src/render/testgl.cpp         \
+  src/network/nettest.cpp       \
+  src/tools/tSafePTRBase.cpp    \
+  src/render/rConsoleCout.cpp
+# master.cpp   — main(), the separate master-server binary.
+# astat, l2_demo, l3_demo, nettest_main, memtest, transfab, test, testgl
+#              — main(), standalone demos/benchmarks; several no longer compile
+#                against today's headers (SDL 1.2 API, private nNetObject::owner).
+# nettest.cpp  — the nettest_main harness's other half; includes a nNet.h that
+#                no longer exists in the tree.
+# tSafePTRBase — dead code: its body is commented out and what remains refers to
+#                a List<> template that was renamed tList<> long ago.
+# rConsoleCout — EXTRA_DIST in src/Makefile.am, i.e. shipped but never built: an
+#                alternative rConsole backend that defines the same symbols as
+#                the compiled render/rConsoleGraph.cpp.
 SRCS      := $(filter-out $(EXCLUDES), \
                $(wildcard src/tools/*.cpp) $(wildcard src/network/*.cpp) \
                $(wildcard src/engine/*.cpp) $(wildcard src/render/*.cpp) \
