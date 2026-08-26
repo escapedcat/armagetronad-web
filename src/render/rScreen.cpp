@@ -407,9 +407,10 @@ static void sr_SetGLAttributes( int rDepth, int gDepth, int bDepth, int zDepth )
 #ifndef __EMSCRIPTEN__
     // Emscripten reports SDL 1.3.0, so it passes the version check above, but
     // its SDL_GLattr has no SDL_GL_SWAP_CONTROL (SDL dropped it after 1.2).
-    // Dropping the block costs nothing: the browser paces presentation itself
-    // via requestAnimationFrame, and the default vSync setting took neither
-    // of the two branches that set the attribute anyway.
+    // Dropping the block costs nothing on a default configuration: vSync
+    // defaults to ArmageTron_VSync_Default (:340), which is the one case that
+    // sets no attribute at all. A non-default setting loses a swap-interval
+    // hint, which is not something a browser would have honoured regardless.
     switch (currentScreensetting.vSync)
     {
     case ArmageTron_VSync_On:
