@@ -184,18 +184,22 @@ Every change here is `#ifdef __EMSCRIPTEN__`-guarded with the original preserved
 
 - [ ] **Step 1: Declare `gluLookAt`**
 
-`eCamera.cpp:1415` calls it; the implementation exists in Emscripten (`libglemu.js:3888`). Only the declaration is missing, because `rGL.h`'s GLU include sits in a commented-out block. Add to `src/render/rGL.h` after the existing GL includes:
+`eCamera.cpp:1415` calls it; the implementation exists in Emscripten (`libglemu.js:3888`). Only the declaration is missing, because `rGL.h`'s GLU include sits in a commented-out block (`rGL.h:14-35`).
+
+**Corrected during execution:** emsdk *does* ship `GL/glu.h` (`cache/sysroot/include/GL/glu.h`), which declares `gluLookAt` at `:314`. Include the real header rather than hand-writing a declaration — a hand-written one risks a signature or linkage mismatch with the actual implementation, and the header also supplies `gluPerspective` and `gluOrtho2D`, which Emscripten likewise implements.
+
+Add to `src/render/rGL.h` after the existing GL includes:
 
 ```c
 #ifdef __EMSCRIPTEN__
-// The <GL/glu.h> include this file would normally use is inside the
-// commented-out block above. Emscripten implements gluLookAt (libglemu.js)
-// but ships no GLU header, so declare just what the tree calls.
-extern "C" void gluLookAt(GLdouble eyeX, GLdouble eyeY, GLdouble eyeZ,
-                          GLdouble centerX, GLdouble centerY, GLdouble centerZ,
-                          GLdouble upX, GLdouble upY, GLdouble upZ);
+// The <GL/glu.h> this file would normally include sits in the commented-out
+// block above. Emscripten ships the header and implements gluLookAt,
+// gluPerspective and gluOrtho2D (libglemu.js).
+#include <GL/glu.h>
 #endif
 ```
+
+**Consequence for Task 3, deliberate:** that header also declares `gluBuild2DMipmaps` (`glu.h:296`), which Emscripten does NOT implement. So including it makes `rTexture.cpp` compile and moves its failure from compile time to link time. That is consistent with this plan's approach of treating the linker as the authority (Task 4), and Task 3's verification is written accordingly.
 
 - [ ] **Step 2: Guard `SDL_GL_SWAP_CONTROL`**
 
@@ -235,7 +239,7 @@ SDL 1.3 made `scancode` and `mod` typed enums where 1.2 had integers.
 
 `uMenu.cpp:839` and `:1019` do `SDLMod mod = c.mod;` where `keysym.mod` stayed `Uint16`; add `static_cast<SDLMod>`.
 
-- [ ] **Step 5: Verify 99 of 100 compile**
+- [ ] **Step 5: Verify all 100 now compile**
 
 ```bash
 # -k is essential: without it make stops dispatching after the first failure,
@@ -243,7 +247,11 @@ SDL 1.3 made `scancode` and `mod` typed enums where 1.2 had integers.
 make -f web/Makefile client -j8 -k 2>&1 | grep -E "^src/.*error:" | sort -u
 ```
 
-Expected: only `src/render/rTexture.cpp` errors, on `gluBuild2DMipmaps`.
+Expected: **no compile errors at all.** Including `<GL/glu.h>` in Step 1 also satisfies `rTexture.cpp`'s reference to `gluBuild2DMipmaps`, so the build now proceeds to the link stage and fails there instead — on undefined symbols. That is expected and is Task 4's subject. Confirm the failure is a *link* failure by checking that `web/build-m1` contains 100 `.o` files:
+
+```bash
+find web/build-m1 -name '*.o' | wc -l   # expect 100
+```
 
 - [ ] **Step 6: Verify the dedicated build still produces 2,488,298 bytes**
 
@@ -266,8 +274,10 @@ git commit -m "port: <the specific fix>"
 - Modify: `src/render/rTexture.cpp`
 
 **Interfaces:**
-- Consumes: Task 2's compiling tree.
-- Produces: all 100 translation units compiling. This is the only texture upload path in the game — there is no other `glTexImage2D` call anywhere in `src/` — so getting it wrong breaks every texture.
+- Consumes: Task 2's compiling tree — all 100 translation units already compile after Task 2 included `<GL/glu.h>`.
+- Produces: `gluBuild2DMipmaps` gone from the undefined-symbol list, and a texture upload path that is actually correct under WebGL. This is the only texture upload path in the game — there is no other `glTexImage2D` call anywhere in `src/` — so getting it wrong breaks every texture.
+
+**Note on the failure mode:** because Task 2 included the real GLU header, `gluBuild2DMipmaps` is now *declared* but still not *implemented* by Emscripten. So this file compiles and the symbol shows up at link time. You are fixing a link error and a correctness problem, not a compile error.
 
 - [ ] **Step 1: Check whether the shipped textures are power-of-two**
 
@@ -322,13 +332,17 @@ This branch is *probably* dead (Emscripten's `IMG_Load` returns 32-bit RGBA via 
 
 `rTexture.cpp:223`. Emscripten declares it in `SDL/SDL_image.h` but implements it nowhere — a link error, not a compile error. In SDL_image 1.2 it was already a deprecated no-op, so removing it is expected to be behaviourally free. Guard it, and note in your report that if that assumption is wrong every texture renders with inverted alpha — which is obvious on sight and instantly diagnosable.
 
-- [ ] **Step 5: Verify all 100 compile**
+- [ ] **Step 5: Verify the symbol is gone**
+
+All 100 files already compiled before you started, so the check is on the link stage:
 
 ```bash
-make -f web/Makefile client -j8 -k 2>&1 | grep -cE "^src/.*error:"
+make -f web/Makefile client -j8 -k 2>&1 | tee /tmp/m1-t3-link.log
+grep -c "gluBuild2DMipmaps" /tmp/m1-t3-link.log   # expect 0
+grep -oE "undefined symbol: [A-Za-z_0-9]+" /tmp/m1-t3-link.log | sort -u
 ```
 
-Expected: `0`. The build will now proceed to the link stage and fail there — that is Task 4.
+Expected: `gluBuild2DMipmaps` no longer appears anywhere. The link still fails on other undefined symbols — that is Task 4's subject, and the list you just printed is useful input to it. Record it in your report.
 
 - [ ] **Step 6: Verify the dedicated build is still 2,488,298 bytes, then commit**
 
