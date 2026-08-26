@@ -44,9 +44,10 @@ EXCLUDES  := \
 #                no longer exists in the tree.
 # tSafePTRBase — dead code: its body is commented out and what remains refers to
 #                a List<> template that was renamed tList<> long ago.
-# rConsoleCout — EXTRA_DIST in src/Makefile.am, i.e. shipped but never built: an
-#                alternative rConsole backend that defines the same symbols as
-#                the compiled render/rConsoleGraph.cpp.
+# rConsoleCout — not a standalone TU: render/rConsoleGraph.cpp ends with a
+#                literal `#include "rConsoleCout.cpp"` for DEDICATED builds,
+#                which is why it is EXTRA_DIST in src/Makefile.am. Its code IS
+#                in the build; compiling it a second time only duplicates it.
 SRCS      := $(filter-out $(EXCLUDES), \
                $(wildcard src/tools/*.cpp) $(wildcard src/network/*.cpp) \
                $(wildcard src/engine/*.cpp) $(wildcard src/render/*.cpp) \
