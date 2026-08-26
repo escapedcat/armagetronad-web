@@ -453,7 +453,7 @@ Expected (approximate): a long list of config items with descriptions (hundreds 
 node web/dist-m0/armagetronad-dedicated.js --datadir . --userdatadir /tmp/aa-persist 2>&1 | tee /tmp/m0-boot.log
 ```
 
-Expected (approximate): language files load, `config/` is read, the default map resource parses (this is libxml2 earning its keep), and the server settles into its round/listen loop — PLAN.md phrases it as booting to "Ready for connections" with map parsed. Socket errors that are *logged and survived* are success (Global Constraints); a busy-wait sleep warning from Emscripten is expected and fine. Stop with Ctrl-C.
+Expected (approximate): language files load, `config/` is read, the default map resource parses (this is libxml2 earning its keep), and the server settles into its idle serving loop. The real idle line is `Nobody there. Taking a nap...` and the passing signal is the `Closing socket bound to *.*.*.*:4534` / `Bound socket to *.*.*.*:4534.` pair — the string "Ready for connections" this plan originally cited does not exist anywhere in the program. Socket errors that are *logged and survived* are success (Global Constraints); a busy-wait sleep warning from Emscripten is expected and fine. Stop with Ctrl-C.
 
 - [ ] **Step 3: Fix runtime failures via the Task 4 loop**
 
