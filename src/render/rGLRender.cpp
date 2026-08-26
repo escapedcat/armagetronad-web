@@ -160,33 +160,18 @@ public:
 
     virtual void BeginQuadStrip(){
 #ifdef __EMSCRIPTEN__
-        // Emscripten's immediate-mode emulation supports GL_POINTS through
-        // GL_TRIANGLE_FAN plus GL_QUADS, and abort()s the entire runtime --
-        // not just the draw -- on anything else: `if (GLImmediate.mode != 7)
-        // abort('unsupported immediate mode ' + GLImmediate.mode)`
-        // (libglemu.js:3061-3062). GL_QUAD_STRIP is mode 8, so it is fatal.
+        // Emscripten's immediate-mode emulation abort()s the entire runtime --
+        // not just the draw -- on any primitive above GL_TRIANGLE_FAN except
+        // GL_QUADS (src/lib/libglemu.js, grep "unsupported immediate mode").
+        // GL_QUAD_STRIP is mode 8, so it is fatal, and gWall.cpp:1242 draws the
+        // cycle wall with it every frame of every round behind a guard that is
+        // a `static const bool = true` (gWall.cpp:1066). GL_TRIANGLE_STRIP
+        // consumes the same vertex stream in the same order.
         //
-        // GL_TRIANGLE_STRIP is a faithful substitution, not an approximation:
-        // both consume the vertex stream as a ladder of adjacent pairs, in the
-        // same order, and both cover the same surface. The only difference is
-        // that a quad strip's implied diagonal is unspecified while a triangle
-        // strip's is fixed, which is invisible for the flat, per-vertex-shaded
-        // quads the one caller draws.
-        //
-        // That caller is gWall.cpp:1242, the cycle wall itself, drawn every
-        // frame of every round. It cannot be configured away: its guard
-        // sg_renderBeginQuads is a `static const bool = true` outside DEBUG
-        // (gWall.cpp:1066). So this is not defensive -- without it the first
-        // wall drawn takes the tab down. It is not reachable from the main
-        // menu, so M1 does not depend on it; M2 does.
-        //
-        // Aliasing two rRenderer primitives onto one GLenum is safe here
-        // because BeginPrimitive() only elides the glBegin when the mode is
-        // unchanged, and nothing in the tree calls BeginTriangleStrip() -- it
-        // has zero call sites -- so no real triangle strip can ever be merged
-        // with a quad strip. Should one ever appear, note that both of these
-        // pass forceEnd=true, which makes the next End() emit a glEnd and
-        // clear lastPrimitive regardless of its `force` argument.
+        // Before "tidying" this: aliasing two rRenderer primitives onto one
+        // GLenum is only safe because BeginTriangleStrip() has zero call sites
+        // tree-wide, so no real triangle strip can be merged into a quad-strip
+        // batch. See docs/porting/browser-runtime-notes.md section 5.
         BeginPrimitive(GL_TRIANGLE_STRIP, true);
 #else
         BeginPrimitive(GL_QUAD_STRIP, true);

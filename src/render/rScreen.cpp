@@ -956,6 +956,10 @@ bool sr_upperSky=false;
 bool sr_lowerSky=false;
 bool sr_skyWobble=true;
 bool sr_dither=true;
+// Still settable, but INERT in the browser: eDisplay.cpp forces the rim path
+// unconditionally under __EMSCRIPTEN__, because the infinity plane is the only
+// thing that reaches glTexCoord4f and Emscripten aborts the runtime on it.
+// See docs/porting/browser-runtime-notes.md § 4 before relying on this flag.
 bool sr_infinityPlane=false;
 bool sr_laggometer=true;
 bool sr_predictObjects=false;
@@ -1015,32 +1019,17 @@ void sr_LoadDefaultConfig(){
         //workaround for 3dfx renderer: aliasing must be turned on
         //sr_lineAntialias=rFEAT_OFF;
     }
-    // The NVIDIA branch is compiled out of the browser client. It is not
-    // compiled out of the M0 dedicated build (which shares this file and must
-    // stay byte-identical), hence the DEDICATED half of the condition.
+    // The NVIDIA branch is compiled out of the browser client only -- the M0
+    // dedicated build shares this file and must stay byte-identical, hence the
+    // DEDICATED half of the condition (browser-runtime-notes.md § 1).
     //
-    // Be precise about what this is: a clarity change, not a crash fix. The
-    // branch cannot fire in a browser today, because gl_vendor is not a GPU
-    // driver string here. rScreen.cpp:720 fills it from glGetString(GL_VENDOR),
-    // and Emscripten forwards GL_VENDOR (0x1F00) to WebGL's own VENDOR
-    // parameter rather than to UNMASKED_VENDOR_WEBGL (libwebgl.js:1300-1310) --
-    // so it reads "Mozilla" or "WebKit", never "NVIDIA". It is removed anyway
-    // because everything about it is hostile to this port:
-    //
-    //  - Its two effects are both traps. sr_infinityPlane=true is the ONLY
-    //    thing that can reach glTexCoord4f (eDisplay.cpp), which Emscripten
-    //    defines as abort('glTexCoord4f: TODO') (libglemu.js:3218), and
-    //    rDisplayList_CAC routes geometry through the display-list stubs in
-    //    src/emscripten/eCompat.cpp, which capture nothing.
-    //  - sr_LoadDefaultConfig() runs from gArmagetron.cpp's `if (st_FirstUse)`
-    //    branch, and until M4 gives the client persistent storage EVERY page
-    //    load is a first use.
-    //  - It runs after the configuration files are parsed, so no
-    //    settings_web.cfg entry can defend against it; it would simply
-    //    overwrite the user's INFINITY_PLANE.
-    //
-    // A vendor string is a proxy for driver capabilities, and WebGL is one
-    // implementation with one capability set. There is nothing here to sniff.
+    // This is a clarity change, NOT a crash fix: gl_vendor is not a GPU driver
+    // string under WebGL (Emscripten forwards GL_VENDOR to WebGL's own VENDOR
+    // rather than UNMASKED_VENDOR_WEBGL), so it reads "Mozilla" or "WebKit" and
+    // the branch cannot fire. Removed anyway because both of its effects are
+    // traps here, it runs on every page load until M4, and it runs after config
+    // parsing so no .cfg can override it.
+    // docs/porting/browser-runtime-notes.md § 6.
 #if defined( DEDICATED ) || !defined( __EMSCRIPTEN__ )
     else if(strstr(gl_vendor,"NVIDIA")){
         // infinity , display lists and glFlush swapping work for NVIDIA

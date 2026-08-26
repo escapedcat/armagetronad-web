@@ -184,19 +184,31 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 #
 # The lever, if this has to come down, is ASYNCIFY_ONLY (or ASYNCIFY_REMOVE):
 # hand Binaryen the list of functions that really can be on the stack across a
-# yield, and it instruments only those. That needs a call-graph audit that is
-# only trustworthy once the client actually runs, so it belongs to M5 and not
-# here -- getting the list wrong produces an "unreachable" trap at runtime, not
-# a build error. JSPI is the other exit and would cost far less, but it is not
-# yet baseline across browsers, and taking it means giving up -fexceptions for
-# -fwasm-exceptions, which is the pairing this file already rejected.
+# yield, and it instruments only those. Do NOT hand-write that list -- getting
+# it wrong produces an "unreachable" trap at runtime, not a build error.
+# Generate it with -sASYNCIFY_ADVISE, which prints every function Binaryen
+# instrumented together with the reason it was included; that output is the
+# input to a defensible ASYNCIFY_ONLY. Worth doing only once the client runs,
+# so the advice can be checked against real behaviour -- i.e. M5, not here.
+#
+# JSPI is the other exit and would cost far less. Its blocker is browser
+# baseline. An earlier draft of this comment also asserted that JSPI conflicts
+# with -fexceptions; that was NOT verified and this emsdk does not enforce it
+# (src/settings.js has `var JSPI = 0`, and tools/link.py encodes no
+# JSPI/exceptions or JSPI/longjmp error -- its only Asyncify incompatibility is
+# WASM_ESM_INTEGRATION). Treat the interaction as needing verification against
+# the emsdk in use rather than as a known blocker.
 #
 # ASYNCIFY_STACK_SIZE is the side buffer the unwound frames are copied into,
 # and it is a fixed allocation, not a growing one -- overflowing it is a
 # runtime abort ("Asyncify stack overflow"), not a reallocation. The default is
 # 4096 bytes, which is not enough here: SwapGL() is called from the bottom of
 # deeply nested render code, and the whole chain from main() down has to fit.
-# 131072 (128KB) is 32x the default and costs 128KB of linear memory once.
+# 131072 (128KB) is 32x the default and costs 128KB of linear memory once. It
+# has NOT been validated against a running client.
+#
+# Fuller notes, including the console-output cost of the yield:
+# docs/porting/browser-runtime-notes.md sections 2 and 7.
 CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
                   -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \

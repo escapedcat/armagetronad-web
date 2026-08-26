@@ -599,14 +599,16 @@ void rSysDep::SwapGL(){
     // Deliberately NOT done in sr_LimitFPS(): that runs after the early return
     // (so it would miss those callers entirely), and it does not need it --
     // under Asyncify SDL_Delay is aliased straight to emscripten_sleep
-    // (libsdl.js:1712-1713), and at the default MAX_FPS of 360 its delay
-    // branch is usually not taken at all.
+    // (src/lib/libsdl.js, grep "SDL_Delay: 'emscripten_sleep'").
     //
-    // Cost, so nobody is surprised later: emscripten_sleep is setTimeout
-    // (libasync.js:482), which browsers clamp to ~4ms once timeouts nest, so
-    // this caps the client near 250 FPS and does not align frames with
-    // requestAnimationFrame. Making the render loop rAF-driven is a bigger
-    // change than M1 wants; this is the placement that works today.
+    // Two consequences that will look like bugs; both are explained in
+    // docs/porting/browser-runtime-notes.md section 2. emscripten_sleep is
+    // setTimeout, which browsers clamp to ~4ms once timeouts nest, so frames
+    // are neither rAF-aligned nor faster than ~250 FPS. And because
+    // rConsole::DisplayAtNewline() calls this function
+    // (rConsoleGraph.cpp:67), a burst of console output during loading costs
+    // one event-loop round trip per line -- check that before blaming Asyncify
+    // for a boot that looks hung.
     emscripten_sleep( 0 );
 #endif
 
