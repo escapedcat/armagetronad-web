@@ -16,7 +16,15 @@ INCLUDES  := -I src/emscripten \
              -iquote src/thirdparty/binreloc \
              -iquote src/thirdparty/particles
 
-CXXFLAGS  := -std=gnu++14 -O2 $(INCLUDES)
+# -MMD -MP emits a .d file beside each .o listing the headers that .o consumed,
+# so editing a header rebuilds exactly what depends on it. This matters more here
+# than in a typical project: src/emscripten/config.h is the file this port churns
+# most, and without dependency tracking a macro edit yields "Nothing to be done"
+# — or worse, a half-rebuilt tree where some translation units saw the old macro
+# set and some the new. That kind of ODR mismatch links cleanly and misbehaves at
+# runtime. -MP adds phony targets for the headers, so deleting or renaming one
+# does not wedge the build with "No rule to make target".
+CXXFLAGS  := -std=gnu++14 -O2 -MMD -MP $(INCLUDES)
 
 # The wildcards below sweep whole directories, so they also pick up files that
 # src/Makefile.am never compiles: extra main()s, stale demos/test harnesses and
@@ -62,9 +70,18 @@ web/dist-m0/armagetronad-dedicated.js: $(OBJS) $(LIBXML2)/lib/libxml2.a
 	@mkdir -p web/dist-m0
 	$(EMXX) $(OBJS) $(LIBXML2)/lib/libxml2.a $(LDFLAGS) -o $@
 
-$(OBJDIR)/%.o: src/%.cpp
+# Objects also depend on this Makefile, so editing a flag (a -D, the include
+# list, the optimisation level) actually triggers a rebuild instead of silently
+# leaving stale objects behind. The link target needs no such rule: it depends on
+# every object, and every object depends on this file.
+$(OBJDIR)/%.o: src/%.cpp web/Makefile
 	@mkdir -p $(dir $@)
 	$(EMXX) $(CXXFLAGS) -c $< -o $@
+
+# The generated header dependencies. Lowercase -include: on a clean tree the .d
+# files do not exist yet and must not be an error. They live in $(OBJDIR), so
+# `clean` already removes them.
+-include $(OBJS:.o=.d)
 
 .PHONY: dedicated clean
 dedicated: web/dist-m0/armagetronad-dedicated.js
