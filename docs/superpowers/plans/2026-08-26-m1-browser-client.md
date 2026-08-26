@@ -153,7 +153,9 @@ web/dist-m1
 - [ ] **Step 7: Run the client compile and confirm the expected six failures**
 
 ```bash
-make -f web/Makefile client -j8 2>&1 | grep -E "^src/.*error:" | sort -u
+# -k is essential: without it make stops dispatching after the first failure,
+# so a parallel build surfaces only one error and hides the rest.
+make -f web/Makefile client -j8 -k 2>&1 | grep -E "^src/.*error:" | sort -u
 ```
 
 Expected: compilation stops with errors in exactly these files — `rTexture.cpp` (`gluBuild2DMipmaps`), `eCamera.cpp` (`gluLookAt`), `rScreen.cpp` (`SDL_GL_SWAP_CONTROL`), `gArmagetron.cpp` (`SDL_SetEventFilter`), `uInputQueue.cpp` (`SDL_Scancode`), `uMenu.cpp` (`SDLMod`). Record the actual output in your report.
@@ -236,7 +238,9 @@ SDL 1.3 made `scancode` and `mod` typed enums where 1.2 had integers.
 - [ ] **Step 5: Verify 99 of 100 compile**
 
 ```bash
-make -f web/Makefile client -j8 2>&1 | grep -E "^src/.*error:" | sort -u
+# -k is essential: without it make stops dispatching after the first failure,
+# so a parallel build surfaces only one error and hides the rest.
+make -f web/Makefile client -j8 -k 2>&1 | grep -E "^src/.*error:" | sort -u
 ```
 
 Expected: only `src/render/rTexture.cpp` errors, on `gluBuild2DMipmaps`.
@@ -321,7 +325,7 @@ This branch is *probably* dead (Emscripten's `IMG_Load` returns 32-bit RGBA via 
 - [ ] **Step 5: Verify all 100 compile**
 
 ```bash
-make -f web/Makefile client -j8 2>&1 | grep -cE "^src/.*error:"
+make -f web/Makefile client -j8 -k 2>&1 | grep -cE "^src/.*error:"
 ```
 
 Expected: `0`. The build will now proceed to the link stage and fail there — that is Task 4.
