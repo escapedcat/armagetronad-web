@@ -33,6 +33,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "tConfiguration.h"
 #include "tLocale.h"
 
+// The guard below is NOT the plain #ifdef __EMSCRIPTEN__ used elsewhere in
+// this port, and the difference is load-bearing. This translation unit is
+// compiled into BOTH Emscripten variants, and only the browser client links
+// with -sASYNCIFY. Without that flag emscripten_sleep is not a missing symbol
+// -- it resolves to a JS stub whose whole body is
+// abort('Please compile your program with async support ...')
+// (libasync.js:614-615) -- so a plain __EMSCRIPTEN__ guard would link the M0
+// dedicated server cleanly, change its wasm, and then kill it at the first
+// tDelay(). Every emscripten_sleep in this file therefore has to be gated on
+// "browser client", which in this build is __EMSCRIPTEN__ && !DEDICATED
+// (src/emscripten/config.h defines DEDICATED unless -DAA_WEB_CLIENT is given).
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+#include <emscripten.h>
+#endif
+
 //! time structure
 struct tTime
 {
@@ -285,12 +300,35 @@ void tAdvanceFrameSys( tTime & start, tTime & relative )
 #endif
 }
 
+// Both sleeps below are patched in place, INSIDE the recorder guards, and not
+// one line higher. Emscripten's usleep() is a busy-wait on the calling thread:
+// it never returns to the JS event loop, so on the main thread it burns CPU
+// and freezes the tab for the whole requested duration. emscripten_sleep()
+// unwinds the stack instead and resumes after the browser has had its turn.
+//
+// The obvious shortcuts are both wrong. Replacing libc usleep() globally would
+// catch callers that must not yield. Hoisting the sleep above the `if` would
+// discard the recorder logic these two functions exist for: tDelay() must not
+// sleep at all during playback (it only records that a delay was wanted), and
+// tDelayForce()'s else branch rewinds timeStart by the delay instead of
+// sleeping, which is what makes a recording replay identically on a machine of
+// a different speed. Demo playback is an M5 deliverable; keep the guards.
+//
+// usecdelay/1000 truncates toward zero, so any request under a millisecond
+// becomes emscripten_sleep(0). That is not a lost yield: 0 still round-trips
+// through setTimeout and hands control to the browser, which is the point.
 static bool s_delayedInPlayback = false;
 void tDelay( int usecdelay )
 {
     // delay a bit if we're not playing back
     if ( ! tRecorder::IsPlayingBack() )
+    {
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+        emscripten_sleep( usecdelay / 1000 );
+#else
         usleep( usecdelay );
+#endif
+    }
     else
         s_delayedInPlayback = true;
 }
@@ -299,7 +337,13 @@ void tDelayForce( int usecdelay )
 {
     // delay a bit
     if ( !s_delayedInPlayback )
+    {
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+        emscripten_sleep( usecdelay / 1000 );
+#else
         usleep( usecdelay );
+#endif
+    }
     else
     {
         // when recording, the machine was idling around. No need to play that back.
