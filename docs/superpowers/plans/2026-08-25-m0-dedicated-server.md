@@ -513,8 +513,10 @@ Expected: a native `armagetronad-dedicated` binary. (First check `./armagetronad
 
 ```bash
 cd /Users/user/data/src/armagetronad-web/.worktrees/m0-dedicated-server
-node web/dist-m0/armagetronad-dedicated.js --datadir . --playback /tmp/m0-demo.aarec
+node web/dist-m0/armagetronad-dedicated.js --daemon --datadir . --playback /tmp/m0-demo.aarec < /dev/null
 ```
+
+(`--daemon < /dev/null` for the same reason as Task 7 — see Task 5's finding: without it the stdin console blocks in `read()` under NODERAWFS and the run parks silently. If playback drives its own input and `--daemon` interferes, say so in the report rather than working around it.)
 
 Expected (best-effort): playback runs; divergence or early stop is *recorded as a data point*, not fixed now (float non-determinism is a known, accepted risk — see PLAN.md risk register).
 
@@ -539,10 +541,25 @@ git commit -m "docs: record M0 playback diagnostic outcome"
 ```bash
 make -f web/Makefile clean && make -f web/Makefile dedicated -j8
 node web/dist-m0/armagetronad-dedicated.js --doc | head -5
-node web/dist-m0/armagetronad-dedicated.js --datadir . --userdatadir /tmp/aa-persist
+node web/dist-m0/armagetronad-dedicated.js --daemon --datadir . --userdatadir /tmp/aa-persist < /dev/null
 ```
 
 All three behave as in Tasks 4–5 (PLAN.md Verification item 1). This is the superpowers:verification-before-completion step — evidence before claims.
+
+**`--daemon < /dev/null` is mandatory and was added after Task 5 discovered why.** Without it the process parks in a stalled regime that *looks* healthier — it sits at 0% CPU and its log stops early at `[0] Timestamp:` — because Emscripten's NODERAWFS accepts `O_NONBLOCK` on stdin and then ignores it, so the console blocks in `read()` and the idle loop never performs its re-listen. The healthy regime spins at ~98% CPU and its log ends with the `Closing socket` / `Bound socket to *.*.*.*:4534` pair. Treat that pair, not mere absence of a crash, as the passing signal.
+
+Also expected and NOT failures (verified in Task 5): a `Relocation error … found itself in web/dist-m0` line on stderr, and the fact that nothing is actually reachable on port 4534 — the synchronous game loop starves Node's event loop, which is an M1 concern.
+
+- [ ] **Step 1b: Commit durable gate evidence**
+
+The task reports live in a git-ignored workspace, so the boot evidence has never landed in the repository. Capture it:
+
+```bash
+node web/dist-m0/armagetronad-dedicated.js --daemon --datadir . --userdatadir /tmp/aa-persist < /dev/null > /tmp/m0-gate.log 2>&1 &
+sleep 20 && kill %1
+mkdir -p docs/m0 && cp /tmp/m0-gate.log docs/m0/boot-evidence.log
+git add docs/m0/boot-evidence.log && git commit -m "docs: commit M0 boot evidence"
+```
 
 - [ ] **Step 2: Update the public status**
 
