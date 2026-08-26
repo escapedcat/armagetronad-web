@@ -320,3 +320,108 @@ a growing one: overflowing it aborts at runtime with "Asyncify stack overflow",
 never at build time. It has not been validated against a running client. If that
 string appears in the console, raise the number — it costs linear memory and
 nothing else.
+
+---
+
+## 8. One Asyncify yield per frame, and no more
+
+`src/render/rSysdep.cpp`, `sr_LimitFPS()`. The whole function is compiled out of
+the browser client.
+
+This was the single thing standing between "the client links" and "the client
+works". It is worth reading before adding any other `emscripten_sleep()`,
+`SDL_Delay()`, `tDelay()` or `tDelayForce()` call to a code path that already
+yields — the failure mode is spectacular and points nowhere near the cause.
+
+### What the symptom looked like
+
+With the frame limiter on (`MAX_FPS 60`, which the web defaults set), the
+client:
+
+1. booted, initialised GL, loaded its textures, drew the title screen and drew
+   the language menu correctly — one frame;
+2. then never updated the picture again;
+3. never responded to a keystroke — Emscripten's `_SDL_PollEvent` was called
+   **once in six seconds**, against ~60 times a second expected (counted by
+   patching the built `armagetronad.js` from the page);
+4. and, in most runs, died some seconds later with
+   `Attempt to set SP to 0xffffffb0` — the C stack pointer set to a tiny
+   absolute address, so the next function prologue trapped.
+
+Throughout all of that the game loop was *running*: it yielded ~120 times a
+second (counted by hooking `setTimeout`), and the Asyncify sleep stack showed
+it parked in `uMenu::OnEnter -> rSysDep::SwapGL` exactly where it should be.
+That combination — alive, rendering nothing, deaf to input — is what makes this
+look like three separate bugs in the renderer, the input layer and the memory
+layout.
+
+### What it was
+
+`sr_LimitFPS()` called `SDL_Delay()`. Emscripten's SDL aliases `SDL_Delay`
+straight to `emscripten_sleep` (`src/lib/libsdl.js`, grep
+`SDL_Delay: 'emscripten_sleep'`), so that call was a **second** Asyncify
+unwind/rewind inside the same `rSysDep::SwapGL()` call as the deliberate one at
+the top of the function (§2) — two per frame instead of one.
+
+Deleting that one call fixes all four symptoms at once.
+
+### How that was established
+
+Bisected on identical binaries, changing only the value of `MAX_FPS` in the
+preloaded `autoexec.cfg` (`sr_LimitFPS` returns immediately when it is 0, so
+the `SDL_Delay` becomes unreachable while everything else is byte-identical):
+
+| build | `MAX_FPS 60` | `MAX_FPS 0` |
+|---|---|---|
+| `-O0` link (as shipped through Task 6) | freezes in the language menu | boots and navigates |
+| `-O2` link | freezes after 1-2 keystrokes | boots and navigates |
+
+So it is not an optimisation-level artefact, and the optimisation level is not
+the fix either. Things that were tried and did **not** help, each ruled out by
+measurement rather than reasoning:
+
+- `-sSTACK_SIZE` at 64KB (default), 1MB and 4MB — identical failure at the
+  identical instant every time. Not stack exhaustion.
+- `-sGLOBAL_BASE=1024`, which moves the stack off address 0 — the bogus stack
+  pointer was still ~0, i.e. nowhere near the stack. Conclusive: the pointer is
+  being *set* to a small absolute value, not decremented off the end.
+- `-sASYNCIFY_STACK_SIZE` at 1MB (8x) — no effect.
+- `-fwasm-exceptions` instead of `-fexceptions`, on the theory that the JS
+  `invoke_*` trampolines in the call chain were involved — no effect, and emcc
+  warns the combination is unsupported with ASYNCIFY anyway
+  (`emcc.py`, grep `not compatible with -fwasm-exceptions`).
+- disabling sound (`SOUND_QUALITY 0`), on the theory that the SDL audio
+  callback was re-entering wasm while the main stack was unwound — no effect.
+
+### What is NOT established
+
+Why two yields per frame breaks Asyncify. The transform's own shape is visible
+in a disassembly (`wasm-dis`) of any instrumented function: the stack-pointer
+prologue is wrapped in `if (asyncify_state == Normal)` and the frame-pointer
+local is restored from the asyncify stack on rewind, so `__stack_pointer` is
+never explicitly saved — the design depends on nothing moving it between the
+unwind and the matching rewind. That is consistent with the corruption seen but
+does not explain it, and no reduced test case was built. Emscripten issue
+[#20058](https://github.com/emscripten-core/emscripten/issues/20058) ("stack
+corruption in a concurrent suspension/unsuspension scenario") describes
+something with the same flavour and is open with no workaround.
+
+Treat "one yield per frame" as a rule with a measured basis and an unknown
+mechanism, not as a theory.
+
+### What this costs, and what to watch for
+
+Nothing caps the frame rate in the browser now. In practice `emscripten_sleep`
+is `setTimeout`, which browsers clamp to ~4ms once timeouts nest, so the ceiling
+is ~250 FPS rather than unbounded. Aligning frames to `requestAnimationFrame`
+is M2/M5's job and would remove the need for a frame limiter at all.
+
+**The residual risk is real and belongs to M2.** Disabling `sr_LimitFPS` removes
+the only *second* yield on the menu path, but it does not make the rule hold
+globally. `tDelay()` and `tDelayForce()` still yield (§3), and callers of them
+that run inside a frame that already reaches `SwapGL()` would reintroduce
+exactly this failure — `uMenu::OnEnter`'s `tDelay(10000)` idle branch
+(`uMenu.cpp`, the `if (!sr_glOut)` arm) and `SwapGL()`'s own recorder-playback
+`tDelayForce()` are both live examples that M1 simply never reaches. If the
+gameplay loop starts behaving like this section describes, count the yields per
+frame first.

@@ -553,6 +553,60 @@ static tConfItem<int> sr_maxFPSConf("MAX_FPS", sr_maxFPS,
 
 void sr_LimitFPS()
 {
+#ifdef __EMSCRIPTEN__
+    // The frame limiter is disabled in the browser, and this is not a
+    // performance decision -- with it on, the game does not work at all.
+    //
+    // WHAT GOES WRONG. The SDL_Delay() below is Emscripten's SDL_Delay, which
+    // ASYNCIFY aliases straight to emscripten_sleep (src/lib/libsdl.js, grep
+    // "SDL_Delay: 'emscripten_sleep'"). So it is a second Asyncify
+    // unwind/rewind inside the same rSysDep::SwapGL() call as the deliberate
+    // one at the top of that function -- two per frame instead of one. With
+    // two, the client boots, draws the menu once, and then stops working:
+    //   - SDL_PollEvent is called ONCE in six seconds instead of ~60 times a
+    //     second, so no keystroke ever reaches the menu (measured by counting
+    //     calls to Emscripten's _SDL_PollEvent from the page);
+    //   - the picture never changes again, because the drawing calls in
+    //     uMenu::OnEnter's loop body stop running too;
+    //   - and, in most runs, the C stack pointer is eventually set to a tiny
+    //     absolute address and the next function prologue traps
+    //     ("Attempt to set SP to 0xffffffb0"). That is NOT stack exhaustion:
+    //     it reproduces identically at -sSTACK_SIZE 64KB, 1MB and 4MB, and
+    //     with -sGLOBAL_BASE=1024 moving the stack off address 0 the bogus SP
+    //     is still ~0, i.e. nowhere near the stack.
+    // The game loop is still running throughout -- it yields ~120 times a
+    // second -- which is what makes this look like a rendering or input bug
+    // rather than what it is.
+    //
+    // Removing this one call fixes all three symptoms at once. Verified by
+    // bisection with the identical binary: with MAX_FPS 60 the client freezes
+    // in the language menu; with MAX_FPS 0 (which makes the branch below
+    // unreachable) the same build boots, renders, and navigates the menus with
+    // the arrow keys and Enter. Confirmed on both an -O0 and an -O2 link, so
+    // it is not an optimisation-level artefact.
+    //
+    // Why the guard rather than shipping MAX_FPS 0 in the web defaults: MAX_FPS
+    // is a live tConfItem (declared just above) and the settings menu exposes
+    // it, so a config default is not a guard -- a player raising the FPS cap
+    // would silently reintroduce the freeze with no diagnostic.
+    //
+    // Why not the reverse fix (drop SwapGL's yield and keep this one): that
+    // yield is the only one every caller and every code path reaches; see the
+    // long comment in rSysDep::SwapGL() below for why it has to be there.
+    //
+    // The cost is real but small and belongs to a later milestone: nothing caps
+    // the frame rate in the browser now. In practice emscripten_sleep is
+    // setTimeout, which browsers clamp to ~4ms once timeouts nest, so the
+    // ceiling is ~250 FPS rather than unbounded. Aligning frames to
+    // requestAnimationFrame -- which would cap and pace properly, and remove
+    // the need for a frame limiter at all -- is M2/M5's job.
+    //
+    // A plain __EMSCRIPTEN__ guard is the right form here: this whole region of
+    // the file is inside #ifndef DEDICATED (rSysdep.cpp:465-768), so the
+    // dedicated build never compiles this function at all.
+    return;
+#endif
+
     if (sr_maxFPS > 0 && !tRecorder::IsPlayingBack())
     {
         static double last_time = 0;
