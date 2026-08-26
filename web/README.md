@@ -35,7 +35,16 @@ comment in the script for why. Re-run only after `rm -rf deps/build/libxml2-*`.
     ./deps/build-libxml2.sh        # once
     make -f web/Makefile dedicated -j8
 
-Output: web/dist-m0/armagetronad-dedicated.{js,wasm}. `make -f web/Makefile clean` resets.
+Output: web/dist-m0/armagetronad-dedicated.{js,wasm}. `make -f web/Makefile clean`
+removes the objects and the artifact.
+
+`dedicated` also generates the runtime data a native build gets from
+`configure` — `language/languages.txt`, `config/aiplayers.cfg` and
+`resource/included/` (see the `data` target). `clean` deliberately leaves those
+alone, because they are generated *source-tree* data rather than build output.
+To rebuild them from scratch — a corrupted or half-written `resource/included`
+is the usual reason — use `make -f web/Makefile clean-data`, then any build
+target regenerates them.
 
 The Makefile is hand-written and deliberately does not use autotools. It compiles
 100 translation units — the same `*.cpp` set a native *dedicated* build does,
@@ -74,7 +83,9 @@ Both commands are run from the repo root, and both need `make -f web/Makefile
 dedicated` to have run first — that target also generates the runtime data
 (`language/languages.txt`, `config/aiplayers.cfg`, `resource/included/`) that a
 native build would get from `configure`. Node needs `web/node_modules`, so run
-`npm install --prefix web` once on a fresh checkout.
+`npm ci --prefix web` once on a fresh checkout — `ci` rather than `install`, so
+the committed lockfile is honoured exactly, same discipline as the pinned emsdk
+and libxml2 above.
 
     node web/dist-m0/armagetronad-dedicated.js --doc            # config self-test
     node web/dist-m0/armagetronad-dedicated.js --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
@@ -99,19 +110,30 @@ condition: the process does not exit on its own, so run it under a timeout.
 
 **The map is parsed even though nothing says so.** `$map_file_loading` is inside
 `#ifdef DEBUG` (`gGame.cpp:2899`) and map loading runs behind a console filter,
-so a successful parse is silent. `gGame::Verify()` parses and DTD-validates the
-default map through libxml2 before the server starts listening, and throws if it
-fails — so reaching "Taking a nap..." *is* the proof. To see the machinery work,
-point `MAP_FILE` at another map: with
-`Z-Man/fortress/sumo_4x4-0.1.1.aamap.xml` the boot log gains
+so a successful parse is silent. `gGame::Verify()` parses and DTD-validates a map
+through libxml2 before the server starts listening, so reaching "Taking a
+nap..." proves that libxml2 ran and that **some** map came out of it.
+
+Be careful not to read more into that line than it carries. At `Verify()` time
+the net state is still `nSTANDALONE`, so the throw at `gGame.cpp:2916` is gated
+and `:2921-2922` quietly retries with `DEFAULT_MAP`, throwing only if the
+fallback fails too. A broken `MAP_FILE` therefore still reaches "Taking a
+nap..." — on the default map. **The nap line is not evidence that your map
+loaded.**
+
+To check that, look for the map's own settings. Pointing `MAP_FILE` at
+`Z-Man/fortress/sumo_4x4-0.1.1.aamap.xml` adds:
 
     [0] MAP_FILE_OVERRIDE changed from 3 to 0.
     [0] FORTRESS_MAX_PER_TEAM changed from 0 to 1.
     [0] SPAWN_POINT_GROUP_SIZE changed from 0 to 4.
 
-which are the three `<Setting>` elements inside that map file. (Set it from a
-`.cfg` in `<userdatadir>/config` and pass `-e <name>.cfg`; `--extraconfig`
-resolves against the config path, not the working directory.)
+which are the three `<Setting>` elements inside that map file. If those lines
+are absent, your map did not load and you are running the default. A failed
+parse also prints libxml2's own errors (`:N: parser error`, `validity error`,
+`[0] Failed to validate.`) before falling back. (Set `MAP_FILE` from a `.cfg` in
+`<userdatadir>/config` and pass `-e <name>.cfg`; `--extraconfig` resolves
+against the config path, not the working directory.)
 
 ### Known limitations at this milestone
 
@@ -124,7 +146,9 @@ is one of the things the Asyncify work in the next milestone fixes.
 
 **Run it with `--daemon < /dev/null`, not on a terminal.** Without `--daemon`
 the server installs a stdin console, and that console assumes `O_NONBLOCK` makes
-`read()` return `EAGAIN` when no key has been pressed (`rConsoleCout.cpp:49-66`).
+`read()` return `EAGAIN` when no key has been pressed — the `F_SETFL` is at
+`src/render/rConsoleCout.cpp:246` and the loop that depends on it is at
+`:392-409`.
 Under `-sNODERAWFS=1` that assumption does not hold: `fcntl(F_SETFL, O_NONBLOCK)`
 succeeds and `F_GETFL` reports the flag set, but `read()` still blocks forever.
 Interactive commands do work (`PLAYERS`, `SAY` and friends all respond), but
