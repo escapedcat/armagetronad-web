@@ -14,7 +14,9 @@
 #
 # PASS looks like: nine screenshots, all nine different, and a transcript with
 # no "Stack overflow detected", no [EXCEPTION], and no
-# "SDL event queue full". The one 404 in the transcript is /favicon.ico.
+# "SDL event queue full". Every 404 in the transcript is /favicon.ico (the
+# browser asks for it once per navigation and python3 -m http.server has none);
+# any other 404 is a missing asset and is a failure.
 #
 # Reading the screenshots (this is a first run, so the client has no saved
 # config and walks the first-use path):
