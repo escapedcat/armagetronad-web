@@ -107,7 +107,52 @@ $(OBJDIR)/%.o: src/%.cpp web/Makefile
 # `clean` already removes them.
 -include $(OBJS:.o=.d)
 
-.PHONY: dedicated clean
-dedicated: web/dist-m0/armagetronad-dedicated.js
+# ---------------------------------------------------------------------------
+# Runtime data.
+#
+# A checked-out tree is not a runnable tree: three of the files the server reads
+# at startup are generated, and a native build gets them from `configure` and
+# `make` long before the binary runs. This Makefile deliberately does not use
+# autotools, so it has to do that work itself. All three outputs are already
+# covered by .gitignore (lines 49, 52, 54), so nothing generated here is
+# committable. Each rule below mirrors the autotools rule it replaces.
+DATA := language/languages.txt config/aiplayers.cfg resource/included/.mapversion
+
+# configure.ac:1059 lists language/languages.txt in AC_OUTPUT. @progtitle@ is its
+# only substitution, defaulted at configure.ac:447-448 to "Armagetron Advanced".
+# Without the generated file there is no language at all: tLocale::FindStrict
+# reports "Language British English not found" and every message afterwards
+# prints as its raw id ("config_command_unknown" rather than English text).
+language/languages.txt: language/languages.txt.in
+	sed -e 's,@progtitle@,Armagetron Advanced,g' $< > $@
+
+# Also AC_OUTPUT (configure.ac:1060). aiplayers.cfg.in contains no @substitution@
+# at all, so configure only copies it. It carries the AI character table that
+# gAICharacter reads.
+config/aiplayers.cfg: config/aiplayers.cfg.in
+	cp $< $@
+
+# resource/Makefile.am's `included:` rule, which its `all:` target depends on.
+# sortresources does NOT merely copy resource/proto. It parses each map's
+# <Map name= author= category= version=> attributes and refiles it under the
+# name the game actually asks for. That rename is the only reason the default
+# map exists: proto/Anonymous/original/original.map.xml is republished as
+# Anonymous/polygon/regular/square-1.0.1.aamap.xml, which is verbatim
+# DEFAULT_MAP in src/tron/gGame.cpp:121. Skip this step and no local resource
+# path matches, so tResourceManager falls through to downloading the map from
+# resource.armagetronad.net -- which under Node's socket emulation fails with
+# "Unknown IO error" and takes the map load down with it.
+# .mapversion is sortresources' own final output, so it stamps a complete run.
+resource/included/.mapversion: batch/make/sortresources batch/make/sortresources.py $(shell find resource/proto -type f 2>/dev/null)
+	sh batch/make/sortresources resource/proto resource/included batch/make/sortresources.py
+
+.PHONY: dedicated data clean
+data: $(DATA)
+dedicated: web/dist-m0/armagetronad-dedicated.js data
 clean:
 	rm -rf $(OBJDIR) web/dist-m0
+# `clean` deliberately leaves $(DATA) alone: it is generated *source-tree* data,
+# not build output, and regenerating it is slow-ish and never the thing at fault.
+.PHONY: clean-data
+clean-data:
+	rm -rf resource/included language/languages.txt config/aiplayers.cfg
