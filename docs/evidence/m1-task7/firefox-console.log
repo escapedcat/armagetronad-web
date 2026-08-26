@@ -1,39 +1,44 @@
-[   1455ms] [harness] firefox: 154.0.1 (headless=true)
-[   1455ms] [harness] navigating to http://localhost:8000/armagetronad.html
-[     57ms] [page] load event fired
+[   1536ms] [harness] firefox: 154.0.1 (headless=true)
+[   1537ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     51ms] [page] load event fired
+[    138ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
 [    154ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
-[    154ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
-[    155ms] [page] load event fired
-[   6162ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => canvas 1024x768
-[   6166ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
-[   6166ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
-[   6166ms] [console.error] 
-[   6167ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
-[   6167ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
-[   6167ms] [console.log] 
-[   6297ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
-[   6443ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
-[   6445ms] [console.error] TODO: glShadeModel
-[   6459ms] [harness] click #start: clicked
-[  11460ms] [harness] === should-be-the-language-menu ===
-[  11488ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/01-language-menu.png
-[  11504ms] [harness] key Down (1/1)
-[  13026ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/02-language-menu-cursor-moved.png
-[  13031ms] [harness] key Enter (1/1)
-[  16331ms] [harness] === should-be-the-main-menu ===
-[  16357ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/03-main-menu.png
-[  16360ms] [harness] key Down (1/1)
-[  17881ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/04-main-menu-down-1.png
-[  17887ms] [harness] key Down (1/1)
-[  19433ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/05-main-menu-down-2.png
-[  19438ms] [harness] key Up (1/1)
-[  20968ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/06-main-menu-up-1.png
-[  20968ms] [harness] === enter-a-submenu ===
-[  20972ms] [harness] key Enter (1/1)
-[  24301ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/07-submenu.png
-[  24304ms] [harness] key Down (1/1)
-[  25840ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/08-submenu-down.png
-[  25841ms] [harness] === escape-back-out ===
-[  25845ms] [harness] key Escape (1/1)
-[  29161ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-firefox/09-back-in-main-menu.png
-[  29163ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})() => {"VENDOR":"Mozilla","RENDERER":"Apple M1, or similar","VERSION":"WebGL 1.0","UNMASKED_VENDOR":"Apple","UNMASKED_RENDERER":"Apple M1, or similar","preserveDrawingBuffer":true}
+[    155ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    156ms] [page] load event fired
+[   6180ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => canvas 1024x768
+[   6185ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   6185ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   6186ms] [console.error] 
+[   6186ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   6186ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   6187ms] [console.log] 
+[   6327ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   6490ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   6493ms] [console.error] TODO: glShadeModel
+[   6506ms] [harness] click #start: clicked
+[  11508ms] [harness] === should-be-the-language-menu ===
+[  11540ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/01-language-menu.png
+[  11557ms] [harness] key Down (1/1)
+[  13077ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/02-language-menu-british-english-selected.png
+[  13078ms] [harness] === enter-chooses-a-language-and-leaves-this-menu ===
+[  13080ms] [harness] key Enter (1/1)
+[  16397ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/03-first-setup-cursor-on-accept.png
+[  16399ms] [harness] eval (()=>{window.__st=0;const o=window.setTimeout;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => setTimeout counter installed
+[  19409ms] [harness] eval (()=>{const dt=(performance.now()-window.__t0)/1000;return 'setTimeout calls/sec='+(window.__st/dt).toFixed(1)+' => ~'+(window.__st/dt/2).toFixed(1)+' FPS (MAX_FPS 60)'})() => setTimeout calls/sec=123.0 => ~61.5 FPS (MAX_FPS 60)
+[  19414ms] [harness] key Down (1/1)
+[  20941ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/04-first-setup-cursor-on-name.png
+[  20944ms] [harness] key Down (1/1)
+[  22466ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/05-first-setup-cursor-on-colour.png
+[  22466ms] [harness] === left-right-changes-a-selection-value ===
+[  22469ms] [harness] key Right (1/1)
+[  23999ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/06-first-setup-colour-value-changed.png
+[  24001ms] [harness] key Down (1/1)
+[  25519ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/07-first-setup-cursor-on-controls.png
+[  25521ms] [harness] key Right (1/1)
+[  27049ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/08-first-setup-controls-value-changed.png
+[  27051ms] [harness] key Up (1/1)
+[  28581ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/09-first-setup-cursor-back-on-colour.png
+[  28581ms] [harness] === escape-leaves-the-first-setup-menu-entirely ===
+[  28584ms] [harness] key Escape (1/1)
+[  31914ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/10-welcome-message.png
+[  31917ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})() => {"VENDOR":"Mozilla","RENDERER":"Apple M1, or similar","VERSION":"WebGL 1.0","UNMASKED_VENDOR":"Apple","UNMASKED_RENDERER":"Apple M1, or similar","preserveDrawingBuffer":true}
