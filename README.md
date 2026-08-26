@@ -60,6 +60,27 @@ whether native and wasm compute identical results during play is still
 untested. Full boot log: [docs/m0/boot-evidence.log](docs/m0/boot-evidence.log).
 Next: M1 — the client boots to the main menu in a browser.
 
+## Build and run it
+
+The complete sequence — toolchain, dependencies, build, run — is the
+**[Quickstart in `web/README.md`](web/README.md#quickstart)**. Roughly 15
+minutes from a fresh clone, most of it spent downloading the Emscripten SDK.
+There is no browser client yet (that is M1); what you can run today is the
+dedicated server under Node.
+
+The short version, once the toolchain and dependencies are in place:
+
+```sh
+source deps/emsdk/emsdk_env.sh
+make -f web/Makefile dedicated -j8
+timeout 15 node web/dist-m0/armagetronad-dedicated.js \
+    --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
+```
+
+It idles at `Nobody there. Taking a nap...` rather than exiting — that is
+success. `web/README.md` explains the `--daemon` requirement, the harmless
+startup warnings, and why nothing answers on port 4534 yet.
+
 ## Repo layout
 
 - `main` is based on upstream's `legacy_0.2.9` branch (the current stable line);

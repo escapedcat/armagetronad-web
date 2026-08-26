@@ -1,5 +1,63 @@
 # Web build (Emscripten port)
 
+## Quickstart
+
+The whole sequence, from a fresh clone to a running server. Every command runs
+**from the repo root**, and the whole thing takes ~15 minutes, most of it
+waiting on the Emscripten SDK download. The sections after this one explain
+each step and what can go wrong; this is the path that works.
+
+```sh
+# 1. Toolchain (~1 GB download, several minutes). Once per checkout.
+git clone https://github.com/emscripten-core/emsdk.git deps/emsdk
+(cd deps/emsdk && ./emsdk install 6.0.8 && ./emsdk activate 6.0.8)
+
+# 2. Load it. Once per SHELL — it does not persist across terminals.
+source deps/emsdk/emsdk_env.sh
+
+# 3. Dependencies. Once per checkout.
+./deps/build-libxml2.sh      # static wasm libxml2, a few minutes
+npm ci --prefix web          # the `ws` package, needed at RUNTIME by Node
+
+# 4. Build (100 translation units; minutes cold, seconds warm).
+make -f web/Makefile dedicated -j8
+
+# 5. Run.
+node web/dist-m0/armagetronad-dedicated.js --doc | head -20
+timeout 15 node web/dist-m0/armagetronad-dedicated.js \
+    --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
+```
+
+Day to day you only need steps 2, 4 and 5 — and step 2 only in a new terminal.
+
+**A successful run ends with the server idling, not exiting:**
+
+```
+[0] Bound socket to *.*.*.*:4534.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/08/26 12:00:03
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.
+```
+
+Three things that look like failures and are not:
+
+- **It never exits.** `Taking a nap...` is the finish line, not a hang — it is
+  the idle serving loop. Use `timeout`, or Ctrl-C.
+- **`Relocation error … found itself in web/dist-m0` on stderr.** The game
+  checks whether it is installed where it expects, dislikes the answer, and
+  falls back to the current directory. That fallback is exactly why every
+  command runs from the repo root. Harmless — see *Expected startup noise*.
+- **Nothing answers on port 4534.** Correct for this milestone: the game's
+  synchronous loop never yields to Node's event loop, so the socket never
+  finishes listening. M1's Asyncify work is what fixes it.
+
+**`--daemon < /dev/null` is mandatory, and dropping it is the one real trap.**
+Without it the process sits at ~0% CPU with a shorter log, looking calm — but
+it is stalled, blocked forever in `read()` on stdin. The *working* run pins a
+core at ~98%. The quiet one is the broken one; *Known limitations* has the
+mechanism.
+
 ## Toolchain
 
 Emscripten is a compiler that converts C and C++ code to WebAssembly (WASM), allowing the game's C++ dedicated server to run in a JavaScript environment.
