@@ -1,0 +1,303 @@
+[   1201ms] [harness] chrome: Chrome/152.0.7977.65
+[   1202ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     43ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     45ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     58ms] [page] load event fired
+[     65ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)
+[   6024ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => "canvas 1024x768"
+[   6066ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   6066ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   6067ms] [console.error] 
+[   6068ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   6069ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   6069ms] [console.log] 
+[   6251ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   6277ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   6280ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6280ms] [console.error] TODO: glShadeModel
+[   6285ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+[   6338ms] [harness] click #start: clicked
+[   6339ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[   6339ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[   6340ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[   6340ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[   6341ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[   6358ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6358ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6361ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6365ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6367ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6368ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6368ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6369ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6369ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6369ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6369ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6370ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6370ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6371ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6371ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6372ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6372ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6372ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6372ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6373ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6373ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6373ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6373ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6373ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6373ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6374ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6374ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6374ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6374ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6374ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6378ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6379ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6379ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6379ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6379ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6384ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6384ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6384ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6385ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6385ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6390ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6390ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6391ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6391ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6391ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6397ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6397ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6397ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6398ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6398ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6403ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6403ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6403ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6403ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6404ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6408ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6409ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6409ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6409ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6409ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6414ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6415ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6415ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6415ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6415ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6421ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6421ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6422ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6422ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6422ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6427ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6427ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6427ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6427ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6428ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6432ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6433ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6433ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6434ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6434ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6439ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6439ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6439ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6440ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6440ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6444ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6444ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6445ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6445ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6445ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6450ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6450ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6450ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6451ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6451ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6456ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6456ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6456ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6457ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6457ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6461ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6462ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6462ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6462ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6462ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6467ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6467ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6468ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6468ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6472ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6473ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6473ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6473ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6474ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6474ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6479ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6479ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6480ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6480ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6480ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6484ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6484ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6485ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6485ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6485ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6490ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6490ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6490ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6491ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6491ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6495ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6495ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6496ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6496ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6496ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6500ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6501ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6501ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6501ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6502ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6506ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6507ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6507ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6507ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6507ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6512ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6512ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6513ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6513ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6513ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6518ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6518ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6518ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6518ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6519ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6523ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6523ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6524ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6524ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6524ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6529ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6530ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6530ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6530ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6530ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6535ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6535ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6536ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6536ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6536ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6541ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6541ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6541ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6542ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6542ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6547ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6547ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6548ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6548ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6548ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6553ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6554ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6554ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6554ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6554ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6559ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6559ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6560ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6560ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6560ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6565ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6565ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6565ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6566ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6566ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6571ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6571ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6572ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6572ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6572ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6576ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6577ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6577ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6577ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6577ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6582ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6582ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6583ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6583ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6583ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6588ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6588ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6588ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6589ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6589ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6594ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6594ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6594ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6595ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6595ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6599ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6600ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6600ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6601ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6601ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6606ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6607ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6607ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6607ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6608ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6613ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6613ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6613ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6614ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6614ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6619ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6619ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6620ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6620ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6620ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6625ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6625ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6626ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6626ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6626ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6631ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6632ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6632ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6632ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6633ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6638ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6638ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6639ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6639ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6639ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[   6639ms] [browser.warning/rendering] WebGL: too many errors, no more errors will be reported to the console for this context.
+[  11341ms] [harness] === should-be-the-language-menu ===
+[  11391ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/01-language-menu.png
+[  11426ms] [harness] key Down (1/1)
+[  11464ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)
+[  12971ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/02-language-menu-cursor-moved.png
+[  13003ms] [harness] key Enter (1/1)
+[  16304ms] [harness] === should-be-the-main-menu ===
+[  16344ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/03-main-menu.png
+[  16376ms] [harness] key Down (1/1)
+[  17923ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/04-main-menu-down-1.png
+[  17957ms] [harness] key Down (1/1)
+[  19509ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/05-main-menu-down-2.png
+[  19543ms] [harness] key Up (1/1)
+[  21091ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/06-main-menu-up-1.png
+[  21091ms] [harness] === enter-a-submenu ===
+[  21124ms] [harness] key Enter (1/1)
+[  24481ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/07-submenu.png
+[  24514ms] [harness] key Down (1/1)
+[  26064ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/08-submenu-down.png
+[  26064ms] [harness] === escape-back-out ===
+[  26098ms] [harness] key Escape (1/1)
+[  29449ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/FINAL-chrome/09-back-in-main-menu.png
+[  29451ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})() => "{\"VENDOR\":\"WebKit\",\"RENDERER\":\"WebKit WebGL\",\"VERSION\":\"WebGL 1.0 (OpenGL ES 2.0 Chromium)\",\"UNMASKED_VENDOR\":\"Google Inc. (Apple)\",\"UNMASKED_RENDERER\":\"ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)\",\"preserveDrawingBuffer\":true}"
