@@ -91,10 +91,12 @@ EXCLUDES  := \
 #                no longer exists in the tree.
 # tSafePTRBase — dead code: its body is commented out and what remains refers to
 #                a List<> template that was renamed tList<> long ago.
-# rConsoleCout — not a standalone TU: render/rConsoleGraph.cpp ends with a
-#                literal `#include "rConsoleCout.cpp"` for DEDICATED builds,
-#                which is why it is EXTRA_DIST in src/Makefile.am. Its code IS
-#                in the build; compiling it a second time only duplicates it.
+# rConsoleCout.cpp — excluded from BOTH builds, for opposite reasons.
+#   dedicated: rConsoleGraph.cpp:274 #includes it textually (the #else of
+#              #ifndef DEDICATED), so compiling it too would duplicate it.
+#   client:    that #else is dead, so the file contributes nothing — and
+#              compiling it would collide with the graphical console
+#              (DoCenterDisplay, DisplayAtNewline, sr_InputForScripts).
 SRCS      := $(filter-out $(EXCLUDES), \
                $(wildcard src/tools/*.cpp) $(wildcard src/network/*.cpp) \
                $(wildcard src/engine/*.cpp) $(wildcard src/render/*.cpp) \
@@ -121,6 +123,39 @@ $(OBJDIR)/%.o: src/%.cpp web/Makefile
 # files do not exist yet and must not be an error. They live in $(OBJDIR), so
 # `clean` already removes them.
 -include $(OBJS:.o=.d)
+
+# ---- M1: browser client -------------------------------------------------
+# Same 100 source files as the dedicated build. Deliberately NOT adding
+# src/thirdparty/particles: USE_PARTICLES is commented out at
+# gParticles.h:32, so it is dead code, and linking its objects directly
+# (native hides them in a .a) would add glCallList, glPushClientAttrib and
+# glPopClientAttrib as undefined symbols for no benefit.
+CLIENT_OBJDIR := web/build-m1
+CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o)
+CLIENT_DEFS   := -DAA_WEB_CLIENT
+# SDL and libpng are needed at COMPILE time for their headers, not just at link.
+CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
+# $(EXCEPTIONS) is required at COMPILE time as well as link — see the
+# comment on its definition above; omitting it here silently discards catches.
+CLIENT_CXXFLAGS := -std=gnu++14 -O2 -MMD -MP $(EXCEPTIONS) \
+                   $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
+
+CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
+                  -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
+                  $(EXCEPTIONS)
+
+web/dist-m1/armagetronad.js: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a
+	@mkdir -p web/dist-m1
+	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+
+$(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
+	@mkdir -p $(dir $@)
+	$(EMXX) $(CLIENT_CXXFLAGS) -c $< -o $@
+
+-include $(CLIENT_OBJS:.o=.d)
+
+.PHONY: client
+client: data web/dist-m1/armagetronad.js
 
 # ---------------------------------------------------------------------------
 # Runtime data.
@@ -184,7 +219,7 @@ resource/included/.mapversion: batch/make/sortresources batch/make/sortresources
 data: $(DATA)
 dedicated: web/dist-m0/armagetronad-dedicated.js data
 clean:
-	rm -rf $(OBJDIR) web/dist-m0
+	rm -rf $(OBJDIR) web/dist-m0 $(CLIENT_OBJDIR) web/dist-m1
 # `clean` deliberately leaves $(DATA) alone: it is generated *source-tree* data,
 # not build output, and regenerating it is slow-ish and never the thing at fault.
 .PHONY: clean-data

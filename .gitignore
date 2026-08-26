@@ -126,6 +126,8 @@ deps/emsdk
 deps/build
 web/build-m0
 web/dist-m0
+web/build-m1
+web/dist-m1
 web/node_modules
 # Scratch space for planning/recon notes — never part of the port.
 .superpowers/
