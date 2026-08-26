@@ -45,7 +45,19 @@
     <p id="status">Loading&hellip;</p>
     <button id="start" disabled>Play</button>
   </div>
-  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <!--
+    The width/height attributes are load-bearing, not decoration. The game's
+    default video mode is "desktop resolution" (rScreen.cpp:114 constructs
+    currentScreensetting with ArmageTron_Desktop), which means width+height==0
+    and rScreen.cpp:626-629 substitutes whatever SDL reports as the desktop.
+    Emscripten's SDL_GetVideoInfo answers that with canvas.width/canvas.height
+    (libsdl.js:1400-1405) -- and SDL_SetVideoMode then writes the mode it was
+    given straight back onto the same canvas. So the canvas's size is both the
+    question and the answer: with no attributes here the canvas is HTML's
+    default 300x150 and the game faithfully runs at 300x150.
+  -->
+  <canvas id="canvas" width="1024" height="768"
+          tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
 
   <script>
     const statusEl  = document.getElementById('status');
