@@ -1,0 +1,69 @@
+# The M1 gate, as a re-runnable script.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/gate-chrome \
+#        --script-file web/tools/menu-gate.steps
+#   node web/tools/drive-firefox.mjs          --out /tmp/gate-firefox \
+#        --script-file web/tools/menu-gate.steps
+#   kill %1
+#
+# --headed is REQUIRED for Chrome: headless Chrome 152 floods the page with
+# thousands of spurious keydown events per real keypress, which drowns the
+# SDL event queue. Firefox headless is fine. Both are explained in the header
+# comment of the respective driver.
+#
+# PASS looks like: nine screenshots, all nine different, and a transcript with
+# no "Stack overflow detected", no [EXCEPTION], and no
+# "SDL event queue full". The one 404 in the transcript is /favicon.ico.
+#
+# Reading the screenshots (this is a first run, so the client has no saved
+# config and walks the first-use path):
+#   01  language menu, "American English" highlighted
+#   02  same menu, highlight moved to "British English"      <- arrow key works
+#   03  "First Setup" menu, cursor on "Accept"
+#   04  cursor on "Name: web_user"
+#   05  cursor on "Colour: ..."                              <- two more downs
+#   06  cursor back on "Name"                                <- up works
+#   07  the Name field in edit mode, text cursor visible     <- Enter works
+#   08  still editing
+#   09  back out of the field                                <- Escape works
+# The exact menu contents will drift as the port progresses; what has to stay
+# true is that every screenshot differs from the one before it.
+
+wait:6000
+eval:(()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})()
+click:#start
+wait:5000
+mark:should-be-the-language-menu
+shot:01-language-menu
+key:Down
+wait:1200
+shot:02-language-menu-cursor-moved
+key:Enter
+wait:3000
+mark:should-be-the-main-menu
+shot:03-main-menu
+key:Down
+wait:1200
+shot:04-main-menu-down-1
+key:Down
+wait:1200
+shot:05-main-menu-down-2
+key:Up
+wait:1200
+shot:06-main-menu-up-1
+mark:enter-a-submenu
+key:Enter
+wait:3000
+shot:07-submenu
+key:Down
+wait:1200
+shot:08-submenu-down
+mark:escape-back-out
+key:Escape
+wait:3000
+shot:09-back-in-main-menu
+# The strings the game's own glGetString(GL_VENDOR/GL_RENDERER) return are the
+# masked WebGL ones, not the unmasked driver ones -- see
+# docs/porting/browser-runtime-notes.md section 6.
+eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})()
