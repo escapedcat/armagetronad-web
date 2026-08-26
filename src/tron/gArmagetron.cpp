@@ -462,7 +462,14 @@ static void sg_DelayedActivation()
     Activate( sg_active );
 }
 
+#ifdef __EMSCRIPTEN__
+// Emscripten's SDL uses the 1.3 callback convention: an event callback takes
+// a userdata pointer first and a non-const event. The body below only reads
+// the event, so widening the signature changes nothing about what it does.
+int filter(void *, SDL_Event *tEvent){
+#else
 int filter(const SDL_Event *tEvent){
+#endif
     // recursion avoidance
     static bool recursion = false;
     if ( !recursion )
@@ -811,7 +818,14 @@ int main(int argc,char **argv){
 
             sr_glRendererInit();
 
+#ifdef __EMSCRIPTEN__
+            // Emscripten's SDL declares SDL_SetEventFilter but implements
+            // nothing behind it. emscripten_SDL_SetEventHandler is the
+            // supported way to install an event callback there.
+            emscripten_SDL_SetEventHandler(&filter, NULL);
+#else
             SDL_SetEventFilter(&filter);
+#endif
 
             //std::cout << "set filter\n";
 
