@@ -134,3 +134,7 @@ web/node_modules
 # ...but the hand-written wasm Makefile is source, not autotools output
 # (line 37's bare "Makefile" rule would otherwise swallow it).
 !web/Makefile
+# Same problem, different rule: line 63's bare "*.html" is meant for the
+# generated docs under src/doc/ (html.m4 -> *.html), but it also matches this
+# hand-written shell page, which --shell-file needs as source, not output.
+!web/shell.html

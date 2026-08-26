@@ -209,12 +209,96 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 #
 # Fuller notes, including the console-output cost of the yield:
 # docs/porting/browser-runtime-notes.md sections 2 and 7.
+#
+# ---- M1 Task 6: preload the runtime data tree and generate the page -----
+#
+# --use-preload-plugins is NOT optional. Without it Emscripten's IMG_Load_RW
+# warns once and then returns 0 for every single file, so no texture ever
+# loads -- the plugin is what registers the preloaded bytes with SDL_image's
+# virtual file layer. (Flagged by Task 3's reviewer as this task's job.)
+#
+# Each --preload-file maps a source-tree directory (path relative to the
+# repo root, since that is where `make -f web/Makefile` runs) to a path
+# inside the in-memory filesystem the game sees at runtime. The right-hand
+# side of every mapping below must agree with the --datadir/--userconfigdir
+# arguments web/shell.html passes to Module.arguments -- the game does not
+# search for its data, it is told exactly where to look.
+#   config, language, textures, models, sound, resource/included
+#     -> /data/<same-name>, matching --datadir /data.
+#   web/webdefaults
+#     -> /data/webdefaults, matching --userconfigdir /data/webdefaults.
+#     This ships settings_web.cfg into the bundle; see that file's own
+#     comment for what actually reads (or doesn't yet read) it.
+#
+# The --exclude-file patterns drop ~1 MB of the ~1.6 MB source tree (raw file
+# bytes; du -sh reports higher due to block rounding) that no milestone reads
+# at runtime: GIMP .xcf sources behind the shipped textures, five non-English
+# language files plus the transliterated Polish variant (the Demo is
+# English-only), the language file's build-time update.py, and the dedicated
+# server's settings. None of this is reachable code, so cutting it is free --
+# but the size drop does NOT verify itself; see the pattern-shape note below,
+# which is the actual reason a first attempt at this quietly excluded nothing.
+#
+# tools/file_packager.py's should_ignore() matches each pattern with
+# fnmatch.fnmatch(fullname, pattern), and fullname is the SOURCE-RELATIVE
+# path (e.g. "language/deutsch.txt"), not the bare basename. A bare
+# 'deutsch.txt' pattern therefore matches nothing -- fnmatch requires the
+# whole string to match, and fnmatch's '*' happens to cross '/' so only a
+# pattern with a leading wildcard (or an explicit directory component)
+# matches a nested file. '*.xcf' below works by accident of that same rule
+# (the '*' swallows the whole "textures/.../" prefix); every fixed filename
+# needs the same '*/' prefix to match at all. Confirmed by grepping the built
+# armagetronad.js for these paths post-link -- do that again if any of these
+# lines are ever touched, because a silently-ignored --exclude-file fails
+# nothing at build time, it just ships the file anyway.
+#
+# --shell-file replaces Emscripten's stock loader page with web/shell.html.
 CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
                   -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
-                  $(EXCEPTIONS)
+                  $(EXCEPTIONS) \
+                  --use-preload-plugins \
+                  --preload-file config@/data/config \
+                  --preload-file language@/data/language \
+                  --preload-file textures@/data/textures \
+                  --preload-file models@/data/models \
+                  --preload-file sound@/data/sound \
+                  --preload-file resource/included@/data/resource/included \
+                  --preload-file web/webdefaults@/data/webdefaults \
+                  --exclude-file '*.xcf' --exclude-file '*/update.py' \
+                  --exclude-file '*/settings_dedicated.cfg' \
+                  --exclude-file '*/deutsch.txt' --exclude-file '*/polish.txt' \
+                  --exclude-file '*/polish_transliterated.txt' \
+                  --exclude-file '*/spanish.txt' --exclude-file '*/french.txt' \
+                  --exclude-file '*/portugese.txt' \
+                  --shell-file web/shell.html
 
-web/dist-m1/armagetronad.js: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a
+# The primary output is the .html page (Task 6's actual deliverable); the
+# .js loader, .wasm binary and .data archive are generated alongside it by
+# the same emcc invocation. web/shell.html and the preloaded directories are
+# listed as prerequisites so editing any of them triggers a relink instead
+# of Make silently reusing a stale bundle.
+#
+# The three generated-data paths (spelled out here, not as $(DATA) -- that
+# variable isn't assigned until the "Runtime data" section further down, and
+# a prerequisite list is expanded when Make reads this line, not when it
+# finally builds the target, so $(DATA) here would silently expand to
+# nothing) are listed explicitly for a reason that did not matter for M0:
+# --preload-file reads these directories off disk at LINK time and bundles
+# whatever it finds right then, whereas M0's NODERAWFS reads them at RUN
+# time. Without this dependency, `make -f web/Makefile client -j8` on a
+# clean checkout can race -- Make is free to start the link the moment every
+# .o exists, before config/aiplayers.cfg, language/languages.txt or
+# resource/included/.mapversion (and the map files sortresources produces
+# alongside it) have been generated, silently shipping a client missing its
+# maps, AI roster or language table. It did not bite in practice while
+# developing this task only because those files already existed from an
+# earlier milestone's build; verify after touching this rule by running
+# `clean-data` first.
+web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
+                                web/shell.html web/webdefaults/settings_web.cfg \
+                                language/languages.txt config/aiplayers.cfg \
+                                resource/included/.mapversion
 	@mkdir -p web/dist-m1
 	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -225,7 +309,7 @@ $(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
 -include $(CLIENT_OBJS:.o=.d)
 
 .PHONY: client
-client: data web/dist-m1/armagetronad.js
+client: data web/dist-m1/armagetronad.html
 
 # ---------------------------------------------------------------------------
 # Runtime data.

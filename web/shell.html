@@ -1,0 +1,79 @@
+<!doctype html>
+<!--
+  Shell page for the wasm client (web/Makefile's --shell-file).
+
+  This file IS the whole page Emscripten emits as armagetronad.html -- it is
+  not a fragment dropped into some other template. The build tool does a
+  literal string substitution of the triple-brace SCRIPT placeholder near the
+  end of <body> with a <script> tag that loads the generated armagetronad.js
+  loader, which in turn fetches the .wasm and the preloaded .data archive.
+  That placeholder is mandatory -- em++ hard-fails the link step if it is
+  missing -- and because the substitution is a plain text replace of every
+  occurrence, do not paste its literal three-brace form anywhere in this file
+  except at that one spot (this comment deliberately does not spell it out,
+  having once been mangled by its own explanation).
+
+  Load order matters: the placeholder must come AFTER the <script> below that
+  defines `Module`, because armagetronad.js looks for a pre-existing global
+  `Module` object as it starts up and merges its own runtime hooks into it.
+  Defining Module later would just be ignored.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Armagetron Advanced</title>
+  <style>
+    body { margin:0; background:#111; color:#eee;
+           font:14px/1.4 system-ui, sans-serif; }
+    #canvas { display:block; margin:0 auto; background:#000; }
+    #overlay { position:fixed; inset:0; display:grid; place-content:center;
+               gap:1rem; text-align:center; background:#111; }
+    #start[disabled] { opacity:.5; }
+  </style>
+</head>
+<body>
+
+  <div id="overlay">
+    <h1>Armagetron Advanced</h1>
+    <p id="status">Loading&hellip;</p>
+    <button id="start" disabled>Play</button>
+  </div>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const startEl  = document.getElementById('start');
+
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      // The game reads its data from the preloaded /data tree and writes user
+      // config to /persist. Both are runtime switches the game already has --
+      // no path patches needed. /persist becomes an IDBFS mount in M4; until
+      // then it is in-memory, so settings do not survive a reload.
+      arguments: ['--datadir','/data','--userdatadir','/persist',
+                  '--userconfigdir','/data/webdefaults'],
+      // callMain is invoked from the button below, not automatically -- the
+      // button itself matters starting M3: browsers require a user gesture
+      // before audio can start, so waiting for a click costs nothing now and
+      // is already in place when sound lands.
+      noInitialRun: true,
+      setStatus: (text) => { statusEl.textContent = text || 'Ready'; },
+      print:    (text) => console.log(text),
+      printErr: (text) => console.error(text),
+      onRuntimeInitialized: () => {
+        statusEl.textContent = 'Ready';
+        startEl.disabled = false;
+      }
+    };
+
+    startEl.addEventListener('click', () => {
+      document.getElementById('overlay').remove();
+      Module.canvas.focus();          // so the menu receives key events
+      Module.callMain(Module.arguments);
+    });
+  </script>
+
+  {{{ SCRIPT }}}
+
+</body>
+</html>
