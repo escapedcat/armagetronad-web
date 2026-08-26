@@ -28,3 +28,19 @@ Node: v22.x (any ≥ 18 works for running the M0 server).
 libxml2 (static, wasm): `./deps/build-libxml2.sh` (needs the emsdk env sourced).
 Output lands in `deps/build/libxml2-install/`. Pinned to 2.12.x — see the
 comment in the script for why. Re-run only after `rm -rf deps/build/libxml2-*`.
+
+## Building the M0 dedicated server
+
+    source deps/emsdk/emsdk_env.sh
+    ./deps/build-libxml2.sh        # once
+    make -f web/Makefile dedicated -j8
+
+Output: web/dist-m0/armagetronad-dedicated.{js,wasm}. `make -f web/Makefile clean` resets.
+
+The Makefile is hand-written and deliberately does not use autotools. It compiles
+the same 100 translation units a native *dedicated* build does — the file set was
+cross-checked against the `*_SOURCES` lists in `src/Makefile.am`. Its `EXCLUDES`
+list names the files the per-directory wildcards would otherwise sweep in (extra
+`main()`s, stale demos, and `render/rConsoleCout.cpp`, which is `EXTRA_DIST` only);
+each entry carries its reason in a comment. Grow that list only for further
+`main()`s, never to make an error go away.
