@@ -1,0 +1,10 @@
+{
+  "name": "armagetronad-web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Node-side runtime dependencies for the Armagetron Advanced WebAssembly port. Not a JS project: nothing here is built or published, and the wasm artifact is produced by web/Makefile.",
+  "comment": "ws is required by Emscripten itself, not by any code in this repo. Its socket emulation implements BSD sockets over WebSockets and reaches for the npm package by name in two places (deps/emsdk/upstream/emscripten/src/lib/libsockfs.js:278 for outgoing peers, :581 for the listening server). Without it the first bind() raises a Node MODULE_NOT_FOUND out of the JS glue, which unwinds straight through the wasm frames and kills the process before any C++ handler can see it. This file lives in web/ rather than the repo root so the port keeps its footprint inside web/; Node's resolver walks up from web/dist-m0/ and finds web/node_modules on the way.",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

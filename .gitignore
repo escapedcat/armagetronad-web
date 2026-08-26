@@ -124,6 +124,7 @@ deps/emsdk/
 deps/build/
 web/build-m0/
 web/dist-m0/
+web/node_modules/
 # ...but the hand-written wasm Makefile is source, not autotools output
 # (line 37's bare "Makefile" rule would otherwise swallow it).
 !web/Makefile
