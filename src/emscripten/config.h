@@ -1,8 +1,10 @@
-/* Hand-written config for Emscripten builds — dedicated-server (M0) variant.
+/* Hand-written config for Emscripten builds. Serves both the dedicated-server
+   (M0) and browser-client (M1) variants — see the AA_WEB_CLIENT switch below.
    Precedent: src/win32/config.h, src/config_ide.h. Native builds never see
    this file; it must be first on the include path (-I src/emscripten).
-   Rules (PLAN.md): no threads, no SDL (yet), no curl/krawall, no
-   TOP_SOURCE_DIR, no platform macros. */
+   Dedicated-variant rules (PLAN.md): no threads, no curl/krawall, no
+   TOP_SOURCE_DIR, no platform macros. The client variant deliberately adds
+   SDL — see the #ifdef AA_WEB_CLIENT block below. */
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 

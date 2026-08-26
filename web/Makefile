@@ -57,7 +57,13 @@ INCLUDES  := -I src/emscripten \
 # line item in PLAN.md's M5 size budget.
 EXCEPTIONS := -fexceptions
 
-CXXFLAGS  := -std=gnu++14 -O2 -MMD -MP $(EXCEPTIONS) $(INCLUDES)
+# Shared by every variant compiled from this file (M0 dedicated, M1 client, and
+# whatever M2 adds): the C++ standard, optimisation level, and dependency-file
+# flags must not drift between them, so they live here once. Each variant's
+# CXXFLAGS then adds only what makes it different (macros, -sUSE_* ports, ...).
+BASE_CXXFLAGS := -std=gnu++14 -O2 -MMD -MP $(EXCEPTIONS)
+
+CXXFLAGS  := $(BASE_CXXFLAGS) $(INCLUDES)
 
 # The wildcards below sweep whole directories, so they also pick up files that
 # src/Makefile.am never compiles: extra main()s, stale demos/test harnesses,
@@ -137,8 +143,9 @@ CLIENT_DEFS   := -DAA_WEB_CLIENT
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
 # $(EXCEPTIONS) is required at COMPILE time as well as link — see the
 # comment on its definition above; omitting it here silently discards catches.
-CLIENT_CXXFLAGS := -std=gnu++14 -O2 -MMD -MP $(EXCEPTIONS) \
-                   $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
+# $(BASE_CXXFLAGS) keeps the standard/optimisation/dependency flags identical
+# to the dedicated build's CXXFLAGS above — see its definition for why.
+CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 
 CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
