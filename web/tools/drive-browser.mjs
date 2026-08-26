@@ -273,7 +273,12 @@ async function main() {
           break;
         }
         case 'Log.entryAdded':
-          record(`[browser.${p.entry.level}/${p.entry.source}] ${p.entry.text}`);
+          // entry.url is the whole point for network entries. "Failed to load
+          // resource: 404" without it names no resource, which makes the
+          // "every 404 in a passing transcript is /favicon.ico" pass criterion
+          // unverifiable from the transcript it is supposed to be checked against.
+          record(`[browser.${p.entry.level}/${p.entry.source}] ${p.entry.text}`
+                 + (p.entry.url ? `   <- ${p.entry.url}` : ''));
           break;
         case 'Page.loadEventFired':
           record('[page] load event fired');

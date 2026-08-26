@@ -163,7 +163,21 @@ async function main() {
 
     // log.entryAdded carries console.* calls AND uncaught JS errors, which in
     // CDP are two separate domains.
-    await bidi.send('session.subscribe', { events: ['log.entryAdded', 'browsingContext.load'] });
+    //
+    // network.responseCompleted / network.fetchError have no CDP-side
+    // counterpart here: Chrome surfaces failed loads through Log.entryAdded
+    // for free, Firefox does not surface them at all unless you subscribe.
+    // Without this the gate's "every 404 in a passing transcript is
+    // /favicon.ico" rule was silently unenforceable on Firefox, because the
+    // transcript contained no network lines whatsoever to check it against.
+    await bidi.send('session.subscribe', {
+      events: [
+        'log.entryAdded',
+        'browsingContext.load',
+        'network.responseCompleted',
+        'network.fetchError',
+      ],
+    });
     bidi.on((msg) => {
       if (msg.method === 'log.entryAdded') {
         const e = msg.params;
@@ -176,7 +190,28 @@ async function main() {
         }
       } else if (msg.method === 'browsingContext.load') {
         record('[page] load event fired');
+      } else if (msg.method === 'network.responseCompleted') {
+        // Only the failures. Logging every 200 would bury the transcript in
+        // the game's own asset fetches, and a 200 proves nothing the gate asks.
+        const { request, response } = msg.params;
+        if (response && response.status >= 400) {
+          record(`[browser.error/network] ${response.status} ${response.statusText || ''} `
+                 + `<- ${request?.url ?? response.url}`);
+        }
+      } else if (msg.method === 'network.fetchError') {
+        const { request, errorText } = msg.params;
+        record(`[browser.error/network] fetch failed (${errorText}) <- ${request?.url}`);
       }
+    });
+
+    // --width/--height size the WINDOW, so the content viewport comes out
+    // shorter by the height of the browser chrome -- 1024x683 against Chrome's
+    // 1024x768, which crops the bottom of every screenshot and makes the two
+    // engines' evidence not comparable side by side. setViewport sets the
+    // content box directly, which is what Emulation.setDeviceMetricsOverride
+    // does on the CDP side.
+    await bidi.send('browsingContext.setViewport', {
+      context, viewport: { width: opt.width, height: opt.height }, devicePixelRatio: 1,
     });
 
     record(`[harness] firefox: ${session.capabilities.browserVersion} (headless=${!opt.headed})`);
