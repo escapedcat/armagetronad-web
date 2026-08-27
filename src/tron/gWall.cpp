@@ -418,10 +418,14 @@ void gWallRim::RenderReal(const eCamera *cam){
                 // consistent: the colour becomes a state change (mode is -1, so
                 // libglemu stores it in clientColor rather than the vertex
                 // stream), and the shadow gets its own position-only block.
-                // This costs no extra draw call in the common case -- the
-                // RenderEnd(true) below already closed the previous wall's
-                // batch one statement later, so this only moves that boundary
-                // earlier. Native builds keep the merge; they do not need this.
+                //
+                // Cost: one extra draw call per SHADOWED rim wall. On those
+                // frames what was a single glEnd becomes two -- this one and
+                // the RenderEnd(true) at :445. Rim walls that draw no shadow
+                // never reach this line and are unaffected; they were already
+                // one draw call each, because that same :445 RenderEnd closes
+                // every wall's batch one wall later regardless. Native builds
+                // keep the merge; they do not need this.
                 RenderEnd( true );
 #endif
                 Color(0,0,0);

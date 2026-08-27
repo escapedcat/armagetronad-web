@@ -690,3 +690,136 @@ browser-level `Log` entries over CDP, while `drive-firefox.mjs` captures only
 `console.*` and network events over BiDi. Firefox's own WebGL warnings were
 never being collected. Do not read its clean transcript as a clean run — and if
 M2 needs Firefox-side GL diagnostics, wiring that up is part of the same job.
+
+## 10. One glBegin/glEnd block, one vertex format
+
+`src/render/rGLRender.cpp`, `src/tron/gWall.cpp`, `src/tron/gCycle.cpp`,
+`src/tron/gSparks.cpp`. This is the largest single class of porting defect found
+so far, it has two distinct shapes, and one of them is silent. Read this before
+adding a `Begin*()` call site or moving a colour/texcoord near one.
+
+### The rule
+
+Real OpenGL lets a `glBegin`/`glEnd` block mix vertices freely. `glVertex`
+captures whatever the current colour and texcoord state happens to be, so a
+block may contain vertices that were preceded by a `glTexCoord` and vertices
+that were not, and it may set a colour once for a whole run of vertices.
+
+Emscripten cannot express that. `libglemu.js` appends every attribute call to
+one flat `Float32Array` **in call order** and derives a *single* interleaved
+layout for the entire block:
+
+| call | slots written (4 bytes each) | component | size registered |
+|---|---|---|---|
+| `glVertex2f` / `glVertex3f` / `glVertex4f` / `glVertex3fv` | 4 | `VERTEX` | 16 B |
+| `glTexCoord2f` / `glTexCoord2i` | 2 | `TEXTURE0` | 8 B |
+| `glColor3f` / `glColor4f` (inside a block) | 1 (4 packed ubytes) | `COLOR` | 4 B |
+
+`addRendererComponent` sums the sizes of the components it has seen into
+`GLImmediate.stride`, and `glEnd` asserts:
+
+```js
+var numVertices = 4 * GLImmediate.vertexCounter / GLImmediate.stride;   // :3025
+assert(numVertices % 1 == 0, '`numVertices` must be an integer.');      // :3028
+```
+
+> **Every vertex in a block must emit exactly the same attribute calls, in the
+> same order.** A colour, if used at all, must be sent before *every* vertex —
+> not once per triangle, not once per line, not once per loop iteration.
+
+A `glColor*` issued while `GLImmediate.mode == -1` (no block open) is *state*
+and costs no slots — that is the harmless form. Inside a block it becomes a
+per-vertex attribute.
+
+### Two failure modes, and only one of them is loud
+
+1. **Non-integral → abort.** `Aborted(Assertion failed: `numVertices` must be an
+   integer.)`, thrown from `glEnd`. This is the good case: `ASSERTIONS` is on
+   precisely so it happens. **Do not "fix" it by adding `-O`** — that turns it
+   into case 2 everywhere.
+2. **Integral by accident → silent garbage.** If the slot count happens to
+   divide by the stride, nothing complains, but the writer's and reader's
+   per-vertex periods still differ, so from the second vertex on, attributes are
+   read out of the wrong words. `gSparks.cpp` was doing exactly this.
+
+### The two shapes
+
+**(A) Cross-batch contamination.** `glRenderer::BeginPrimitive`
+(`rGLRender.cpp:70`) makes a `Begin*()` a **no-op** when the same primitive is
+already current — that is its batching optimisation. So a function that returns
+without calling `RenderEnd()` leaves a live block that the *next* piece of code
+silently joins, whatever format that code uses.
+
+Note this is bounded: it needs an actual open block to reach the site. Many
+things close one, so a colour merely appearing before a `Begin*()` is **not** by
+itself a bug. `End(true)` is called by `ProjMatrix`, `ModelMatrix`, `TexMatrix`,
+`PopMatrix`, `MultMatrix`, `IdentityMatrix`, `ScaleMatrix` and
+`TranslateMatrix` — a matrix operation anywhere on the path makes the site safe.
+Check reachability before reporting one of these.
+
+The only functions that currently leak an open block are:
+
+- `gWallRim_helper` (`gWall.cpp:203`) — `BeginQuads()` + 4 `TexVertex`, no
+  `RenderEnd`. This caused the M2 abort; see below.
+- `gNetPlayerWall::RenderNormal` (`gWall.cpp:1173`) — leaves `GL_QUADS` open with
+  a `{COLOR, TEXTURE0, VERTEX}` / 28-byte format. Safe *today* only because the
+  code that can follow it is either another `RenderNormal` quad block with the
+  identical format, or `RenderBegin`, whose `BeginLineStrip`/`BeginQuadStrip` are
+  different primitives and so force a real `glEnd`. Fragile — do not add a
+  differently-shaped `GL_QUADS` emitter after it.
+- `rViewportConfiguration::DemonstrateViewport` (`rViewport.cpp:240`) — see the
+  latent list.
+- `rRenderer::Line` (`rRender.cpp:67`) — dead; `glRenderer::Line` overrides it
+  and does call `End()`.
+
+**(B) Intra-batch non-uniformity.** A block the code opened itself emits
+attributes at a rate other than one per vertex. No inherited batch is involved,
+so this fires wherever the code runs. This is the shape that is easy to miss by
+grepping, because the colour is *inside* the `Begin`/`RenderEnd` pair and looks
+perfectly reasonable.
+
+### Fixed
+
+- **`gWall.cpp` (shape A)** — `gWallRim::RenderReal` drew a rim wall's textured
+  quad, returned with the block open, and the *next* wall's shadow quad appended
+  a `Color(0,0,0)` plus four texcoord-less vertices to it. 24 slots + 1 + 16 =
+  41 against stride 28 (`VERTEX 16 + TEXTURE0 8 + COLOR 4`) → `4*41/28 = 5.857`.
+  Aborted ~8.6 s into every round. Fixed with `RenderEnd(true)` before the
+  colour, so the colour becomes state and the shadow gets its own block.
+- **`gCycle.cpp` (shape B)** — the chat/inactive/just-spawned pyramid set one
+  colour per *triangle*: 2 × (1 + 3×4) = 26 slots against stride 20 →
+  `4*26/20 = 5.2`. Fixed by repeating the colour before every vertex.
+- **`gSparks.cpp` (shape B)** — one colour per *line segment*: 9 slots per
+  iteration against a 5-slot stride. With `SPARKS == 10` that is 90/20 = 18, an
+  integer, so it never asserted — it drew garbage. Fixed the same way.
+
+### Still latent — not fixed, and why
+
+- **`rViewport.cpp:246`** (shape A+B) — `BeginLineLoop()`, four `glVertex2f`,
+  then `glColor3f(1,1,1)` **with the block still open**, then `DisplayText()`
+  whose `RenderEnd(true)` flushes it: 17 slots against stride 20 → `3.4`. Would
+  abort. Reached only from the viewport-configuration menu preview. Not fixed
+  because nothing in M2 opens that screen, so the fix could not be verified.
+- **`eDisplay.cpp:586`** (shape B) — the `debug_grid` overlay sets one colour per
+  *six* vertices in one loop and per two in another. `debug_grid` defaults to 0
+  (`eDisplay.cpp:63`) and is toggled by a key (`gGame.cpp:4257`).
+- **`eDebugLine.cpp:105`** (shape B) — one colour per two vertices. `DEBUGLINE`
+  *is* defined (`eDebugLine.cpp:33`) so the function compiles, but every producer
+  of `se_lines` is behind a commented-out `//#define DEBUGLINE` (`gAIBase.cpp:69`,
+  `eSensor.cpp:34`), so the loop body never runs and the empty block returns
+  early at `if (!numVertices) return`. Enabling AI or sensor debug lines aborts.
+
+**Both of the first two are keyboard-triggered.** Anything that touches key
+bindings should assume it can wake them.
+
+### How to find these
+
+`glColor*`/`glTexCoord*` are frequently called **raw**, not through
+`glRenderer::Color`/`TexCoord` — `gCycle.cpp:4621`, `gWinZone.cpp:474`,
+`rViewport.cpp:246` and both cycle-wall renderers all bypass the renderer. A
+sweep that greps only for `Color(` and `TexCoord(` will miss most of the
+codebase, and a fix inside `glRenderer::Color()` would not catch them either.
+Grep for both forms, then for each `Begin*()` block compare the colour and
+texcoord counts against the vertex count, remembering that loops make
+per-source-line counts misleading. `<scratch>/t5/sweep.py` in the M2 task-5
+working notes is a starting point.

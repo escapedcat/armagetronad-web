@@ -4467,15 +4467,48 @@ void gCycle::Render(const eCamera *cam){
 
                 BeginTriangles();
 
+                // Emscripten's glBegin/glEnd emulation derives ONE interleaved
+                // vertex layout for the whole block from the set of attributes
+                // it sees, so every vertex must carry the SAME attributes.
+                // Real OpenGL has no such rule -- there glVertex just captures
+                // whatever the current colour happens to be, which is why this
+                // block legitimately sets a colour once per TRIANGLE.
+                //
+                // Under Emscripten that writes 26 float slots (1 colour + 3
+                // vertices, twice; a colour is 1 slot, a vertex 4) against a
+                // stride of 20 bytes (COLOR 4 + VERTEX 16), and glEnd asserts
+                // "`numVertices` must be an integer" on 4*26/20 = 5.2.
+                // See docs/porting/browser-runtime-notes.md section 10.
+                //
+                // Repeating the colour before every vertex makes the block
+                // uniform: 6 * (1+4) = 30 slots against stride 20 = 6 vertices,
+                // and each 5-slot record is exactly [colour, x, y, z, w].
+                // The two triangles keep their different shades. Native GL does
+                // not need the repeats, so they are guarded.
+                //
+                // This matters beyond cosmetics: the pyramid is drawn whenever
+                // the player is CHATTING (:4434), inactive (:4439), or just
+                // spawned on a multi-player team (:4445). A working chat key
+                // would abort the client mid-round.
+#ifdef __EMSCRIPTEN__
+#  define AA_PYRAMID_COLOR( r, g, b ) glColor4f( (r), (g), (b), alpha )
+#else
+#  define AA_PYRAMID_COLOR( r, g, b ) ((void)0)
+#endif
                 glColor4f( colorPyramid.r,colorPyramid.g,colorPyramid.b, alpha );
                 glVertex3f(0,0,3);
+                AA_PYRAMID_COLOR( colorPyramid.r,colorPyramid.g,colorPyramid.b );
                 glVertex3f(0,1,4.5);
+                AA_PYRAMID_COLOR( colorPyramid.r,colorPyramid.g,colorPyramid.b );
                 glVertex3f(0,-1,4.5);
 
                 glColor4f( colorPyramid.r * .7f,colorPyramid.g * .7f,colorPyramid.b * .7f, alpha );
                 glVertex3f(0,0,3);
+                AA_PYRAMID_COLOR( colorPyramid.r * .7f,colorPyramid.g * .7f,colorPyramid.b * .7f );
                 glVertex3f(1,0,4.5);
+                AA_PYRAMID_COLOR( colorPyramid.r * .7f,colorPyramid.g * .7f,colorPyramid.b * .7f );
                 glVertex3f(-1,0,4.5);
+#undef AA_PYRAMID_COLOR
 
                 RenderEnd();
 
