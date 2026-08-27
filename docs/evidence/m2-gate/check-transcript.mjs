@@ -53,6 +53,17 @@
 //    arbitrate the number the milestone is actually about; an earlier version
 //    of it printed ALL CHECKS PASSED without ever looking at the frame rate.
 //
+//    ...and THE WINDOW those numbers are averaged over, against a clock the
+//    sampler did not write. Every frame-rate figure here is only as good as
+//    span_s, and span_s comes out of the same in-page payload as the frame
+//    count. An earlier version of this check compared span_s against
+//    frames / mean_fps -- but mean_fps IS frames / span_s, so it was an
+//    identity, and only a rounding error could ever have failed it.
+//    The drivers stamp every line with their own wall clock as they receive
+//    it, entirely outside the page, so the first "[L] NEW_ROUND" and the n-th
+//    "[L] ROUND_WINNER" give the same two instants measured by a second,
+//    independent instrument. That is now the check.
+//
 // 6. `until TIMED OUT`, which is how a driver records a wait that expired.
 //    A run in which a round never finished still produces its screenshots and
 //    its frame-rate dump, deliberately -- so the timeout line is the only
@@ -190,9 +201,35 @@ if (!fps || !fps.overall) {
   // it keeps it visible without letting one hitch decide the milestone.
   note(`worst single frame ${o.frame_ms.max} ms = ${(1000 / o.frame_ms.max).toFixed(1)} fps `
      + `instantaneous. Not a pass criterion -- see the report -- but do not let it go unread.`);
-  // A window shorter than the rounds would make the numbers above meaningless.
-  check(o.span_s > 0 && fps.rounds_won >= 3 && Math.abs(o.span_s - (o.frames / (o.mean_fps || 1))) < 1,
-        `the measured window is the rounds themselves (${o.span_s}s spanning all ${fps.rounds_won})`);
+  // A window shorter than the rounds would make every number above
+  // meaningless, so span_s has to be checked -- and checked against something
+  // outside the payload it came from. The driver stamps each line with its own
+  // wall clock as it arrives: "[  22233ms] [console.log] [L] NEW_ROUND ...".
+  // Those stamps have a different origin from the sampler's performance.now(),
+  // but the difference cancels in a span, and console delivery latency is the
+  // only remaining term. Measured here it is about a millisecond.
+  const stamp = (l) => { const m = /^\s*\[\s*(\d+)ms\]/.exec(l); return m ? Number(m[1]) : null; };
+  const stampsFor = (event) =>
+    game.filter((l) => l.includes(`[L] ${event}`)).map(stamp).filter((t) => t !== null);
+  const nrAt = stampsFor('NEW_ROUND');
+  const rwAt = stampsFor('ROUND_WINNER');
+  // The sampler's window is nr[0] .. rw[n-1] with n = min(starts, wins).
+  // Use the same one, or this compares two different things and agrees anyway.
+  const nWin = Math.min(nrAt.length, rwAt.length);
+  if (nWin < 3) {
+    check(false, `the transcript carries wall-clock stamps for at least 3 round `
+               + `boundaries (found ${nrAt.length} NEW_ROUND, ${rwAt.length} ROUND_WINNER)`);
+  } else {
+    const wall  = (rwAt[nWin - 1] - nrAt[0]) / 1000;
+    const drift = Math.abs(o.span_s - wall);
+    console.log(`window: sampler span_s ${o.span_s}s vs driver wall clock ${wall.toFixed(3)}s`
+              + ` (NEW_ROUND #1 at ${nrAt[0]}ms -> ROUND_WINNER #${nWin} at ${rwAt[nWin - 1]}ms),`
+              + ` drift ${drift.toFixed(3)}s`);
+    check(o.span_s > 0 && fps.rounds_won >= 3 && drift <= 0.5,
+          `the measured window is the rounds themselves: ${o.span_s}s spanning all `
+          + `${fps.rounds_won}, agreeing with the driver's independent wall clock to `
+          + `${drift.toFixed(3)}s (bar: 0.5s)`);
+  }
 }
 
 // ------------------------------------------------- 6. no expired waits
