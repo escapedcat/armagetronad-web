@@ -380,6 +380,50 @@ void gWallRim::RenderReal(const eCamera *cam){
                 eCoord P4=P2+normal*extension;
 
                 // render shadow
+#ifdef __EMSCRIPTEN__
+                // Close whatever batch a PREVIOUS rim wall left open before
+                // touching the colour. Without this the round aborts here about
+                // 8.6s in with "`numVertices` must be an integer".
+                //
+                // The gWallRim_helper() call further down this function ends
+                // with BeginQuads() + four TexVertex() (gWall.cpp:203-215) and
+                // never calls RenderEnd(), so every rim wall
+                // returns from RenderReal() with a GL_QUADS batch still open;
+                // it is closed one wall later, by the RenderEnd(true) further
+                // down this function. Meanwhile glRenderer::BeginPrimitive()
+                // (rGLRender.cpp:44) deliberately makes BeginQuads() a NO-OP
+                // when GL_QUADS is already current -- that is how it merges
+                // batches. So the shadow quad below does not start a batch of
+                // its own: it appends to the previous wall's textured one.
+                //
+                // Real OpenGL does not care -- glVertex captures whatever the
+                // current colour/texcoord state is, so a block may freely mix
+                // vertices that did and did not get a glTexCoord. Emscripten's
+                // emulation cannot express that: libglemu.js appends each
+                // attribute call to one flat array and derives a SINGLE
+                // interleaved stride for the whole block from the set of
+                // components it saw (addRendererComponent, libglemu.js:2043).
+                // Mixing formats makes 4*vertexCounter/stride non-integral and
+                // glEnd asserts (libglemu.js:3025-3028).
+                //
+                // Measured: the previous wall's four TexVertex leave
+                // vertexCounter at 24 with stride 24. Color(0,0,0) then lands
+                // INSIDE that open block, so it is recorded as a per-vertex
+                // attribute (one slot, vertexCounter 25) and grows the stride
+                // to 28 (VERTEX 16 + TEXTURE0 8 + COLOR 4). The four
+                // texcoord-less Vertex calls below add 16 more slots, and glEnd
+                // sees vertexCounter 41 against stride 28 -- 4*41/28 = 5.857.
+                //
+                // Ending the batch first makes both batches internally
+                // consistent: the colour becomes a state change (mode is -1, so
+                // libglemu stores it in clientColor rather than the vertex
+                // stream), and the shadow gets its own position-only block.
+                // This costs no extra draw call in the common case -- the
+                // RenderEnd(true) below already closed the previous wall's
+                // batch one statement later, so this only moves that boundary
+                // earlier. Native builds keep the merge; they do not need this.
+                RenderEnd( true );
+#endif
                 Color(0,0,0);
                 BeginQuads();
                 Vertex(P1.x, P1.y, 0);
