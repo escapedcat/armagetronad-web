@@ -14,15 +14,100 @@ was executed), against `web/dist-m1` built with no `-O` added to
 Chrome 152.0.7977.65 (headed, real GPU). Firefox 154.0.1 (headless).
 Canvas 1024x768 in both.
 
+## The match these numbers come from is the tutorial match
+
+Read this before quoting any figure below. The gate drives a first-time
+visitor's path unmodified, so the match it plays is the one `welcome()` starts
+— and `welcome()` (`gArmagetron.cpp:378-395`) temporarily changes six settings
+for that one match, restoring them afterwards:
+
+| | during this match | shipped single-player value |
+|---|---|---|
+| `speedFactor` | -2 | 0 |
+| `sizeFactor` | -5 | -3 |
+| `wallsLength` | 400 | -1 (unlimited) |
+| `sg_rubberCycle` | 5 | 3 |
+| `sg_delayCycle` | 0.05 | 0.1 |
+| `autoNum` | 0, forced | whatever `SP_AUTO_AIS` says |
+
+It is therefore a slower, smaller, shorter-walled arena than a normal
+single-player game: **the frame rates below are tutorial-parameter frame
+rates**, and a busier scene would produce lower ones. The ≥30 fps bar is
+cleared by a wide margin — the worst whole second of either run is 53 and 56
+against a 60 fps cap — so the conclusion survives easily. But do not lift the
+number out of here and quote it as "the client runs at 60 fps".
+
+**What `welcome()` does *not* touch is `numAIs` or `limitRounds`.** That is
+what keeps the two counts attributable: three opponents is `SP_NUM_AIS 3`
+alone, three rounds is `SP_LIMIT_ROUNDS 3` alone. The only setting the tutorial
+framing masks is `SP_AUTO_AIS`, and masking it can only work against the gate,
+never for it.
+
 ## Re-check it rather than believing this file
 
     node docs/evidence/m2-gate/check-transcript.mjs docs/evidence/m2-gate/chrome-console.log
     node docs/evidence/m2-gate/check-transcript.mjs docs/evidence/m2-gate/firefox-console.log
 
 Both exit 0. The script counts completed rounds from `ROUND_WINNER` (not
-`NEW_ROUND`), reconstructs the AI team's roster from the `TEAM_*` ladder-log
-events, checks the forbidden strings, and checks the positive controls. It is
-the arbiter; everything below is a description of what it is checking.
+`NEW_ROUND`), reconstructs the AI team's roster by replaying the `TEAM_*`
+ladder-log events, checks the frame rate against the ≥30 bar (median *and*
+minimum), checks the forbidden strings, checks that no `until:` wait expired,
+and checks the positive controls. It is the arbiter; everything below is a
+description of what it is checking.
+
+### The `.asrun` copy is deliberately stale, and here is what changed
+
+`gameplay-gate.steps.asrun` is the script **exactly as executed** for these
+transcripts (`md5 76567cb89e88041761d86b4ef8348004`). It is not updated when
+`web/tools/gameplay-gate.steps` is, because then it would stop being a record
+of what produced these numbers. Two things have been corrected in the live
+script since, and a reader of the `.asrun` copy should know both:
+
+1. **Its "WHAT PASSES" header told you to count `TEAM_PLAYER_ADDED` lines per
+   round.** That is wrong — see the "three AIs" section below. The header in
+   the live script now describes the roster replay instead.
+2. **Its per-second bucketing dropped empty seconds** rather than reporting
+   them as zero, so a full-second stall would have vanished from the series
+   instead of setting the minimum to 0. It did not happen in these runs (every
+   second of both windows has frames in it, which the committed series show),
+   but the live script now enumerates every whole second explicitly.
+
+Neither changes any number in this directory. Re-running the *live* script
+reproduces the same measurements by the same method, with the second-bucket
+hole closed.
+
+## Three rounds, and three AIs — how these are counted
+
+**Rounds completed = `[L] ROUND_WINNER` lines.** Not `[L] NEW_ROUND`, which
+counts rounds *started*. Each transcript has exactly three, then one
+`MATCH_WINNER`. Since `SP_LIMIT_ROUNDS` ships as 10, a match that stops at
+three is itself the setting having been read.
+
+**Opponents = the AI team's roster, replayed.** `eTeam`'s ladder-log writers
+(`eTeam.cpp:220-224`, on by default) emit `TEAM_CREATED`, `TEAM_DESTROYED`,
+`TEAM_PLAYER_ADDED` and `TEAM_PLAYER_REMOVED`. Replaying them into a set gives
+`ai_team`'s membership at any instant. Both transcripts give:
+
+```
+round 1: ai_team roster = 3 [word, excel, notepad]
+round 2: ai_team roster = 3 [word, excel, outlook]
+round 3: ai_team roster = 3 [word, excel, outlook]
+```
+
+**Do not count `TEAM_PLAYER_ADDED` lines per round.** This is the trap, and an
+earlier version of the steps file's own header fell into it. Those writers log
+the **delta**, not a census: round 1 logs three adds, round 2 logs one remove
+and one add, and round 3 logs **nothing at all**, because its roster was
+already correct. Counting adds reports round 3 as having zero opponents.
+
+Two independent cross-checks on the same rosters:
+
+- `ROUND_WINNER <team> <p1> <p2> <p3>` appends the winning team's full
+  membership (`gGame.cpp:3944-3946` → `eTeam::WritePlayers`). The AI team won
+  all three rounds, so each of those three lines is its own census, and each
+  lists three players.
+- The HUD's `Enemies: 3 Friends: 1` (`gHud.cpp:238-251, 479`), legible in
+  Chrome's `04`, `08`, `12` and Firefox's `08`, `12`.
 
 ## What each screenshot actually shows
 
@@ -69,7 +154,7 @@ channel instead: the sampler reads `glGetError()` off the game's own context
 every 30th frame and logs a `[GLERR]` line for any non-zero result. Both
 engines: **0 non-zero out of 126 (Chrome) and 123 (Firefox) polls.**
 
-## Frame rate
+## Frame rate (tutorial-parameter — see the caveat at the top)
 
 Measured in-page by counting `glFlush`/`glFinish` calls — `rSysDep::SwapGL()`
 makes exactly one per rendered frame — over the whole span from round 1's
@@ -83,9 +168,13 @@ in `.superpowers/sdd/2026-08-27-m2-playable/task-8-report.md`.
 | frames per whole second, minimum | **53** | **56** |
 | worst single frame | 43.8 ms (= 22.8 fps instantaneous) | 41.0 ms (= 24.4 fps instantaneous) |
 
-The game's own HUD counter reads `FPS: 60` in every Chrome screenshot that has
-a cockpit in it, and `FPS: 60` in Firefox's `12`. (Firefox's `08` shows a
+The game's own HUD counter is a coarse, independent second opinion on the same
+runs — not the measurement, which is the table above. Of the Chrome shots read
+off individually, it is `FPS: 60` in `04`, `06`, `08`, `12` and `17`, and
+**`FPS: 59` in `05`**. (An earlier revision of this file said "60 in every
+Chrome screenshot with a cockpit", which was both off by one and an
+exhaustive-sounding claim about frames nobody had checked one by one; the
+59 is a normal sample of a series whose median is 60 and whose minimum whole
+second is 53, not an anomaly.) In Firefox, `12` reads `FPS: 60`; `08` shows a
 two-digit value in the high fifties whose second glyph is not crisp enough at
-this resolution to read off with confidence, so it is not quoted as a number.)
-That counter is a coarse, independent second opinion on the same runs, not the
-measurement — the measurement is the table above.
+this resolution to read off with confidence, so it is not quoted as a number.

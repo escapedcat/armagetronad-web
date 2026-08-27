@@ -17,18 +17,44 @@
 # match welcome() (gArmagetron.cpp:378-395) starts. With the three SP_* settings
 # in web/webdefaults/autoexec.cfg that match is three rounds against three AIs.
 #
-# The match's parameters are NOT the shipped single-player ones, and the report
-# should not pretend otherwise: welcome() temporarily sets speedFactor -2,
-# sizeFactor -2, wallsLength 400, rubber 5, delayCycle 0.05 for this one match
-# and restores them afterwards. It is a real game of Armagetron with real AI
-# opponents and real rounds; it is a gentle one.
+# The match's parameters are NOT the shipped single-player ones, and nothing
+# reporting on this run should pretend otherwise: welcome()
+# (gArmagetron.cpp:378-395) temporarily sets speedFactor -2, sizeFactor -5
+# (its own -3 default minus 2), wallsLength 400, rubber 5, delayCycle 0.05 for
+# this one match and restores them afterwards. It is a real game of Armagetron
+# with real AI opponents and real rounds; it is a gentle one, and a frame rate
+# measured here is a TUTORIAL-PARAMETER frame rate.
 #
-# WHAT PASSES. Three "[L] ROUND_WINNER" lines -- not three "[L] NEW_ROUND"
-# lines, which count rounds STARTED. Three "[L] TEAM_PLAYER_ADDED ai_team ..."
-# lines per round, which is team membership and therefore the opponent count
-# itself rather than a roster of names seen over time. A frame-rate dump whose
-# minimum, not only whose median, clears 30. No "Stack overflow detected", no
-# [EXCEPTION], no "SDL event queue full", and every 404 being /favicon.ico.
+# What welcome() does NOT touch is numAIs and limitRounds. So the three
+# opponents are attributable to SP_NUM_AIS 3 alone and the three rounds to
+# SP_LIMIT_ROUNDS 3 alone; only SP_AUTO_AIS is masked here, because welcome()
+# forces autoNum to 0 for this match regardless.
+#
+# WHAT PASSES
+#
+#   Rounds: three "[L] ROUND_WINNER" lines -- NOT three "[L] NEW_ROUND" lines,
+#   which count rounds STARTED.
+#
+#   Opponents: THE AI TEAM'S ROSTER, REPLAYED. Do not count
+#   "[L] TEAM_PLAYER_ADDED ai_team ..." lines per round -- an earlier version of
+#   this comment said to, and it is wrong. The TEAM_* writers log the DELTA, not
+#   a census: round 1 logs three adds, round 2 logs one remove and one add, and
+#   round 3 logs NOTHING AT ALL because its roster was already correct. Counting
+#   adds reports round 3 as having zero opponents. Replay
+#   TEAM_CREATED/TEAM_DESTROYED/TEAM_PLAYER_ADDED/TEAM_PLAYER_REMOVED into a set
+#   instead; docs/evidence/m2-gate/check-transcript.mjs does exactly that and is
+#   the reference implementation. "[L] ROUND_WINNER <team> <p1> <p2> <p3>" is an
+#   independent second census, because the engine appends the winning team's
+#   full membership (gGame.cpp:3944-3946 -> eTeam::WritePlayers).
+#
+#   Frame rate: a dump whose MINIMUM, not only whose median, clears 30.
+#
+#   Cleanliness: no "Stack overflow detected", no [EXCEPTION], no
+#   "SDL event queue full", no "[GLERR]", no "until TIMED OUT", and every 404
+#   being /favicon.ico.
+#
+# check-transcript.mjs checks every one of those against a transcript and exits
+# non-zero if any fails. Prefer running it to reading a report that quotes it.
 
 # ---------------------------------------------------------------------------
 # Frame-rate sampler. Installed before anything runs, so nothing is missed.
@@ -167,7 +193,15 @@ shot:16-after-the-match
 #
 # Both are reported because either alone can mislead: a median hides hitches, a
 # single-frame minimum makes a smooth run look bad.
-eval:(()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const ks=Object.keys(sec).map(Number).sort((a,b)=>a-b);const per=ks.slice(0,-1).map(k=>sec[k]);const span=(t1-t0)/1000;return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})()
+#
+# THE BUCKET LOOP RUNS OVER SECONDS, NOT OVER OBSERVED KEYS, and that is
+# load-bearing rather than style. An earlier version built the series by
+# mapping over Object.keys() of the tally, so a second in which the game
+# completed ZERO frames contributed no key and simply vanished from the series
+# -- meaning the one number that exists to detect a stall was the one number
+# that could not see a total freeze. Enumerating k = 0 .. floor(span) - 1 and
+# defaulting to 0 makes a one-second hang read as fps_per_second_min = 0.
+eval:(()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})()
 
 # ---------------------------------------------------------------------------
 # POSITIVE CONTROL for the WebGL-warning subscription, and the reason it is
@@ -184,6 +218,16 @@ eval:(()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.protot
 # guarded it, and the exact defect class section 9 is about. It runs on a
 # THROWAWAY canvas with its own context, so it cannot spend the game's WebGL
 # error budget or disturb anything on screen.
+#
+# WHAT THIS CONTROL DOES **NOT** TEST, so nobody reads more into it than is
+# there: it does not exercise the glGetError poll. The sampler is wrapped
+# around the GAME's context, which this canvas is not, and this step then calls
+# getError() itself to print the code -- consuming the error a poll would have
+# read. It tests the browser's warning channel and nothing else. Review
+# established the other channel separately by injecting the same call on the
+# game's own live context mid-run, which did produce
+# "[GLERR] frame 540 glGetError=0x500". Folding that into this script is worth
+# doing and is not free: it needs a safe point in the frame to fire at.
 #
 # PASS for this step: the transcript contains a browser-level warning line
 # mentioning hint/INVALID_ENUM within a second of it. MEASURED RESULT: Chrome

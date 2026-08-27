@@ -47,6 +47,18 @@
 //    web/tools/gameplay-gate.steps. This is the cross-engine channel, and the
 //    only one that works in Firefox.
 //
+// 5. THE FRAME RATE, against the gate's own >=30 bar -- the median AND the
+//    minimum of the frames-completed-per-whole-second series, over the whole
+//    span of the rounds. This script is called the arbiter, so it has to
+//    arbitrate the number the milestone is actually about; an earlier version
+//    of it printed ALL CHECKS PASSED without ever looking at the frame rate.
+//
+// 6. `until TIMED OUT`, which is how a driver records a wait that expired.
+//    A run in which a round never finished still produces its screenshots and
+//    its frame-rate dump, deliberately -- so the timeout line is the only
+//    thing separating "three rounds happened" from "I stopped waiting". It is
+//    checked over the WHOLE file, not just the run half.
+//
 // Exit status is 0 if every check passes and 1 otherwise, so it can be used as
 // a gate rather than read as prose.
 
@@ -133,22 +145,67 @@ check(badNotFound.length === 0,
       `every 404 is /favicon.ico (${notFound.length} total, ${badNotFound.length} other)`);
 for (const h of badNotFound.slice(0, 5)) console.log(`        ${h.trim().slice(0, 160)}`);
 
+// An `eval:` result is recorded as "... => <value>". Chrome's driver
+// JSON.stringify()s it, so the payload arrives as a quoted, backslash-escaped
+// string; Firefox's records it raw. Parsing once and then again if the result
+// is still a string handles both without knowing which driver wrote the file.
+const evalPayload = (needle) => {
+  const line = lines.find((l) => l.includes(needle) && l.includes(' => '));
+  if (!line) return null;
+  const raw = line.split(' => ').slice(1).join(' => ').trim();
+  try {
+    const v = JSON.parse(raw);
+    return typeof v === 'string' ? JSON.parse(v) : v;
+  } catch { return null; }
+};
+
 // ------------------------------------------------------------ 4. GL errors
 console.log('');
-const tally = lines.find((l) => l.includes('glGetError_nonzero'));
-if (!tally) {
-  check(false, 'the sampler reported a glGetError tally');
+const gl = evalPayload('glGetError_nonzero');
+if (!gl) {
+  check(false, 'the sampler reported a parseable glGetError tally');
 } else {
-  const m = /"glGetError_polls":(\d+),"glGetError_nonzero":(\d+)/.exec(tally.replace(/\\"/g, '"'));
-  if (!m) check(false, `could not parse the glGetError tally: ${tally.slice(-160)}`);
-  else {
-    console.log(`glGetError: ${m[1]} polls, ${m[2]} non-zero`);
-    check(Number(m[1]) > 0, 'the glGetError poll actually ran');
-    check(Number(m[2]) === 0, 'the game produced no GL errors during the run');
-  }
+  console.log(`glGetError: ${gl.glGetError_polls} polls, ${gl.glGetError_nonzero} non-zero`);
+  check(gl.glGetError_polls > 0, 'the glGetError poll actually ran');
+  check(gl.glGetError_nonzero === 0, 'the game produced no GL errors during the run');
 }
 
-// ------------------------------------------------- 5. the positive controls
+// ------------------------------------------------------------ 5. frame rate
+console.log('');
+const BAR = 30;
+const fps = evalPayload('total_frames_sampled');
+if (!fps || !fps.overall) {
+  check(false, 'the sampler reported a parseable frame-rate dump');
+} else {
+  const o = fps.overall;
+  console.log(`frame rate over ${o.span_s}s / ${o.frames} frames:`
+            + ` per-second median ${o.fps_per_second_median}, min ${o.fps_per_second_min};`
+            + ` worst single frame ${o.frame_ms.max} ms`);
+  check(o.fps_per_second_median >= BAR,
+        `median frames-per-second >= ${BAR} (${o.fps_per_second_median})`);
+  check(o.fps_per_second_min >= BAR,
+        `MINIMUM frames-per-second >= ${BAR} (${o.fps_per_second_min}) -- the worst whole second`);
+  // Deliberately a note, not a check. The worst single frame is a much harsher
+  // statistic than a frame rate, and the gate is about a frame rate; printing
+  // it keeps it visible without letting one hitch decide the milestone.
+  note(`worst single frame ${o.frame_ms.max} ms = ${(1000 / o.frame_ms.max).toFixed(1)} fps `
+     + `instantaneous. Not a pass criterion -- see the report -- but do not let it go unread.`);
+  // A window shorter than the rounds would make the numbers above meaningless.
+  check(o.span_s > 0 && fps.rounds_won >= 3 && Math.abs(o.span_s - (o.frames / (o.mean_fps || 1))) < 1,
+        `the measured window is the rounds themselves (${o.span_s}s spanning all ${fps.rounds_won})`);
+}
+
+// ------------------------------------------------- 6. no expired waits
+console.log('');
+{
+  const hits = lines.filter((l) => l.includes('until TIMED OUT'));
+  check(hits.length === 0,
+        `no "until TIMED OUT" anywhere in the file (${hits.length} hits) -- a driver `
+        + `records this and keeps going, so it is the only sign of a wait that never came`);
+  for (const h of hits.slice(0, 5)) console.log(`        ${h.trim().slice(0, 160)}`);
+}
+
+// ------------------------------------------------- 7. the positive controls
 console.log('');
 const ctlWebgl = controlLines.filter((l) => !isHarness(l) && /WebGL/i.test(l) && /hint/i.test(l));
 if (ctlWebgl.length) {
