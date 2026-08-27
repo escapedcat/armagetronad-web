@@ -197,7 +197,7 @@ None of these is a failure:
 
 ### The browser-driving harness
 
-`web/tools/` holds two ~200-line Node scripts that open the page in a real
+`web/tools/` holds two Node scripts (393 and 300 lines) that open the page in a real
 browser, click Play, press keys, take screenshots and record everything the
 console says. They exist because the page cannot be checked with a plain
 screenshot — nothing runs until Play is clicked — and because retyping the
