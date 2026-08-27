@@ -51,10 +51,10 @@ Estimates are relative effort, not calendar commitments.
   "Ready for connections" string exists in this codebase); native-recorded
   demo plays back under Node (best-effort)
 
-**M1 — Client links, boots to main menu in browser (4–7 days).**
+**M1 — Client links, boots to main menu in browser (4–7 days). ✅ DONE.** Chrome 152 and Firefox 154, WebGL on a real GPU, arrow keys / Enter / Escape all working. Evidence: `docs/evidence/m1-task7/` (20 screenshots, 2 console transcripts); re-runnable as `web/tools/menu-gate.steps`. **Read "main menu" narrowly**: what the client reaches is the language menu and the first-run setup menu, which are the two menus that come *before* the game. `gMenus.cpp`'s main menu — the one with submenus — sits behind a first-run tutorial round, so reaching it is gameplay and therefore M2's. Long-form reasoning behind every patch: `docs/porting/browser-runtime-notes.md`.
 - Client config.h variant: + `HAVE_LIBSDL`, `HAVE_SDL_SDL_IMAGE_H`, `HAVE_LIBSDL_IMAGE`, `HAVE_LIBPNG`, − `DEDICATED`
 - Patch `src/render/rTexture.cpp`: stub `IMG_InvertAlpha`; `gluBuild2DMipmaps` → `glTexImage2D` (unsized formats) + `glGenerateMipmap`
-- Patch `src/render/rSysdep.cpp`: `SDL_Delay`→`emscripten_sleep` in `sr_LimitFPS`; guaranteed `emscripten_sleep(0)` per frame at end of `SwapGL()` — THE browser yield point (all blocking loops call SwapGL: `uMenu::Enter`, splash screen, message boxes, connection waits, game loop)
+- Patch `src/render/rSysdep.cpp`: `SDL_Delay`→`emscripten_sleep` in `sr_LimitFPS`; guaranteed `emscripten_sleep(0)` per frame ~~at end of~~ **at the TOP of** `SwapGL()` — THE browser yield point (all blocking loops call SwapGL: `uMenu::Enter`, splash screen, message boxes, connection waits, game loop). *Corrected at M1: `SwapGL()` returns early whenever `sr_glOut` is false — console auto-scroll, recorder frame-skip and fast-forward all clear it — and that return skips everything below, so a yield at the end is missed by exactly the loops that spin hardest. Top-of-function is the only placement that is once-per-call for every caller.* The `sr_LimitFPS` half of this line was right, and the M1 plan's landmine #2 talked M1 out of it for a while; see that entry's correction.
 - Patch `src/tools/tSysTime.cpp`: `tDelay` → `emscripten_sleep` (recorder-safe: inside the wrapped functions)
 - New `src/emscripten/eCompat.cpp`: stubs (SDL mutex/thread no-ops, `SDL_LoadWAV`/`SDL_BuildAudioCVT` if missing, display-list family `glNewList`… return 0 — lists default off)
 - Link: `-sUSE_SDL=1 -sUSE_LIBPNG=1 -sLEGACY_GL_EMULATION=1 -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 -fexceptions --use-preload-plugins --preload-file config@/data/config` (+ language/textures/models/sound/resource/included/webdefaults) `--shell-file web/shell.html`
@@ -76,7 +76,7 @@ Estimates are relative effort, not calendar commitments.
 | Risk | Mitigation → Fallback |
 |---|---|
 | LEGACY_GL_EMULATION gaps | Conservative runtime defaults + per-feature disables → **gl4es drop-in** (more complete fixed-function translator, same integration shape) → targeted GLES2 rewrite of hot paths only (floor/walls/model) via existing `rRenderer` seam (`rRender.h`) — last resort |
-| Asyncify stack/reentrancy | Single yield point in SwapGL, big ASYNCIFY_STACK_SIZE → manually restructure only `uMenu::Enter` + `sg_EnterGameCore`, or JSPI |
+| Asyncify stack/reentrancy | Yield points funnelled through SwapGL (M1 ships two per frame — top-of-function, plus `sr_LimitFPS()` when the frame finishes early; both measured fine), big ASYNCIFY_STACK_SIZE → manually restructure only `uMenu::Enter` + `sg_EnterGameCore`, or JSPI. **The primitive matters, the count does not**: only sleeps in `ASYNCIFY_IMPORTS` are safe, never `SDL_Delay` — `browser-runtime-notes.md` § 8 |
 | SDL1 emulation gaps | eCompat.cpp stubs, found at link time → each replaceable <100 lines |
 | Float non-determinism breaks demo playback | Treat playback as diagnostic, not gate → manual playtest matrix |
 | Immediate-mode emulation too slow | MAX_FPS 60, reduced effects → same gl4es / GLES2 hot-path chain as above |

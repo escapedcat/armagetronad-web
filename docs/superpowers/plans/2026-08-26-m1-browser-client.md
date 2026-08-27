@@ -24,11 +24,21 @@
 
 The full investigation is at `.superpowers/m1-recon.md` (git-ignored). It syntax-checked all 104 client translation units, so the compile-error list below is **fact, not prediction**.
 
+> **Read that claim narrowly — one of these was false.** "Fact, not prediction" holds for the compile errors, because reconnaissance actually compiled them. The rest is very good reading of the emsdk sources, and #2 shows what reading can miss: it was wrong, it was trusted because of the sentence above, and unpicking it took most of Task 7. Entries M1 falsified now carry their correction inline; nothing is deleted, because the wrong version is what a reader may have already acted on.
+
 1. **The Asyncify yield goes at the TOP of `SwapGL()`, not the end.** `rSysdep.cpp:626-639` returns early whenever `sr_glOut` is false — reachable via console auto-scroll, recorder frame-skip and fast-forward — bypassing everything after it including `sr_LimitFPS()`. Only a top-of-function yield is once-per-call for every caller.
-2. **`sr_LimitFPS()` needs no patch.** Under Asyncify, `SDL_Delay` is already aliased to `emscripten_sleep` (`libsdl.js:1712-1713`). It is also an unreliable yield: at the default `MAX_FPS 360` its delay branch is usually not taken.
+2. **FALSE — corrected in Task 7; do not act on this entry.** ~~`sr_LimitFPS()` needs no patch. Under Asyncify, `SDL_Delay` is already aliased to `emscripten_sleep` (`libsdl.js:1712-1713`). It is also an unreliable yield: at the default `MAX_FPS 360` its delay branch is usually not taken.~~
+
+   > **Correction.** The alias in `libsdl.js` is real, and it is **JS-side only**. `src/jsifier.mjs` resolves aliases without copying the target's `__async` decorator (grep `LibraryManager.isAlias`, then `asyncFuncs.push`), so `SDL_Delay` never enters `ASYNCIFY_IMPORTS` and Binaryen never instruments the wasm call site. The two halves then disagree: the JS side starts a real unwind, the wasm caller was never instrumented and returns normally, and `__stack_pointer` is restored from an asyncify slot nothing wrote. The client booted, drew exactly one frame, then stopped rendering and stopped seeing keystrokes — and usually died with `Attempt to set SP to 0xffffffb0`.
+   >
+   > **The rule that replaces this entry: never call `SDL_Delay` in the client. Only call sleeps that appear in `ASYNCIFY_IMPORTS`.** `sr_LimitFPS()` *did* need a patch — its `SDL_Delay` is now `emscripten_sleep` under `__EMSCRIPTEN__` — and with it `MAX_FPS` is live in the browser.
+   >
+   > The second sentence was beside the point rather than wrong: how often the delay branch is taken decides how often the bug fires, not whether it exists. That is also why the first bisection (flipping `MAX_FPS` 60 ↔ 0) pointed at yield *counting* instead of at the primitive.
+   >
+   > Full argument, the reduction that proved it, and the `-sASYNCIFY_IMPORTS=SDL_Delay` escape hatch: `docs/porting/browser-runtime-notes.md` § 8.
 3. **`rConsoleCout.cpp` stays excluded, but for a NEW reason.** In a client build `DEDICATED` is undefined, so `rConsoleGraph.cpp:30`'s `#ifndef` takes the graphical branch and the `#include "rConsoleCout.cpp"` at `:274` never compiles. Adding the file would cause three duplicate-symbol errors (`DoCenterDisplay`, `DisplayAtNewline`, `sr_InputForScripts`). M0's `EXCLUDES` comment explains the dedicated-build reason and is now wrong for the client — update it.
 4. **`src/thirdparty/particles` must NOT be built.** `USE_PARTICLES` is commented out (`gParticles.h:32`), so it is dead code. Native tolerates it only because it becomes a `.a` whose unreferenced members are dropped; passing the objects directly introduces `glCallList`, `glPushClientAttrib` and `glPopClientAttrib` as undefined symbols for zero benefit.
-5. **`sr_LoadDefaultConfig()` sniffs the GPU vendor and turns on two dangerous features.** `rScreen.cpp:1010-1015`: if `glGetString(GL_VENDOR)` contains `NVIDIA`, it sets `sr_infinityPlane=true` and `sr_useDisplayLists=rDisplayList_CAC`. Under WebGL that string is browser-dependent (Chrome can report `Google Inc. (NVIDIA)`). It runs under `if (st_FirstUse)` — every page load until M4's persistence — and **after** config parsing, so `settings_web.cfg` cannot defend against it.
+5. **`sr_LoadDefaultConfig()` sniffs the GPU vendor and turns on two dangerous features.** `rScreen.cpp:1010-1015`: if `glGetString(GL_VENDOR)` contains `NVIDIA`, it sets `sr_infinityPlane=true` and `sr_useDisplayLists=rDisplayList_CAC`. Under WebGL that string is browser-dependent (Chrome can report `Google Inc. (NVIDIA)`). It runs under `if (st_FirstUse)` — every page load until M4's persistence — and **after** config parsing, so `settings_web.cfg` cannot defend against it. *(That filename is dead — Task 6 Step 4's correction has the detail; the file shipped as `autoexec.cfg`. The point survives the rename: no `.cfg`, under any name, loads late enough to win.)*
 6. **`GL_QUAD_STRIP` hard-aborts the runtime.** `libglemu.js:3062` aborts on primitive mode 8; `gWall.cpp:1242` uses it every frame in gameplay and it is not configurable (`gWall.cpp:1066` is `static const bool`). Not reachable from the menu, so it does not block M1 — but it is one line while `rGLRender.cpp` is open.
 7. **A NULL mutex is passed every frame and that is fine.** `rSysDep::StartNetSyncThread()` returns unconditionally at `rSysdep.cpp:500`, so `sr_netLock` is never created and `SwapGL()` calls `SDL_mutexV(NULL)`/`SDL_mutexP(NULL)`. Emscripten's mutex functions are no-op stubs returning 0 (`libsdl.js:2602-2605`). No patch needed — noted because it looks alarming in a stack trace.
 8. **`DIRTY` is undefined, which deletes a large GLX/wgl block** (`rSysdep.cpp:93-248`). This is good luck; do not "fix" the config in a way that defines it.
@@ -482,7 +492,9 @@ git commit -m "port: add browser compatibility shims and link the client"
 
 Add `#include <emscripten.h>` under the same guard.
 
-Do NOT patch `sr_LimitFPS()`: under Asyncify `SDL_Delay` is already `emscripten_sleep` (`libsdl.js:1712-1713`), and its delay branch usually is not taken at `MAX_FPS 360` anyway.
+~~Do NOT patch `sr_LimitFPS()`: under Asyncify `SDL_Delay` is already `emscripten_sleep` (`libsdl.js:1712-1713`), and its delay branch usually is not taken at `MAX_FPS 360` anyway.~~
+
+> **Correction (Task 7). Ignore that instruction — `sr_LimitFPS()` does need the patch.** It repeats landmine #2, which is false: the `SDL_Delay` → `emscripten_sleep` alias is JS-side only and never reaches `ASYNCIFY_IMPORTS`, so Binaryen leaves the call site uninstrumented and the unwind corrupts the stack pointer. `sr_LimitFPS()`'s `SDL_Delay` is now `emscripten_sleep` under `__EMSCRIPTEN__`, `SDL_Delay` kept for native, and `MAX_FPS` works in the browser. Two Asyncify yields per `SwapGL()` — this one and the top-of-function one above — were measured to be fine; yield *count* was never the problem. `docs/porting/browser-runtime-notes.md` § 8.
 
 - [ ] **Step 2: Make `tDelay` and `tDelayForce` yield**
 
@@ -500,7 +512,7 @@ Patch the `usleep(...)` call inside each, leaving the surrounding logic alone. T
 
 - [ ] **Step 3: Disarm the GPU-vendor branch**
 
-`rScreen.cpp:1010-1015` turns on `INFINITY_PLANE` and `USE_DISPLAYLISTS` when `glGetString(GL_VENDOR)` contains `NVIDIA`. Under WebGL that string is browser-dependent, this runs on every page load until M4's persistence lands, and it runs *after* config parsing so `settings_web.cfg` cannot override it. `INFINITY_PLANE` makes `glTexCoord4f` live (`libglemu.js:3218` aborts); display lists would call the Task 4 stubs, which return 0 and silently render nothing.
+`rScreen.cpp:1010-1015` turns on `INFINITY_PLANE` and `USE_DISPLAYLISTS` when `glGetString(GL_VENDOR)` contains `NVIDIA`. Under WebGL that string is browser-dependent, this runs on every page load until M4's persistence lands, and it runs *after* config parsing so `settings_web.cfg` cannot override it *(dead filename — see Step 4 of Task 6; shipped as `autoexec.cfg`, and no config file of any name loads late enough)*. `INFINITY_PLANE` makes `glTexCoord4f` live (`libglemu.js:3218` aborts); display lists would call the Task 4 stubs, which return 0 and silently render nothing.
 
 Guard the whole `else if(strstr(gl_vendor,"NVIDIA"))` branch out with `#ifndef __EMSCRIPTEN__`, with a comment explaining that WebGL vendor strings are not GPU-driver vendor strings.
 
@@ -542,7 +554,7 @@ Report the size before and after Asyncify — the instrumentation is expected to
 ### Task 6: Assets and the page
 
 **Files:**
-- Create: `web/shell.html`, `web/webdefaults/settings_web.cfg`
+- Create: `web/shell.html`, ~~`web/webdefaults/settings_web.cfg`~~ → **`web/webdefaults/autoexec.cfg`** (see Step 4's correction)
 - Modify: `web/Makefile` (preload flags, shell file)
 
 **Interfaces:**
@@ -647,7 +659,7 @@ A minimal page: a canvas, a loading indicator, and a start button. The button ma
 
 Keep it plain and commented — its reader is a JavaScript developer, which is the one part of this stack that is home turf.
 
-- [ ] **Step 4: Write `web/webdefaults/settings_web.cfg`**
+- [ ] **Step 4: Write ~~`web/webdefaults/settings_web.cfg`~~ `web/webdefaults/autoexec.cfg`**
 
 ```
 MAX_FPS 60
@@ -657,6 +669,10 @@ SOUND_BUFFER_SHIFT 3
 ```
 
 Note the setting is `USE_DISPLAYLISTS` (`rModel.cpp:45`). This file is defence in depth only — Task 5 patched out the code that would override it, because `sr_LoadDefaultConfig()` runs after config parsing.
+
+> **Correction (Task 6). The filename in this step is dead — `settings_web.cfg` is opened by no code path in the tree.** `st_LoadConfig()` (`tConfiguration.cpp:959-1000`) opens a fixed handful of names, and that is not one of them, so every setting above would have been silently ignored. The file shipped as `autoexec.cfg`, which `st_LoadConfig()` opens unconditionally in both build variants, with no first-use gate, and which loads *after* `user.cfg` and `settings.cfg` so its values win. Two consequences carried into `PLAN.md`'s M2 entry and into the file's own header comment: `/data/webdefaults` **replaces rather than merges** (never drop a `settings.cfg` or `keys_*.cfg` there — it would shadow the shipped one whole), and these are hard overrides a user cannot change back, which is right for `USE_DISPLAYLISTS`/`INFINITY_PLANE` and worth re-thinking for `MAX_FPS` once M4 persists settings. `default.cfg` was considered and rejected: it is gated on `st_FirstUse` and would also shadow the shipped `config/default.cfg` entirely.
+>
+> The same dead filename appears in landmine #5 and in Task 5 Step 3, where it is used only to make the point that no `.cfg` can defend against `sr_LoadDefaultConfig()`. That point survives the rename — no config file, whatever its name, loads late enough.
 
 - [ ] **Step 5: Build and confirm the page exists**
 
@@ -690,7 +706,9 @@ Then open `http://localhost:8000/armagetronad.html`. (A plain `file://` open wil
 
 - [ ] **Step 2: Capture what actually happens**
 
-Record, from the browser devtools console: every error and warning, how far the boot got, and whether anything renders. If the tab hangs, the first thing to check is the `SDL_GetAppState` loops at `rScreen.cpp:811-815` and `:823-827` — they are not routed through `SwapGL()` or `tDelay()` and depend on `SDL_Delay` being Asyncify-aliased.
+Record, from the browser devtools console: every error and warning, how far the boot got, and whether anything renders. ~~If the tab hangs, the first thing to check is the `SDL_GetAppState` loops at `rScreen.cpp:811-815` and `:823-827` — they are not routed through `SwapGL()` or `tDelay()` and depend on `SDL_Delay` being Asyncify-aliased.~~
+
+> **Correction (done in Task 7).** The right instinct, the wrong reason: those two loops are dangerous *because* `SDL_Delay` cannot be depended on at all. The alias is JS-side only, never reaches `ASYNCIFY_IMPORTS`, and its call site is never instrumented — see landmine #2's correction and `docs/porting/browser-runtime-notes.md` § 8. Both loops are now compiled out under `__EMSCRIPTEN__`; there is no ALT-Tab in a browser. They never actually spun, and only by luck: Emscripten's `SDL_GetAppState` ORs in `SDL_APPACTIVE` unconditionally, so the condition was never true. `llvm-nm` over every client object confirmed these two were the whole client's only undefined `SDL_Delay`.
 
 - [ ] **Step 3: Log what the browser reports as its GPU vendor**
 
@@ -704,7 +722,15 @@ Escalate rather than improvise if a fix would require restructuring code the pla
 
 - [ ] **Step 5: Verify the gate in both browsers**
 
-The menu must appear and be navigable with the arrow keys and Enter in **Chrome and Firefox**. Navigate into a submenu and back out. Screenshot both.
+The menu must appear and be navigable with the arrow keys and Enter in **Chrome and Firefox**. ~~Navigate into a submenu and back out.~~ Screenshot both.
+
+> **Correction (Task 7). The submenu criterion is not achievable at M1, and it is not a shortfall — there is no submenu on the path this milestone reaches.** Both menus reachable before gameplay were enumerated from the source and neither contains a `uMenuItemSubmenu` (`uMenu.h:468`): the language menu (`gLanguageMenu.cpp:125-141`) holds only `uMenuItemLanguage`, and First Setup (`gArmagetron.cpp:152-226`) holds `uMenuItemExit`, `uMenuItemString` and three `uMenuItemSelection`. "Controls:" looks like a submenu and is not — it is a left/right chooser over `keys_*.cfg` templates (`gArmagetron.cpp:175`). The real main menu, where the submenus live (`gMenus.cpp`), is only reached after `welcome()` runs a tutorial single-player game (`gArmagetron.cpp:391`), because `st_FirstUse` is true on every load until M4 adds persistence — so reaching it means playing, which is M2's gate, not M1's.
+>
+> **What was demonstrated instead**, in both browsers, ten screenshots each, committed at `docs/evidence/m1-task7/`: every menu input path M1 can reach — Down, Up, Left/Right, Enter and Escape — each with a before/after pair, plus Enter leaving one menu for another and Escape leaving First Setup entirely. That covers the same underlying capability the submenu round trip was standing in for: input reaches the game, the game re-renders, and menu state changes both ways.
+>
+> Recorded for whoever revisits this: `st_FirstUse` is exposed as the config item `FIRST_USE` (`tConfiguration.cpp:402`), so `FIRST_USE 0` would boot straight to the main menu. That changes what every real user sees on first load, so it is a product decision, not a test fix.
+>
+> The re-runnable script and the full reasoning are in `web/tools/menu-gate.steps`.
 
 Note for later, not for now: `config/keys_cursor.cfg` binds SDL 1.2 numeric keycodes (274/275/276) while Emscripten emits 1105/1103/1104, so default arrow-key *steering* bindings will silently not fire in gameplay. Menu navigation uses `SDLK_*` constants and is unaffected. This is an M2 problem — record it, do not fix it here.
 
@@ -716,9 +742,11 @@ Note for later, not for now: `config/keys_cursor.cfg` binds SDL 1.2 numeric keyc
 
 **Files:**
 - Modify: `web/README.md`, `README.md`
-- Create: `docs/m1/` evidence
+- Create: ~~`docs/m1/`~~ **`docs/evidence/m1-task7/`** — evidence
 
-- [ ] **Step 1: Verify the gate from a clean rebuild**
+> **Correction (Task 8).** Steps 1 and 2 were overtaken by events. Task 7 committed the evidence as it captured it, under `docs/evidence/m1-task7/` rather than `docs/m1/` — 20 screenshots and 2 console transcripts, from a run of `web/tools/menu-gate.steps` in each browser. That evidence is the milestone gate, so Task 8 did **not** re-run Step 1's clean rebuild: a rebuild that produced different screenshots would replace the gate with an unreviewed one, and one that produced identical screenshots would prove nothing the committed set does not. Task 8 was executed as documentation only, no rebuild and no relink, and re-verified the dedicated wasm by measuring the existing artifact (2,488,298 bytes). Every command written into the docs was executed first.
+
+- [ ] **Step 1: Verify the gate from a clean rebuild** — *not run; see the correction above*
 
 ```bash
 make -f web/Makefile clean
@@ -729,7 +757,7 @@ ls -l web/dist-m0/armagetronad-dedicated.wasm   # must still be 2488298
 
 Then re-serve and re-confirm the menu in both browsers.
 
-- [ ] **Step 2: Commit durable evidence**
+- [ ] **Step 2: Commit durable evidence** — *done in Task 7, at `docs/evidence/m1-task7/`*
 
 Screenshots of the menu in Chrome and Firefox into `docs/m1/`, plus the devtools console output as a text file. M0 established that the reports live in a git-ignored workspace, so evidence that is not committed does not exist.
 
