@@ -60,8 +60,18 @@ description of what it is checking.
 `gameplay-gate.steps.asrun` is the script **exactly as executed** for these
 transcripts (`md5 76567cb89e88041761d86b4ef8348004`). It is not updated when
 `web/tools/gameplay-gate.steps` is, because then it would stop being a record
-of what produced these numbers. Two things have been corrected in the live
-script since, and a reader of the `.asrun` copy should know both:
+of what produced these numbers.
+
+Do not take this list on trust either — run the diff:
+
+    diff docs/evidence/m2-gate/gameplay-gate.steps.asrun web/tools/gameplay-gate.steps
+
+**Exactly one non-comment line differs.** Everything else is comment text:
+
+    diff <(grep -v '^[[:space:]]*#' docs/evidence/m2-gate/gameplay-gate.steps.asrun) \
+         <(grep -v '^[[:space:]]*#' web/tools/gameplay-gate.steps)
+
+#### Three things were corrected
 
 1. **Its "WHAT PASSES" header told you to count `TEAM_PLAYER_ADDED` lines per
    round.** That is wrong — see the "three AIs" section below. The header in
@@ -70,11 +80,39 @@ script since, and a reader of the `.asrun` copy should know both:
    them as zero, so a full-second stall would have vanished from the series
    instead of setting the minimum to 0. It did not happen in these runs (every
    second of both windows has frames in it, which the committed series show),
-   but the live script now enumerates every whole second explicitly.
+   but the live script now enumerates every whole second explicitly. This is
+   the one non-comment line: the `eval:` expression that dumps the frame-rate
+   statistics.
+3. **Its header said `welcome()` sets `sizeFactor -2`.** It does
+   `sizeFactor -= 2` against `sizeFactor`'s own `-3` default, so the value
+   during the tutorial match is **−5**, which is what the live script now says.
+   The parameters table at the top of this file has always had −5; the `.asrun`
+   header is the only place the −2 appears.
 
-Neither changes any number in this directory. Re-running the *live* script
-reproduces the same measurements by the same method, with the second-bucket
-hole closed.
+#### And one thing was added, plus supporting prose
+
+4. **A `WHAT THIS CONTROL DOES NOT TEST` block** on the WebGL positive
+   control, recording that it does not exercise the `glGetError` poll: the
+   throwaway canvas is not the game's context, and the step calls `getError()`
+   itself to print the code, consuming the error a poll would have read. It
+   tests the browser's warning channel and nothing else. (The other channel was
+   established separately during review, by injecting the same invalid call on
+   the game's live context mid-run, which did produce
+   `[GLERR] frame 540 glGetError=0x500`.)
+
+The rest of the added text argues for things this file already says, and none
+of it corrects a claim: a paragraph on what `welcome()` does *not* touch
+(`numAIs`, `limitRounds`) and why that keeps the two counts attributable; two
+more forbidden strings spelled out in the "cleanliness" list (`[GLERR]` and
+`until TIMED OUT`); a pointer to `check-transcript.mjs` as the arbiter and as
+the reference implementation of the roster replay; the note that
+`ROUND_WINNER`'s player list is an independent second census; the comment above
+the bucket loop explaining why correction 2 is load-bearing rather than style;
+and the phrase "a frame rate measured here is a TUTORIAL-PARAMETER frame rate".
+
+**No correction changes any number or any conclusion in this directory.**
+Re-running the *live* script reproduces the same measurements by the same
+method, with the second-bucket hole closed.
 
 ## Three rounds, and three AIs — how these are counted
 
@@ -156,17 +194,83 @@ engines: **0 non-zero out of 126 (Chrome) and 123 (Firefox) polls.**
 
 ## Frame rate (tutorial-parameter — see the caveat at the top)
 
-Measured in-page by counting `glFlush`/`glFinish` calls — `rSysDep::SwapGL()`
-makes exactly one per rendered frame — over the whole span from round 1's
-`NEW_ROUND` to round 3's `ROUND_WINNER`. Full numbers, method and caveats are
-in `.superpowers/sdd/2026-08-27-m2-playable/task-8-report.md`.
+### What was counted, and why it is the frame rate rather than a proxy for it
 
-|  | Chrome | Firefox |
+Calls to `glFlush`/`glFinish` on the live WebGL context, wrapped from the page
+before the module starts. `rSysDep::SwapGL()` (`rSysdep.cpp:747-758`) ends every
+rendered frame with exactly one of the two — chosen by `swapMode_`, immediately
+before the buffer swap and after the early `!sr_glOut` return — and Emscripten
+compiles both to a single method call on the real context
+(`_glFlush = () => GLctx.flush()`, `armagetronad.js:14460-14464`).
+`grep -rn 'glFlush\|glFinish' src/` finds no other **call** to either anywhere
+in the program — the remaining hits are the `rSwapMode` enum
+(`rSysdep.h:37-38`), assignments to `swapMode_` (`rScreen.cpp:1029`, `:1069`,
+`:1075`) and the two menu entries that let a player choose between them
+(`gMenus.cpp:605-606`). So one call through the wrapper is one frame the game
+finished drawing. Both are wrapped because `swapMode_` is `glFlush` by default
+(`rSysdep.cpp:459`) and `sr_LoadDefaultConfig()` switches it to `glFinish`
+(`rScreen.cpp:1029`), which is what the first-use path this script drives
+actually runs with.
+
+This replaced M1's estimator, which counted `setTimeout` calls and divided by
+two on a theory of two Asyncify yields per frame. The second yield is
+`sr_LimitFPS()`'s and only happens when the frame finished *early*
+(`rSysdep.cpp:606-614`) — so that estimator silently halved exactly when the
+frame rate dropped, which is the one case a gate is about.
+
+**Window:** round 1's `[L] NEW_ROUND` to round 3's `[L] ROUND_WINNER` — the
+entire length of the three rounds, not a sampled slice. The same hook
+timestamps every `[L] ` line with `performance.now()`, so the round boundaries
+are in the same clock as the frame samples. `check-transcript.mjs` then
+cross-checks that span against the driver's own wall-clock stamps, which are
+recorded outside the page: Chrome 22233 ms → 61874 ms = 39.641 s against a
+reported 39.64.
+
+**Cost of measuring:** one `performance.now()` and one array store per frame,
+plus one `getError()` every 30th frame. About 62 extra operations a second.
+
+### The numbers
+
+|  | Chrome 152 (headed) | Firefox 154.0.1 (headless) |
 |---|---|---|
 | span measured | 39.64 s, 2369 frames | 39.41 s, 2324 frames |
+| mean | 59.76 fps | 58.97 fps |
 | frames per whole second, median | **60** | **59** |
 | frames per whole second, minimum | **53** | **56** |
+| instantaneous fps: median / p10 / p01 | 59.88 / 55.56 / 50.25 | 58.82 / 50.00 / 38.46 |
 | worst single frame | 43.8 ms (= 22.8 fps instantaneous) | 41.0 ms (= 24.4 fps instantaneous) |
+| frame interval p50 / p90 / p99 / max | 16.7 / 18.0 / 19.9 / 43.8 ms | 17 / 20 / 26 / 41 ms |
+
+Per round, frames-per-whole-second minimum / median:
+
+|  | round 1 | round 2 | round 3 |
+|---|---|---|---|
+| Chrome | 53 / 60 | 60 / 60 | 60 / 60 |
+| Firefox | 57 / 58 | 58 / 59 | 60 / 60 |
+
+The full per-second series for every window is in the transcripts themselves.
+Chrome's overall: `[53,60,60,60,59,60,59,60,…,60,59,61,60]`.
+
+### The caveats, in full
+
+- **These are tutorial-parameter numbers.** See the top of this file. It is the
+  most important caveat and the easiest to drop when quoting.
+- **Two statistics, because either alone misleads.** `fps_per_second` is frames
+  actually completed in each *whole* wall-clock second — "the frame rate" in the
+  sense a player means, and what the ≥30 bar is judged on. `inst_fps` is
+  percentiles of `1000/(gap between consecutive frames)`; its `min` is the single
+  worst frame in the run, which one 44 ms hitch anywhere sets.
+- **A bucket occasionally reads `61`.** That is bucket-boundary rounding in a
+  fixed 1000 ms histogram at a 59.9 fps mean, not the `MAX_FPS 60` cap being
+  exceeded.
+- **The last, partial second of each window is dropped** rather than reported as
+  a dip.
+- **"≥30 fps" is read here as a rate, not as a bound on any single frame.** Read
+  the other way — no frame ever taking longer than 33 ms — *neither* browser
+  meets it, and it is doubtful any browser build would. Both readings are in the
+  table above; apply your own. The only figures below 30 anywhere are the worst
+  single frames, one per engine, both in round 1, both consistent with
+  first-round arena and texture work.
 
 The game's own HUD counter is a coarse, independent second opinion on the same
 runs — not the measurement, which is the table above. Of the Chrome shots read

@@ -200,7 +200,8 @@ if (!fps || !fps.overall) {
   // statistic than a frame rate, and the gate is about a frame rate; printing
   // it keeps it visible without letting one hitch decide the milestone.
   note(`worst single frame ${o.frame_ms.max} ms = ${(1000 / o.frame_ms.max).toFixed(1)} fps `
-     + `instantaneous. Not a pass criterion -- see the report -- but do not let it go unread.`);
+     + `instantaneous. Not a pass criterion -- docs/evidence/m2-gate/README.md, `
+     + `"The caveats, in full" -- but do not let it go unread.`);
   // A window shorter than the rounds would make every number above
   // meaningless, so span_s has to be checked -- and checked against something
   // outside the payload it came from. The driver stamps each line with its own
