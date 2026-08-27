@@ -1096,7 +1096,21 @@ void sr_ResetRenderState(bool menu){
 
     if (menu){
         glDisable(GL_DEPTH_TEST);
+#ifdef __EMSCRIPTEN__
+        // Do not call glHint(GL_PERSPECTIVE_CORRECTION_HINT, ...) here. WebGL 1
+        // accepts only GL_GENERATE_MIPMAP_HINT as a hint target, and libglemu.js
+        // forwards this one straight to a WebGL call that rejects it -- the
+        // rejection itself is harmless, since perspective correction is not
+        // optional in WebGL and there is nothing the hint could change. The real
+        // cost is that this runs once per menu frame, and Chrome enforces a
+        // small *permanent* per-context budget on WebGL errors surfaced to
+        // devtools: once it is spent (M1 measured ~256 calls, 1.4s into boot),
+        // Chrome silently drops every WebGL error for that context's remaining
+        // lifetime -- including real ones later gameplay-rendering work needs to
+        // see. See docs/porting/browser-runtime-notes.md § 9.
+#else
         glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+#endif
         glViewport (0, 0, GLsizei(sr_screenWidth), GLsizei(sr_screenHeight));
     }
     else{
