@@ -40,6 +40,23 @@
 //   key:NAME:N            press it N times, 150ms apart
 //   eval:EXPR             Runtime.evaluate an expression, print the result
 //   mark:TEXT             write a marker line into the console transcript
+//   until:N:MS:TEXT       block until TEXT has appeared in N transcript lines,
+//                         or MS milliseconds elapse. Records which happened.
+//
+// WHY `until` EXISTS (the only directive M2 added). A gameplay script cannot
+// be written in `wait:` alone the way a menu script can. A menu keystroke has
+// a fixed, tiny latency; a ROUND of Armagetron ends when a cycle hits a wall,
+// which is a different duration every run and depends on how the AIs play. The
+// M1 vocabulary could only express that as a `wait:` long enough for the worst
+// case, which makes the script both slow and -- much worse -- unable to tell
+// "the round ended" from "the round hung and I waited long enough anyway".
+// `until:` turns the transcript the harness is already collecting into a
+// synchronisation source, so the script says what it is waiting FOR, and a
+// timeout is a visible failure rather than a silently-passed `wait:`.
+//
+// The N is a COUNT of matching lines, not a flag, because the events this
+// waits on repeat: "the third [L] ROUND_WINNER" is the statement M2's gate
+// needs, and it is not the same statement as "a [L] ROUND_WINNER".
 //
 // Everything the page logs (console.*, uncaught exceptions, and browser-level
 // Log entries such as WebGL warnings) is streamed to stdout AND written to
@@ -232,11 +249,23 @@ async function main() {
   const t0 = () => Date.now() - startedAt;
   let startedAt = Date.now();
 
+  // Every recorded line, kept in memory so `until:` can count matches. A gate
+  // run is a few thousand lines; holding them costs nothing and means `until:`
+  // sees exactly the transcript that gets committed as evidence, rather than a
+  // second, separately-filtered stream that could disagree with it.
+  const transcript = [];
   const record = (line) => {
     const stamped = `[${String(t0()).padStart(7)}ms] ${line}`;
+    transcript.push(stamped);
     process.stdout.write(stamped + '\n');
     appendFileSync(logPath, stamped + '\n');
   };
+  // Lines the harness itself wrote are excluded, and that is not tidiness: an
+  // `until:` step echoes the string it is waiting for, a `mark:` may name it
+  // and an `eval:` result may quote it back. Counting those would let the
+  // harness satisfy its own wait condition.
+  const countMatches = (needle) =>
+    transcript.reduce((n, l) => n + (!l.includes('] [harness] ') && l.includes(needle) ? 1 : 0), 0);
 
   try {
     const version = await waitForDevTools(opt.port);
@@ -364,6 +393,28 @@ async function main() {
         case 'eval': {
           const r = await send('Runtime.evaluate', { expression: arg, returnByValue: true, awaitPromise: true });
           record(`[harness] eval ${arg} => ${JSON.stringify(r.result?.value ?? r.result?.description)}`);
+          break;
+        }
+        case 'until': {
+          // until:N:MS:TEXT -- TEXT may itself contain colons (every ladder-log
+          // needle this is used with does not, but a timestamped one would), so
+          // only the first two fields are split off.
+          const m = /^(\d+):(\d+):([\s\S]+)$/.exec(arg);
+          if (!m) throw new Error(`until needs N:MS:TEXT, got: ${arg}`);
+          const [, wantStr, msStr, needle] = m;
+          const want = Number(wantStr), deadline = Date.now() + Number(msStr);
+          record(`[harness] until ${want}x <<${needle}>> (timeout ${msStr}ms, have ${countMatches(needle)})`);
+          let got = countMatches(needle);
+          while (got < want && Date.now() < deadline) {
+            await sleep(100);
+            got = countMatches(needle);
+          }
+          if (got >= want) record(`[harness] until SATISFIED: saw ${got}x <<${needle}>>`);
+          // Not thrown: a gate that gets two rounds out of three has produced a
+          // real result and the rest of the script (screenshots, the frame-rate
+          // dump) is exactly what is needed to report it honestly. Aborting
+          // here would throw that evidence away.
+          else record(`[harness] until TIMED OUT after ${msStr}ms: saw ${got}x <<${needle}>>, wanted ${want}`);
           break;
         }
         default:
