@@ -109,8 +109,29 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     // sounds, because the "add into an unspecified buffer" hazard survives
     // that change -- so this stays even when the Load() short-circuit goes.
     //
+    // BUT IT IS ONLY CORRECT FOR THE SDL_OpenAudio REGISTRATION. fill_audio
+    // has a second one: Mix_SetPostMix( &fill_audio, NULL ) at :249. A *post*
+    // -mix callback is handed a buffer that ALREADY holds SDL_mixer's output,
+    // to be modified in place -- zeroing it there would silence the music this
+    // function is meant to mix on top of. That path is dead in this build (it
+    // sits inside #ifdef HAVE_LIBSDL_MIXER, opened at :233, and
+    // HAVE_LIBSDL_MIXER is defined only under WIN32 at :46-48; nothing in
+    // src/emscripten/ or web/Makefile defines it), which is why one
+    // unconditional memset is safe *today*. It stops being safe the moment
+    // this file is built with SDL_mixer -- and M3, which owns real audio, is
+    // exactly the milestone that might reach for it. If you are here because
+    // you just enabled SDL_mixer: make this conditional on which callback you
+    // are, do not delete it, or the SDL_OpenAudio path goes back to playing
+    // uninitialised heap.
+    //
     // `len` is SDL's byte count for this callback, which is exactly the
-    // buffer's size; SDL_AudioSpec::size is the same number.
+    // buffer's size; SDL_AudioSpec::size is the same number. It is `int`,
+    // while memset's third parameter is size_t, so a negative len would
+    // convert to ~4GB and make this a catastrophic overrun rather than a
+    // no-op. Nothing checks for that -- not here, and not in the original
+    // mixing code below, which indexes with `len` just as trustingly. SDL
+    // does not pass negative lengths, so this is an assumption rather than a
+    // latent bug; it is written down because the assumption is unchecked.
     memset( stream, 0, len );
 #endif
 #ifndef DEDICATED

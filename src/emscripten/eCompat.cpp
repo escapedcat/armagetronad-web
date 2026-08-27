@@ -179,11 +179,21 @@ void   GLAPIENTRY glDeleteLists( GLuint /* list */, GLsizei /* range */ ) {}
 // same failure a *real* SDL_LoadWAV_RW would produce in this build anyway,
 // since Emscripten's SDL 1.2 emulation has no WAV decoder at all.
 //
-// M2 UPDATE -- THIS FUNCTION IS NO LONGER CALLED. eWavData::Load()
-// (src/engine/eSound.cpp) now short-circuits under __EMSCRIPTEN__ before it
-// gets here, so nothing in the client reaches SDL_LoadWAV_RW; the definition
-// stays only because -sERROR_ON_UNDEFINED_SYMBOLS=1 wants the symbol. Read
-// that short-circuit's comment for the reasoning; the summary is that
+// M2 UPDATE -- THIS FUNCTION IS NOW DEAD, and so are SDL_BuildAudioCVT and
+// SDL_ConvertAudio below. eWavData::Load() (src/engine/eSound.cpp) now
+// short-circuits under __EMSCRIPTEN__ before reaching any of them, and it was
+// their only caller. Not "kept alive by the linker": all three appear in
+// web/build-m1 solely as a definition in this object (`T` in eCompat.o) with
+// no undefined reference to them anywhere in the other 100 objects, so
+// -sERROR_ON_UNDEFINED_SYMBOLS=1 does not want them either -- deleting them
+// would link. They are left in place because M3 is the milestone that gives
+// them real bodies, and having the signatures already written against the SDL
+// 1.2 declarations is worth more than the dead code costs.
+//
+// SDL_FreeWAV is the exception and is still live: eSound.o does carry a `U`
+// for it, from the !freeData branch of eWavData::Unload.
+//
+// Read the short-circuit's comment for the reasoning; the summary is that
 // returning NULL was NOT in fact a failure the callers handle. An earlier
 // version of this comment claimed it was, and that claim was wrong in the one
 // way that mattered: eSound.cpp's retry chain (alternative filename, then
