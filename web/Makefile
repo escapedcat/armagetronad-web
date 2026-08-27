@@ -299,15 +299,27 @@ CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
 # the same emcc invocation.
 #
 # The prerequisite list below is NOT "every preloaded directory" -- it is
-# web/shell.html, web/webdefaults/autoexec.cfg, and the three generated data
-# files, because those are the only preload inputs whose paths this
-# Makefile can name without shelling out to `find`. Editing anything else
-# under config/, language/, textures/, models/, sound/ or resource/proto
-# (e.g. adding a texture, editing a map) does NOT trigger a relink -- Make
-# has no rule pointing at those files, so it will silently reuse a stale
-# .data archive. Run `make -f web/Makefile clean && make ... client` (or
-# just `rm -f web/dist-m1/armagetronad.*`) after touching any preloaded
-# asset that isn't one of the four named below.
+# five files: web/shell.html, web/webdefaults/autoexec.cfg, and the three
+# generated data files, because those are the only preload inputs whose
+# paths this Makefile can name without shelling out to `find`. Editing
+# anything else under config/, language/, textures/, models/ or sound/
+# (e.g. adding a texture) does NOT trigger a relink -- Make has no rule
+# pointing at those files, so it will silently reuse a stale .data archive.
+# Run `make -f web/Makefile clean && make ... client` (or just
+# `rm -f web/dist-m1/armagetronad.*`) after touching any preloaded asset
+# that isn't one of the five named below.
+#
+# resource/proto is the EXCEPTION, and an earlier version of this comment
+# listed it wrongly among the uncovered directories. It IS covered, just
+# indirectly: the resource/included/.mapversion rule further down lists
+# $(shell find resource/proto -type f) among its prerequisites, so editing
+# or adding a map re-runs sortresources, which restamps .mapversion, which
+# is a prerequisite here -- and the relink follows. Verified with
+# `touch resource/proto/<file> && make -f web/Makefile -n client`, which
+# prints both the sortresources recipe and the em++ link. One real gap
+# remains: that `find` runs when Make PARSES this file, so a map you DELETE
+# is not noticed (nothing ends up newer than .mapversion). Deleting a map
+# still needs the manual clean above.
 #
 # The three generated-data paths (spelled out here, not as $(DATA) -- that
 # variable isn't assigned until the "Runtime data" section further down, and
