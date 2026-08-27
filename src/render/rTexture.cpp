@@ -402,10 +402,19 @@ void rSurface::CopyFrom( rSurface const & other )
     //     through Asyncify's rewind and the game loop never resumes -- the
     //     canvas freezes on the last swapped frame, permanently. This function
     //     is on the default path: rSurfaceTexture::OnSelect (below) copies its
-    //     surface on every select, and gCycle's recoloured body/wheel textures
-    //     (gCycle.cpp:2091) do that once per cycle per round. Measured in the
-    //     browser: four calls in the first round of the one-AI tutorial game,
-    //     a 256x256 body and a 64x64 wheel for each of the two cycles.
+    //     surface on every (re)LOAD -- the first Select(), and again after an
+    //     Unload(). Not on every select, which is the easy misreading: the
+    //     delegated OnSelect() is gated on `textureModeLast_ < 0` (:837) inside
+    //     `textureModeLast_ != texmod` (:822), and :937 assigns texmod, so every
+    //     later select takes the plain glBindTexture branch at :927 instead.
+    //     OnUnload (:979) resets textureModeLast_ to -100, which is what makes a
+    //     reload copy again. gCycle builds recoloured body and wheel textures
+    //     for every cycle (gCycle.cpp:2091), so this runs once per cycle texture
+    //     per round. Measured in the browser: four calls in the first round of
+    //     the one-AI tutorial game -- a 256x256 body and a 64x64 wheel for each
+    //     of the two cycles -- over 570 ms at ~45 fps. Per select it would have
+    //     been hundreds; if you ever measure hundreds, something reset
+    //     textureModeLast_.
     //
     // (2) EVEN WITHOUT THE THROW IT WOULD RETURN NO PIXELS. That blit copies
     //     canvas to canvas. Nothing writes the new surface's `pixels` buffer --
@@ -421,7 +430,14 @@ void rSurface::CopyFrom( rSurface const & other )
     // A direct pixel copy sidesteps both. The pixels are guaranteed present on
     // the source: IMG_Load_RW calls _SDL_LockSurface (libsdl.js:2307) precisely
     // so that they are, with the comment "code everywhere seems to assume that
-    // the pixels are in fact available".
+    // the pixels are in fact available". That one call is the whole basis for
+    // this function being able to work at all, so it is worth knowing why it
+    // suffices: SDL.defaults.copyOnLock is true and discardOnLock is false
+    // (libsdl.js:35, 39), so SDL_LockSurface does getImageData on the canvas
+    // (:1545) and HEAPU8.set()s the result into the pixel buffer (:1580) --
+    // three lines before IMG_Load_RW throws the canvas away. If that default
+    // ever changes, this function copies nothing useful and every texture goes
+    // blank; it would not fail loudly.
     //
     // Details that make this correct rather than merely working:
     //
@@ -446,8 +462,9 @@ void rSurface::CopyFrom( rSurface const & other )
     //   the destination match a source that is not already 32-bit RGBA.
     // * Nothing may lock these surfaces afterwards or the copy is lost:
     //   SDL_LockSurface overwrites `pixels` from the canvas (libsdl.js:1545),
-    //   and SDL_UnlockSurface asserts !SDL.GL. Neither is called anywhere in
-    //   this tree (`grep -rn "LockSurface" src/` is empty), so the memcpy'd
+    //   which for a copy made here is a blank canvas, and SDL_UnlockSurface
+    //   asserts !SDL.GL. No *call* to either exists anywhere in this tree -- the
+    //   only occurrences of the names are inside this comment -- so the memcpy'd
     //   bytes are what glTexImage2D reads.
     // * Ownership is unchanged: the surface returned here is freed by Clear()
     //   via SDL_FreeSurface, exactly as the converted one was, and
@@ -455,19 +472,29 @@ void rSurface::CopyFrom( rSurface const & other )
     //   A null return is handled the same way the old code handled a null from
     //   SDL_ConvertSurface -- surface_ stays 0 and format_ is still copied --
     //   except that the guarded memcpy below cannot dereference it.
-    // * No #include was added for memcpy. <string.h> is already in scope, and
-    //   not by luck: rSDL.h -> SDL.h -> SDL_stdinc.h includes it (line 61), and
-    //   SDL_stdinc.h is the header that declares SDL_Surface's own types, so it
-    //   cannot go away while this code compiles at all. In C++ a missing
-    //   declaration is a hard error, never an implicit int, so if that ever
-    //   changed the build would fail here rather than miscompile.
+    // * memcpy and printf need no #include here: rSDL.h -> SDL.h ->
+    //   SDL_stdinc.h already brings in <string.h> and <stdio.h>.
     SDL_Surface * o = other.surface_;
     surface_ = SDL_CreateRGBSurface( SDL_SWSURFACE, o->w, o->h,
                                      o->format->BitsPerPixel,
                                      o->format->Rmask, o->format->Gmask,
                                      o->format->Bmask, o->format->Amask );
     if ( surface_ && o->pixels && surface_->pixels )
+    {
         memcpy( surface_->pixels, o->pixels, o->h * o->pitch );
+    }
+    else if ( surface_ && surface_->pixels )
+    {
+        // Unreachable today -- every surface that gets here came from
+        // IMG_Load_RW, which locks it -- but skipping the copy silently would
+        // hand Upload() the uninitialised _malloc block that (2) above is
+        // entirely about, and it would look like a texture bug rather than a
+        // missing source. Blank it so the failure is a black texture rather
+        // than noise, and say so once.
+        memset( surface_->pixels, 0, surface_->h * surface_->pitch );
+        printf( "rSurface::CopyFrom: source surface has no pixels; "
+                "texture will be blank.\n" );
+    }
 #else
     surface_ = SDL_ConvertSurface(other.surface_, other.surface_->format, SDL_SWSURFACE);
 #endif
