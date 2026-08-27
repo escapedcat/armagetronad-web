@@ -197,7 +197,7 @@ None of these is a failure:
 
 ### The browser-driving harness
 
-`web/tools/` holds two Node scripts (393 and 300 lines) that open the page in a real
+`web/tools/` holds two Node scripts (444 and 368 lines) that open the page in a real
 browser, click Play, press keys, take screenshots and record everything the
 console says. They exist because the page cannot be checked with a plain
 screenshot — nothing runs until Play is clicked — and because retyping the
@@ -207,8 +207,21 @@ They have **no dependencies**: no Playwright, no Puppeteer, no `npm install`.
 Node 22's global `WebSocket` talks the Chrome DevTools Protocol
 (`drive-browser.mjs`) and WebDriver BiDi (`drive-firefox.mjs`, because Firefox
 dropped CDP in 129). Both take the same options and the same step vocabulary
-(`wait:`/`shot:`/`click:`/`key:`/`eval:`/`mark:`); each file's header comment is
-the reference.
+(`wait:`/`shot:`/`click:`/`key:`/`eval:`/`mark:`/`until:`); each file's header
+comment is the reference.
+
+`until:N:MS:TEXT` is M2's addition: it blocks until `TEXT` has appeared in `N`
+transcript lines, or `MS` elapses. Gameplay needs it. A round ends when a cycle
+hits a wall, at a different moment every run, so the only way to express "wait
+for the third round to finish" in `wait:` alone is a sleep long enough for the
+worst case — and that cannot tell a finished round from a hung one.
+
+`web/tools/gameplay-gate.steps` is the **M2** gate: the first-run flow, then
+three complete rounds against three AIs, with the frame rate measured in-page
+rather than asserted. Same invocation as below with the filename swapped.
+Evidence from a run of it — screenshots, both transcripts, and a
+`check-transcript.mjs` that re-derives every claim from the transcript alone —
+is committed in `docs/evidence/m2-gate/`.
 
 `web/tools/menu-gate.steps` is the M1 gate itself, as a re-runnable script.
 To re-run it — **after `make -f web/Makefile client`, since `web/dist-m1` is

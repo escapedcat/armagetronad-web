@@ -1,0 +1,213 @@
+# The M2 gate, as a re-runnable script: three complete rounds against three AI
+# opponents, with the frame rate measured rather than asserted.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/gate-chrome \
+#        --script-file web/tools/gameplay-gate.steps
+#   node web/tools/drive-firefox.mjs          --out /tmp/gate-firefox \
+#        --script-file web/tools/gameplay-gate.steps
+#   kill %1
+#
+# --headed is REQUIRED for Chrome and only for Chrome: headless Chrome 152
+# floods the page with thousands of spurious keydown events per real keypress
+# and drowns the SDL event queue. Both drivers' header comments explain it.
+#
+# WHAT THIS DRIVES. A first-time visitor's path, unmodified -- no FIRST_USE 0.
+# Play, language menu, First Setup, welcome message, and then the single-player
+# match welcome() (gArmagetron.cpp:378-395) starts. With the three SP_* settings
+# in web/webdefaults/autoexec.cfg that match is three rounds against three AIs.
+#
+# The match's parameters are NOT the shipped single-player ones, and the report
+# should not pretend otherwise: welcome() temporarily sets speedFactor -2,
+# sizeFactor -2, wallsLength 400, rubber 5, delayCycle 0.05 for this one match
+# and restores them afterwards. It is a real game of Armagetron with real AI
+# opponents and real rounds; it is a gentle one.
+#
+# WHAT PASSES. Three "[L] ROUND_WINNER" lines -- not three "[L] NEW_ROUND"
+# lines, which count rounds STARTED. Three "[L] TEAM_PLAYER_ADDED ai_team ..."
+# lines per round, which is team membership and therefore the opponent count
+# itself rather than a roster of names seen over time. A frame-rate dump whose
+# minimum, not only whose median, clears 30. No "Stack overflow detected", no
+# [EXCEPTION], no "SDL event queue full", and every 404 being /favicon.ico.
+
+# ---------------------------------------------------------------------------
+# Frame-rate sampler. Installed before anything runs, so nothing is missed.
+#
+# WHAT IS COUNTED AND WHY IT IS THE FRAME RATE. rSysDep::SwapGL()
+# (src/render/rSysdep.cpp:747-758) ends every rendered frame with exactly one
+# of glFlush() or glFinish(), chosen by swapMode_, immediately before the
+# buffer swap. Emscripten compiles both to a single method call on the live
+# WebGL context (`_glFlush = () => GLctx.flush()`, armagetronad.js:14460-14464),
+# and they are the ONLY two calls to those methods in the whole program
+# (`grep -rn 'glFlush\|glFinish' src/` finds rSysdep.cpp and a menu label).
+# So one call through this wrapper == one frame the game finished drawing.
+# Both are wrapped because swapMode_ is glFlush by default (rSysdep.cpp:459)
+# and sr_LoadDefaultConfig() switches it to glFinish (rScreen.cpp:1029), which
+# is what the first-use path this script drives actually runs with.
+#
+# This is a strictly better measurement than M1's setTimeout counter, which
+# assumed two timeouts per frame. That assumption is only true while the frame
+# finishes EARLY: sr_LimitFPS() (rSysdep.cpp:598-624) issues its
+# emscripten_sleep only when there is time left in the frame budget, so the
+# estimator silently halves exactly when the frame rate drops -- the one case
+# a gate cares about.
+#
+# The same expression also timestamps every "[L] " ladder-log line in
+# performance.now() time, because the round boundaries have to be expressed in
+# the same clock as the frame samples for the window to mean anything. Module
+# print routes stdout through console.log (web/shell.html:160) and resolves
+# `console` at call time, so replacing it here catches everything the game
+# prints; the original is kept bound, so CDP/BiDi still see every line.
+#
+# AND IT POLLS glGetError, WHICH IS THE PART THAT MAKES FIREFOX'S TRANSCRIPT
+# MEAN SOMETHING. Chrome reports WebGL misuse as a browser-level Log entry that
+# CDP forwards; Firefox 154 emits nothing over BiDi for the same call, which is
+# measured at the bottom of this file and not assumed. A GL error read back
+# from the context itself is engine-independent: it is the same WebGL state
+# machine in both browsers, so the same defect produces the same line.
+#
+# Safe because the game never reads it. sr_CheckGLError() (rGL.cpp:36) is the
+# only glGetError caller in the tree and it compiles to an empty inline unless
+# AA_GL_ERROR_CHECKING is defined, which needs DEBUG, which this build does not
+# define -- confirmed against the artifact rather than the headers: the string
+# "glGetError" does not appear in armagetronad.wasm at all. So nothing else can
+# have its error stolen by this poll.
+#
+# Every 30th frame, i.e. about twice a second, NOT every frame: getError() is a
+# synchronous round trip in both engines and polling it 60 times a second would
+# depress the very number this script exists to measure. The cost of that
+# choice is that a single isolated GL error can be missed; the defect class
+# this is watching for (browser-runtime-notes.md section 9 and 10) produces one
+# per frame for as long as the offending draw path is live, so it cannot hide
+# from a 2 Hz poll for more than half a second.
+wait:1000
+eval:(()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})()
+wait:7000
+eval:(()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})()
+click:#start
+wait:6000
+mark:first-run-flow-language-menu
+shot:01-language-menu
+key:Enter
+wait:3000
+shot:02-first-setup-menu
+mark:escape-accepts-the-defaults-and-leaves-first-setup
+key:Escape
+wait:4000
+shot:03-welcome-message
+mark:enter-dismisses-the-welcome-message-and-starts-the-match
+key:Enter
+
+# ------------------------------------------------------------------- round 1
+until:1:60000:[L] NEW_ROUND
+mark:ROUND-1-STARTED
+# ~5 s of countdown follows NEW_ROUND before the cycles move.
+wait:5500
+# The HUD line "Enemies: N Friends: N" (gHud.cpp:479) is the live count of
+# enemies still alive; at the top of a round it is the opponent count.
+shot:04-round1-driving-HUD-shows-enemies
+key:Left
+wait:1200
+shot:05-round1-after-LEFT
+key:Right
+wait:1200
+shot:06-round1-after-RIGHT
+until:1:150000:[L] ROUND_WINNER
+mark:ROUND-1-COMPLETE
+shot:07-round1-ended
+
+# ------------------------------------------------------------------- round 2
+until:2:60000:[L] NEW_ROUND
+mark:ROUND-2-STARTED
+wait:5500
+shot:08-round2-driving-HUD-shows-enemies
+key:Right
+wait:1200
+shot:09-round2-after-RIGHT
+key:Left
+wait:1200
+shot:10-round2-after-LEFT
+until:2:150000:[L] ROUND_WINNER
+mark:ROUND-2-COMPLETE
+shot:11-round2-ended
+
+# ------------------------------------------------------------------- round 3
+until:3:60000:[L] NEW_ROUND
+mark:ROUND-3-STARTED
+wait:5500
+shot:12-round3-driving-HUD-shows-enemies
+key:Left
+wait:1200
+shot:13-round3-after-LEFT
+key:Left
+wait:1200
+shot:14-round3-after-LEFT-again
+until:3:150000:[L] ROUND_WINNER
+mark:ROUND-3-COMPLETE
+shot:15-round3-ended
+
+# SP_LIMIT_ROUNDS 3 means the match is over now (the shipped default is 10, so
+# a match that stops here is itself the proof the setting was read). What comes
+# next is welcome()'s second message and then the real main menu.
+wait:8000
+shot:16-after-the-match
+
+# ---------------------------------------------------------------------------
+# The frame-rate dump. Reports a DISTRIBUTION over the whole span of the
+# rounds, per round and overall, and in two independent forms:
+#
+#   inst_fps       -- percentiles of 1000/(gap between consecutive frames).
+#                     "min" is the single worst frame in the run, which is a
+#                     harsh number: one 60 ms hitch anywhere sets it.
+#   fps_per_second -- frames actually completed in each whole wall-clock second
+#                     of the window, listed in full. This is "the frame rate"
+#                     in the sense a player means it, and its MINIMUM is the
+#                     worst full second of the run. The last, partial second of
+#                     each window is dropped rather than reported as a dip.
+#
+# Both are reported because either alone can mislead: a median hides hitches, a
+# single-frame minimum makes a smooth run look bad.
+eval:(()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const ks=Object.keys(sec).map(Number).sort((a,b)=>a-b);const per=ks.slice(0,-1).map(k=>sec[k]);const span=(t1-t0)/1000;return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})()
+
+# ---------------------------------------------------------------------------
+# POSITIVE CONTROL for the WebGL-warning subscription, and the reason it is
+# here rather than in a comment claiming the subscription works.
+#
+# M1's Firefox transcript was read as clean when it was merely deaf
+# (docs/porting/browser-runtime-notes.md section 9). A transcript with no WebGL
+# warnings in it is worth nothing unless the same transcript can be shown to
+# contain one when one is produced. So: make one, on purpose, at the very end
+# of the run where it can affect nothing.
+#
+# The call is glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST) -- byte for
+# byte the call rScreen.cpp:1099 used to make on every menu frame before task 1
+# guarded it, and the exact defect class section 9 is about. It runs on a
+# THROWAWAY canvas with its own context, so it cannot spend the game's WebGL
+# error budget or disturb anything on screen.
+#
+# PASS for this step: the transcript contains a browser-level warning line
+# mentioning hint/INVALID_ENUM within a second of it. MEASURED RESULT: Chrome
+# does ("[browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid
+# target"); Firefox 154 does NOT, even with webgl.max-warnings-per-context
+# raised and every log.entryAdded level recorded. That is why the sampler polls
+# glGetError -- see the note at the top of this file. Keep this control: the
+# day Firefox starts reporting them, this is what will notice.
+mark:positive-control-deliberate-webgl-warning-follows
+eval:(()=>{const c=document.createElement('canvas');const g=c.getContext('webgl');if(!g)return 'no webgl context for the control';g.hint(0x0C50,g.FASTEST);return 'deliberate bad glHint issued, gl.getError()=0x'+g.getError().toString(16)+' (0x500 == INVALID_ENUM)'})()
+wait:1500
+shot:17-final-state
+
+# The GL-error tally from the game's own context over the whole run. A run with
+# zero errors here is a real statement in both engines, which is exactly what
+# M1's Firefox transcript could not make.
+eval:(()=>{const S=window.__fps;if(!S)return 'no sampler';const codes={};for(const g of S.gl)codes['0x'+g[1].toString(16)]=(codes['0x'+g[1].toString(16)]||0)+1;return JSON.stringify({glGetError_polls:S.polls,glGetError_nonzero:S.gl.length,codes:codes,first:S.gl.slice(0,5)})})()
+
+# SECOND POSITIVE CONTROL, and the reason it is last: it makes the page report
+# an uncaught error, which web/shell.html:99 turns into a red failure banner.
+# It answers "can this transcript see a browser-reported JS error at all?",
+# which is what separates "Firefox reports nothing about WebGL specifically"
+# from "Firefox reports nothing at all" -- and only the first of those is true.
+mark:positive-control-deliberate-uncaught-error-follows
+eval:setTimeout(function(){null.thisIsADeliberateUncaughtError;},0)
+wait:2000
+shot:18-after-deliberate-uncaught-error

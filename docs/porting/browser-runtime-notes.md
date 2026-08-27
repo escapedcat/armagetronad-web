@@ -688,8 +688,49 @@ problem, not a rendering bug — M1's screenshots are what the game intends.
 at all, and that is a harness artifact: `drive-browser.mjs` receives Chrome's
 browser-level `Log` entries over CDP, while `drive-firefox.mjs` captures only
 `console.*` and network events over BiDi. Firefox's own WebGL warnings were
-never being collected. Do not read its clean transcript as a clean run — and if
-M2 needs Firefox-side GL diagnostics, wiring that up is part of the same job.
+never being collected. Do not read its clean transcript as a clean run.
+
+### 9a. M2 went looking for those warnings and they are not there
+
+Written after the M2 gate, which needed a Firefox transcript that meant
+something. Three things were tried and the third is the one that works.
+
+1. **The labelling was wrong, and that is fixed.** `drive-firefox.mjs` printed
+   *every* `log.entryAdded` entry of type `javascript` as `[EXCEPTION]` and
+   ignored `entry.level`. So even if a warning had arrived it would have been
+   reported as an exception, failing the gate for the wrong reason. It now
+   prints non-error levels as `[browser.LEVEL/javascript]`, matching Chrome.
+
+2. **The per-context warning cap was raised.** Firefox stops reporting after
+   `webgl.max-warnings-per-context` warnings (32 by default) and then goes
+   silent for the life of the context — indistinguishable, in a minutes-long
+   run, from a clean one. The driver now writes a `user.js` into its throwaway
+   profile raising it to 100000.
+
+3. **Neither helped, and that is the finding.** Measured with a positive
+   control in `web/tools/gameplay-gate.steps` — a deliberate
+   `glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)` on a throwaway canvas,
+   i.e. the exact call this section is about:
+
+   | | deliberate bad `glHint` | deliberate uncaught `TypeError` |
+   |---|---|---|
+   | Chrome 152 | `[browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target` | `[EXCEPTION]` |
+   | Firefox 154.0.1 | **nothing at all** | `[EXCEPTION]` |
+
+   So Firefox's BiDi `log.entryAdded` subscription is alive — it reports
+   browser-generated JS errors fine — and simply does not carry WebGL warnings.
+   Raising the cap and fixing the labelling could not have helped.
+
+**What to use instead, in either engine.** Read `glGetError()` back off the
+game's own context. It is the same WebGL state machine in both browsers, so
+the same defect gives the same line, and it is free here: `sr_CheckGLError()`
+(`rGL.cpp:36`) is the only `glGetError` caller in the tree and compiles to an
+empty inline without `DEBUG` — verified against the artifact, the string
+`glGetError` does not occur in `armagetronad.wasm` at all — so nothing else can
+have an error stolen from it. The M2 sampler polls it every 30th frame from
+inside the `glFlush`/`glFinish` hook it already installs; every frame would be
+too expensive to do while also measuring the frame rate. Keep the `glHint`
+control anyway: it is what will notice the day Firefox starts reporting these.
 
 ## 10. One glBegin/glEnd block, one vertex format
 
