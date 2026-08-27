@@ -8,6 +8,11 @@ Scope: the Asyncify yield, the two `usleep` replacements, the rule about which
 sleep primitives are safe at all (§8 — read that one before adding any sleep),
 and the three GL traps. Each section is named so a comment can cite it.
 
+**Starting M2? Read §9 first and fix it before anything else.** The client
+burns Chrome's per-context WebGL error budget 1.4 s into boot, so by the time
+gameplay rendering starts, the console has stopped reporting WebGL errors
+entirely. One line causes it.
+
 **On emsdk citations.** Line numbers into `deps/emsdk/upstream/emscripten` drift
 on every toolchain bump. Each one below is paired with a greppable token; if the
 line is wrong, grep the token before concluding the claim is stale.
@@ -620,3 +625,68 @@ handling, including on paths that already reach `SwapGL()` —
 recorder-playback `tDelayForce()` are both fine, and neither needs counting.
 The thing to grep for before adding a sleep is `SDL_Delay`; the thing to check
 after linking is the `WebAssembly.Module.imports()` one-liner above.
+
+---
+
+## 9. The WebGL error console goes silent 1.4 s into boot — fix this first in M2
+
+**This should be M2's first commit, before any gameplay-rendering work.** M2 is
+the milestone that has to debug WebGL — walls, cycles, the floor, the font
+atlas, alpha test, fog — and it would start with its most important diagnostic
+already switched off.
+
+In the committed Chrome transcript
+(`docs/evidence/m1-task7/chrome-console.log`), the client emits **256** copies
+of
+
+```
+WebGL: INVALID_ENUM: hint: invalid target
+```
+
+between `6310ms` and `7409ms` — about 1.1 s of errors, 1.4 s after the module's
+first output — and Chrome then prints, at line 280:
+
+```
+WebGL: too many errors, no more errors will be reported to the console for this context.
+```
+
+That is per WebGL *context*, and it is permanent for the life of that context.
+Everything after that point — every genuinely useful `INVALID_OPERATION`,
+`INVALID_VALUE` or incomplete-framebuffer complaint M2 might cause — is
+discarded before it reaches the console. The tab looks quiet because the budget
+is spent, not because nothing is wrong.
+
+### The cause is one line, and it is not ambiguous
+
+`src/render/rScreen.cpp:1099`, in `sr_ResetRenderState()`'s `if (menu)` branch:
+
+```cpp
+glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+```
+
+- It is the **only** `glHint` call in the entire tree (`grep -rn glHint src/`).
+- `GL_PERSPECTIVE_CORRECTION_HINT` is `0x0C50`
+  (`cache/sysroot/include/GL/gl.h:583`). WebGL 1 accepts exactly one hint
+  target, `GENERATE_MIPMAP_HINT` — perspective correction is not optional in
+  WebGL and there is nothing to hint at.
+- Emscripten does not filter it. `libglemu.js` wraps `glHint` and drops only
+  `GL_TEXTURE_COMPRESSION_HINT` (`0x84EF`), passing everything else straight to
+  `GLctx.hint()` — `src/lib/libglemu.js`, grep `orig_glHint`.
+- `sr_ResetRenderState(true)` runs per menu frame, which is why one bad call
+  becomes 256 errors in a second and exhausts the budget so fast.
+
+The obvious fix is a guarded no-op at that call site, the same shape as every
+other patch in this note. Do not "fix" it by suppressing console output.
+
+### Two things not to conclude from this
+
+**The picture is correct.** The hint is rejected, so nothing is applied, and
+perspective correction is always on in WebGL anyway. This is a diagnostics
+problem, not a rendering bug — M1's screenshots are what the game intends.
+
+**The Firefox transcript proves nothing here.** It contains no WebGL warnings
+at all, and that is a harness artifact: `drive-browser.mjs` receives Chrome's
+browser-level `Log` entries over CDP, while `drive-firefox.mjs` captures only
+`console.*` and network events over BiDi. Firefox's own WebGL warnings were
+never being collected. Do not read its clean transcript as a clean run — and if
+M2 needs Firefox-side GL diagnostics, wiring that up is part of the same job.
