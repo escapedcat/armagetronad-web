@@ -146,8 +146,18 @@ uAction * uAction::Find( char const * name )
 //!     to the literal 316 as well (libsdl.js:145, an SDL-1.2 leftover among
 //!     otherwise SDL-2 values), so default.cfg's `KEYBOARD 316 ... SCREENSHOT`
 //!     already works by that coincidence. Translating it to SDLK_PRINTSCREEN
-//!     (1094) would BREAK a binding that works today. The rest of that range
-//!     has no unambiguous same-key target and no shipped bind.
+//!     (1094) would BREAK a binding that works today.
+//!
+//!     There IS one other shipped bind in this range, and an earlier revision
+//!     of this comment wrongly said there was none: default.cfg:88 binds 319
+//!     (SDL 1.2's SDLK_MENU) to TOGGLE_FULLSCREEN. Leaving it dead costs
+//!     nothing, because default.cfg:89-90 bind the same action to 110 ('n')
+//!     and 102 ('f'), which are ASCII and therefore untranslated and live, so
+//!     fullscreen is reachable either way.
+//!     The rest of the range has no unambiguous same-key target and no
+//!     shipped bind: across all six files under config/ that contain
+//!     KEYBOARD lines, 316 and 319 are the only two keycodes bound anywhere
+//!     in 313-322.
 //!
 //!   * 324-336. These are not SDL keysyms at all: they are this program's own
 //!     mouse pseudo-keys, SDLK_MOUSE_X_PLUS and friends, defined in uInput.h
