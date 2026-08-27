@@ -273,12 +273,66 @@ void rModel::Render(){
         // model display lists should definitely be compiled before other lists
         rDisplayList::Cancel();
 
+        // Whether the indexed glDrawElements path at the bottom of this
+        // function can be used. Natively that is exactly what
+        // modelTexFacesCoherent records: one index array can drive both the
+        // vertex and the texture-coordinate array only when the two face lists
+        // are identical.
+        //
+        // Under Emscripten it can never be used, so the immediate-mode branch
+        // -- which is *not* a fallback here, it is the same code path every
+        // other draw in this renderer already takes -- runs for every model.
+        //
+        // Why glDrawElements cannot work here:
+        //
+        //  * The call below passes GL_UNSIGNED_INT indices through a client
+        //    pointer. Emscripten's emulation (src/lib/libglemu.js, the
+        //    glDrawElements entry) forwards straight to WebGL only when no
+        //    client attribute is enabled AND an element array buffer is bound.
+        //    This function enables client arrays, and nothing in this tree ever
+        //    binds an element array buffer, so it always takes the emulation
+        //    path -- which asserts `type == GL_UNSIGNED_SHORT` and aborts the
+        //    whole runtime on the first cycle drawn.
+        //
+        //  * Narrowing the indices to GL_UNSIGNED_SHORT gets past the assert
+        //    but lands in prepareClientAttributes, which the emulation's own
+        //    warnOnce on the next line says it "doesn't actually ... properly".
+        //    Concretely: it is handed the *index* count and restrides that many
+        //    vertices out of the client arrays, so for models/cycle_rear.mod it
+        //    copies 243 vertices from arrays holding 34 -- a 2508-byte overread
+        //    of each of vertices/normals/texVert, per model, per cycle, per
+        //    frame.
+        //    The drawn geometry survives (the indices only ever reach the
+        //    correctly-copied leading entries), but nothing about that is worth
+        //    buying, and paying for it would additionally cost either a second
+        //    16-bit index array or a narrower rModelFace::A -- and rModelFace's
+        //    layout is baked into the dedicated build too.
+        //
+        // The immediate-mode branch draws the same triangles: for the .mod
+        // loader modelTexFaces is an element-wise copy of modelFaces (see
+        // Load() above), which is what modelTexFacesCoherent asserts, so
+        // indexing texVert by modelTexFaces yields exactly the coordinate
+        // glTexCoordPointer would have fetched by vertex index. glTexCoord3fv
+        // is real here -- src/emscripten/eCompat.cpp forwards it to
+        // glTexCoord2f, and that file's comment establishes that dropping r is
+        // lossless tree-wide.
+        //
+        // Note this is a per-frame cost either way: display lists are stubs in
+        // the browser build (eCompat.cpp's glGenLists returns 0, so
+        // displayList_.Call() is always false), so no branch here ever gets to
+        // reuse compiled geometry.
+#ifdef __EMSCRIPTEN__
+        bool const useDrawElements = false;
+#else
+        bool const useDrawElements = modelTexFacesCoherent;
+#endif
+
         bool texcoord=true;
         if (texVert.Len()<0)
             texcoord=false;
         if (modelTexFaces.Len()!=modelFaces.Len())
             texcoord=false;
-        if ( !modelTexFacesCoherent )
+        if ( !useDrawElements )
             texcoord=false;
 
         if (texcoord)
@@ -289,7 +343,7 @@ void rModel::Render(){
 
            
 
-        if ( !modelTexFacesCoherent )
+        if ( !useDrawElements )
         {
             rDisplayListFiller filler( displayList_, false );
             glEnable(GL_CULL_FACE);
