@@ -1000,8 +1000,33 @@ compare the colour and texcoord counts against the vertex count; a block is
 uniform only if each is either 0 or equal to the vertex count. Loops make
 per-source-line counts misleading and `/* */` comments fool a line-comment
 filter, so the count is a way to make a *miss* impossible, not a verdict —
-read every hit. `<scratch>/t5/sweep.py` in the M2 task-5 working notes does the
-counting.
+read every hit.
+
+`web/tools/sweep-immediate-mode.py` does the counting. It is the script that
+produced the site lists above — the M2 task-5 working notes called it
+`sweep.py` — and it is committed so that M5's obligation to re-run this sweep
+before any `-O` reaches the link (`PLAN.md`, M5 inherited item 1) can actually
+be discharged by whoever inherits it:
+
+```sh
+python3 web/tools/sweep-immediate-mode.py src
+```
+
+**Every line it currently prints is accounted for below, and that is what makes
+running it useful: a hit that is not in this table is new.** As of this commit
+it prints 19. Match them on the file and function, not on the line number,
+which is the `Begin*()` and moves whenever anything above it does.
+
+| hit | why it is not a new bug |
+|---|---|
+| `eDebugLine.cpp:101`, `eDisplay.cpp:586` | compiled out of this build entirely — see above |
+| `rGLRender.cpp:163`–`:207` | the `Begin*()` wrapper definitions themselves. There is no block for them to close |
+| `rRender.cpp:67` | dead `rRenderer::Line`; see the leak list above |
+| `rViewport.cpp:240` | the one still-latent site; see above |
+| `gCycle.cpp:4468` | **fixed.** The repeated colours are behind an `AA_PYRAMID_COLOR` macro that the regex does not match, so it still counts 3 colours against 6 vertices. A block this script calls ragged can be one a human already made uniform |
+| `gHud.cpp:100`, `gWall.cpp:172` | blocks that sit inside `/* */` comments, which the line-comment filter does not catch |
+| `gWall.cpp:203` | `gWallRim_helper`, the known leaker; see the leak list above |
+| `gWall.cpp:1152`, `:1173`, `:1269` | the cycle-wall renderers, whose colour/vertex counts span two functions so the per-region count is meaningless. `:1173` is `RenderNormal`, the second known leaker |
 
 **3. Check reachability in both dimensions before writing anything down** — the
 `#ifdef` test first, because it is one command and it eliminates whole files,
