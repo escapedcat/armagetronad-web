@@ -1,17 +1,25 @@
 # Browser runtime notes
 
-Long-form reasoning behind the M1 changes that make the client survive a
-browser. The source files carry short pointers here rather than the whole
-argument; this is the file to read before undoing one of them.
+Long-form reasoning behind the M1 and M2 changes that make the client survive a
+browser and play a round. The source files carry short pointers here rather than
+the whole argument; this is the file to read before undoing one of them.
 
 Scope: the Asyncify yield, the two `usleep` replacements, the rule about which
 sleep primitives are safe at all (§8 — read that one before adding any sleep),
-and the three GL traps. Each section is named so a comment can cite it.
+the GL traps, and the camera. Each section is named so a comment can cite it.
 
-**Starting M2? Read §9 first and fix it before anything else.** The client
-burns Chrome's per-context WebGL error budget 1.4 s into boot, so by the time
-gameplay rendering starts, the console has stopped reporting WebGL errors
-entirely. One line causes it.
+**If you are about to touch rendering, read §10 first.** "One `glBegin`/`glEnd`
+block, one vertex format" is the largest single class of defect this port has
+found. It has two shapes and **one of them is silent** — it draws wrong geometry
+without asserting. One instance is still unfixed (`rViewport.cpp:246`).
+
+**If you are about to add `-O` to the client link, read §10 as well, and then
+don't.** `ASSERTIONS` being on is the only reason the loud shape of that defect
+class is loud.
+
+**§9 was M2's first task and is done.** Kept because the trap it describes —
+reading a clean console as evidence when the console had gone deaf — is general,
+and §9a records how the same mistake was avoided the second time.
 
 **On emsdk citations.** Line numbers into `deps/emsdk/upstream/emscripten` drift
 on every toolchain bump. Each one below is paired with a greppable token; if the
@@ -104,12 +112,73 @@ file so the command checks itself:
 |---|---|---|---|
 | `sr_LoadDefaultConfig` | 2 | 3 | in **both** builds — `awk` called this dedicated-excluded, and was wrong |
 | `NVIDIA` | 1 | 0 | the § 6 guard doing its job: kept for dedicated, gone from the client |
-| `glHint` | 0 | 3 | genuinely inside `#ifndef DEDICATED` (the region opened at `:1093`) |
+| `glHint` | 0 | ~~3~~ **2** | see below — this row is a live example of a control going stale |
+
+Re-measured at M2 exit; the first two rows still reproduce exactly. **The
+`glHint` row changed, and the reason is instructive rather than annoying.** At
+M1 the client saw 3 hits: two header declarations (`glHint` and `glHintPGI`) and
+the call at `:1112`. M2's Task 1 compiled that call out of the client (§ 9), so
+the client now sees the two declarations only. Two things follow. First, a
+control table is an assertion about the tree and goes stale with it — if these
+numbers do not reproduce, check the tree before concluding the *method* is
+broken. Second, `grep -c` over preprocessed output counts **declarations, not
+just uses**: a token that appears in a GL header will never reach 0 in a build
+that includes it, so "0 vs non-zero" is only meaningful for tokens that exist
+solely in this codebase. `sr_LoadDefaultConfig` and `NVIDIA` are good controls
+for that reason; `glHint` was always a slightly poor one.
 
 For the client column, add `-DAA_WEB_CLIENT -sUSE_SDL=1 -sUSE_LIBPNG=1` to the
 same command; nothing else changes. Choose a *distinctive* token — a function
 name, a string literal, an odd identifier. A common word will match somewhere
 in the ~66,000 lines of expanded headers and tell you nothing.
+
+#### The check that is right about the wrong thing
+
+**`em++ -E` can fail and still print a full, plausible preprocessed stream. A
+`grep -c` that does not test the exit status will get a confidently wrong
+answer, and the recipe above pipes straight into `grep`, which throws that
+status away.** Found in M2 Task 1, where it produced a `0` that sat in a report
+next to numbers from healthy runs.
+
+The failure looks like this:
+
+```
+In file included from src/render/rScreen.cpp:28:
+In file included from src/render/rFont.h:31:
+src/render/rSDL.h:4:10: fatal error: 'config.h' file not found
+1 error generated.
+```
+
+despite `-I src/emscripten` being present and correct. clang does **not** stop
+there: it recovers from the missing header and preprocesses the rest of the
+translation unit, so stdout still contains tens of thousands of lines and looks
+normal. But `config.h` is what defines `DEDICATED`, so a run that hits this
+silently never defines it — **for the dedicated and the client command line
+equally**, which destroys exactly the comparison the technique exists to make.
+It was reproduced on demand in this environment: five consecutive identical
+invocations all exiting 1, immediately after two identical ones exiting 0. No
+flag, ordering or `-MMD -MP` change made it go away. It is nondeterministic
+here, not caused by a bad command line.
+
+So: **redirect to a file and let the shell gate the grep on the exit status.**
+`&&` rather than `;` is the whole fix — a failed preprocess then prints nothing
+instead of printing a number:
+
+```sh
+em++ -E -std=gnu++14 \
+     -I src/emscripten -I deps/build/libxml2-install/include/libxml2 \
+     -iquote src -iquote src/tools -iquote src/network -iquote src/render \
+     -iquote src/ui -iquote src/engine -iquote src/tron \
+     -iquote src/thirdparty/binreloc -iquote src/thirdparty/particles \
+     src/render/rScreen.cpp > /tmp/pp.i \
+  && grep -c sr_LoadDefaultConfig /tmp/pp.i
+```
+
+`-c` compiles were not observed failing this way — every one run during Task 1
+succeeded, including several interleaved with failing `-E` runs — which is why
+the `llvm-nm` route below is the reliable fallback when `-E` will not settle
+down. It answers a coarser question (does the *function* survive?), so it does
+not replace `-E` for a question about a particular line.
 
 #### The cheap check, when the question is about a whole function
 
@@ -939,3 +1008,90 @@ counting.
 then the open-batch/runtime-guard test. See "Reachability has TWO dimensions"
 above. Reporting a dead site as live is not a harmless over-report: it sends
 whoever reads this next after code that does not exist.
+
+---
+
+## 11. The camera never turns: `gluLookAt` is a no-op
+
+`src/engine/eCamera.cpp`, `config/default.cfg`. **Nothing in this port fixes
+either half of this section.** Both are recorded here because they are cheap to
+rediscover expensively: the first makes every screenshot of this port misleading,
+and the second makes a set of shipped bindings look broken for no visible reason.
+
+### The no-op
+
+`libglemu.js:3888` (grep `gluLookAt:`):
+
+```js
+gluLookAt: (ex, ey, ez, cx, cy, cz, ux, uy, uz) => {
+  GLImmediate.matricesModified = true;
+  GLImmediate.matrixVersion[GLImmediate.currentMatrix] = (... + 1)|0;
+  GLImmediate.matrixLib.mat4.lookAt(GLImmediate.matrix[GLImmediate.currentMatrix],
+                                    [ex, ey, ez], [cx, cy, cz], [ux, uy, uz]);
+},
+```
+
+The bundled gl-matrix declares `mat4.lookAt = function (eye, center, up, dest)`
+(`src/gl-matrix.js:1356`) — **destination last**. So this passes the current
+matrix as `eye`, the real eye as `center`, the real centre as `up`, and writes
+the sixteen-float result into the three-element array literal `[ux, uy, uz]`,
+where it is discarded. **The current matrix is read and never written.**
+
+Contrast `gluPerspective` eight lines above (`:3880`), which *does* assign its
+result back into `GLImmediate.matrix[...]`. This is one buggy function, not a
+design decision, and it is not something the app can work around by calling it
+differently.
+
+### What it costs this game
+
+`eCamera::Render` (`eCamera.cpp:1415-1426`) sets the entire view orientation with
+a single `gluLookAt` on the projection matrix, followed by
+`glTranslatef(-pos.x, -pos.y, -z)`. With the rotation half inert, the view is
+always straight down −Z from wherever the camera is: **a top-down view,
+permanently, in every camera mode.**
+
+That is a measurement, not an inference. Three independent signatures, all from
+M2 gate frames:
+
+- the floor grid shows **no perspective convergence** in any in-round frame —
+  what looking perpendicular at a plane produces;
+- a cycle's wall projects to a **one-pixel vertical line at x = 511** in a
+  1024-wide canvas, i.e. exactly the screen centre, which is where a wall passing
+  under the camera lands when you look straight down;
+- the default camera is `CAMERA_CUSTOM` (`ePlayer.cpp:1169`), which sits
+  `6 + 0.5·speed` ≈ 13.5 units *behind* the cycle at ≈ 10 up
+  (`config/settings_visual.cfg:67-71`). Looking straight down from there puts the
+  cycle just outside the frame — half the visible ground width is ~13.3 units.
+  Moving the camera to 3 units back makes it appear.
+
+Consequences to carry:
+
+- **No screenshot of this port has ever shown a correct 3D view**, and none will
+  until this is fixed. Do not write a gate that depends on one; the M2 gate
+  deliberately does not.
+- `CAMERA_IN` is not a workaround: `eCamera.cpp:1429-1433` removes the centred
+  object from the render list when the camera is within 1 unit of it.
+- The fix is small — implement `gluLookAt` correctly in `eCompat.cpp`, the way it
+  already shims `glRectf` — but it is **new behaviour rather than a bug-for-bug
+  port**, so it belongs to a task that owns it and can verify the result visually.
+
+### The other half: `SDLK_LAST` moved, so the mouse-camera binds are dead
+
+`config/default.cfg:31-35` binds `LOOK_LEFT`, `LOOK_RIGHT`, `BANK_UP`,
+`BANK_DOWN` and `ZOOM_IN` to keycodes 324-336. Those are not SDL keysyms at all:
+they are this program's own mouse pseudo-keys, `SDLK_MOUSE_X_PLUS` and friends,
+defined in `uInput.h` as `SDLK_LAST+1 … SDLK_LAST+13`. **SDL 1.2's `SDLK_LAST`
+was 323; in this build it is 1536** (measured, not assumed — see the comment on
+`su_TranslateSDL12Keysym` in `uInput.cpp`), so the shipped literals point at
+nothing.
+
+This is the same defect as the arrow keys, which §Task 6 of M2 fixed by
+re-encoding keysyms at config-parse time. It was deliberately **not** included in
+that translation table: 324-336 → 1537-1549 is idempotent-safe (the ranges are
+disjoint, same as the rest of the table), but enabling mouse camera control in a
+browser needs pointer-lock behaviour verified first, and turning on bindings that
+have never been exercised is not a thing to do blind.
+
+Whoever fixes the camera should fix this at the same time — they are the same
+feature from a player's point of view, and a correct `gluLookAt` with no way to
+turn the camera is only half a result.
