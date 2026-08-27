@@ -35,13 +35,93 @@ ALT-Tab waits, inside the region opened at `:432`), `rGLRender.cpp` (whole file,
 is **not** true at `tSysTime.cpp` (`tDelay`/`tDelayForce`) or `rScreen.cpp`
 (`sr_LoadDefaultConfig()`).
 
-The mechanical check, rather than eyeballing `#endif`s:
+### Checking it, and the check that lies to you
+
+An earlier revision of this section recommended an `awk` one-liner that counts
+`#if`/`#endif` depth down to a line number. **Do not use it. It is wrong on the
+very file this section warns you about**, and it is wrong in the dangerous
+direction — it reports code as guarded that is not.
 
 ```bash
+# WRONG -- kept only so it is recognisable if you find it quoted somewhere.
 awk '/^[ \t]*#[ \t]*(if|ifdef|ifndef)/ {d++; s[d]=NR"|"$0; next}
      /^[ \t]*#[ \t]*endif/ {d--; next}
-     NR==822 {for(i=1;i<=d;i++) print "depth "i": "s[i]}' src/render/rScreen.cpp
+     NR==1007 {for(i=1;i<=d;i++) print "depth "i": "s[i]}' src/render/rScreen.cpp
+#   -> depth 1: 432|#ifndef DEDICATED
 ```
+
+That answer is false. `sr_LoadDefaultConfig()` at `rScreen.cpp:1007` is **not**
+inside any `#ifndef DEDICATED` — the region opened at `:432` closes at `:878` —
+and the function is compiled into the dedicated build. Which is exactly why the
+NVIDIA branch inside it (§ 6) needed the three-clause guard rather than a bare
+`#ifdef __EMSCRIPTEN__`.
+
+The cause: a preprocessor directive does not stop being one for `awk` when it
+sits inside a comment. `rScreen.cpp:546-553` is a block comment containing
+`#ifdef POWERPAK_DEB` and a matching `#else`, but no `#endif` — the `*/` comes
+first. `awk` counts the opener, never sees a closer, and reports every depth
+from `:547` onward one too high. The imbalance is visible directly: the file
+has 45 lines matching the opener pattern and 44 `#endif`s.
+
+```bash
+grep -c '^[ \t]*#[ \t]*\(if\|ifdef\|ifndef\)' src/render/rScreen.cpp   # 45
+grep -c '^[ \t]*#[ \t]*endif'                 src/render/rScreen.cpp   # 44
+```
+
+Any C file may contain that shape, and a text-level nesting counter cannot be
+trusted on any of them.
+
+**Not hypothetical.** Mis-reading which side of a `#ifndef DEDICATED` a line
+sits on is the mistake that silently changed the M0 wasm earlier in this
+milestone. Silently, because — as the next subsection explains — the wrong
+guard links cleanly.
+
+#### The authoritative check: ask the preprocessor
+
+Only the preprocessor knows. Run it with the dedicated build's flags and grep
+the output for a token from the line in question. Token present ⇒ the line is
+in the dedicated build.
+
+```bash
+source deps/emsdk/emsdk_env.sh
+em++ -E -std=gnu++14 \
+     -I src/emscripten -I deps/build/libxml2-install/include/libxml2 \
+     -iquote src -iquote src/tools -iquote src/network -iquote src/render \
+     -iquote src/ui -iquote src/engine -iquote src/tron \
+     -iquote src/thirdparty/binreloc -iquote src/thirdparty/particles \
+     src/render/rScreen.cpp | grep -c sr_LoadDefaultConfig
+```
+
+Run against this tree, with a positive and a negative control inside the same
+file so the command checks itself:
+
+| token in `rScreen.cpp` | dedicated | client | what it means |
+|---|---|---|---|
+| `sr_LoadDefaultConfig` | 2 | 3 | in **both** builds — `awk` called this dedicated-excluded, and was wrong |
+| `NVIDIA` | 1 | 0 | the § 6 guard doing its job: kept for dedicated, gone from the client |
+| `glHint` | 0 | 3 | genuinely inside `#ifndef DEDICATED` (the region opened at `:1093`) |
+
+For the client column, add `-DAA_WEB_CLIENT -sUSE_SDL=1 -sUSE_LIBPNG=1` to the
+same command; nothing else changes. Choose a *distinctive* token — a function
+name, a string literal, an odd identifier. A common word will match somewhere
+in the ~66,000 lines of expanded headers and tell you nothing.
+
+#### The cheap check, when the question is about a whole function
+
+If the question is only whether a *function* survives into the dedicated build,
+the object file already on disk answers it without recompiling:
+
+```bash
+deps/emsdk/upstream/bin/llvm-nm web/build-m0/render/rScreen.o | grep LoadDefaultConfig
+#   -> 00001b2c T _Z20sr_LoadDefaultConfigv        (T = defined in this object)
+```
+
+Two caveats. **`llvm-nm` is not on `PATH` after `source
+deps/emsdk/emsdk_env.sh`** — spell out `deps/emsdk/upstream/bin/llvm-nm`, as
+above. And it answers at function granularity only: `sr_ResetRenderState` is
+`T` in that same object even though most of its body is inside `#ifndef
+DEDICATED`, because the *function* is not. For a question about a particular
+line, use `em++ -E`.
 
 ### Why getting this wrong is not caught by the build
 
@@ -80,6 +160,29 @@ and similar), none of them a call this port introduced.
 The other cheap check, for the hazard in §8, is
 `grep -c SDL_Delay web/dist-m0/armagetronad-dedicated.js` — also 0, and 0 in
 the *client* wasm's imports too, which is the one that matters.
+
+Both of those are post-link and tell you only that *something* is wrong. To get
+the same answer per file, before linking and with the offender named, run the
+preprocessor over every game source the port has patched:
+
+```bash
+source deps/emsdk/emsdk_env.sh
+for f in $(git diff --name-only main...HEAD -- 'src/*.cpp' | grep -v '^src/emscripten/'); do
+  n=$(em++ -E -std=gnu++14 -I src/emscripten \
+        -I deps/build/libxml2-install/include/libxml2 \
+        -iquote src -iquote src/tools -iquote src/network -iquote src/render \
+        -iquote src/ui -iquote src/engine -iquote src/tron \
+        -iquote src/thirdparty/binreloc -iquote src/thirdparty/particles \
+        "$f" | grep -c 'emscripten_sleep\|SDL_Delay')
+  printf '%-28s %s\n' "$f" "$n"
+done
+```
+
+**Every count must be 0**, because neither symbol belongs in a dedicated build.
+As of M1 all ten patched files report 0 — which is what re-verified §8's
+"checked, not assumed" claim about the `rSysdep.cpp` and `rScreen.cpp` guards
+after the `awk` tool that originally checked them turned out to be unreliable.
+A non-zero row names the file to go and look at.
 
 ---
 
@@ -492,6 +595,15 @@ Both guards are bare `#ifdef __EMSCRIPTEN__` / `#ifndef __EMSCRIPTEN__`, which
 `sr_LimitFPS()` is inside the region opened at `rSysdep.cpp:465`, and both
 `rScreen.cpp` waits are inside the one opened at `rScreen.cpp:432`. Neither
 appears in the dedicated build, whose wasm is unchanged at 2,488,298 bytes.
+
+**Re-checked at M1 exit with a tool that works.** The nesting above was
+originally confirmed with §1's `awk` one-liner, which has since been shown to
+give wrong answers on `rScreen.cpp` (a commented-out `#ifdef` throws its depth
+count off — §1 has the detail). Re-run through `em++ -E` with the dedicated
+flags, both files still come out clean: zero `emscripten_sleep` and zero
+`SDL_Delay` survive dedicated preprocessing in either. The conclusion held; the
+tool that produced it did not, and that is worth knowing if any of these guards
+is ever revisited.
 
 ### What this costs, and what to watch for
 
