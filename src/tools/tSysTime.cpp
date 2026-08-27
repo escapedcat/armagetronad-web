@@ -33,6 +33,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "tConfiguration.h"
 #include "tLocale.h"
 
+// NOT the plain #ifdef __EMSCRIPTEN__ used elsewhere in this port, and the
+// difference is load-bearing: this translation unit is compiled into BOTH
+// Emscripten variants and only the browser client links with -sASYNCIFY.
+// Without that flag emscripten_sleep is NOT an undefined symbol that the build
+// would catch -- it resolves to a JS abort() stub -- so a plain guard would
+// link the M0 dedicated server cleanly and kill it at the first tDelay().
+// Full reasoning, and the rule for later milestones:
+// docs/porting/browser-runtime-notes.md section 1.
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+#include <emscripten.h>
+#endif
+
 //! time structure
 struct tTime
 {
@@ -285,12 +297,31 @@ void tAdvanceFrameSys( tTime & start, tTime & relative )
 #endif
 }
 
+// Emscripten's usleep() busy-waits on the calling thread, so on the browser's
+// main thread it burns CPU AND freezes the tab for the full duration.
+// emscripten_sleep() unwinds the stack instead.
+//
+// Both sleeps below are patched in place, INSIDE the recorder guards, and not
+// one line higher: tDelay() must not sleep at all during playback, and
+// tDelayForce()'s else branch rewinds timeStart instead of sleeping, which is
+// what keeps recordings deterministic across machines of different speeds.
+// Hoisting either sleep, or replacing libc usleep() globally, breaks demo
+// playback (an M5 deliverable). docs/porting/browser-runtime-notes.md § 3.
+//
+// usecdelay/1000 truncates, so a sub-millisecond request becomes
+// emscripten_sleep(0) -- still a real yield, which is the point.
 static bool s_delayedInPlayback = false;
 void tDelay( int usecdelay )
 {
     // delay a bit if we're not playing back
     if ( ! tRecorder::IsPlayingBack() )
+    {
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+        emscripten_sleep( usecdelay / 1000 );
+#else
         usleep( usecdelay );
+#endif
+    }
     else
         s_delayedInPlayback = true;
 }
@@ -299,7 +330,13 @@ void tDelayForce( int usecdelay )
 {
     // delay a bit
     if ( !s_delayedInPlayback )
+    {
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+        emscripten_sleep( usecdelay / 1000 );
+#else
         usleep( usecdelay );
+#endif
+    }
     else
     {
         // when recording, the machine was idling around. No need to play that back.

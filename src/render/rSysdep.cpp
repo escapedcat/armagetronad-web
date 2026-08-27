@@ -48,6 +48,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SDL_thread.h"
 #include "SDL_mutex.h"
 
+#ifdef __EMSCRIPTEN__
+// For emscripten_sleep(), the browser yield in SwapGL() below. Only the
+// browser client links with -sASYNCIFY; the M0 dedicated build does not, and
+// without it emscripten_sleep is a JS-side abort() (libasync.js:614) rather
+// than a link error -- so this include, and every call it enables, stays
+// inside #ifndef DEDICATED.
+#include <emscripten.h>
+#endif
+
 #include <png.h>
 #define SCREENSHOT_PNG_BITDEPTH 8
 #define SCREENSHOT_BYTES_PER_PIXEL 3
@@ -542,6 +551,50 @@ void rSysDep::StopNetSyncThread()
 static tConfItem<int> sr_maxFPSConf("MAX_FPS", sr_maxFPS,
                                     [](const int& val) { return (val >= 0); });
 
+// NEVER CALL SDL_Delay() IN THE BROWSER CLIENT. It is the one sleep primitive
+// that is actively unsafe under Asyncify, and it fails nowhere near the call.
+//
+// Emscripten's SDL declares it as a JS-side *alias* of emscripten_sleep
+// (src/lib/libsdl.js, grep "SDL_Delay: 'emscripten_sleep'", inside #if ASYNCIFY),
+// so at runtime _SDL_Delay really is the function that starts an Asyncify
+// unwind. But the alias is resolved by src/jsifier.mjs WITHOUT copying the
+// target's `__async` decorator: the asyncFuncs list is built from
+// LibraryManager.library[symbol + '__async'] (grep "asyncFuncs.push") BEFORE
+// aliases are resolved (grep "LibraryManager.isAlias"), and only
+// emscripten_sleep carries that decorator (src/lib/libasync.js, grep
+// "emscripten_sleep__async"). asyncFuncs is what tools/link.py turns into
+// ASYNCIFY_IMPORTS (grep "js_info\['asyncFuncs'\]"), and ASYNCIFY_IMPORTS is
+// what tells Binaryen which call sites to instrument.
+//
+// Net effect: the JS side unwinds, the wasm side does not participate. The
+// caller of SDL_Delay is left uninstrumented while instrumented frames further
+// up the stack rewind anyway, restoring __stack_pointer from a garbage
+// asyncify-stack slot. Downstream that presents as "Attempt to set SP to
+// 0xffffffb0" -- a tiny absolute address, at every -sSTACK_SIZE, so it looks
+// like memory-layout corruption rather than a sleep problem.
+//
+// Verified two ways against the emsdk in deps/:
+//   - `emcc -v` prints the Binaryen argument; asyncify-imports contains
+//     *.emscripten_sleep and no *.SDL_Delay;
+//   - a five-line reduction with the shape of SwapGL() below (one
+//     emscripten_sleep(0), then a nested call that sleeps again) survives 100
+//     frames when the second sleep is emscripten_sleep, and dies with
+//     "RuntimeError: unreachable" when it is SDL_Delay. Same source, same
+//     flags. So the number of yields per frame is NOT the variable -- which
+//     primitive is used is.
+//
+// The rule, therefore: only call sleeps that appear in ASYNCIFY_IMPORTS.
+// emscripten_sleep does; so do tDelay()/tDelayForce(), which route through it
+// (tSysTime.cpp). SDL_Delay does not. If a third-party call site ever makes
+// SDL_Delay unavoidable, -sASYNCIFY_IMPORTS=SDL_Delay at link is the escape
+// hatch and it does work (verified with the same reduction) -- but prefer
+// removing the call, so that "the client's wasm imports no SDL_Delay" stays a
+// checkable invariant.
+//
+// A plain __EMSCRIPTEN__ guard is the right form here: this whole region of the
+// file is inside #ifndef DEDICATED (opened at :465), so the dedicated build --
+// which links without -sASYNCIFY and would abort on emscripten_sleep -- never
+// compiles this function at all. See docs/porting/browser-runtime-notes.md § 8.
 void sr_LimitFPS()
 {
     if (sr_maxFPS > 0 && !tRecorder::IsPlayingBack())
@@ -554,7 +607,14 @@ void sr_LimitFPS()
         const double target_now_time = last_time + SPF;
         if (now_time < target_now_time)
         {
+#ifdef __EMSCRIPTEN__
+            // Same wait, a primitive Asyncify actually instruments. This is a
+            // second yield inside the same SwapGL() call as the deliberate one
+            // at the top of that function, and that is fine -- see above.
+            emscripten_sleep(round(1000 * (target_now_time - now_time)));
+#else
             SDL_Delay(round(1000 * (target_now_time - now_time)));
+#endif
             last_time = target_now_time;
         }
         else
@@ -565,6 +625,45 @@ void sr_LimitFPS()
 }
 
 void rSysDep::SwapGL(){
+#ifdef __EMSCRIPTEN__
+    // THE browser yield point, and the reason the whole client is built with
+    // Asyncify. The game has no frame callback: every one of its loops --
+    // uMenu::Enter, gGame's round loop, the connection and download waits --
+    // is a plain while() that only returns when the activity it drives is
+    // over. In a browser that never gives the event loop a turn, so the tab
+    // freezes: no input, no repaint, eventually a "page unresponsive" prompt.
+    // emscripten_sleep() unwinds the C++ stack back to the JS caller, lets the
+    // browser run, and resumes this call where it left off.
+    //
+    // It has to be HERE, at the top, unconditionally, not at the end of the
+    // function. SwapGL() returns early from the `if (!sr_glOut)` block roughly
+    // sixty lines down, and that return skips the entire rest of the function
+    // -- the buffer swap, the breakpoint, and sr_LimitFPS(). !sr_glOut is not
+    // an edge case: the console turns rendering off while it auto-scrolls, and
+    // the recorder's frame-skip and fast-forward paths both drive it. A yield
+    // placed after that block would be silently skipped for exactly the loops
+    // that spin fastest. Placed here it is provably once per call, for every
+    // caller and every path. uMenu::Enter (uMenu.cpp) calls SwapGL()
+    // unconditionally at the bottom of its loop body, so both of the menu's
+    // paths -- rendering and the tDelay()-throttled idle one -- are covered.
+    //
+    // Deliberately NOT done in sr_LimitFPS() instead: that runs after the early
+    // return, so it would miss exactly those callers. sr_LimitFPS() does yield
+    // as well when a frame finishes early, which is a second yield inside this
+    // same call -- harmless, and measured to be harmless; see the comment above
+    // sr_LimitFPS() for what actually is not.
+    //
+    // Two consequences that will look like bugs; both are explained in
+    // docs/porting/browser-runtime-notes.md section 2. emscripten_sleep is
+    // setTimeout, which browsers clamp to ~4ms once timeouts nest, so frames
+    // are neither rAF-aligned nor faster than ~250 FPS. And because
+    // rConsole::DisplayAtNewline() calls this function
+    // (rConsoleGraph.cpp:67), a burst of console output during loading costs
+    // one event-loop round trip per line -- check that before blaming Asyncify
+    // for a boot that looks hung.
+    emscripten_sleep( 0 );
+#endif
+
     if ( s_benchmark )
     {
         static PerformanceCounter counter;

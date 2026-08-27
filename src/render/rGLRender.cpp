@@ -159,7 +159,23 @@ public:
     };
 
     virtual void BeginQuadStrip(){
+#ifdef __EMSCRIPTEN__
+        // Emscripten's immediate-mode emulation abort()s the entire runtime --
+        // not just the draw -- on any primitive above GL_TRIANGLE_FAN except
+        // GL_QUADS (src/lib/libglemu.js, grep "unsupported immediate mode").
+        // GL_QUAD_STRIP is mode 8, so it is fatal, and gWall.cpp:1242 draws the
+        // cycle wall with it every frame of every round behind a guard that is
+        // a `static const bool = true` (gWall.cpp:1066). GL_TRIANGLE_STRIP
+        // consumes the same vertex stream in the same order.
+        //
+        // Before "tidying" this: aliasing two rRenderer primitives onto one
+        // GLenum is only safe because BeginTriangleStrip() has zero call sites
+        // tree-wide, so no real triangle strip can be merged into a quad-strip
+        // batch. See docs/porting/browser-runtime-notes.md section 5.
+        BeginPrimitive(GL_TRIANGLE_STRIP, true);
+#else
         BeginPrimitive(GL_QUAD_STRIP, true);
+#endif
     };
 
     virtual void BeginTriangleFan(){

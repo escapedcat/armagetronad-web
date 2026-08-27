@@ -1,0 +1,126 @@
+# The M1 gate, as a re-runnable script.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/gate-chrome \
+#        --script-file web/tools/menu-gate.steps
+#   node web/tools/drive-firefox.mjs          --out /tmp/gate-firefox \
+#        --script-file web/tools/menu-gate.steps
+#   kill %1
+#
+# --headed is REQUIRED for Chrome: headless Chrome 152 floods the page with
+# thousands of spurious keydown events per real keypress, which drowns the
+# SDL event queue. Firefox headless is fine. Both are explained in the header
+# comment of the respective driver.
+#
+# PASS looks like: ten screenshots, all ten different, and a transcript with
+# no "Stack overflow detected", no [EXCEPTION], and no "SDL event queue full".
+# Every 404 in the transcript is /favicon.ico (the browser asks for it once per
+# navigation and python3 -m http.server has none); any other 404 is a missing
+# asset and is a failure. Both drivers now print the URL alongside each failed
+# load, so that rule can actually be checked -- before, Chrome logged the
+# status without the URL and Firefox logged no network events at all.
+#
+# WHAT THIS DOES AND DOES NOT DEMONSTRATE. It demonstrates every menu input
+# path M1 can reach: Down, Up, Left/Right, Enter and Escape, each with a
+# before/after screenshot pair.
+#
+# It does NOT demonstrate entering a submenu and coming back out, and an
+# earlier version of this file claimed it did -- shots 07/08 were labelled
+# "submenu" and "submenu-down" when they were the same First Setup menu as 04
+# and 06. The reason it does not is not laziness: **there is no submenu on the
+# path M1 reaches.** Both menus reachable before gameplay were enumerated from
+# the source, and neither contains a uMenuItemSubmenu (uMenu.h:468):
+#
+#   language menu (gLanguageMenu.cpp:125-141)  -- uMenuItemLanguage only
+#   First Setup   (gArmagetron.cpp:152-226)    -- uMenuItemExit (Accept),
+#       uMenuItemString (Name), and three uMenuItemSelection (Colour,
+#       Controls, Connection). "Controls:" in particular LOOKS like a submenu
+#       and is not: it is uMenuItemSelection<tString> (gArmagetron.cpp:175),
+#       a left/right chooser over keys_*.cfg templates.
+#
+# The real main menu (gMenus.cpp, where the uMenuItemSubmenu items live) is
+# only reached after welcome() runs a tutorial single-player game
+# (gArmagetron.cpp:391), because st_FirstUse is true on every load until M4
+# adds persistence. Driving through that is gameplay, which is M2's. Note for
+# whoever picks this up: st_FirstUse is exposed as the config item FIRST_USE
+# (tConfiguration.cpp:402), so "FIRST_USE 0" would skip straight to the main
+# menu -- but that changes what every real user sees on boot, so it is a
+# product decision, not a test fix.
+#
+# Reading the screenshots (a first run, so the client walks the first-use path;
+# the menu lists items Accept / Name / Colour / Controls / Connection / Accept
+# from the top):
+#   01  language menu, "American English" selected
+#   02  "British English" selected                    <- Down works
+#   03  "First Setup" menu, cursor on "Accept"        <- Enter works: it chose
+#                                                        a language AND left
+#                                                        the language menu
+#   04  cursor on "Name: web_user"                    <- Down
+#   05  cursor on "Colour: ..."                       <- Down
+#   06  the Colour VALUE has changed                  <- Right works
+#   07  cursor on "Controls: ..."                     <- Down
+#   08  the Controls VALUE has changed                <- Right, on a second
+#                                                        item, so it is the
+#                                                        key and not the item
+#   09  cursor back on "Colour", both changed values still showing   <- Up
+#   10  "Welcome to Armagetron Advanced!"             <- Escape leaves the
+#                                                        First Setup menu
+#
+# The text cursor visible next to "Name:" in 04 is NOT an edit mode. Nothing in
+# uMenu has one: uMenuItemString::Render (uMenu.cpp:811-830) draws the cursor
+# whenever the item is selected, and uMenuItemString::Event takes keystrokes
+# straight from the selected item. Pressing Enter on "Name:" does nothing, and
+# an earlier version of this file read that as "entered the field".
+#
+# The exact menu contents will drift as the port progresses; what has to stay
+# true is that every screenshot differs from the one before it.
+
+wait:6000
+eval:(()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})()
+click:#start
+wait:5000
+mark:should-be-the-language-menu
+shot:01-language-menu
+key:Down
+wait:1200
+shot:02-language-menu-british-english-selected
+mark:enter-chooses-a-language-and-leaves-this-menu
+key:Enter
+wait:3000
+shot:03-first-setup-cursor-on-accept
+# Is the frame limiter actually limiting? Every SwapGL() yields twice per frame
+# under MAX_FPS > 0 -- emscripten_sleep(0) at the top, then sr_LimitFPS()'s
+# emscripten_sleep(pad) -- and both are setTimeout underneath. So setTimeout
+# calls per second is ~2x the frame rate. At MAX_FPS 60 expect ~120/s; with the
+# limiter compiled out (as it was before this was fixed) emscripten_sleep(0)
+# alone runs at the browser's ~4ms nested-timeout clamp, i.e. ~250/s.
+eval:(()=>{window.__st=0;const o=window.setTimeout;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})()
+wait:3000
+eval:(()=>{const dt=(performance.now()-window.__t0)/1000;return 'setTimeout calls/sec='+(window.__st/dt).toFixed(1)+' => ~'+(window.__st/dt/2).toFixed(1)+' FPS (MAX_FPS 60)'})()
+key:Down
+wait:1200
+shot:04-first-setup-cursor-on-name
+key:Down
+wait:1200
+shot:05-first-setup-cursor-on-colour
+mark:left-right-changes-a-selection-value
+key:Right
+wait:1200
+shot:06-first-setup-colour-value-changed
+key:Down
+wait:1200
+shot:07-first-setup-cursor-on-controls
+key:Right
+wait:1200
+shot:08-first-setup-controls-value-changed
+key:Up
+wait:1200
+shot:09-first-setup-cursor-back-on-colour
+mark:escape-leaves-the-first-setup-menu-entirely
+key:Escape
+wait:3000
+shot:10-welcome-message
+# The strings the game's own glGetString(GL_VENDOR/GL_RENDERER) return are the
+# masked WebGL ones, not the unmasked driver ones -- see
+# docs/porting/browser-runtime-notes.md section 6.
+eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})()

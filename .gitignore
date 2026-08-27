@@ -120,11 +120,21 @@ src/nTrueVersion.h
 fingerprint
 wget-log*
 .worktrees/
-deps/emsdk/
-deps/build/
-web/build-m0/
-web/dist-m0/
-web/node_modules/
+# No trailing slashes: in a git worktree these are often symlinks to a shared
+# toolchain rather than real directories, and "foo/" does not match a symlink.
+deps/emsdk
+deps/build
+web/build-m0
+web/dist-m0
+web/build-m1
+web/dist-m1
+web/node_modules
+# Scratch space for planning/recon notes — never part of the port.
+.superpowers/
 # ...but the hand-written wasm Makefile is source, not autotools output
 # (line 37's bare "Makefile" rule would otherwise swallow it).
 !web/Makefile
+# Same problem, different rule: line 63's bare "*.html" is meant for the
+# generated docs under src/doc/ (html.m4 -> *.html), but it also matches this
+# hand-written shell page, which --shell-file needs as source, not output.
+!web/shell.html

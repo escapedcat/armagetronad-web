@@ -586,6 +586,10 @@ static uSelectEntry<rDisplayListUsage> dl_off(dl,"$tweaks_displaylists_off_text"
 static uSelectEntry<rDisplayListUsage> dl_cac(dl,"$tweaks_displaylists_cac_text","$tweaks_displaylists_cac_help",rDisplayList_CAC);
 static uSelectEntry<rDisplayListUsage> dl_cae(dl,"$tweaks_displaylists_cae_text","$tweaks_displaylists_cae_help",rDisplayList_CAE);
 
+// This toggle still moves in the browser but changes nothing: eDisplay.cpp
+// forces the rim path under __EMSCRIPTEN__, because turning the infinity plane
+// on would reach glTexCoord4f and abort the runtime. Hiding the item is an M4
+// UI job. See docs/porting/browser-runtime-notes.md § 4.
 static uMenuItemToggle infp
 (&screen_menu_tweaks,"$tweaks_infinity_text",
  "$tweaks_infinity_help"

@@ -1,0 +1,194 @@
+<!doctype html>
+<!--
+  Shell page for the wasm client (web/Makefile's --shell-file).
+
+  This file IS the whole page Emscripten emits as armagetronad.html -- it is
+  not a fragment dropped into some other template. The build tool does a
+  literal string substitution of the triple-brace SCRIPT placeholder near the
+  end of <body> with a <script> tag that loads the generated armagetronad.js
+  loader, which in turn fetches the .wasm and the preloaded .data archive.
+  That placeholder is mandatory -- em++ hard-fails the link step if it is
+  missing -- and because the substitution is a plain text replace of every
+  occurrence, do not paste its literal three-brace form anywhere in this file
+  except at that one spot (this comment deliberately does not spell it out,
+  having once been mangled by its own explanation).
+
+  Load order matters: the placeholder must come AFTER the <script> below that
+  defines `Module`, because armagetronad.js looks for a pre-existing global
+  `Module` object as it starts up and merges its own runtime hooks into it.
+  Defining Module later would just be ignored.
+
+  This must be served over HTTP, not opened as a file:// URL: the loader
+  fetches the .wasm and .data files with fetch()/XHR, which file:// pages
+  are not allowed to do in most browsers. The failure handling below exists
+  mainly to surface that specific mistake, since it is the single most
+  likely first thing anyone opening this page hits.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Armagetron Advanced</title>
+  <style>
+    body { margin:0; background:#111; color:#eee;
+           font:14px/1.4 system-ui, sans-serif; }
+    #canvas { display:block; margin:0 auto; background:#000; }
+    #overlay { position:fixed; inset:0; display:grid; place-content:center;
+               gap:1rem; text-align:center; background:#111; }
+    #start[disabled] { opacity:.5; }
+    #status.error { color:#f77; max-width:32rem; }
+  </style>
+</head>
+<body>
+
+  <div id="overlay">
+    <h1>Armagetron Advanced</h1>
+    <p id="status">Loading&hellip;</p>
+    <button id="start" disabled>Play</button>
+  </div>
+  <!--
+    The width/height attributes are load-bearing, not decoration. The game's
+    default video mode is "desktop resolution" (rScreen.cpp:114 constructs
+    currentScreensetting with ArmageTron_Desktop), which means width+height==0
+    and rScreen.cpp:626-629 substitutes whatever SDL reports as the desktop.
+    Emscripten's SDL_GetVideoInfo answers that with canvas.width/canvas.height
+    (libsdl.js:1400-1405) -- and SDL_SetVideoMode then writes the mode it was
+    given straight back onto the same canvas. So the canvas's size is both the
+    question and the answer: with no attributes here the canvas is HTML's
+    default 300x150 and the game faithfully runs at 300x150.
+  -->
+  <canvas id="canvas" width="1024" height="768"
+          tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+
+  <script>
+    const statusEl  = document.getElementById('status');
+    const startEl   = document.getElementById('start');
+    const overlayEl = document.getElementById('overlay');
+
+    // Both the .wasm and the .data package are fetched from inside
+    // armagetronad.js with plain fetch()/XHR calls that are never awaited
+    // with a .catch() by the generated loader itself -- a 404 or network
+    // failure on either one surfaces only as an unhandled promise
+    // rejection, not as a thrown exception armagetronad.js itself reports.
+    // Module.onAbort, by contrast, only fires for the runtime's OWN
+    // abort() calls (assertion failures, out-of-memory, a bad
+    // Module.instantiateWasm) -- it does not fire for a missing file.
+    // Without handling both, the failure mode looks identical to a slow
+    // load: the page just sits on "Loading..." forever with the button
+    // disabled and nothing else visible anywhere in the UI.
+    function showFailure(message) {
+      const text = 'Failed to load: ' + message +
+        '. If you opened this page directly from disk (a file:// URL), ' +
+        'that will not work -- serve it over HTTP instead.';
+      if (document.body.contains(overlayEl)) {
+        statusEl.textContent = text;
+        statusEl.classList.add('error');
+        startEl.disabled = true;
+      } else {
+        // The overlay was already removed by a successful Play click, so
+        // failure happened after the game was already running -- put the
+        // message somewhere visible instead of silently doing nothing.
+        const banner = document.createElement('div');
+        banner.textContent = text;
+        banner.style.cssText =
+          'position:fixed;top:0;left:0;right:0;padding:.5rem 1rem;' +
+          'background:#500;color:#fff;font:14px system-ui, sans-serif;z-index:9999';
+        document.body.prepend(banner);
+      }
+      console.error(message);
+    }
+    window.onerror = (message) => showFailure(String(message));
+    window.onunhandledrejection = (event) => showFailure(String(event.reason));
+
+    // Without preserveDrawingBuffer the canvas renders BLACK -- not "wrong
+    // colours", not "flickering", solid black -- while the game underneath is
+    // drawing a perfectly correct frame. Measured that way round: forcing the
+    // flag on and reading the framebuffer back showed 544849 of 786432 pixels
+    // non-black at a moment when Page.captureScreenshot returned an all-black
+    // image.
+    //
+    // Why: WebGL discards the drawing buffer after every composite unless this
+    // attribute is set. That is normally invisible, because a normal WebGL app
+    // draws its whole frame inside one requestAnimationFrame callback, so a
+    // composite can only ever happen at a frame boundary. This game does not
+    // have a frame callback at all -- it is a 2003 desktop main loop that
+    // Asyncify chops into pieces at every emscripten_sleep(), and those land
+    // *inside* the frame: rSysDep::SwapGL() yields before the buffer swap,
+    // tDelay()/sr_LimitFPS() yield again, and rConsoleGraph.cpp:67 yields once
+    // per line of console output. The browser therefore composites at an
+    // arbitrary mid-frame moment, discards the buffer, and the next composite
+    // shows only whatever was drawn since -- usually nothing, because the
+    // game's next act is glClear.
+    //
+    // Emscripten's SDL 1.2 shim builds the context attributes itself from the
+    // SDL_GL_* attributes (libsdl.js:407-412) and offers no Module hook to add
+    // to them, so the only place to inject this is the canvas's own
+    // getContext, which GL.createContext calls as an instance method
+    // (libwebgl.js:782-789). Patching the instance rather than
+    // HTMLCanvasElement.prototype keeps the change to this one element, and
+    // spreading the existing attributes rather than replacing them preserves
+    // the depth/stencil/alpha/antialias choices SDL derived from the game's
+    // own sr_SetGLAttributes call.
+    //
+    // This is a correctness fix, not a tuning knob: do not "optimise" it away.
+    // The real fix is to align rendering to requestAnimationFrame, which is
+    // M2/M5's problem; until then this is what makes the picture appear.
+    (() => {
+      const canvas = document.getElementById('canvas');
+      const realGetContext = canvas.getContext.bind(canvas);
+      canvas.getContext = (type, attrs) => realGetContext(
+        type,
+        String(type).startsWith('webgl')
+          ? Object.assign({}, attrs || {}, { preserveDrawingBuffer: true })
+          : attrs
+      );
+    })();
+
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      // The game reads its data from the preloaded /data tree and writes user
+      // config to /persist. Both are runtime switches the game already has --
+      // no path patches needed. /persist becomes an IDBFS mount in M4; until
+      // then it is in-memory, so settings do not survive a reload.
+      arguments: ['--datadir','/data','--userdatadir','/persist',
+                  '--userconfigdir','/data/webdefaults'],
+      // callMain is invoked from the button below, not automatically -- the
+      // button itself matters starting M3: browsers require a user gesture
+      // before audio can start, so waiting for a click costs nothing now and
+      // is already in place when sound lands.
+      noInitialRun: true,
+      setStatus: (text) => { statusEl.textContent = text || 'Ready'; },
+      print:    (text) => console.log(text),
+      printErr: (text) => console.error(text),
+      // Fires on the runtime's own abort() (assertion failures, OOM, a
+      // rejected instantiateWasm) -- see the comment above showFailure for
+      // why this alone is not enough to catch a missing .wasm/.data file.
+      onAbort:  (what) => showFailure(String(what)),
+      onRuntimeInitialized: () => {
+        statusEl.textContent = 'Ready';
+        startEl.disabled = false;
+      }
+    };
+
+    startEl.addEventListener('click', () => {
+      overlayEl.remove();
+      Module.canvas.focus();          // so the menu receives key events
+      // .slice() matters: callMain(args) unshifts argv[0] onto whatever
+      // array it's given, mutating it in place, so passing Module.arguments
+      // directly would grow that same array by one on every call (harmless
+      // here since the button is gone after one click, but wrong to write).
+      // Calling callMain() with no argument is NOT the fix, despite
+      // looking like the obvious one: callMain's own default parameter is
+      // `args = []` (confirmed against the built armagetronad.js), not
+      // Module['arguments'] -- only the runtime's own internal auto-run
+      // path defaults to that (a separate `run(args = programArgs)`, which
+      // noInitialRun skips entirely). Calling callMain() bare would launch
+      // main() with none of --datadir/--userdatadir/--userconfigdir.
+      // A copy is both non-mutating and correct.
+      Module.callMain(Module.arguments.slice());
+    });
+  </script>
+
+  {{{ SCRIPT }}}
+
+</body>
+</html>

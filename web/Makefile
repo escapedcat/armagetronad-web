@@ -57,7 +57,13 @@ INCLUDES  := -I src/emscripten \
 # line item in PLAN.md's M5 size budget.
 EXCEPTIONS := -fexceptions
 
-CXXFLAGS  := -std=gnu++14 -O2 -MMD -MP $(EXCEPTIONS) $(INCLUDES)
+# Shared by every variant compiled from this file (M0 dedicated, M1 client, and
+# whatever M2 adds): the C++ standard, optimisation level, and dependency-file
+# flags must not drift between them, so they live here once. Each variant's
+# CXXFLAGS then adds only what makes it different (macros, -sUSE_* ports, ...).
+BASE_CXXFLAGS := -std=gnu++14 -O2 -MMD -MP $(EXCEPTIONS)
+
+CXXFLAGS  := $(BASE_CXXFLAGS) $(INCLUDES)
 
 # The wildcards below sweep whole directories, so they also pick up files that
 # src/Makefile.am never compiles: extra main()s, stale demos/test harnesses,
@@ -91,10 +97,12 @@ EXCLUDES  := \
 #                no longer exists in the tree.
 # tSafePTRBase — dead code: its body is commented out and what remains refers to
 #                a List<> template that was renamed tList<> long ago.
-# rConsoleCout — not a standalone TU: render/rConsoleGraph.cpp ends with a
-#                literal `#include "rConsoleCout.cpp"` for DEDICATED builds,
-#                which is why it is EXTRA_DIST in src/Makefile.am. Its code IS
-#                in the build; compiling it a second time only duplicates it.
+# rConsoleCout.cpp — excluded from BOTH builds, for opposite reasons.
+#   dedicated: rConsoleGraph.cpp:274 #includes it textually (the #else of
+#              #ifndef DEDICATED), so compiling it too would duplicate it.
+#   client:    that #else is dead, so the file contributes nothing — and
+#              compiling it would collide with the graphical console
+#              (DoCenterDisplay, DisplayAtNewline, sr_InputForScripts).
 SRCS      := $(filter-out $(EXCLUDES), \
                $(wildcard src/tools/*.cpp) $(wildcard src/network/*.cpp) \
                $(wildcard src/engine/*.cpp) $(wildcard src/render/*.cpp) \
@@ -121,6 +129,229 @@ $(OBJDIR)/%.o: src/%.cpp web/Makefile
 # files do not exist yet and must not be an error. They live in $(OBJDIR), so
 # `clean` already removes them.
 -include $(OBJS:.o=.d)
+
+# ---- M1: browser client -------------------------------------------------
+# Same 100 source files as the dedicated build. Deliberately NOT adding
+# src/thirdparty/particles: USE_PARTICLES is commented out at
+# gParticles.h:32, so it is dead code, and linking its objects directly
+# (native hides them in a .a) would add glCallList, glPushClientAttrib and
+# glPopClientAttrib as undefined symbols for no benefit.
+CLIENT_OBJDIR := web/build-m1
+# ...plus one translation unit the dedicated build does not have:
+# src/emscripten/eCompat.cpp, the compatibility shims for the symbols
+# Emscripten's SDL and GL emulation leave undefined. It has to be named here
+# because $(SRCS) above wildcards the six game source directories only, and
+# src/emscripten/ is not one of them (it holds the hand-written config.h, not
+# game source). No extra compile rule is needed for it: the
+# $(CLIENT_OBJDIR)/%.o: src/%.cpp rule below already matches, with a stem of
+# "emscripten/eCompat" -- pattern stems may contain slashes.
+CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
+                 $(CLIENT_OBJDIR)/emscripten/eCompat.o
+CLIENT_DEFS   := -DAA_WEB_CLIENT
+# SDL and libpng are needed at COMPILE time for their headers, not just at link.
+CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
+# $(EXCEPTIONS) is required at COMPILE time as well as link — see the
+# comment on its definition above; omitting it here silently discards catches.
+# $(BASE_CXXFLAGS) keeps the standard/optimisation/dependency flags identical
+# to the dedicated build's CXXFLAGS above — see its definition for why.
+CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
+
+# -sASYNCIFY is what lets this program run in a browser at all, and it is a
+# LINK-time transform: Binaryen rewrites the linked wasm so that a call stack
+# can be unwound to the JS caller and rebuilt later. It is deliberately absent
+# from CLIENT_CXXFLAGS -- passing it at compile time would do nothing.
+#
+# It is needed because the game has no frame callback. Every loop in it -- the
+# main menu, the round loop, the connection and download waits -- is a plain
+# while() that returns only when its work is done, and a browser tab that never
+# yields to the event loop is a frozen tab. The single yield point that makes
+# this pay off is emscripten_sleep(0) at the top of rSysDep::SwapGL()
+# (src/render/rSysdep.cpp); Asyncify is the machinery that makes that call able
+# to return.
+#
+# It is not free, and M5's size budget needs the number. Relinking the same 101
+# objects with and without these two flags:
+#     without   2,982,495 bytes wasm      584,996 bytes js
+#     with      8,871,099 bytes wasm      625,787 bytes js
+#     delta    +5,888,604 bytes (+197%)   +40,791 bytes (+7%)
+# The wasm very nearly triples. That makes Asyncify by a wide margin the single
+# largest line item in the size budget -- seven times -fexceptions' +827,185
+# (see the EXCEPTIONS comment above), and it displaces it as the figure to
+# quote first. The reason is that ASYNCIFY=1 instruments every function that
+# might be on the stack when an async call happens, and here that is reachable
+# from essentially the whole program: SwapGL() is called from the bottom of the
+# render tree, which is called from every game loop.
+#
+# The lever, if this has to come down, is ASYNCIFY_ONLY (or ASYNCIFY_REMOVE):
+# hand Binaryen the list of functions that really can be on the stack across a
+# yield, and it instruments only those. Do NOT hand-write that list -- getting
+# it wrong produces an "unreachable" trap at runtime, not a build error.
+# Generate it with -sASYNCIFY_ADVISE, which prints every function Binaryen
+# instrumented together with the reason it was included; that output is the
+# input to a defensible ASYNCIFY_ONLY. Worth doing only once the client runs,
+# so the advice can be checked against real behaviour -- i.e. M5, not here.
+#
+# JSPI is the other exit and would cost far less. Its blocker is browser
+# baseline. An earlier draft of this comment also asserted that JSPI conflicts
+# with -fexceptions; that was NOT verified and this emsdk does not enforce it
+# (src/settings.js has `var JSPI = 0`, and tools/link.py encodes no
+# JSPI/exceptions or JSPI/longjmp error -- its only Asyncify incompatibility is
+# WASM_ESM_INTEGRATION). Treat the interaction as needing verification against
+# the emsdk in use rather than as a known blocker.
+#
+# ASYNCIFY_STACK_SIZE is the side buffer the unwound frames are copied into,
+# and it is a fixed allocation, not a growing one -- overflowing it is a
+# runtime abort ("Asyncify stack overflow"), not a reallocation. The default is
+# 4096 bytes, which is not enough here: SwapGL() is called from the bottom of
+# deeply nested render code, and the whole chain from main() down has to fit.
+# 131072 (128KB) is 32x the default and costs 128KB of linear memory once. It
+# has NOT been validated against a running client.
+#
+# Fuller notes, including the console-output cost of the yield:
+# docs/porting/browser-runtime-notes.md sections 2 and 7.
+#
+# ---- M1 Task 6: preload the runtime data tree and generate the page -----
+#
+# --use-preload-plugins is NOT optional. Without it Emscripten's IMG_Load_RW
+# warns once and then returns 0 for every single file, so no texture ever
+# loads -- the plugin is what registers the preloaded bytes with SDL_image's
+# virtual file layer. (Flagged by Task 3's reviewer as this task's job.)
+#
+# Each --preload-file maps a source-tree directory (path relative to the
+# repo root, since that is where `make -f web/Makefile` runs) to a path
+# inside the in-memory filesystem the game sees at runtime. The right-hand
+# side of every mapping below must agree with the --datadir/--userconfigdir
+# arguments web/shell.html passes to Module.arguments -- the game does not
+# search for its data, it is told exactly where to look.
+#   config, language, textures, models, sound, resource/included
+#     -> /data/<same-name>, matching --datadir /data.
+#   web/webdefaults
+#     -> /data/webdefaults, matching --userconfigdir /data/webdefaults.
+#     This ships web/webdefaults/autoexec.cfg into the bundle -- see that
+#     file's own comment for the load-order mechanics that make it work
+#     (tConfiguration.cpp loads autoexec.cfg unconditionally, last) and for
+#     why /data/webdefaults REPLACES rather than merges with the shipped
+#     config directory: anything else dropped in here (a settings.cfg, a
+#     keys_*.cfg) would silently shadow the real one, not extend it.
+#
+# The --exclude-file patterns drop ~1 MB of the ~1.6 MB source tree (raw file
+# bytes; du -sh reports higher due to block rounding) that no milestone reads
+# at runtime: GIMP .xcf sources behind the shipped textures, five non-English
+# language files plus the transliterated Polish variant (the Demo is
+# English-only), the language file's build-time update.py, and the dedicated
+# server's settings. None of this is reachable code, so cutting it is free --
+# but the size drop does NOT verify itself; see the pattern-shape note below,
+# which is the actual reason a first attempt at this quietly excluded nothing.
+#
+# tools/file_packager.py's should_ignore() matches each pattern with
+# fnmatch.fnmatch(fullname, pattern), and fullname is the SOURCE-RELATIVE
+# path (e.g. "language/deutsch.txt"), not the bare basename. A bare
+# 'deutsch.txt' pattern therefore matches nothing -- fnmatch requires the
+# whole string to match, and fnmatch's '*' happens to cross '/' so only a
+# pattern with a leading wildcard (or an explicit directory component)
+# matches a nested file. '*.xcf' below works by accident of that same rule
+# (the '*' swallows the whole "textures/.../" prefix); every fixed filename
+# needs the same '*/' prefix to match at all. Confirmed by grepping the built
+# armagetronad.js for these paths post-link -- do that again if any of these
+# lines are ever touched, because a silently-ignored --exclude-file fails
+# nothing at build time, it just ships the file anyway.
+#
+# --shell-file replaces Emscripten's stock loader page with web/shell.html.
+#
+# -sEXPORTED_RUNTIME_METHODS=callMain is not optional either, and for a
+# reason that will not show up as a build error: Emscripten never
+# auto-exports callMain (postamble.js says as much -- it is explicitly the
+# embedder's job, settings.js documents it the same way), so without this
+# flag it lands in the loader's unexportedSymbols list. The page still
+# links, still loads, still reaches "Ready" -- it dies the instant
+# web/shell.html's Play button calls Module.callMain(), because the
+# unexported-symbol getter's body is an abort(). Fixing this now rather
+# than at M5 matters because that abort's helpful message only exists while
+# ASSERTIONS defaults on; the moment -O2 (or any release flag that turns
+# ASSERTIONS off) reaches this link, the same bug degrades to a bare,
+# unattributed TypeError. Verify this one by grep, the same way the
+# --exclude-file bug above was actually caught: confirm "callMain" appears
+# outside of unexportedSymbols in the built armagetronad.js, do not trust
+# that adding the flag was enough.
+CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
+                  -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
+                  -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
+                  -sEXPORTED_RUNTIME_METHODS=callMain \
+                  $(EXCEPTIONS) \
+                  --use-preload-plugins \
+                  --preload-file config@/data/config \
+                  --preload-file language@/data/language \
+                  --preload-file textures@/data/textures \
+                  --preload-file models@/data/models \
+                  --preload-file sound@/data/sound \
+                  --preload-file resource/included@/data/resource/included \
+                  --preload-file web/webdefaults@/data/webdefaults \
+                  --exclude-file '*.xcf' --exclude-file '*/update.py' \
+                  --exclude-file '*/settings_dedicated.cfg' \
+                  --exclude-file '*/deutsch.txt' --exclude-file '*/polish.txt' \
+                  --exclude-file '*/polish_transliterated.txt' \
+                  --exclude-file '*/spanish.txt' --exclude-file '*/french.txt' \
+                  --exclude-file '*/portugese.txt' \
+                  --shell-file web/shell.html
+
+# The primary output is the .html page (Task 6's actual deliverable); the
+# .js loader, .wasm binary and .data archive are generated alongside it by
+# the same emcc invocation.
+#
+# The prerequisite list below is NOT "every preloaded directory" -- it is
+# five files: web/shell.html, web/webdefaults/autoexec.cfg, and the three
+# generated data files, because those are the only preload inputs whose
+# paths this Makefile can name without shelling out to `find`. Editing
+# anything else under config/, language/, textures/, models/ or sound/
+# (e.g. adding a texture) does NOT trigger a relink -- Make has no rule
+# pointing at those files, so it will silently reuse a stale .data archive.
+# Run `make -f web/Makefile clean && make ... client` (or just
+# `rm -f web/dist-m1/armagetronad.*`) after touching any preloaded asset
+# that isn't one of the five named below.
+#
+# resource/proto is the EXCEPTION, and an earlier version of this comment
+# listed it wrongly among the uncovered directories. It IS covered, just
+# indirectly: the resource/included/.mapversion rule further down lists
+# $(shell find resource/proto -type f) among its prerequisites, so editing
+# or adding a map re-runs sortresources, which restamps .mapversion, which
+# is a prerequisite here -- and the relink follows. Verified with
+# `touch resource/proto/<file> && make -f web/Makefile -n client`, which
+# prints both the sortresources recipe and the em++ link. One real gap
+# remains: that `find` runs when Make PARSES this file, so a map you DELETE
+# is not noticed (nothing ends up newer than .mapversion). Deleting a map
+# still needs the manual clean above.
+#
+# The three generated-data paths (spelled out here, not as $(DATA) -- that
+# variable isn't assigned until the "Runtime data" section further down, and
+# a prerequisite list is expanded when Make reads this line, not when it
+# finally builds the target, so $(DATA) here would silently expand to
+# nothing) are listed explicitly for a reason that did not matter for M0:
+# --preload-file reads these directories off disk at LINK time and bundles
+# whatever it finds right then, whereas M0's NODERAWFS reads them at RUN
+# time. Without this dependency, `make -f web/Makefile client -j8` on a
+# clean checkout can race -- Make is free to start the link the moment every
+# .o exists, before config/aiplayers.cfg, language/languages.txt or
+# resource/included/.mapversion (and the map files sortresources produces
+# alongside it) have been generated, silently shipping a client missing its
+# maps, AI roster or language table. It did not bite in practice while
+# developing this task only because those files already existed from an
+# earlier milestone's build; verify after touching this rule by running
+# `clean-data` first.
+web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
+                                web/shell.html web/webdefaults/autoexec.cfg \
+                                language/languages.txt config/aiplayers.cfg \
+                                resource/included/.mapversion
+	@mkdir -p web/dist-m1
+	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+
+$(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
+	@mkdir -p $(dir $@)
+	$(EMXX) $(CLIENT_CXXFLAGS) -c $< -o $@
+
+-include $(CLIENT_OBJS:.o=.d)
+
+.PHONY: client
+client: data web/dist-m1/armagetronad.html
 
 # ---------------------------------------------------------------------------
 # Runtime data.
@@ -184,7 +415,7 @@ resource/included/.mapversion: batch/make/sortresources batch/make/sortresources
 data: $(DATA)
 dedicated: web/dist-m0/armagetronad-dedicated.js data
 clean:
-	rm -rf $(OBJDIR) web/dist-m0
+	rm -rf $(OBJDIR) web/dist-m0 $(CLIENT_OBJDIR) web/dist-m1
 # `clean` deliberately leaves $(DATA) alone: it is generated *source-tree* data,
 # not build output, and regenerating it is slow-ish and never the thing at fault.
 .PHONY: clean-data

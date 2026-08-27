@@ -811,7 +811,41 @@ int main(int argc,char **argv){
 
             sr_glRendererInit();
 
+#ifndef __EMSCRIPTEN__
             SDL_SetEventFilter(&filter);
+#else
+            // No event filter is installed under Emscripten, on purpose.
+            //
+            // Emscripten's SDL declares SDL_SetEventFilter but implements
+            // nothing behind it, and its only replacement,
+            // emscripten_SDL_SetEventHandler, is not a filter: it REPLACES
+            // polling. Its own header says so ("This is used in place of
+            // SDL_PollEvent", SDL_events.h:620), and libsdl.js:885 drains the
+            // event queue into the handler and discards the return value. So
+            // installing it would starve su_GetSDLInput's SDL_PollEvent, and
+            // worst of all in the menus, where su_prefetchInput is false and
+            // the filter has nowhere to forward events to. It also allocates
+            // its scratch event at sizeof(SDL_KeyboardEvent) (28 bytes) while
+            // SDL_MouseMotionEvent is 36, so every mouse move would overrun
+            // the heap by 8 bytes.
+            //
+            // What this filter did, and what dropping it costs here:
+            //  - boss key (shift-esc) and cmd-Q: browser-reserved chords, so
+            //    they never reach us anyway.
+            //  - re-centring the mouse: gated on su_mouseGrab, false by
+            //    default (uInput.cpp:37).
+            //  - SDL_ACTIVEEVENT (alt-tab): already unreachable. The SDL 1.2
+            //    constant is 0x7000 (SDL_compat.h:99), but Emscripten reports
+            //    focus changes as SDL_WINDOWEVENT, 0x200 (libsdl.js:1376).
+            //  - SDL_QUIT: the one real loss. The st_SaveConfig() in filter()
+            //    above (:502) is what saves settings when the window closes;
+            //    in a browser they will not be saved on tab close. Recorded as
+            //    an explicit obligation for M4, which owns persistence -- do
+            //    not paper over it here.
+            //
+            // filter() itself is left intact and unused, ready to be called
+            // from a poll loop by whichever milestone wires up input.
+#endif
 
             //std::cout << "set filter\n";
 

@@ -404,6 +404,13 @@ static void sr_SetGLAttributes( int rDepth, int gDepth, int bDepth, int zDepth )
 
 #if SDL_VERSION_ATLEAST(1, 2, 10)
     // requires SDL 1.2.10
+#ifndef __EMSCRIPTEN__
+    // Emscripten reports SDL 1.3.0, so it passes the version check above, but
+    // its SDL_GLattr has no SDL_GL_SWAP_CONTROL (SDL dropped it after 1.2).
+    // Dropping the block costs nothing on a default configuration: vSync
+    // defaults to ArmageTron_VSync_Default (:340), which is the one case that
+    // sets no attribute at all. A non-default setting loses a swap-interval
+    // hint, which is not something a browser would have honoured regardless.
     switch (currentScreensetting.vSync)
     {
     case ArmageTron_VSync_On:
@@ -416,6 +423,7 @@ static void sr_SetGLAttributes( int rDepth, int gDepth, int bDepth, int zDepth )
     case ArmageTron_VSync_Default:
         break;
     }
+#endif // !__EMSCRIPTEN__
 #endif
 #endif
 }
@@ -809,11 +817,39 @@ static bool lowlevel_sr_InitDisplay(){
     }
 
     // wait for activation if we were ALT-Tabbed away:
+#ifndef __EMSCRIPTEN__
     while ( (SDL_GetAppState() & SDL_APPACTIVE) == 0)
     {
         SDL_Delay(100);
         SDL_PumpEvents();
     }
+#else
+    // Compiled out for two independent reasons, and the second is why it is a
+    // guard rather than a shrug.
+    //
+    // 1. It cannot do anything. There is no ALT-Tab in a browser, and
+    //    Emscripten's SDL_GetAppState ORs SDL_APPACTIVE into its result
+    //    unconditionally (src/lib/libsdl.js, grep "SDL_GetAppState"), so the
+    //    condition is always false and the body never runs. (Page visibility
+    //    is a different mechanism -- document.visibilityState -- and wiring it
+    //    up is M2/M4's, not a like-for-like replacement for this.)
+    //
+    // 2. The body calls SDL_Delay, which is unsafe under Asyncify however
+    //    rarely it runs -- see the long comment above sr_LimitFPS() in
+    //    rSysdep.cpp for the mechanism. Left in place, these two lines were the
+    //    only reason `WebAssembly.Module.imports()` on the client wasm listed
+    //    env.SDL_Delay (verified with llvm-nm: rScreen.o was the sole object in
+    //    the whole client link with an undefined SDL_Delay). They were dormant
+    //    only by reason 1, i.e. by the behaviour of a JS shim we do not own.
+    //
+    // Removing the call rather than adding -sASYNCIFY_IMPORTS=SDL_Delay to the
+    // link is deliberate. The link flag makes SDL_Delay work, but it would also
+    // silently legalise every future call site, and it would cost the cheap
+    // invariant this guard buys: the browser client's wasm imports no
+    // SDL_Delay, checkable in one line. Keep the flag as the escape hatch for
+    // third-party code that cannot be edited.
+    // docs/porting/browser-runtime-notes.md § 8.
+#endif
 
     if (software_renderer && !last_software_renderer)
         sr_LoadDefaultConfig();
@@ -822,11 +858,14 @@ static bool lowlevel_sr_InitDisplay(){
 
 
     // wait for activation if we were ALT-Tabbed away:
+#ifndef __EMSCRIPTEN__
+    // (the second of the two identical ALT-Tab waits; see the one above)
     while ( (SDL_GetAppState() & SDL_APPACTIVE) == 0)
     {
         SDL_Delay(100);
         SDL_PumpEvents();
     }
+#endif
 
     sr_ResetRenderState(true);
 
@@ -948,6 +987,10 @@ bool sr_upperSky=false;
 bool sr_lowerSky=false;
 bool sr_skyWobble=true;
 bool sr_dither=true;
+// Still settable, but INERT in the browser: eDisplay.cpp forces the rim path
+// unconditionally under __EMSCRIPTEN__, because the infinity plane is the only
+// thing that reaches glTexCoord4f and Emscripten aborts the runtime on it.
+// See docs/porting/browser-runtime-notes.md § 4 before relying on this flag.
 bool sr_infinityPlane=false;
 bool sr_laggometer=true;
 bool sr_predictObjects=false;
@@ -1007,12 +1050,25 @@ void sr_LoadDefaultConfig(){
         //workaround for 3dfx renderer: aliasing must be turned on
         //sr_lineAntialias=rFEAT_OFF;
     }
+    // The NVIDIA branch is compiled out of the browser client only -- the M0
+    // dedicated build shares this file and must stay byte-identical, hence the
+    // DEDICATED half of the condition (browser-runtime-notes.md § 1).
+    //
+    // This is a clarity change, NOT a crash fix: gl_vendor is not a GPU driver
+    // string under WebGL (Emscripten forwards GL_VENDOR to WebGL's own VENDOR
+    // rather than UNMASKED_VENDOR_WEBGL), so it reads "Mozilla" or "WebKit" and
+    // the branch cannot fire. Removed anyway because both of its effects are
+    // traps here, it runs on every page load until M4, and it runs after config
+    // parsing so no .cfg can override it.
+    // docs/porting/browser-runtime-notes.md § 6.
+#if defined( DEDICATED ) || !defined( __EMSCRIPTEN__ )
     else if(strstr(gl_vendor,"NVIDIA")){
         // infinity , display lists and glFlush swapping work for NVIDIA
         sr_infinityPlane=true;
         sr_useDisplayLists=rDisplayList_CAC;
         rSysDep::swapMode_=rSysDep::rSwap_glFlush;
     }
+#endif
 #ifdef MACOSX
     else if(strstr(gl_vendor,"ATI")){
         // glFlush swapping work for ATI on the mac

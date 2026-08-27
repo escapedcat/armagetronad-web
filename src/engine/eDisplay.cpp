@@ -136,6 +136,20 @@ static void infinity_xy_plane(eCoord const & pos, const eCoord &dir,REAL h=0){
     // always use the rim if infinity rendering is turned off
     use_rim |= !sr_infinityPlane;
 
+#ifdef __EMSCRIPTEN__
+    // ...and always use it in the browser, whatever INFINITY_PLANE says. The
+    // else branch below is the only code in the tree that reaches
+    // glTexCoord4f, which Emscripten defines as abort('glTexCoord4f: TODO')
+    // (src/lib/libglemu.js, grep glTexCoord4f) -- an abort of the whole
+    // runtime, so the tab dies rather than the floor rendering wrong. Not a
+    // live crash (sr_infinityPlane defaults false) but one click away in the
+    // Tweaks menu. Do not replace this with a glTexCoord4f shim before reading
+    // docs/porting/browser-runtime-notes.md section 4: a projective divide
+    // cannot be expressed from C++ here, and the obvious per-vertex shim is
+    // wrong even where it is finite.
+    use_rim = true;
+#endif
+
     if (use_rim){
         /*
           // the rim wall based rendering does not work properly for shaped arenas, so

@@ -1,0 +1,307 @@
+[   1618ms] [harness] chrome: Chrome/152.0.7977.65
+[   1619ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     55ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     55ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     67ms] [page] load event fired
+[     70ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[   6041ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => "canvas 1024x768"
+[   6069ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   6069ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   6069ms] [console.error] 
+[   6071ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   6071ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   6071ms] [console.log] 
+[   6262ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   6306ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   6310ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6311ms] [console.error] TODO: glShadeModel
+[   6315ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   6511ms] [harness] click #start: clicked
+[   6514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   6515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   6515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   6515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   6515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   6538ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6539ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6573ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6577ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6587ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6588ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6588ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6588ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6592ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6592ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6593ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6593ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6593ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6608ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6609ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6609ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6609ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6610ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6626ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6626ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6631ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6632ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6632ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6642ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6642ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6648ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6648ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6648ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6659ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6660ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6665ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6665ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6666ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6675ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6676ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6680ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6681ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6681ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6693ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6693ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6698ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6699ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6699ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6708ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6708ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6714ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6714ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6715ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6726ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6726ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6732ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6732ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6733ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6743ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6744ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6749ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6749ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6750ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6758ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6759ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6764ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6765ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6765ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6776ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6776ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6782ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6782ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6782ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6793ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6793ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6798ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6799ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6799ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6808ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6808ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6814ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6814ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6815ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6827ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6827ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6832ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6832ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6832ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6842ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6843ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6849ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6849ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6849ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6858ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6858ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6863ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6863ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6863ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6875ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6876ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6880ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6881ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6881ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6892ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6893ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6898ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6899ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6902ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6908ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6909ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6913ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6913ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6914ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6926ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6926ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6931ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6932ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6932ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6942ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6943ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6948ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6949ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6949ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6959ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6959ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6965ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6965ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6966ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6976ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6976ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6982ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6982ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6983ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6993ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6993ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6999ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   6999ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7000ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7008ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7008ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7013ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7013ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7013ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7025ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7026ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7031ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7032ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7033ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7043ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7043ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7048ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7048ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7049ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7061ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7061ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7065ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7065ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7066ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7076ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7076ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7081ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7082ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7082ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7092ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7093ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7098ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7099ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7100ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7109ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7109ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7114ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7115ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7115ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7127ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7127ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7133ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7133ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7134ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7143ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7144ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7149ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7150ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7150ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7159ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7160ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7165ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7166ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7166ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7176ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7176ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7181ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7182ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7182ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7192ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7196ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7198ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7198ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7199ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7209ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7210ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7214ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7214ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7215ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7226ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7226ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7231ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7232ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7232ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7243ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7244ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7249ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7250ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7250ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7259ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7259ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7264ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7264ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7264ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7276ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7276ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7281ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7281ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7281ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7292ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7293ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7298ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7298ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7298ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7309ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7310ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7315ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7315ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7315ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7325ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7325ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7330ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7331ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7331ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7342ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7342ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7348ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7348ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7349ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7358ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7359ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7364ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7364ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7365ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7375ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7376ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7381ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7382ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7382ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7392ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7392ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7398ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7398ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7399ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7409ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7409ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target   <- http://localhost:8000/armagetronad.js
+[   7409ms] [browser.warning/rendering] WebGL: too many errors, no more errors will be reported to the console for this context.   <- http://localhost:8000/armagetronad.js
+[  11513ms] [harness] === should-be-the-language-menu ===
+[  11568ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/01-language-menu.png
+[  11607ms] [harness] key Down (1/1)
+[  11666ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[  13154ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/02-language-menu-british-english-selected.png
+[  13154ms] [harness] === enter-chooses-a-language-and-leaves-this-menu ===
+[  13197ms] [harness] key Enter (1/1)
+[  16542ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/03-first-setup-cursor-on-accept.png
+[  16543ms] [harness] eval (()=>{window.__st=0;const o=window.setTimeout;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => "setTimeout counter installed"
+[  19546ms] [harness] eval (()=>{const dt=(performance.now()-window.__t0)/1000;return 'setTimeout calls/sec='+(window.__st/dt).toFixed(1)+' => ~'+(window.__st/dt/2).toFixed(1)+' FPS (MAX_FPS 60)'})() => "setTimeout calls/sec=126.6 => ~63.3 FPS (MAX_FPS 60)"
+[  19580ms] [harness] key Down (1/1)
+[  21131ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/04-first-setup-cursor-on-name.png
+[  21164ms] [harness] key Down (1/1)
+[  22718ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/05-first-setup-cursor-on-colour.png
+[  22718ms] [harness] === left-right-changes-a-selection-value ===
+[  22751ms] [harness] key Right (1/1)
+[  24300ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/06-first-setup-colour-value-changed.png
+[  24334ms] [harness] key Down (1/1)
+[  25888ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/07-first-setup-cursor-on-controls.png
+[  25921ms] [harness] key Right (1/1)
+[  27471ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/08-first-setup-controls-value-changed.png
+[  27504ms] [harness] key Up (1/1)
+[  29057ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/09-first-setup-cursor-back-on-colour.png
+[  29057ms] [harness] === escape-leaves-the-first-setup-menu-entirely ===
+[  29091ms] [harness] key Escape (1/1)
+[  32435ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-chrome/10-welcome-message.png
+[  32437ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})() => "{\"VENDOR\":\"WebKit\",\"RENDERER\":\"WebKit WebGL\",\"VERSION\":\"WebGL 1.0 (OpenGL ES 2.0 Chromium)\",\"UNMASKED_VENDOR\":\"Google Inc. (Apple)\",\"UNMASKED_RENDERER\":\"ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)\",\"preserveDrawingBuffer\":true}"
