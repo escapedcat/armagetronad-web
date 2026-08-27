@@ -757,6 +757,43 @@ itself a bug. `End(true)` is called by `ProjMatrix`, `ModelMatrix`, `TexMatrix`,
 `TranslateMatrix` — a matrix operation anywhere on the path makes the site safe.
 Check reachability before reporting one of these.
 
+### Reachability has TWO dimensions, and the compile-time one is easy to forget
+
+Before calling any site live, latent or dangerous, check **both**:
+
+1. **Compile-time.** Is the code in this build at all? Large parts of this tree
+   sit behind `#ifdef`s that the wasm build never defines: `DEBUG`, `DEBUGLINE`
+   (which is itself only defined inside `#ifdef DEBUG`, at `eDebugLine.cpp:29`),
+   `XDEBUG`, `USE_HEADLIGHT`, `USE_PARTICLES`, `MACOSX`. `src/emscripten/config.h`
+   defines only `AA_WEB_CLIENT`/`DEDICATED`, and `web/Makefile`'s `CLIENT_DEFS`
+   and `BASE_CXXFLAGS` add no `-D` beyond `-DAA_WEB_CLIENT`. Code behind any of
+   the others compiles to nothing and **cannot** be latent.
+2. **Runtime.** Given that it compiles, can an open batch actually reach it, and
+   can the guarding conditions be true?
+
+Both of the entries this section originally listed as "keyboard-triggered latent
+aborts" failed test 1, and it took two review rounds to notice, because the
+`#ifdef` was tens of lines above the code and the runtime guard (`if
+(debug_grid)`, a key binding) looked convincing on its own. Do not read a
+guarding `if` and stop.
+
+The cheap mechanical version of test 1, which is what should have been run the
+first time:
+
+```sh
+em++ -std=gnu++14 -O2 -fexceptions -DAA_WEB_CLIENT -sUSE_SDL=1 -sUSE_LIBPNG=1 \
+     -I src/emscripten -iquote src -iquote src/render -iquote src/engine \
+     -iquote src/tron -iquote src/tools -iquote src/network -iquote src/ui \
+     -E src/engine/eDisplay.cpp > /tmp/pp.i        # CHECK THE EXIT STATUS
+grep -c debug_grid /tmp/pp.i                       # 0 -> the block is not in the build
+```
+
+Check `em++ -E`'s exit status explicitly — section 1 records that it can exit
+non-zero while still emitting plausible-looking output, so "the token is absent"
+only means something if the run succeeded. Preprocessing `eDisplay.cpp` and
+`gGame.cpp` this way returns 0 hits for `debug_grid` in both; preprocessing
+`eDebugLine.cpp` shows `eDebugLine::Render()` reduced to an empty body.
+
 The only functions that currently leak an open block are:
 
 - `gWallRim_helper` (`gWall.cpp:203`) — `BeginQuads()` + 4 `TexVertex`, no
@@ -793,33 +830,71 @@ perfectly reasonable.
   iteration against a 5-slot stride. With `SPARKS == 10` that is 90/20 = 18, an
   integer, so it never asserted — it drew garbage. Fixed the same way.
 
-### Still latent — not fixed, and why
+### Still latent — one site, and it is reachable today
 
 - **`rViewport.cpp:246`** (shape A+B) — `BeginLineLoop()`, four `glVertex2f`,
   then `glColor3f(1,1,1)` **with the block still open**, then `DisplayText()`
   whose `RenderEnd(true)` flushes it: 17 slots against stride 20 → `3.4`. Would
-  abort. Reached only from the viewport-configuration menu preview. Not fixed
-  because nothing in M2 opens that screen, so the fix could not be verified.
-- **`eDisplay.cpp:586`** (shape B) — the `debug_grid` overlay sets one colour per
-  *six* vertices in one loop and per two in another. `debug_grid` defaults to 0
-  (`eDisplay.cpp:63`) and is toggled by a key (`gGame.cpp:4257`).
-- **`eDebugLine.cpp:105`** (shape B) — one colour per two vertices. `DEBUGLINE`
-  *is* defined (`eDebugLine.cpp:33`) so the function compiles, but every producer
-  of `se_lines` is behind a commented-out `//#define DEBUGLINE` (`gAIBase.cpp:69`,
-  `eSensor.cpp:34`), so the loop body never runs and the empty block returns
-  early at `if (!numVertices) return`. Enabling AI or sensor debug lines aborts.
+  abort.
 
-**Both of the first two are keyboard-triggered.** Anything that touches key
-bindings should assume it can wake them.
+  It compiles (`rViewportConfiguration::DemonstrateViewport`, called from
+  `gMenus.cpp:805` and `:857`) and it is **reachable in the shipped build right
+  now**, through the viewport-configuration screen in the settings menu. It does
+  not depend on any keycode work: menu navigation switches on raw `SDLK_UP` /
+  `SDLK_DOWN` / `SDLK_LEFT` / `SDLK_RIGHT` (`uMenu.cpp:419-448`), which the
+  `KEYBOARD`-line remapping in `config/default.cfg` does not touch. This is a
+  pre-existing hazard, not one a later task introduces.
+
+  It was left unfixed only because nothing in M2 opens that screen, so a fix
+  could not be verified by the browser harness. Whoever next touches the
+  settings menus should fix it (a `RenderEnd(true)` before the `glColor3f`) and
+  verify it by actually opening the screen.
+
+### Compiled out of this build entirely — NOT latent
+
+Both of these look like keyboard-triggered aborts and are not. They are listed
+here so the next reader does not rediscover them and file them as live, which is
+what happened twice during M2.
+
+- **`eDisplay.cpp:586`** (shape B) — the `debug_grid` overlay sets one colour per
+  *six* vertices in one loop and per two in another, which would indeed be
+  ragged. But the whole `if (debug_grid)` block (`eDisplay.cpp:578-622`) is
+  inside `#ifdef DEBUG`, **and so is the only key that can set the flag**
+  (`case('d')`, `gGame.cpp:4255-4282`). `DEBUG` is defined nowhere in this build.
+  Preprocessing either file with the client flags yields 0 hits for
+  `debug_grid`.
+- **`eDebugLine.cpp:105`** (shape B) — one colour per two vertices. `DEBUGLINE`
+  is **not** defined: the `#define DEBUGLINE` at `eDebugLine.cpp:33` is itself
+  inside `#ifdef DEBUG` (`eDebugLine.cpp:29-31`). `eDebugLine::Render()`
+  preprocesses to an empty body.
+
+If `DEBUG` is ever turned on — for a debugging build of the client — **both of
+these become live aborts immediately**, and so does anything else behind
+`XDEBUG`, `USE_HEADLIGHT` or `USE_PARTICLES` that has never been checked against
+this rule. Re-run the sweep before trusting such a build.
 
 ### How to find these
 
-`glColor*`/`glTexCoord*` are frequently called **raw**, not through
-`glRenderer::Color`/`TexCoord` — `gCycle.cpp:4621`, `gWinZone.cpp:474`,
-`rViewport.cpp:246` and both cycle-wall renderers all bypass the renderer. A
-sweep that greps only for `Color(` and `TexCoord(` will miss most of the
-codebase, and a fix inside `glRenderer::Color()` would not catch them either.
-Grep for both forms, then for each `Begin*()` block compare the colour and
-texcoord counts against the vertex count, remembering that loops make
-per-source-line counts misleading. `<scratch>/t5/sweep.py` in the M2 task-5
-working notes is a starting point.
+Three steps, in this order. Each of them was skipped at least once during M2 and
+each omission produced a wrong entry in this list.
+
+**1. Grep for the raw forms too.** `glColor*`/`glTexCoord*`/`glVertex*` are
+frequently called **raw**, not through `glRenderer::Color`/`TexCoord` —
+`gCycle.cpp:4621`, `gWinZone.cpp:474`, `rViewport.cpp:246` and both cycle-wall
+renderers all bypass the renderer. A sweep that greps only for `Color(` and
+`TexCoord(` misses most of the codebase, and for the same reason a fix inside
+`glRenderer::Color()` would not catch them.
+
+**2. Compare counts per block, then read every hit.** For each `Begin*()` block,
+compare the colour and texcoord counts against the vertex count; a block is
+uniform only if each is either 0 or equal to the vertex count. Loops make
+per-source-line counts misleading and `/* */` comments fool a line-comment
+filter, so the count is a way to make a *miss* impossible, not a verdict —
+read every hit. `<scratch>/t5/sweep.py` in the M2 task-5 working notes does the
+counting.
+
+**3. Check reachability in both dimensions before writing anything down** — the
+`#ifdef` test first, because it is one command and it eliminates whole files,
+then the open-batch/runtime-guard test. See "Reachability has TWO dimensions"
+above. Reporting a dead site as live is not a harmless over-report: it sends
+whoever reads this next after code that does not exist.
