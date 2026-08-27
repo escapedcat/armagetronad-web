@@ -206,7 +206,7 @@ void   GLAPIENTRY glDeleteLists( GLuint /* list */, GLsizei /* range */ ) {}
 // path", listing eWavData::Mix, eSoundPlayer::Reset and
 // eSoundPlayer::MakeGlobal as Load()'s only callers. That enumeration was one
 // short: eSoundPlayer's constructor also loads when its loop argument is true
-// (eSound.cpp:861), which is how gCycle.cpp:2224 builds every cycle's engine
+// (eSound.cpp:881-882), which is how gCycle.cpp:2224 builds every cycle's engine
 // sound -- i.e. once per cycle, per round. Boot-to-menu was still safe, which
 // is why M1 shipped, but the very first frame of gameplay was not.
 //
@@ -214,7 +214,7 @@ void   GLAPIENTRY glDeleteLists( GLuint /* list */, GLsizei /* range */ ) {}
 // SDL leaves them untouched on failure; eWavData's own members are already
 // NULL from its constructor, which is what the `!data` test above reads.
 //
-// freesrc is honoured rather than ignored: eSound.cpp:370 passes 1 and relies
+// freesrc is honoured rather than ignored: eSound.cpp:413 passes 1 and relies
 // on the callee to release the source, so ignoring it leaks one rwops per
 // attempt. The release is SDL_FreeRW and specifically NOT the usual
 // SDL_RWclose. Emscripten's SDL_RWFromFile (libsdl.js:3545) returns an
@@ -237,17 +237,17 @@ SDL_AudioSpec * SDLCALL SDL_LoadWAV_RW( SDL_RWops * src,
 
 // A no-op that is consistent with the above rather than merely lazy: the
 // SDL_LoadWAV_RW here never allocates, so there is never anything to free.
-// Both callers -- eSound.cpp:456, and the !freeData branch of
-// eWavData::Unload at eSound.cpp:507 -- only run against a buffer a
+// Both callers -- eSound.cpp:539, and the !freeData branch of
+// eWavData::Unload at eSound.cpp:590 -- only run against a buffer a
 // successful load produced, so neither is reachable while loads return NULL.
 void SDLCALL SDL_FreeWAV( Uint8 * /* audio_buf */ )
 {
 }
 
 // -1 is SDL's documented "the format conversion is not supported"
-// (SDL_audio.h:428-429), and eSound.cpp:440 compares against exactly -1 and
+// (SDL_audio.h:428-429), and eSound.cpp:523 compares against exactly -1 and
 // throws the localised $sound_error_unsupported. Returning 0 -- SDL's "no
-// conversion needed" -- would be the dangerous answer: eSound.cpp:445-447
+// conversion needed" -- would be the dangerous answer: eSound.cpp:528-530
 // would then malloc len * cvt.len_mult and memcpy into it, off a
 // stack-allocated SDL_AudioCVT that this function never initialised.
 //
@@ -265,7 +265,7 @@ int SDLCALL SDL_BuildAudioCVT( SDL_AudioCVT * /* cvt */,
     return -1;
 }
 
-// Same failure value, tested the same way at eSound.cpp:451 and throwing the
+// Same failure value, tested the same way at eSound.cpp:534 and throwing the
 // same $sound_error_unsupported. Unreachable in practice: its only caller
 // runs after a SDL_BuildAudioCVT that returned -1 and threw.
 int SDLCALL SDL_ConvertAudio( SDL_AudioCVT * /* cvt */ )

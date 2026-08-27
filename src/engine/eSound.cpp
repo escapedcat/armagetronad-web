@@ -110,11 +110,11 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     // that change -- so this stays even when the Load() short-circuit goes.
     //
     // BUT IT IS ONLY CORRECT FOR THE SDL_OpenAudio REGISTRATION. fill_audio
-    // has a second one: Mix_SetPostMix( &fill_audio, NULL ) at :249. A *post*
+    // has a second one: Mix_SetPostMix( &fill_audio, NULL ) at :270. A *post*
     // -mix callback is handed a buffer that ALREADY holds SDL_mixer's output,
     // to be modified in place -- zeroing it there would silence the music this
     // function is meant to mix on top of. That path is dead in this build (it
-    // sits inside #ifdef HAVE_LIBSDL_MIXER, opened at :233, and
+    // sits inside #ifdef HAVE_LIBSDL_MIXER, opened at :254, and
     // HAVE_LIBSDL_MIXER is defined only under WIN32 at :46-48; nothing in
     // src/emscripten/ or web/Makefile defines it), which is why one
     // unconditional memset is safe *today*. It stops being safe the moment
