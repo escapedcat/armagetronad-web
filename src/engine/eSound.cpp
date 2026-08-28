@@ -91,6 +91,49 @@ static tList<eSoundPlayer> se_globalPlayers;
 
 void fill_audio(void *udata, Uint8 *stream, int len)
 {
+#if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
+    // Zero the buffer before anything mixes into it. Every path below ADDS
+    // into `stream` (eWavData::Mix does dest_s[i] += ...) and none of them
+    // ever writes a baseline, so whatever the buffer arrives holding is
+    // played. Native SDL 1.2 gets away with that because SDL_RunAudio memsets
+    // the stream to the device's silence value before each callback;
+    // Emscripten's SDL 1.2 emulation does not -- it malloc()s the buffer once
+    // in SDL_OpenAudio and hands the same block back every time, uninitialised
+    // on the first pass and holding the previous callback's mix afterwards.
+    //
+    // On the web client that is not a subtle glitch: no WAV ever loads (see
+    // eWavData::Load below), so NOTHING writes to the buffer at all, and
+    // uninitialised heap bytes get reinterpreted as signed 16-bit samples and
+    // scheduled straight into the Web Audio graph. The symptom is loud noise
+    // where the port intends silence. It also matters once M3 does load real
+    // sounds, because the "add into an unspecified buffer" hazard survives
+    // that change -- so this stays even when the Load() short-circuit goes.
+    //
+    // BUT IT IS ONLY CORRECT FOR THE SDL_OpenAudio REGISTRATION. fill_audio
+    // has a second one: Mix_SetPostMix( &fill_audio, NULL ) at :270. A *post*
+    // -mix callback is handed a buffer that ALREADY holds SDL_mixer's output,
+    // to be modified in place -- zeroing it there would silence the music this
+    // function is meant to mix on top of. That path is dead in this build (it
+    // sits inside #ifdef HAVE_LIBSDL_MIXER, opened at :254, and
+    // HAVE_LIBSDL_MIXER is defined only under WIN32 at :46-48; nothing in
+    // src/emscripten/ or web/Makefile defines it), which is why one
+    // unconditional memset is safe *today*. It stops being safe the moment
+    // this file is built with SDL_mixer -- and M3, which owns real audio, is
+    // exactly the milestone that might reach for it. If you are here because
+    // you just enabled SDL_mixer: make this conditional on which callback you
+    // are, do not delete it, or the SDL_OpenAudio path goes back to playing
+    // uninitialised heap.
+    //
+    // `len` is SDL's byte count for this callback, which is exactly the
+    // buffer's size; SDL_AudioSpec::size is the same number. It is `int`,
+    // while memset's third parameter is size_t, so a negative len would
+    // convert to ~4GB and make this a catastrophic overrun rather than a
+    // no-op. Nothing checks for that -- not here, and not in the original
+    // mixing code below, which indexes with `len` just as trustingly. SDL
+    // does not pass negative lengths, so this is an assumption rather than a
+    // latent bug; it is written down because the assumption is unchecked.
+    memset( stream, 0, len );
+#endif
 #ifndef DEDICATED
     real_sound_sources=0;
     int i;
@@ -380,6 +423,46 @@ void eWavData::Load(){
         loadError = false;
         return;
     }
+
+#if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
+    // The browser client is deliberately silent, and this is where that
+    // decision is enforced. It is NOT a bug being papered over: Emscripten's
+    // SDL 1.2 emulation implements the playback half of the audio API
+    // (SDL_OpenAudio/PauseAudio/Lock/Unlock/Close) but not the WAV-decoding
+    // half, so M1 shims SDL_LoadWAV_RW in src/emscripten/eCompat.cpp to
+    // return SDL's documented failure value, NULL, for every file.
+    //
+    // Without this early return, that NULL is fatal rather than merely quiet.
+    // The code below reacts to it by retrying the alternative filename, then
+    // sound/expl.wav, and then throwing tGenericException("Sound Error").
+    // The nearest catch is sg_EnterGame (src/tron/gGame.cpp:4635), which runs
+    // sg_EnterGameCleanup() and shows a modal -- and the FIRST Load() of the
+    // whole program is introPlayer.MakeGlobal() on the sixth line of
+    // sg_EnterGameCore (gGame.cpp:4544). So a missing WAV did not mute the
+    // web client, it made it impossible to enter a round at all.
+    //
+    // Short-circuiting Load() itself, rather than each of its callers, is
+    // deliberate: all four ways a load can start funnel through here --
+    // eWavData::Mix (which then sees !data and returns false),
+    // eSoundPlayer::Reset, eSoundPlayer::MakeGlobal, and the
+    // eSoundPlayer(w,loop=true) constructor. The Mix path is the one that
+    // makes throwing unacceptable rather than just inconvenient: it runs from
+    // fill_audio, which Emscripten drives from SDL.audio.queueNewAudioData
+    // registered on Asyncify.sleepCallbacks, so it re-enters wasm on every
+    // unwind. An exception escaping an Asyncify rewind is not something to
+    // debug in a browser.
+    //
+    // loadError = true rather than false is load-bearing, not defensive:
+    // eWavData::Mix calls Load() only while !loadError, so setting it makes
+    // the first (permanent) failure stick instead of re-attempting a load
+    // that cannot succeed on every audio callback, forever.
+    //
+    // This block is M3's to delete. Real audio means giving eCompat.cpp a
+    // working decoder; when SDL_LoadWAV_RW can succeed, remove this and the
+    // original error handling below becomes correct again as written.
+    loadError = true;
+    return;
+#endif
 
 #ifndef DEDICATED
 

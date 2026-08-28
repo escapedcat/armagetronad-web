@@ -1,17 +1,25 @@
 # Browser runtime notes
 
-Long-form reasoning behind the M1 changes that make the client survive a
-browser. The source files carry short pointers here rather than the whole
-argument; this is the file to read before undoing one of them.
+Long-form reasoning behind the M1 and M2 changes that make the client survive a
+browser and play a round. The source files carry short pointers here rather than
+the whole argument; this is the file to read before undoing one of them.
 
 Scope: the Asyncify yield, the two `usleep` replacements, the rule about which
 sleep primitives are safe at all (§8 — read that one before adding any sleep),
-and the three GL traps. Each section is named so a comment can cite it.
+the GL traps, and the camera. Each section is named so a comment can cite it.
 
-**Starting M2? Read §9 first and fix it before anything else.** The client
-burns Chrome's per-context WebGL error budget 1.4 s into boot, so by the time
-gameplay rendering starts, the console has stopped reporting WebGL errors
-entirely. One line causes it.
+**If you are about to touch rendering, read §10 first.** "One `glBegin`/`glEnd`
+block, one vertex format" is the largest single class of defect this port has
+found. It has two shapes and **one of them is silent** — it draws wrong geometry
+without asserting. One instance is still unfixed (`rViewport.cpp:246`).
+
+**If you are about to add `-O` to the client link, read §10 as well, and then
+don't.** `ASSERTIONS` being on is the only reason the loud shape of that defect
+class is loud.
+
+**§9 was M2's first task and is done.** Kept because the trap it describes —
+reading a clean console as evidence when the console had gone deaf — is general,
+and §9a records how the same mistake was avoided the second time.
 
 **On emsdk citations.** Line numbers into `deps/emsdk/upstream/emscripten` drift
 on every toolchain bump. Each one below is paired with a greppable token; if the
@@ -104,12 +112,73 @@ file so the command checks itself:
 |---|---|---|---|
 | `sr_LoadDefaultConfig` | 2 | 3 | in **both** builds — `awk` called this dedicated-excluded, and was wrong |
 | `NVIDIA` | 1 | 0 | the § 6 guard doing its job: kept for dedicated, gone from the client |
-| `glHint` | 0 | 3 | genuinely inside `#ifndef DEDICATED` (the region opened at `:1093`) |
+| `glHint` | 0 | ~~3~~ **2** | see below — this row is a live example of a control going stale |
+
+Re-measured at M2 exit; the first two rows still reproduce exactly. **The
+`glHint` row changed, and the reason is instructive rather than annoying.** At
+M1 the client saw 3 hits: two header declarations (`glHint` and `glHintPGI`) and
+the call at `:1112`. M2's Task 1 compiled that call out of the client (§ 9), so
+the client now sees the two declarations only. Two things follow. First, a
+control table is an assertion about the tree and goes stale with it — if these
+numbers do not reproduce, check the tree before concluding the *method* is
+broken. Second, `grep -c` over preprocessed output counts **declarations, not
+just uses**: a token that appears in a GL header will never reach 0 in a build
+that includes it, so "0 vs non-zero" is only meaningful for tokens that exist
+solely in this codebase. `sr_LoadDefaultConfig` and `NVIDIA` are good controls
+for that reason; `glHint` was always a slightly poor one.
 
 For the client column, add `-DAA_WEB_CLIENT -sUSE_SDL=1 -sUSE_LIBPNG=1` to the
 same command; nothing else changes. Choose a *distinctive* token — a function
 name, a string literal, an odd identifier. A common word will match somewhere
 in the ~66,000 lines of expanded headers and tell you nothing.
+
+#### The check that is right about the wrong thing
+
+**`em++ -E` can fail and still print a full, plausible preprocessed stream. A
+`grep -c` that does not test the exit status will get a confidently wrong
+answer, and the recipe above pipes straight into `grep`, which throws that
+status away.** Found in M2 Task 1, where it produced a `0` that sat in a report
+next to numbers from healthy runs.
+
+The failure looks like this:
+
+```
+In file included from src/render/rScreen.cpp:28:
+In file included from src/render/rFont.h:31:
+src/render/rSDL.h:4:10: fatal error: 'config.h' file not found
+1 error generated.
+```
+
+despite `-I src/emscripten` being present and correct. clang does **not** stop
+there: it recovers from the missing header and preprocesses the rest of the
+translation unit, so stdout still contains tens of thousands of lines and looks
+normal. But `config.h` is what defines `DEDICATED`, so a run that hits this
+silently never defines it — **for the dedicated and the client command line
+equally**, which destroys exactly the comparison the technique exists to make.
+It was reproduced on demand in this environment: five consecutive identical
+invocations all exiting 1, immediately after two identical ones exiting 0. No
+flag, ordering or `-MMD -MP` change made it go away. It is nondeterministic
+here, not caused by a bad command line.
+
+So: **redirect to a file and let the shell gate the grep on the exit status.**
+`&&` rather than `;` is the whole fix — a failed preprocess then prints nothing
+instead of printing a number:
+
+```sh
+em++ -E -std=gnu++14 \
+     -I src/emscripten -I deps/build/libxml2-install/include/libxml2 \
+     -iquote src -iquote src/tools -iquote src/network -iquote src/render \
+     -iquote src/ui -iquote src/engine -iquote src/tron \
+     -iquote src/thirdparty/binreloc -iquote src/thirdparty/particles \
+     src/render/rScreen.cpp > /tmp/pp.i \
+  && grep -c sr_LoadDefaultConfig /tmp/pp.i
+```
+
+`-c` compiles were not observed failing this way — every one run during Task 1
+succeeded, including several interleaved with failing `-E` runs — which is why
+the `llvm-nm` route below is the reliable fallback when `-E` will not settle
+down. It answers a coarser question (does the *function* survive?), so it does
+not replace `-E` for a question about a particular line.
 
 #### The cheap check, when the question is about a whole function
 
@@ -688,5 +757,366 @@ problem, not a rendering bug — M1's screenshots are what the game intends.
 at all, and that is a harness artifact: `drive-browser.mjs` receives Chrome's
 browser-level `Log` entries over CDP, while `drive-firefox.mjs` captures only
 `console.*` and network events over BiDi. Firefox's own WebGL warnings were
-never being collected. Do not read its clean transcript as a clean run — and if
-M2 needs Firefox-side GL diagnostics, wiring that up is part of the same job.
+never being collected. Do not read its clean transcript as a clean run.
+
+### 9a. M2 went looking for those warnings and they are not there
+
+Written after the M2 gate, which needed a Firefox transcript that meant
+something. Three things were tried and the third is the one that works.
+
+1. **The labelling was wrong, and that is fixed.** `drive-firefox.mjs` printed
+   *every* `log.entryAdded` entry of type `javascript` as `[EXCEPTION]` and
+   ignored `entry.level`. So even if a warning had arrived it would have been
+   reported as an exception, failing the gate for the wrong reason. It now
+   prints non-error levels as `[browser.LEVEL/javascript]`, matching Chrome.
+
+2. **The per-context warning cap was raised.** Firefox stops reporting after
+   `webgl.max-warnings-per-context` warnings (32 by default) and then goes
+   silent for the life of the context — indistinguishable, in a minutes-long
+   run, from a clean one. The driver now writes a `user.js` into its throwaway
+   profile raising it to 100000.
+
+3. **Neither helped, and that is the finding.** Measured with a positive
+   control in `web/tools/gameplay-gate.steps` — a deliberate
+   `glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)` on a throwaway canvas,
+   i.e. the exact call this section is about:
+
+   | | deliberate bad `glHint` | deliberate uncaught `TypeError` |
+   |---|---|---|
+   | Chrome 152 | `[browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target` | `[EXCEPTION]` |
+   | Firefox 154.0.1 | **nothing at all** | `[EXCEPTION]` |
+
+   So Firefox's BiDi `log.entryAdded` subscription is alive — it reports
+   browser-generated JS errors fine — and simply does not carry WebGL warnings.
+   Raising the cap and fixing the labelling could not have helped.
+
+**What to use instead, in either engine.** Read `glGetError()` back off the
+game's own context. It is the same WebGL state machine in both browsers, so
+the same defect gives the same line, and it is free here: `sr_CheckGLError()`
+(`rGL.cpp:36`) is the only `glGetError` caller in the tree and compiles to an
+empty inline without `DEBUG` — verified against the artifact, the string
+`glGetError` does not occur in `armagetronad.wasm` at all — so nothing else can
+have an error stolen from it. The M2 sampler polls it every 30th frame from
+inside the `glFlush`/`glFinish` hook it already installs; every frame would be
+too expensive to do while also measuring the frame rate. Keep the `glHint`
+control anyway: it is what will notice the day Firefox starts reporting these.
+
+## 10. One glBegin/glEnd block, one vertex format
+
+`src/render/rGLRender.cpp`, `src/tron/gWall.cpp`, `src/tron/gCycle.cpp`,
+`src/tron/gSparks.cpp`. This is the largest single class of porting defect found
+so far, it has two distinct shapes, and one of them is silent. Read this before
+adding a `Begin*()` call site or moving a colour/texcoord near one.
+
+### The rule
+
+Real OpenGL lets a `glBegin`/`glEnd` block mix vertices freely. `glVertex`
+captures whatever the current colour and texcoord state happens to be, so a
+block may contain vertices that were preceded by a `glTexCoord` and vertices
+that were not, and it may set a colour once for a whole run of vertices.
+
+Emscripten cannot express that. `libglemu.js` appends every attribute call to
+one flat `Float32Array` **in call order** and derives a *single* interleaved
+layout for the entire block:
+
+| call | slots written (4 bytes each) | component | size registered |
+|---|---|---|---|
+| `glVertex2f` / `glVertex3f` / `glVertex4f` / `glVertex3fv` | 4 | `VERTEX` | 16 B |
+| `glTexCoord2f` / `glTexCoord2i` | 2 | `TEXTURE0` | 8 B |
+| `glColor3f` / `glColor4f` (inside a block) | 1 (4 packed ubytes) | `COLOR` | 4 B |
+
+`addRendererComponent` sums the sizes of the components it has seen into
+`GLImmediate.stride`, and `glEnd` asserts:
+
+```js
+var numVertices = 4 * GLImmediate.vertexCounter / GLImmediate.stride;   // :3025
+assert(numVertices % 1 == 0, '`numVertices` must be an integer.');      // :3028
+```
+
+> **Every vertex in a block must emit exactly the same attribute calls, in the
+> same order.** A colour, if used at all, must be sent before *every* vertex —
+> not once per triangle, not once per line, not once per loop iteration.
+
+A `glColor*` issued while `GLImmediate.mode == -1` (no block open) is *state*
+and costs no slots — that is the harmless form. Inside a block it becomes a
+per-vertex attribute.
+
+### Two failure modes, and only one of them is loud
+
+1. **Non-integral → abort.** `Aborted(Assertion failed: `numVertices` must be an
+   integer.)`, thrown from `glEnd`. This is the good case: `ASSERTIONS` is on
+   precisely so it happens. **Do not "fix" it by adding `-O`** — that turns it
+   into case 2 everywhere.
+2. **Integral by accident → silent garbage.** If the slot count happens to
+   divide by the stride, nothing complains, but the writer's and reader's
+   per-vertex periods still differ, so from the second vertex on, attributes are
+   read out of the wrong words. `gSparks.cpp` was doing exactly this.
+
+### The two shapes
+
+**(A) Cross-batch contamination.** `glRenderer::BeginPrimitive`
+(`rGLRender.cpp:70`) makes a `Begin*()` a **no-op** when the same primitive is
+already current — that is its batching optimisation. So a function that returns
+without calling `RenderEnd()` leaves a live block that the *next* piece of code
+silently joins, whatever format that code uses.
+
+Note this is bounded: it needs an actual open block to reach the site. Many
+things close one, so a colour merely appearing before a `Begin*()` is **not** by
+itself a bug. `End(true)` is called by `ProjMatrix`, `ModelMatrix`, `TexMatrix`,
+`PopMatrix`, `MultMatrix`, `IdentityMatrix`, `ScaleMatrix` and
+`TranslateMatrix` — a matrix operation anywhere on the path makes the site safe.
+Check reachability before reporting one of these.
+
+### Reachability has TWO dimensions, and the compile-time one is easy to forget
+
+Before calling any site live, latent or dangerous, check **both**:
+
+1. **Compile-time.** Is the code in this build at all? Large parts of this tree
+   sit behind `#ifdef`s that the wasm build never defines: `DEBUG`, `DEBUGLINE`
+   (which is itself only defined inside `#ifdef DEBUG`, at `eDebugLine.cpp:29`),
+   `XDEBUG`, `USE_HEADLIGHT`, `USE_PARTICLES`, `MACOSX`. `src/emscripten/config.h`
+   defines only `AA_WEB_CLIENT`/`DEDICATED`, and `web/Makefile`'s `CLIENT_DEFS`
+   and `BASE_CXXFLAGS` add no `-D` beyond `-DAA_WEB_CLIENT`. Code behind any of
+   the others compiles to nothing and **cannot** be latent.
+2. **Runtime.** Given that it compiles, can an open batch actually reach it, and
+   can the guarding conditions be true?
+
+Both of the entries this section originally listed as "keyboard-triggered latent
+aborts" failed test 1, and it took two review rounds to notice, because the
+`#ifdef` was tens of lines above the code and the runtime guard (`if
+(debug_grid)`, a key binding) looked convincing on its own. Do not read a
+guarding `if` and stop.
+
+The cheap mechanical version of test 1, which is what should have been run the
+first time:
+
+```sh
+em++ -std=gnu++14 -O2 -fexceptions -DAA_WEB_CLIENT -sUSE_SDL=1 -sUSE_LIBPNG=1 \
+     -I src/emscripten -iquote src -iquote src/render -iquote src/engine \
+     -iquote src/tron -iquote src/tools -iquote src/network -iquote src/ui \
+     -E src/engine/eDisplay.cpp > /tmp/pp.i        # CHECK THE EXIT STATUS
+grep -c debug_grid /tmp/pp.i                       # 0 -> the block is not in the build
+```
+
+Check `em++ -E`'s exit status explicitly — section 1 records that it can exit
+non-zero while still emitting plausible-looking output, so "the token is absent"
+only means something if the run succeeded. Preprocessing `eDisplay.cpp` and
+`gGame.cpp` this way returns 0 hits for `debug_grid` in both; preprocessing
+`eDebugLine.cpp` shows `eDebugLine::Render()` reduced to an empty body.
+
+The only functions that currently leak an open block are:
+
+- `gWallRim_helper` (`gWall.cpp:203`) — `BeginQuads()` + 4 `TexVertex`, no
+  `RenderEnd`. This caused the M2 abort; see below.
+- `gNetPlayerWall::RenderNormal` (`gWall.cpp:1173`) — leaves `GL_QUADS` open with
+  a `{COLOR, TEXTURE0, VERTEX}` / 28-byte format. Safe *today* only because the
+  code that can follow it is either another `RenderNormal` quad block with the
+  identical format, or `RenderBegin`, whose `BeginLineStrip`/`BeginQuadStrip` are
+  different primitives and so force a real `glEnd`. Fragile — do not add a
+  differently-shaped `GL_QUADS` emitter after it.
+- `rViewportConfiguration::DemonstrateViewport` (`rViewport.cpp:240`) — see the
+  latent list.
+- `rRenderer::Line` (`rRender.cpp:67`) — dead; `glRenderer::Line` overrides it
+  and does call `End()`.
+
+**(B) Intra-batch non-uniformity.** A block the code opened itself emits
+attributes at a rate other than one per vertex. No inherited batch is involved,
+so this fires wherever the code runs. This is the shape that is easy to miss by
+grepping, because the colour is *inside* the `Begin`/`RenderEnd` pair and looks
+perfectly reasonable.
+
+### Fixed
+
+- **`gWall.cpp` (shape A)** — `gWallRim::RenderReal` drew a rim wall's textured
+  quad, returned with the block open, and the *next* wall's shadow quad appended
+  a `Color(0,0,0)` plus four texcoord-less vertices to it. 24 slots + 1 + 16 =
+  41 against stride 28 (`VERTEX 16 + TEXTURE0 8 + COLOR 4`) → `4*41/28 = 5.857`.
+  Aborted ~8.6 s into every round. Fixed with `RenderEnd(true)` before the
+  colour, so the colour becomes state and the shadow gets its own block.
+- **`gCycle.cpp` (shape B)** — the chat/inactive/just-spawned pyramid set one
+  colour per *triangle*: 2 × (1 + 3×4) = 26 slots against stride 20 →
+  `4*26/20 = 5.2`. Fixed by repeating the colour before every vertex.
+- **`gSparks.cpp` (shape B)** — one colour per *line segment*: 9 slots per
+  iteration against a 5-slot stride. With `SPARKS == 10` that is 90/20 = 18, an
+  integer, so it never asserted — it drew garbage. Fixed the same way.
+
+### Still latent — one site, and it is reachable today
+
+- **`rViewport.cpp:246`** (shape A+B) — `BeginLineLoop()`, four `glVertex2f`,
+  then `glColor3f(1,1,1)` **with the block still open**, then `DisplayText()`
+  whose `RenderEnd(true)` flushes it: 17 slots against stride 20 → `3.4`. Would
+  abort.
+
+  It compiles (`rViewportConfiguration::DemonstrateViewport`, called from
+  `gMenus.cpp:805` and `:857`) and it is **reachable in the shipped build right
+  now**, through the viewport-configuration screen in the settings menu. It does
+  not depend on any keycode work: menu navigation switches on raw `SDLK_UP` /
+  `SDLK_DOWN` / `SDLK_LEFT` / `SDLK_RIGHT` (`uMenu.cpp:419-448`), which the
+  `KEYBOARD`-line remapping in `config/default.cfg` does not touch. This is a
+  pre-existing hazard, not one a later task introduces.
+
+  It was left unfixed only because nothing in M2 opens that screen, so a fix
+  could not be verified by the browser harness. Whoever next touches the
+  settings menus should fix it (a `RenderEnd(true)` before the `glColor3f`) and
+  verify it by actually opening the screen.
+
+### Compiled out of this build entirely — NOT latent
+
+Both of these look like keyboard-triggered aborts and are not. They are listed
+here so the next reader does not rediscover them and file them as live, which is
+what happened twice during M2.
+
+- **`eDisplay.cpp:586`** (shape B) — the `debug_grid` overlay sets one colour per
+  *six* vertices in one loop and per two in another, which would indeed be
+  ragged. But the whole `if (debug_grid)` block (`eDisplay.cpp:578-622`) is
+  inside `#ifdef DEBUG`, **and so is the only key that can set the flag**
+  (`case('d')`, `gGame.cpp:4255-4282`). `DEBUG` is defined nowhere in this build.
+  Preprocessing either file with the client flags yields 0 hits for
+  `debug_grid`.
+- **`eDebugLine.cpp:105`** (shape B) — one colour per two vertices. `DEBUGLINE`
+  is **not** defined: the `#define DEBUGLINE` at `eDebugLine.cpp:33` is itself
+  inside `#ifdef DEBUG` (`eDebugLine.cpp:29-31`). `eDebugLine::Render()`
+  preprocesses to an empty body.
+
+If `DEBUG` is ever turned on — for a debugging build of the client — **both of
+these become live aborts immediately**, and so does anything else behind
+`XDEBUG`, `USE_HEADLIGHT` or `USE_PARTICLES` that has never been checked against
+this rule. Re-run the sweep before trusting such a build.
+
+### How to find these
+
+Three steps, in this order. Each of them was skipped at least once during M2 and
+each omission produced a wrong entry in this list.
+
+**1. Grep for the raw forms too.** `glColor*`/`glTexCoord*`/`glVertex*` are
+frequently called **raw**, not through `glRenderer::Color`/`TexCoord` —
+`gCycle.cpp:4621`, `gWinZone.cpp:474`, `rViewport.cpp:246` and both cycle-wall
+renderers all bypass the renderer. A sweep that greps only for `Color(` and
+`TexCoord(` misses most of the codebase, and for the same reason a fix inside
+`glRenderer::Color()` would not catch them.
+
+**2. Compare counts per block, then read every hit.** For each `Begin*()` block,
+compare the colour and texcoord counts against the vertex count; a block is
+uniform only if each is either 0 or equal to the vertex count. Loops make
+per-source-line counts misleading and `/* */` comments fool a line-comment
+filter, so the count is a way to make a *miss* impossible, not a verdict —
+read every hit.
+
+`web/tools/sweep-immediate-mode.py` does the counting. It is the script that
+produced the site lists above — the M2 task-5 working notes called it
+`sweep.py` — and it is committed so that M5's obligation to re-run this sweep
+before any `-O` reaches the link (`PLAN.md`, M5 inherited item 1) can actually
+be discharged by whoever inherits it:
+
+```sh
+python3 web/tools/sweep-immediate-mode.py src
+```
+
+**Every line it currently prints is accounted for below, and that is what makes
+running it useful: a hit that is not in this table is new.** As of this commit
+it prints 19. Match them on the file and function, not on the line number,
+which is the `Begin*()` and moves whenever anything above it does.
+
+| hit | why it is not a new bug |
+|---|---|
+| `eDebugLine.cpp:101`, `eDisplay.cpp:586` | compiled out of this build entirely — see above |
+| `rGLRender.cpp:163`–`:207` | the `Begin*()` wrapper definitions themselves. There is no block for them to close |
+| `rRender.cpp:67` | dead `rRenderer::Line`; see the leak list above |
+| `rViewport.cpp:240` | the one still-latent site; see above |
+| `gCycle.cpp:4468` | **fixed.** The repeated colours are behind an `AA_PYRAMID_COLOR` macro that the regex does not match, so it still counts 3 colours against 6 vertices. A block this script calls ragged can be one a human already made uniform |
+| `gHud.cpp:100`, `gWall.cpp:172` | blocks that sit inside `/* */` comments, which the line-comment filter does not catch |
+| `gWall.cpp:203` | `gWallRim_helper`, the known leaker; see the leak list above |
+| `gWall.cpp:1152`, `:1173`, `:1269` | the cycle-wall renderers, whose colour/vertex counts span two functions so the per-region count is meaningless. `:1173` is `RenderNormal`, the second known leaker |
+
+**3. Check reachability in both dimensions before writing anything down** — the
+`#ifdef` test first, because it is one command and it eliminates whole files,
+then the open-batch/runtime-guard test. See "Reachability has TWO dimensions"
+above. Reporting a dead site as live is not a harmless over-report: it sends
+whoever reads this next after code that does not exist.
+
+---
+
+## 11. The camera never turns: `gluLookAt` is a no-op
+
+`src/engine/eCamera.cpp`, `config/default.cfg`. **Nothing in this port fixes
+either half of this section.** Both are recorded here because they are cheap to
+rediscover expensively: the first makes every screenshot of this port misleading,
+and the second makes a set of shipped bindings look broken for no visible reason.
+
+### The no-op
+
+`libglemu.js:3888` (grep `gluLookAt:`):
+
+```js
+gluLookAt: (ex, ey, ez, cx, cy, cz, ux, uy, uz) => {
+  GLImmediate.matricesModified = true;
+  GLImmediate.matrixVersion[GLImmediate.currentMatrix] = (... + 1)|0;
+  GLImmediate.matrixLib.mat4.lookAt(GLImmediate.matrix[GLImmediate.currentMatrix],
+                                    [ex, ey, ez], [cx, cy, cz], [ux, uy, uz]);
+},
+```
+
+The bundled gl-matrix declares `mat4.lookAt = function (eye, center, up, dest)`
+(`src/gl-matrix.js:1356`) — **destination last**. So this passes the current
+matrix as `eye`, the real eye as `center`, the real centre as `up`, and writes
+the sixteen-float result into the three-element array literal `[ux, uy, uz]`,
+where it is discarded. **The current matrix is read and never written.**
+
+Contrast `gluPerspective` eight lines above (`:3880`), which *does* assign its
+result back into `GLImmediate.matrix[...]`. This is one buggy function, not a
+design decision, and it is not something the app can work around by calling it
+differently.
+
+### What it costs this game
+
+`eCamera::Render` (`eCamera.cpp:1415-1426`) sets the entire view orientation with
+a single `gluLookAt` on the projection matrix, followed by
+`glTranslatef(-pos.x, -pos.y, -z)`. With the rotation half inert, the view is
+always straight down −Z from wherever the camera is: **a top-down view,
+permanently, in every camera mode.**
+
+That is a measurement, not an inference. Three independent signatures, all from
+M2 gate frames:
+
+- the floor grid shows **no perspective convergence** in any in-round frame —
+  what looking perpendicular at a plane produces;
+- a cycle's wall projects to a **one-pixel vertical line at x = 511** in a
+  1024-wide canvas, i.e. exactly the screen centre, which is where a wall passing
+  under the camera lands when you look straight down;
+- the default camera is `CAMERA_CUSTOM` (`ePlayer.cpp:1169`), which sits
+  `6 + 0.5·speed` ≈ 13.5 units *behind* the cycle at ≈ 10 up
+  (`config/settings_visual.cfg:67-71`). Looking straight down from there puts the
+  cycle just outside the frame — half the visible ground width is ~13.3 units.
+  Moving the camera to 3 units back makes it appear.
+
+Consequences to carry:
+
+- **No screenshot of this port has ever shown a correct 3D view**, and none will
+  until this is fixed. Do not write a gate that depends on one; the M2 gate
+  deliberately does not.
+- `CAMERA_IN` is not a workaround: `eCamera.cpp:1429-1433` removes the centred
+  object from the render list when the camera is within 1 unit of it.
+- The fix is small — implement `gluLookAt` correctly in `eCompat.cpp`, the way it
+  already shims `glRectf` — but it is **new behaviour rather than a bug-for-bug
+  port**, so it belongs to a task that owns it and can verify the result visually.
+
+### The other half: `SDLK_LAST` moved, so the mouse-camera binds are dead
+
+`config/default.cfg:31-35` binds `LOOK_LEFT`, `LOOK_RIGHT`, `BANK_UP`,
+`BANK_DOWN` and `ZOOM_IN` to keycodes 324-336. Those are not SDL keysyms at all:
+they are this program's own mouse pseudo-keys, `SDLK_MOUSE_X_PLUS` and friends,
+defined in `uInput.h` as `SDLK_LAST+1 … SDLK_LAST+13`. **SDL 1.2's `SDLK_LAST`
+was 323; in this build it is 1536** (measured, not assumed — see the comment on
+`su_TranslateSDL12Keysym` in `uInput.cpp`), so the shipped literals point at
+nothing.
+
+This is the same defect as the arrow keys, which §Task 6 of M2 fixed by
+re-encoding keysyms at config-parse time. It was deliberately **not** included in
+that translation table: 324-336 → 1537-1549 is idempotent-safe (the ranges are
+disjoint, same as the rest of the table), but enabling mouse camera control in a
+browser needs pointer-lock behaviour verified first, and turning on bindings that
+have never been exercised is not a thing to do blind.
+
+Whoever fixes the camera should fix this at the same time — they are the same
+feature from a player's point of view, and a correct `gluLookAt` with no way to
+turn the camera is only half a result.

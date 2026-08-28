@@ -41,6 +41,32 @@ class glRenderer: public rRenderer{
 
     GLenum lastMatrix;
 
+    // WARNING, EMSCRIPTEN: the lastPrimitive test below is a batching
+    // optimisation -- a Begin*() issued while the SAME primitive is already
+    // current is a no-op, so consecutive batches merge into one glBegin/glEnd
+    // and one draw call. Under Emscripten's GL emulation that merge is also a
+    // hazard, and it is the root of a whole class of bug.
+    //
+    // Real OpenGL lets a glBegin/glEnd block mix vertices freely: glVertex
+    // captures whatever the current colour and texcoord state is, so some
+    // vertices may have been given a glTexCoord and others not. Emscripten
+    // cannot express that. libglemu.js appends every attribute call to one flat
+    // array and derives a SINGLE interleaved stride for the whole block from
+    // the set of components it saw (addRendererComponent), then asserts in
+    // glEnd that 4*vertexCounter/stride is an integer. So every vertex in a
+    // block must emit the same attribute calls -- and a merged block spans code
+    // that never agreed to share a format.
+    //
+    // Two things therefore break, and only the first is loud:
+    //   1. mismatched formats make the division non-integral -> the runtime
+    //      aborts with "`numVertices` must be an integer";
+    //   2. if the counts happen to divide anyway it draws SILENT GARBAGE,
+    //      because the writer's and reader's per-vertex periods still differ.
+    //
+    // Before adding a Begin*() call site, or a colour/texcoord anywhere near
+    // one, read docs/porting/browser-runtime-notes.md section 10 -- it states
+    // the rule in both of its forms and lists the sites already fixed and the
+    // ones still latent.
     void BeginPrimitive(GLenum p, bool forceEnd = false){
         //  glBegin(p);
         //  return;

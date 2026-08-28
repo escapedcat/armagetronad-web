@@ -24,8 +24,31 @@
 //
 // Options and steps are the same as drive-browser.mjs (--url, --out, --script,
 // --script-file, --headed, --port, --width, --height, --firefox, --keep-open;
-// steps wait/shot/click/key/eval/mark). Unlike Chrome, key events work in
+// steps wait/shot/click/key/eval/mark/until). Unlike Chrome, key events work in
 // headless mode here, so --headed is only needed to watch it happen.
+//
+// WEBGL WARNINGS: WHAT WAS MISSING AND WHAT FIXED IT
+// --------------------------------------------------
+// M1's Firefox transcript contained no WebGL diagnostics at all and was read
+// as a clean run; docs/porting/browser-runtime-notes.md section 9 records that
+// this was a harness artifact rather than evidence. Two separate causes, both
+// fixed here, and there is a positive control in
+// web/tools/gameplay-gate.steps that proves the fix rather than asserting it:
+//
+//  1. THE LABELLING. Firefox does deliver its WebGL warnings over BiDi -- they
+//     reach the console service as nsIScriptError and come out of
+//     log.entryAdded with type "javascript". But this file used to print EVERY
+//     type:"javascript" entry as "[EXCEPTION]" and ignore entry.level, so a
+//     warning would have been reported as an exception (and a run with a
+//     WebGL warning would have "failed" for the wrong reason). Now the level
+//     decides, and non-error entries are printed in Chrome's
+//     "[browser.LEVEL/SOURCE]" shape so the two transcripts read alike.
+//
+//  2. THE CAP. Firefox stops reporting after webgl.max-warnings-per-context
+//     warnings per context (32 by default) and then goes quiet forever. On a
+//     page that runs for minutes that silence is indistinguishable from a
+//     clean run, which is exactly the mistake M1 made. The profile written
+//     below raises the cap, so silence means silence.
 
 import { spawn } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, appendFileSync, readFileSync, rmSync } from 'node:fs';
@@ -131,6 +154,13 @@ async function main() {
   writeFileSync(logPath, '');
 
   const profileDir = mkdtempSync(join(tmpdir(), 'aa-firefox-'));
+  // user.js is read on every profile start and its values win over prefs.js,
+  // so this needs no profile to exist yet -- Firefox creates the rest around
+  // it. See the WEBGL WARNINGS note in this file's header for why the cap
+  // matters: left at its default of 32 the browser falls silent partway
+  // through a run and the transcript stops being evidence.
+  writeFileSync(join(profileDir, 'user.js'),
+    'user_pref("webgl.max-warnings-per-context", 100000);\n');
   const args = [
     '--remote-debugging-port', String(opt.port),
     '--profile', profileDir,
@@ -149,11 +179,19 @@ async function main() {
   let exitCode = 0;
   let bidi;
   let startedAt = Date.now();
+  // Kept in memory so `until:` can count matches against exactly the
+  // transcript that gets committed. See drive-browser.mjs for the rationale.
+  const transcript = [];
   const record = (line) => {
     const stamped = `[${String(Date.now() - startedAt).padStart(7)}ms] ${line}`;
+    transcript.push(stamped);
     process.stdout.write(stamped + '\n');
     appendFileSync(logPath, stamped + '\n');
   };
+  // Harness-written lines are excluded so an `until:`/`mark:`/`eval:` echo of
+  // the needle cannot satisfy the wait it is part of.
+  const countMatches = (needle) =>
+    transcript.reduce((n, l) => n + (!l.includes('] [harness] ') && l.includes(needle) ? 1 : 0), 0);
 
   try {
     bidi = await BiDi.connect(`ws://127.0.0.1:${opt.port}/session`);
@@ -182,8 +220,21 @@ async function main() {
       if (msg.method === 'log.entryAdded') {
         const e = msg.params;
         if (e.type === 'javascript') {
-          record(`[EXCEPTION] ${e.text}\n${(e.stackTrace?.callFrames ?? [])
-            .map((f) => `    ${f.functionName || '<anonymous>'} @ ${f.url}:${f.lineNumber}`).join('\n')}`);
+          // Everything the browser itself reports about the page arrives here,
+          // not only uncaught exceptions: WebGL warnings, CSS complaints,
+          // deprecation notices. Only level "error" is an exception; calling
+          // the rest "[EXCEPTION]" (as this did through M1) both hides what
+          // they are and breaks the gate's "no [EXCEPTION] in the transcript"
+          // criterion for something that is not one.
+          if (e.level === 'error') {
+            record(`[EXCEPTION] ${e.text}\n${(e.stackTrace?.callFrames ?? [])
+              .map((f) => `    ${f.functionName || '<anonymous>'} @ ${f.url}:${f.lineNumber}`).join('\n')}`);
+          } else {
+            // Chrome's shape, so the two engines' transcripts can be diffed.
+            const where = e.stackTrace?.callFrames?.[0]?.url ?? e.source?.realm;
+            record(`[browser.${e.level}/javascript] ${e.text}`
+                   + (where ? `   <- ${where}` : ''));
+          }
         } else {
           const args = (e.args ?? []).map(remoteToString).join(' ');
           record(`[console.${e.method ?? e.level}] ${args || e.text}`);
@@ -271,6 +322,23 @@ async function main() {
         case 'eval': {
           const r = await evaluate(arg);
           record(`[harness] eval ${arg} => ${remoteToString(r.result)}`);
+          break;
+        }
+        case 'until': {
+          // until:N:MS:TEXT. Identical semantics to drive-browser.mjs, which
+          // carries the explanation of why this directive exists at all.
+          const m = /^(\d+):(\d+):([\s\S]+)$/.exec(arg);
+          if (!m) throw new Error(`until needs N:MS:TEXT, got: ${arg}`);
+          const [, wantStr, msStr, needle] = m;
+          const want = Number(wantStr), deadline = Date.now() + Number(msStr);
+          record(`[harness] until ${want}x <<${needle}>> (timeout ${msStr}ms, have ${countMatches(needle)})`);
+          let got = countMatches(needle);
+          while (got < want && Date.now() < deadline) {
+            await sleep(100);
+            got = countMatches(needle);
+          }
+          if (got >= want) record(`[harness] until SATISFIED: saw ${got}x <<${needle}>>`);
+          else record(`[harness] until TIMED OUT after ${msStr}ms: saw ${got}x <<${needle}>>, wanted ${want}`);
           break;
         }
         default:

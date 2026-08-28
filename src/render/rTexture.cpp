@@ -319,6 +319,33 @@ void rSurface::Create( SDL_Surface * surface )
             {
                 // fallback: convert the texture into a known format.
 
+#ifdef __EMSCRIPTEN__
+                // This is the other SDL_ConvertSurface call in the tree, and on
+                // Emscripten it would throw the same JS TypeError that
+                // rSurface::CopyFrom above now avoids. It is LEFT AS IS because
+                // it is unreachable here, and unlike CopyFrom's case there is no
+                // one-line replacement: this arm exists to convert a surface of
+                // *unknown* bits-per-pixel into RGBA, which is a real format
+                // conversion. A memcpy cannot do it, and Emscripten's SDL ships
+                // no pixel converter to do it with.
+                //
+                // Unreachable by construction, not by luck. SDL.makeSurface
+                // (libsdl.js:352-439) is the single producer of SDL_Surfaces in
+                // this emulation -- SDL_CreateRGBSurface(From), SDL_ConvertSurface,
+                // IMG_Load_RW, TTF_Render*, SDL_SetVideoMode all route through it
+                // -- and it sets BytesPerPixel to 1 when SDL_HWPALETTE is
+                // requested and 4 otherwise (libsdl.js:360, 388). Both values
+                // have their own case arm above, so nothing this SDL can build
+                // lands in `default:`.
+                //
+                // What would make it live: a different SDL underneath -- SDL2 via
+                // -sUSE_SDL=2, or a real SDL 1.2 compiled to wasm -- either of
+                // which can return 2- and 3-byte-per-pixel surfaces from
+                // IMG_Load. Whoever makes that change owns writing the conversion
+                // (walk the source with SDL_GetRGBA and build an RGBA buffer by
+                // hand, or use whatever converter the new SDL provides); it is
+                // not something to leave to this call.
+#endif
                 SDL_Surface *dummy =
                     SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1,
                                          32,
@@ -357,7 +384,120 @@ void rSurface::CopyFrom( rSurface const & other )
     tASSERT( other.surface_ );
 
     // copy surface
+#ifdef __EMSCRIPTEN__
+    // SDL_ConvertSurface is unusable here, for two independent reasons. Both
+    // come from Emscripten's SDL 1.2 emulation keeping a surface's pixels in a
+    // 2D <canvas> and only mirroring them into the C-visible `pixels` buffer on
+    // demand.
+    //
+    // (1) IT THROWS. SDL_ConvertSurface (libsdl.js:1853-1866) is implemented as
+    //     a canvas-to-canvas blit: `newData.ctx.drawImage(oldData.canvas, 0, 0)`.
+    //     But IMG_Load_RW deliberately drops the canvas of every image it loads
+    //     when the program uses OpenGL -- `if (SDL.GL) { surfData.canvas =
+    //     surfData.ctx = null; }` (libsdl.js:2309-2312) -- on the assumption
+    //     that a GL program will never 2D-blit. So oldData.canvas is null and
+    //     drawImage raises a JS TypeError. That is not a C++ exception: it is
+    //     thrown inside a wasm *import*, so none of this program's
+    //     `catch (tException const &)` handlers can see it. It unwinds out
+    //     through Asyncify's rewind and the game loop never resumes -- the
+    //     canvas freezes on the last swapped frame, permanently. This function
+    //     is on the default path: rSurfaceTexture::OnSelect (below) copies its
+    //     surface on every (re)LOAD -- the first Select(), and again after an
+    //     Unload(). Not on every select, which is the easy misreading: the
+    //     delegated OnSelect() is gated on `textureModeLast_ < 0` (:837) inside
+    //     `textureModeLast_ != texmod` (:822), and :937 assigns texmod, so every
+    //     later select takes the plain glBindTexture branch at :927 instead.
+    //     OnUnload (:979) resets textureModeLast_ to -100, which is what makes a
+    //     reload copy again. gCycle builds recoloured body and wheel textures
+    //     for every cycle (gCycle.cpp:2091), so this runs once per cycle texture
+    //     per round. Measured in the browser: four calls in the first round of
+    //     the one-AI tutorial game -- a 256x256 body and a 64x64 wheel for each
+    //     of the two cycles -- over 570 ms at ~45 fps. Per select it would have
+    //     been hundreds; if you ever measure hundreds, something reset
+    //     textureModeLast_.
+    //
+    // (2) EVEN WITHOUT THE THROW IT WOULD RETURN NO PIXELS. That blit copies
+    //     canvas to canvas. Nothing writes the new surface's `pixels` buffer --
+    //     under this emulation only SDL_LockSurface does that, and nothing here
+    //     calls it. Upload() hands `tex->pixels` straight to glTexImage2D, so
+    //     the conversion would have uploaded whatever was in that freshly
+    //     malloc'd block. Not a theory: instrumenting this function to sum the
+    //     destination bytes *before* the memcpy gave a different non-zero total
+    //     on each of the four calls. Repairing the null canvas would therefore
+    //     not have been enough either -- it would have traded a dead game for
+    //     cycles textured with heap garbage.
+    //
+    // A direct pixel copy sidesteps both. The pixels are guaranteed present on
+    // the source: IMG_Load_RW calls _SDL_LockSurface (libsdl.js:2307) precisely
+    // so that they are, with the comment "code everywhere seems to assume that
+    // the pixels are in fact available". That one call is the whole basis for
+    // this function being able to work at all, so it is worth knowing why it
+    // suffices: SDL.defaults.copyOnLock is true and discardOnLock is false
+    // (libsdl.js:35, 39), so SDL_LockSurface does getImageData on the canvas
+    // (:1545) and HEAPU8.set()s the result into the pixel buffer (:1580) --
+    // three lines before IMG_Load_RW throws the canvas away. If that default
+    // ever changes, this function copies nothing useful and every texture goes
+    // blank; it would not fail loudly.
+    //
+    // Details that make this correct rather than merely working:
+    //
+    // * SDL_SWSURFACE is what guarantees the destination HAS a pixel buffer:
+    //   makeSurface pre-allocates width*height*4 only when neither
+    //   SDL_HWSURFACE nor SDL_OPENGL is set (libsdl.js:365-367). It is passed
+    //   literally, not taken from the source, for exactly that reason -- and it
+    //   is what the SDL_ConvertSurface call it replaces asked for anyway.
+    // * `o->h * o->pitch` is the source's pixel data in full, and cannot overrun
+    //   the destination: makeSurface always allocates w*h*4 and always sets
+    //   pitch to w*BytesPerPixel, so h*pitch <= w*h*4 for any source it can
+    //   produce. For every surface that actually reaches here the two are equal
+    //   -- IMG_Load_RW returns 32-bit surfaces, so both pitches are w*4 and this
+    //   copies exactly the whole buffer.
+    // * The `depth` and mask arguments are documentation, not control:
+    //   SDL_CreateRGBSurface forwards them to makeSurface, which ignores depth
+    //   entirely (its bpp is 4 unless SDL_HWPALETTE) and applies each mask only
+    //   as a non-zero override of its RGBA8888 default. Passing the source's
+    //   values is still right -- it is what a real SDL_ConvertSurface onto
+    //   `other.surface_->format` would preserve, and Upload() reads
+    //   format->Amask to decide texalpha -- it just cannot be relied on to make
+    //   the destination match a source that is not already 32-bit RGBA.
+    // * Nothing may lock these surfaces afterwards or the copy is lost:
+    //   SDL_LockSurface overwrites `pixels` from the canvas (libsdl.js:1545),
+    //   which for a copy made here is a blank canvas, and SDL_UnlockSurface
+    //   asserts !SDL.GL. No *call* to either exists anywhere in this tree -- the
+    //   only occurrences of the names are inside this comment -- so the memcpy'd
+    //   bytes are what glTexImage2D reads.
+    // * Ownership is unchanged: the surface returned here is freed by Clear()
+    //   via SDL_FreeSurface, exactly as the converted one was, and
+    //   SDL.freeSurface returns the destination's canvas to SDL.canvasPool.
+    //   A null return is handled the same way the old code handled a null from
+    //   SDL_ConvertSurface -- surface_ stays 0 and format_ is still copied --
+    //   except that the guarded memcpy below cannot dereference it.
+    // * memcpy and printf need no #include here: rSDL.h -> SDL.h ->
+    //   SDL_stdinc.h already brings in <string.h> and <stdio.h>.
+    SDL_Surface * o = other.surface_;
+    surface_ = SDL_CreateRGBSurface( SDL_SWSURFACE, o->w, o->h,
+                                     o->format->BitsPerPixel,
+                                     o->format->Rmask, o->format->Gmask,
+                                     o->format->Bmask, o->format->Amask );
+    if ( surface_ && o->pixels && surface_->pixels )
+    {
+        memcpy( surface_->pixels, o->pixels, o->h * o->pitch );
+    }
+    else if ( surface_ && surface_->pixels )
+    {
+        // Unreachable today -- every surface that gets here came from
+        // IMG_Load_RW, which locks it -- but skipping the copy silently would
+        // hand Upload() the uninitialised _malloc block that (2) above is
+        // entirely about, and it would look like a texture bug rather than a
+        // missing source. Blank it so the failure is a black texture rather
+        // than noise, and say so once.
+        memset( surface_->pixels, 0, surface_->h * surface_->pitch );
+        printf( "rSurface::CopyFrom: source surface has no pixels; "
+                "texture will be blank.\n" );
+    }
+#else
     surface_ = SDL_ConvertSurface(other.surface_, other.surface_->format, SDL_SWSURFACE);
+#endif
 
     // copy flags
     format_ = other.format_;

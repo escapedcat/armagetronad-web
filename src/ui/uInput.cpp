@@ -92,6 +92,176 @@ uAction * uAction::Find( char const * name )
 // a configuration class for keyboard binds
 // ****************************************
 
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+//! Re-encode a keysym read from a .cfg file from SDL 1.2's numbering into the
+//! numbering this build's SDL actually delivers.
+//!
+//! WHY THIS EXISTS. Every shipped KEYBOARD line is DATA that means "the left
+//! arrow key". 276 is merely SDL 1.2's encoding of that key. Emscripten's SDL
+//! shim uses SDL 2's keycode scheme -- scancode | SDLK_SCANCODE_MASK -- with
+//! the mask patched down from 1<<30 to 1<<10 (SDL_keycode.h:46, and the
+//! comment there says why: "closer to old SDL, gives a better chance of SDL
+//! 1.X apps working"). So the same physical key arrives as 80|1024 = 1104.
+//! Nothing reconciles the two: keymap[] is indexed by the raw
+//! e.key.keysym.sym (su_HandleEvent, below), so the shipped binds land on
+//! array slots that no keystroke can ever reach and the arrow keys are simply
+//! dead. Re-encoding the data where it is read is the honest fix, and it fixes
+//! all five shipped keys_*.cfg layouts plus default.cfg's camera, message and
+//! instant-chat binds in one place.
+//!
+//! The menus were never affected -- uMenu.cpp compares against SDLK_* NAMES,
+//! which the compiler resolves to this build's values -- which is why M1 and
+//! every M2 task before this one passed without noticing.
+//!
+//! IT IS IDEMPOTENT, AND THEREFORE SAFE FOR M4's user.cfg PERSISTENCE. The
+//! source range (256-312) and the target range (1081-1255) are disjoint, so a
+//! value that has already been translated passes through untouched. That
+//! matters because WriteVal (below) writes whatever is in keymap[], i.e. the
+//! NEW encoding: a player who rebinds turn-left onto the left arrow in the
+//! binding menu gets keymap[1104] set from the live event, 1104 written to
+//! user.cfg, and 1104 read back unchanged. Re-reading our own output is a
+//! no-op, not a second translation.
+//!
+//! ONLY THE NON-ASCII RANGE IS TOUCHED. 0-127 already agree in both encodings
+//! (SDL 1.2 and SDL 2 both use the ASCII value for printable keys, Return,
+//! Escape, Tab, Backspace and Delete), and Emscripten's DOM->SDL map falls
+//! back to the raw DOM keyCode for anything under 128 (libsdl.js:816), so
+//! those binds -- 'v', 'z', Escape, Return, Tab -- have always worked. This
+//! function must not disturb them.
+//!
+//! THE VALUES WERE MEASURED, NOT ASSUMED, in two independent ways:
+//!   * compile-time: an em++ program built with -sUSE_SDL=1 printing every
+//!     SDLK_* used below (SDLK_LEFT 1104, SDLK_UP 1106, SDLK_RIGHT 1103,
+//!     SDLK_DOWN 1105, SDLK_LAST 1536, ...);
+//!   * run-time: the browser client logging e.key.keysym.sym for each arrow
+//!     press, which reported the same numbers.
+//! The targets below are written as SDLK_* constants rather than as literals
+//! precisely so this table cannot drift if a future emsdk changes the mask.
+//!
+//! DELIBERATELY NOT TRANSLATED, and each omission is load-bearing:
+//!
+//!   * 313-322 (SDL 1.2 MODE, COMPOSE, HELP, PRINT, SYSREQ, BREAK, MENU,
+//!     POWER, EURO, UNDO). 316 is the reason for the cut line: SDL 1.2's
+//!     SDLK_PRINT is 316 and Emscripten's DOM table maps the PrintScreen key
+//!     to the literal 316 as well (libsdl.js:145, an SDL-1.2 leftover among
+//!     otherwise SDL-2 values), so default.cfg's `KEYBOARD 316 ... SCREENSHOT`
+//!     already works by that coincidence. Translating it to SDLK_PRINTSCREEN
+//!     (1094) would BREAK a binding that works today.
+//!
+//!     There IS one other shipped bind in this range, and an earlier revision
+//!     of this comment wrongly said there was none: default.cfg:88 binds 319
+//!     (SDL 1.2's SDLK_MENU) to TOGGLE_FULLSCREEN. Leaving it dead costs
+//!     nothing, because default.cfg:89-90 bind the same action to 110 ('n')
+//!     and 102 ('f'), which are ASCII and therefore untranslated and live, so
+//!     fullscreen is reachable either way.
+//!     The rest of the range has no unambiguous same-key target and no
+//!     shipped bind: across all six files under config/ that contain
+//!     KEYBOARD lines, 316 and 319 are the only two keycodes bound anywhere
+//!     in 313-322.
+//!
+//!   * 324-336. These are not SDL keysyms at all: they are this program's own
+//!     mouse pseudo-keys, SDLK_MOUSE_X_PLUS and friends, defined in uInput.h
+//!     as SDLK_LAST+1..SDLK_LAST+13. They are stale in the config files for
+//!     the same underlying reason (SDL 1.2's SDLK_LAST was 323; here it is
+//!     1536), so default.cfg's mouse camera binds at lines 31-35 are dead
+//!     too. Fixing that needs the browser's pointer-lock behaviour verified
+//!     first, so it is left for a later milestone rather than enabled blind.
+//!
+//! TWO TARGETS THE BROWSER CANNOT CURRENTLY PRODUCE, translated anyway because
+//! the mapping is what it is and both were equally dead before:
+//!   * the right-hand modifiers. A DOM keydown carries keyCode 16/17/18 for
+//!     shift/ctrl/alt with no side information, and libsdl.js maps them to the
+//!     LEFT variants only, so a bind on SDLK_RSHIFT never fires.
+//!   * SDLK_KP_ENTER. The numpad Enter reports DOM keyCode 13, so it arrives
+//!     as SDLK_RETURN. default.cfg binds CHAT to both 13 and 271, so chat
+//!     still works through the 13.
+//!
+//! ALTERNATIVES CONSIDERED AND REJECTED:
+//!   * a shipped keys_web.cfg -- the keys_*.cfg templates are only applied
+//!     under st_FirstUse, so it would stop taking effect the moment M4
+//!     persists a user.cfg;
+//!   * KEYBOARD lines in web/webdefaults/autoexec.cfg -- that file loads
+//!     AFTER user.cfg, which makes every line in it a hard override a player
+//!     could never rebind away;
+//!   * defaulting to WASD -- leaves the arrow keys dead, so the first thing a
+//!     new player tries still does nothing and the game reads as broken.
+static int su_TranslateSDL12Keysym( int keysym )
+{
+    switch ( keysym )
+    {
+        // numeric keypad: SDL 1.2 SDLK_KP0..SDLK_KP_EQUALS, 256-272
+    case 256: return SDLK_KP_0;
+    case 257: return SDLK_KP_1;
+    case 258: return SDLK_KP_2;
+    case 259: return SDLK_KP_3;
+    case 260: return SDLK_KP_4;
+    case 261: return SDLK_KP_5;
+    case 262: return SDLK_KP_6;
+    case 263: return SDLK_KP_7;
+    case 264: return SDLK_KP_8;
+    case 265: return SDLK_KP_9;
+    case 266: return SDLK_KP_PERIOD;
+    case 267: return SDLK_KP_DIVIDE;
+    case 268: return SDLK_KP_MULTIPLY;
+    case 269: return SDLK_KP_MINUS;
+    case 270: return SDLK_KP_PLUS;
+    case 271: return SDLK_KP_ENTER;
+    case 272: return SDLK_KP_EQUALS;
+
+        // arrows: SDL 1.2 SDLK_UP..SDLK_LEFT, 273-276. This is the whole
+        // point of the exercise -- keys_cursor.cfg binds 276/275/274.
+    case 273: return SDLK_UP;
+    case 274: return SDLK_DOWN;
+    case 275: return SDLK_RIGHT;
+    case 276: return SDLK_LEFT;
+
+        // Home/End pad: SDL 1.2 SDLK_INSERT..SDLK_PAGEDOWN, 277-281
+    case 277: return SDLK_INSERT;
+    case 278: return SDLK_HOME;
+    case 279: return SDLK_END;
+    case 280: return SDLK_PAGEUP;
+    case 281: return SDLK_PAGEDOWN;
+
+        // function keys: SDL 1.2 SDLK_F1..SDLK_F15, 282-296
+    case 282: return SDLK_F1;
+    case 283: return SDLK_F2;
+    case 284: return SDLK_F3;
+    case 285: return SDLK_F4;
+    case 286: return SDLK_F5;
+    case 287: return SDLK_F6;
+    case 288: return SDLK_F7;
+    case 289: return SDLK_F8;
+    case 290: return SDLK_F9;
+    case 291: return SDLK_F10;
+    case 292: return SDLK_F11;
+    case 293: return SDLK_F12;
+    case 294: return SDLK_F13;
+    case 295: return SDLK_F14;
+    case 296: return SDLK_F15;
+
+        // locks and modifiers: SDL 1.2 SDLK_NUMLOCK..SDLK_RSUPER, 300-312.
+        // SDL 2 dropped the META/SUPER distinction, so 309-312 collapse onto
+        // the two GUI keys. Harmless: the translation is read-only, and
+        // WriteVal only ever emits the post-translation values.
+    case 300: return SDLK_NUMLOCKCLEAR;
+    case 301: return SDLK_CAPSLOCK;
+    case 302: return SDLK_SCROLLLOCK;
+    case 303: return SDLK_RSHIFT;
+    case 304: return SDLK_LSHIFT;
+    case 305: return SDLK_RCTRL;
+    case 306: return SDLK_LCTRL;
+    case 307: return SDLK_RALT;
+    case 308: return SDLK_LALT;
+    case 309: return SDLK_RGUI;   // SDL 1.2 SDLK_RMETA
+    case 310: return SDLK_LGUI;   // SDL 1.2 SDLK_LMETA
+    case 311: return SDLK_LGUI;   // SDL 1.2 SDLK_LSUPER
+    case 312: return SDLK_RGUI;   // SDL 1.2 SDLK_RSUPER
+    }
+
+    return keysym;
+}
+#endif
+
 class tConfItem_key:public tConfItemBase{
 public:
     tConfItem_key():tConfItemBase("KEYBOARD"){}
@@ -121,6 +291,13 @@ public:
         tString in;
         int keysym;
         s >> keysym;
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+        // The shipped .cfg files spell their keysyms in SDL 1.2's numbering;
+        // this build's SDL delivers SDL 2's. See su_TranslateSDL12Keysym above
+        // for the full reasoning, the measured values, and why this is
+        // idempotent (and so survives M4's user.cfg round-trip).
+        keysym = su_TranslateSDL12Keysym( keysym );
+#endif
         if (keysym>=0){
             tASSERT(keysym < SDLK_NEWLAST);
             s >> in;
@@ -341,10 +518,145 @@ int uPlayerPrototype::Num(){return nextid;}
 //  Menuitem for input selection
 // *****************************************************
 
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+//! Name a keysym for the controls menu, because Emscripten's SDL_GetKeyName
+//! cannot.
+//!
+//! Its whole body (libsdl.js:1754-1764) is
+//!
+//!     var name = '';
+//!     if ((key >= 97 && key <= 122) || (key >= 48 && key <= 57))
+//!       name = String.fromCharCode(key);
+//!
+//! -- lowercase a-z and the digits 0-9, and the empty string for absolutely
+//! everything else. So the controls menu renders a BLANK next to every action
+//! bound to an arrow, Escape, Return, Tab, space, a function key, or any
+//! punctuation. The bind works; the screen just does not say what it is.
+//!
+//! That was tolerable while the non-ASCII binds were dead anyway. It is not
+//! tolerable now: su_TranslateSDL12Keysym (above) is precisely what puts the
+//! arrow keys into this menu, so without this the first thing a player sees
+//! after the steering fix is "Turn Left" with nothing beside it -- and this
+//! screen is the one they would use to work around a binding problem.
+//!
+//! The strings match SDL 1.2's own keynames table (SDL_keyboard.c), so the
+//! browser build labels its keys exactly as the native build does, rather than
+//! inventing a second vocabulary. ASCII is handled here too, not delegated to
+//! SDL_GetKeyName, so that the punctuation binds default.cfg ships ('`' for
+//! CONSOLE_INPUT, '-' and '=' for instant chat, space for brake) are named as
+//! well; SDL 1.2 returns the bare character for those, and so do we.
+static char const * su_EmscriptenKeyName( int sym )
+{
+    switch ( sym )
+    {
+        // ASCII keys SDL 1.2 gives a word rather than a glyph
+    case 8:   return "backspace";
+    case 9:   return "tab";
+    case 12:  return "clear";
+    case 13:  return "return";
+    case 19:  return "pause";
+    case 27:  return "escape";
+    case 32:  return "space";
+    case 127: return "delete";
+
+    case SDLK_KP_0: return "[0]";
+    case SDLK_KP_1: return "[1]";
+    case SDLK_KP_2: return "[2]";
+    case SDLK_KP_3: return "[3]";
+    case SDLK_KP_4: return "[4]";
+    case SDLK_KP_5: return "[5]";
+    case SDLK_KP_6: return "[6]";
+    case SDLK_KP_7: return "[7]";
+    case SDLK_KP_8: return "[8]";
+    case SDLK_KP_9: return "[9]";
+    case SDLK_KP_PERIOD:   return "[.]";
+    case SDLK_KP_DIVIDE:   return "[/]";
+    case SDLK_KP_MULTIPLY: return "[*]";
+    case SDLK_KP_MINUS:    return "[-]";
+    case SDLK_KP_PLUS:     return "[+]";
+    case SDLK_KP_ENTER:    return "enter";
+    case SDLK_KP_EQUALS:   return "equals";
+
+    case SDLK_UP:       return "up";
+    case SDLK_DOWN:     return "down";
+    case SDLK_RIGHT:    return "right";
+    case SDLK_LEFT:     return "left";
+    case SDLK_INSERT:   return "insert";
+    case SDLK_HOME:     return "home";
+    case SDLK_END:      return "end";
+    case SDLK_PAGEUP:   return "page up";
+    case SDLK_PAGEDOWN: return "page down";
+
+    case SDLK_F1:  return "f1";
+    case SDLK_F2:  return "f2";
+    case SDLK_F3:  return "f3";
+    case SDLK_F4:  return "f4";
+    case SDLK_F5:  return "f5";
+    case SDLK_F6:  return "f6";
+    case SDLK_F7:  return "f7";
+    case SDLK_F8:  return "f8";
+    case SDLK_F9:  return "f9";
+    case SDLK_F10: return "f10";
+    case SDLK_F11: return "f11";
+    case SDLK_F12: return "f12";
+    case SDLK_F13: return "f13";
+    case SDLK_F14: return "f14";
+    case SDLK_F15: return "f15";
+
+    case SDLK_NUMLOCKCLEAR: return "numlock";
+    case SDLK_CAPSLOCK:     return "caps lock";
+    case SDLK_SCROLLLOCK:   return "scroll lock";
+    case SDLK_RSHIFT:       return "right shift";
+    case SDLK_LSHIFT:       return "left shift";
+    case SDLK_RCTRL:        return "right ctrl";
+    case SDLK_LCTRL:        return "left ctrl";
+    case SDLK_RALT:         return "right alt";
+    case SDLK_LALT:         return "left alt";
+    case SDLK_RGUI:         return "right meta";
+    case SDLK_LGUI:         return "left meta";
+    case SDLK_MODE:         return "alt gr";
+    case SDLK_APPLICATION:  return "menu";
+    case SDLK_HELP:         return "help";
+    case SDLK_PRINTSCREEN:  return "print screen";
+    case 316:               return "print screen"; // what libsdl.js actually
+                                                   // delivers for PrintScreen
+                                                   // -- see the note in
+                                                   // su_TranslateSDL12Keysym
+    case SDLK_SYSREQ:       return "sys req";
+    case SDLK_PAUSE:        return "pause"; // SDL 2 merged Pause and Break;
+                                            // the browser reports the key as
+                                            // DOM keyCode 19, so it arrives as
+                                            // ASCII 19 above, not as this
+    case SDLK_POWER:        return "power";
+    case SDLK_UNDO:         return "undo";
+    }
+
+    // Printable ASCII: return the character itself, as SDL 1.2 does. The
+    // buffer is static, so the result is valid only until the next call --
+    // the same contract SDL_GetKeyName already has (it returns SDL.keyName,
+    // one shared reallocated buffer), and every caller here copies it into a
+    // tString immediately.
+    if ( sym > 32 && sym < 127 )
+    {
+        static char single[2] = { 0, 0 };
+        single[0] = static_cast< char >( sym );
+        return single;
+    }
+
+    return "";
+}
+#endif
+
 static char const * keyname(int sym){
 #ifndef DEDICATED
     if (sym<=SDLK_LAST)
+#if defined( __EMSCRIPTEN__ )
+        // Emscripten's SDL_GetKeyName names only a-z and 0-9; everything else
+        // would render blank. Substitute a table that can name a key.
+        return su_EmscriptenKeyName(sym);
+#else
         return SDL_GetKeyName(static_cast<SDLKey>(sym));
+#endif
     else switch (sym){
         case SDLK_MOUSE_X_PLUS: return "Mouse right";
         case SDLK_MOUSE_X_MINUS: return "Mouse left";

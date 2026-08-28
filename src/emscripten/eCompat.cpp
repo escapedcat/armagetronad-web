@@ -175,26 +175,46 @@ void   GLAPIENTRY glDeleteLists( GLuint /* list */, GLsizei /* range */ ) {}
 // ---------------------------------------------------------------------------
 
 // NULL is SDL's own documented failure value -- "cannot be opened, uses an
-// unknown data format, or is corrupt" (SDL_audio.h:400-402) -- and
-// eWavData::Load() is written against precisely that. eSound.cpp:396-421
-// tests `result != &spec || !data`, retries with the alternative filename,
-// then with sound/expl.wav, and finally throws tGenericException carrying the
-// localised $sound_error_filenotfound. That is a failure the caller handles,
-// not an unhandled one, and it is the same failure a *real* SDL_LoadWAV_RW
-// would produce in this build anyway, since no sound file is in the virtual
-// filesystem until the data-preloading task lands.
+// unknown data format, or is corrupt" (SDL_audio.h:400-402) -- and it is the
+// same failure a *real* SDL_LoadWAV_RW would produce in this build anyway,
+// since Emscripten's SDL 1.2 emulation has no WAV decoder at all.
 //
-// It is also not on the boot-to-menu path. Load()'s only callers are
-// eWavData::Mix, eSoundPlayer::Reset and eSoundPlayer::MakeGlobal; the two
-// file-scope eSoundPlayers at gGame.cpp:4530-4531 are constructed with the
-// default loop=false (eSound.h:112), and that constructor does not load. The
-// first Load() is reached from sg_EnterGameCore.
+// M2 UPDATE -- THIS FUNCTION IS NOW DEAD, and so are SDL_BuildAudioCVT and
+// SDL_ConvertAudio below. eWavData::Load() (src/engine/eSound.cpp) now
+// short-circuits under __EMSCRIPTEN__ before reaching any of them, and it was
+// their only caller. Not "kept alive by the linker": all three appear in
+// web/build-m1 solely as a definition in this object (`T` in eCompat.o) with
+// no undefined reference to them anywhere in the other 100 objects, so
+// -sERROR_ON_UNDEFINED_SYMBOLS=1 does not want them either -- deleting them
+// would link. They are left in place because M3 is the milestone that gives
+// them real bodies, and having the signatures already written against the SDL
+// 1.2 declarations is worth more than the dead code costs.
+//
+// SDL_FreeWAV is the exception and is still live: eSound.o does carry a `U`
+// for it, from the !freeData branch of eWavData::Unload.
+//
+// Read the short-circuit's comment for the reasoning; the summary is that
+// returning NULL was NOT in fact a failure the callers handle. An earlier
+// version of this comment claimed it was, and that claim was wrong in the one
+// way that mattered: eSound.cpp's retry chain (alternative filename, then
+// sound/expl.wav) ends in `throw tGenericException`, and the catch that
+// receives it is sg_EnterGame (src/tron/gGame.cpp:4635), which aborts entry
+// into the game and shows a "Sound Error" modal. So a NULL here did not mute
+// the client, it made it impossible to start a round.
+//
+// The same earlier comment also called the load path "not on the boot-to-menu
+// path", listing eWavData::Mix, eSoundPlayer::Reset and
+// eSoundPlayer::MakeGlobal as Load()'s only callers. That enumeration was one
+// short: eSoundPlayer's constructor also loads when its loop argument is true
+// (eSound.cpp:881-882), which is how gCycle.cpp:2224 builds every cycle's engine
+// sound -- i.e. once per cycle, per round. Boot-to-menu was still safe, which
+// is why M1 shipped, but the very first frame of gameplay was not.
 //
 // spec, audio_buf and audio_len are deliberately left untouched, because real
 // SDL leaves them untouched on failure; eWavData's own members are already
 // NULL from its constructor, which is what the `!data` test above reads.
 //
-// freesrc is honoured rather than ignored: eSound.cpp:370 passes 1 and relies
+// freesrc is honoured rather than ignored: eSound.cpp:413 passes 1 and relies
 // on the callee to release the source, so ignoring it leaks one rwops per
 // attempt. The release is SDL_FreeRW and specifically NOT the usual
 // SDL_RWclose. Emscripten's SDL_RWFromFile (libsdl.js:3545) returns an
@@ -217,17 +237,17 @@ SDL_AudioSpec * SDLCALL SDL_LoadWAV_RW( SDL_RWops * src,
 
 // A no-op that is consistent with the above rather than merely lazy: the
 // SDL_LoadWAV_RW here never allocates, so there is never anything to free.
-// Both callers -- eSound.cpp:456, and the !freeData branch of
-// eWavData::Unload at eSound.cpp:507 -- only run against a buffer a
+// Both callers -- eSound.cpp:539, and the !freeData branch of
+// eWavData::Unload at eSound.cpp:590 -- only run against a buffer a
 // successful load produced, so neither is reachable while loads return NULL.
 void SDLCALL SDL_FreeWAV( Uint8 * /* audio_buf */ )
 {
 }
 
 // -1 is SDL's documented "the format conversion is not supported"
-// (SDL_audio.h:428-429), and eSound.cpp:440 compares against exactly -1 and
+// (SDL_audio.h:428-429), and eSound.cpp:523 compares against exactly -1 and
 // throws the localised $sound_error_unsupported. Returning 0 -- SDL's "no
-// conversion needed" -- would be the dangerous answer: eSound.cpp:445-447
+// conversion needed" -- would be the dangerous answer: eSound.cpp:528-530
 // would then malloc len * cvt.len_mult and memcpy into it, off a
 // stack-allocated SDL_AudioCVT that this function never initialised.
 //
@@ -245,7 +265,7 @@ int SDLCALL SDL_BuildAudioCVT( SDL_AudioCVT * /* cvt */,
     return -1;
 }
 
-// Same failure value, tested the same way at eSound.cpp:451 and throwing the
+// Same failure value, tested the same way at eSound.cpp:534 and throwing the
 // same $sound_error_unsupported. Unreachable in practice: its only caller
 // runs after a SDL_BuildAudioCVT that returned -1 and threw.
 int SDLCALL SDL_ConvertAudio( SDL_AudioCVT * /* cvt */ )

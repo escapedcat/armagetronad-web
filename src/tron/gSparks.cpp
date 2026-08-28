@@ -129,11 +129,19 @@ void gSpark::Render(const eCamera *cam){
         if (a>1) a=1;
         if (a<0) a=0;
 
+        // The colour is computed into locals rather than being sent straight
+        // to glColor4f so that it can be re-sent before the second vertex
+        // under Emscripten -- see the comment at the RenderVertex calls below.
+        // Behaviour is unchanged: exactly one glColor4f still precedes the
+        // pair on every backend.
+        REAL cr, cg, cb;
         if(!white_sparks) {
-            if(i%2)
-                glColor4f(sparkowncolor_r,sparkowncolor_g,sparkowncolor_b,a);
-            else
-                glColor4f(sparkenemycolor_r,sparkenemycolor_g,sparkenemycolor_b,a);
+            if(i%2) {
+                cr=sparkowncolor_r; cg=sparkowncolor_g; cb=sparkowncolor_b;
+            }
+            else {
+                cr=sparkenemycolor_r; cg=sparkenemycolor_g; cb=sparkenemycolor_b;
+            }
         }
         else {
             REAL r=heat[i]+1;
@@ -148,13 +156,39 @@ void gSpark::Render(const eCamera *cam){
             if (b>1) b=1;
             if (b<0) b=0;
 
-            glColor4f(r,g,b,a);
+            cr=r; cg=g; cb=b;
         }
 
+        glColor4f(cr,cg,cb,a);
         x[i].RenderVertex();
         preLastX[i]=x[i];
         preLastX[i]+=xDot[i]*(-ago*.8);
 
+#ifdef __EMSCRIPTEN__
+        // One colour per VERTEX, not one per line segment.
+        //
+        // Unlike the other two sites of this class, this one does not abort --
+        // it silently draws garbage, which is worse. Emscripten's immediate
+        // mode appends every attribute call to one flat array and derives a
+        // single interleaved stride for the whole glBegin/glEnd block. Here the
+        // block registers COLOR (4 bytes) and VERTEX (16 bytes), so the reader
+        // expects a 20-byte / 5-slot record per vertex: [colour, x, y, z, w].
+        // The loop as written wrote 9 slots per iteration (1 colour + 2
+        // vertices), so writer period 9 and reader period 5 disagree.
+        //
+        // With SPARKS == 10 (gSparks.h:38) that is 90 slots against stride 20,
+        // giving numVertices = 18 -- an integer, so the glEnd assert passes by
+        // pure arithmetic accident and nothing complains. From the second
+        // vertex onward the colour is read out of position data and the
+        // position out of (y, z, w, colour). Sending the colour before each
+        // vertex makes the two periods agree at 5.
+        //
+        // This is live in the browser build: crash_sparks is true off Mac
+        // (gCycle.cpp:2512, and MACOSX is not defined in
+        // src/emscripten/config.h) and sparks spawn on wall grinds.
+        // See docs/porting/browser-runtime-notes.md section 10.
+        glColor4f(cr,cg,cb,a);
+#endif
         preLastX[i].RenderVertex();
         preLastX[i]=lastX[i];
         lastX[i]=x[i];

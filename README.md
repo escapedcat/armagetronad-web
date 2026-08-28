@@ -47,45 +47,107 @@ committed** — each gets its own go/no-go decision once the Demo ships:
 
 ## Status
 
-🚧 **M1 complete: the real game client compiles to WebAssembly and boots to a
-navigable menu in Chrome and Firefox, rendering through WebGL on the GPU.**
+🚧 **M2 complete: the game is playable. Three complete rounds against three AI
+opponents, in Chrome and Firefox, with the arrow keys steering.**
 
-Arrow keys, Enter and Escape drive it: the language menu responds, Enter
-chooses a language and moves on to the first-run setup menu, Left/Right change
-values there, and Escape leaves it for the game's welcome screen. Both browsers
-render on a real GPU rather than a software rasteriser — Chrome reports
-`ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max)`, Firefox `Apple M1, or
-similar`. Twenty screenshots and both devtools transcripts are committed under
-[docs/evidence/m1-task7/](docs/evidence/m1-task7/), and the script that
-produced them is re-runnable: `web/tools/menu-gate.steps`.
+The gate is a script, not a claim. It drives a first-time visitor's path — Play,
+language menu, first-run setup, into the tutorial match — and then plays three
+rounds to completion, pressing Left and Right during each one. It passed in
+**Chrome 152.0.7977.65** (headed, real GPU) and **Firefox 154.0.1** (headless),
+both at canvas 1024×768, on macOS 26.5 with an Apple M1 Max.
 
-Getting there took guarded patches to 11 of the game's own source files, plus
-two new files of port-owned code (`src/emscripten/eCompat.cpp` and the shared
-`config.h`). The reasoning behind each patch is in
-[docs/porting/browser-runtime-notes.md](docs/porting/browser-runtime-notes.md).
-Measured on macOS 26.5 (Apple silicon) with Chrome 152 and Firefox 154 — no
-other browser, OS or GPU has been tried.
+Frame rate was **measured in-page, not asserted** — every `glFlush`/`glFinish`
+counted over the whole span from round 1 starting to round 3 ending, then bucketed
+into whole seconds:
 
-**What M1 does *not* prove: the game is not playable.** No round has ever run
-in a browser. No cycle physics, no AI, no walls, no collisions, no scoring have
-executed — the two menus M1 reaches are the ones that come *before* the game,
-and the main menu with its submenus sits behind a first-run tutorial round,
-which is gameplay. Frame pacing was measured only while sitting in a menu
-(~63 FPS against the `MAX_FPS 60` cap), which says nothing about a scene with
-cycles in it. Nothing persists across a reload, audio is unverified, the
-default arrow-key *steering* bindings are known not to fire yet, and the wasm
-is 8.9 MB before any size work. Those are M2 (playable single-player vs AI),
-M3 (audio), M4 (persistence) and M5 (size and packaging).
+| | Chrome | Firefox |
+|---|---|---|
+| span measured | 39.64 s, 2369 frames | 39.41 s, 2324 frames |
+| frames per whole second, **median** | 60 | 59 |
+| frames per whole second, **minimum** | 53 | 56 |
+| **worst single frame** | 43.8 ms = **22.8 fps** | 41.0 ms = **24.4 fps** |
+
+The ≥30 fps bar is about a frame *rate*, and it is cleared by a wide margin —
+but read the last row too: **the worst single frame drops below 30 fps in both
+browsers.** That is a much harsher statistic than a frame rate and it did not
+decide the milestone, but it is in the evidence and it is not hidden here. It is
+also not a fluke of one run: re-running the gate from a clean rebuild at M2's
+exit reproduced the medians exactly (60 / 59) and the minima to within one frame
+(53 / 57 against the 53 / 56 above), and produced worst single frames of 55 ms
+(18.2 fps) in Chrome and 45 ms (22.2 fps) in Firefox. Whatever causes it is
+still there and nobody has looked for it.
+
+Two things to keep the numbers honest. First, **the match measured is the
+tutorial match** — the one a first-time visitor gets — and `welcome()`
+(`gArmagetron.cpp:378-395`) temporarily alters its speed, arena size, wall length,
+rubber and turn delay, restoring them afterwards. It is a real game of
+Armagetron with real AI opponents and real rounds; it is a *gentle* one, and a
+busier arena would produce lower numbers. Do not lift "60 fps" out of here.
+Second, **`welcome()` touches neither `numAIs` nor `limitRounds`** — that was
+checked, not assumed — so "three opponents" is attributable to `SP_NUM_AIS 3`
+alone and "three rounds" to `SP_LIMIT_ROUNDS 3` alone (the shipped default is
+10 rounds, so a match that stops at three is itself the setting having been read).
+
+Forty-one files of evidence are committed under
+[docs/evidence/m2-gate/](docs/evidence/m2-gate/): eighteen screenshots per
+browser, both full devtools transcripts, the steps file exactly as executed, and
+`check-transcript.mjs` — a checker that re-derives every claim from a transcript
+alone and **exits non-zero if any of them fails**. It is the arbiter; the prose
+is a description of what it checks.
+
+```sh
+node docs/evidence/m2-gate/check-transcript.mjs docs/evidence/m2-gate/chrome-console.log
+node docs/evidence/m2-gate/check-transcript.mjs docs/evidence/m2-gate/firefox-console.log
+```
+
+Getting here took five runtime blockers cleared in sequence, each only visible
+once the one before it was fixed: a NULL-returning WAV stub that aborted round
+entry, `SDL_ConvertSurface` on a surface whose canvas Emscripten had already
+freed, `glDrawElements` with 32-bit indices, a `glBegin`/`glEnd` block whose
+vertex format changed part-way through, and the keycodes that stopped the shipped
+arrow-key binds from firing. **Not one of them was on the watch-list M1 handed
+over**, and the two that involve GL are not gaps in the emulation but rules the
+emulation enforces that real OpenGL does not. The fourth turned out to be a whole
+class of defect rather than one bug — including a variant that draws wrong
+geometry *without* complaining — and is written up as
+[browser-runtime-notes.md](docs/porting/browser-runtime-notes.md) § 10. That is
+the section to read before touching the renderer.
+
+**What M2 does *not* prove.**
+
+- **Not that it is *fun*, or correct in detail.** No human has sat down and
+  played this. Every run of it has been scripted, and a script that presses Left
+  and Right on a timer cannot tell a good game from a bad one. Cycle feel,
+  rubber, camera behaviour, AI difficulty — all unassessed.
+- **The camera is permanently top-down.** Emscripten's `gluLookAt` is a complete
+  no-op (it passes gl-matrix's destination argument as `eye`, so the matrix is
+  read and never written), so no screenshot of this port has ever shown a correct
+  3D view. Unfixed.
+- **One machine, one GPU, two browsers.** macOS 26.5, Apple M1 Max, Chrome 152
+  and Firefox 154. No Windows, no Linux, no Intel or AMD GPU, no Safari, no
+  mobile. A ≥30 fps result on an M1 Max is not a ≥30 fps result anywhere else.
+- **It is silent.** M2 ships with the audio path stubbed so a missing WAV cannot
+  abort round entry; nothing plays. Real audio is M3.
+- **Nothing persists.** Every page load is a first run, so the first-run setup
+  menu appears every time and no setting or rebinding survives a reload. M4.
+- **It is 8,854,277 bytes of wasm** before any size work, and no page has been
+  deployed anywhere. M5.
+
+M1 still holds: the client boots to a navigable menu with WebGL on a real GPU
+(Chrome reports `ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max)`, Firefox
+`Apple M1, or similar`), and its own evidence is under
+[docs/evidence/m1-task7/](docs/evidence/m1-task7/).
 
 M0 still holds and is still checked on every change: the dedicated server
 compiles to WebAssembly, boots under Node, and parses and validates its map
 through libxml2 — and its wasm is still byte-identical at 2,488,298 bytes, the
-tripwire that catches anything client-only leaking into the shared build. What
-M0 did not prove about gameplay correctness is still open: its playback
-diagnostic covered boot and idle only, so whether native and wasm compute
-identical results *during play* remains untested.
+tripwire that catches anything client-only leaking into the shared build. It was
+re-verified from a `make clean` at the end of M2. What M0 did not prove about
+gameplay correctness is still open: its playback diagnostic covered boot and idle
+only, so whether native and wasm compute identical results *during play* remains
+untested.
 Full M0 boot log: [docs/m0/boot-evidence.log](docs/m0/boot-evidence.log).
-Next: M2 — playable single-player against the AI.
+Next: M3 — audio.
 
 ## Build and run it
 
@@ -103,7 +165,9 @@ source deps/emsdk/emsdk_env.sh
 # fetch the .wasm and .data, and the page says so instead of starting.
 make -f web/Makefile client -j8
 python3 -m http.server 8000 --directory web/dist-m1
-# then open http://localhost:8000/armagetronad.html and press Play
+# then open http://localhost:8000/armagetronad.html and press Play.
+# Language menu -> first-run setup -> a tutorial match against three AIs.
+# Arrow keys steer; there is no sound yet (M3) and nothing is saved (M4).
 
 # The M0 dedicated server, under Node.
 make -f web/Makefile dedicated -j8
