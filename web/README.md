@@ -302,7 +302,7 @@ node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-chrome/console
 node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-firefox/console.log
 ```
 
-20 checks, exit 0 or 1. What passing means is narrow and the checker says so
+24 checks, exit 0 or 1. What passing means is narrow and the checker says so
 itself after the verdict: **non-zero PCM reached `SDL.audio.pushAudio`.** It is
 not a claim that the buffers were rendered to a device — `pushAudio` is
 upstream of the Web Audio graph, and the harness mutes Chrome and runs Firefox
@@ -311,7 +311,7 @@ headless — and it is not a claim that the mix is correct. Nobody has heard it.
 Two things make that verdict worth something, and both are re-runnable:
 
 ```sh
-# every check flips to FAIL under a targeted mutation: 20 mutations, 20 flips
+# every check flips to FAIL under a targeted mutation: 24 mutations, 24 flips
 node docs/evidence/m3-audio/prove-checks-can-fail.mjs docs/evidence/m3-audio/chrome-console.log
 
 # and a genuinely silent build fails the gate rather than passing it quietly
@@ -346,6 +346,16 @@ defaults.
   mislead someone reading a screenshot of this port. Mechanism, the three
   measurements that confirm it, and why `CAMERA_IN` is not a workaround:
   `docs/porting/browser-runtime-notes.md` § 11.
+- **The cockpit HUD's first draw within a round is erratic**, and nobody has
+  explained what it waits on. Screenshotting 5.5 s into a round finds the
+  instrument panel present in anywhere from one round of three to three of
+  three, varying **between runs of the same script on the same build**, in both
+  engines. Measured rather than guessed: `docs/evidence/m3-audio/README.md`,
+  "The missing cockpit HUD", scores seven runs with
+  `docs/evidence/m3-audio/cockpit-band.mjs`. It is **not** an M3 regression —
+  the M3 build reaches three of three — and the one plausible mechanism, M3's
+  per-callback mixing work landing on the main thread, is disproved there by a
+  run with that work removed on a byte-identical wasm. Open question for M4/M5.
 - **Sound is produced, but nobody has heard it.** As of M3 both shipped WAVs
   decode and non-zero PCM reaches `SDL.audio.pushAudio` continuously through a
   match — every buffer of every round, in Chrome and Firefox, measured in
