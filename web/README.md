@@ -349,13 +349,21 @@ defaults.
 - **The cockpit HUD's first draw within a round is erratic**, and nobody has
   explained what it waits on. Screenshotting 5.5 s into a round finds the
   instrument panel present in anywhere from one round of three to three of
-  three, varying **between runs of the same script on the same build**, in both
-  engines. Measured rather than guessed: `docs/evidence/m3-audio/README.md`,
-  "The missing cockpit HUD", scores seven runs with
+  three. **In Chrome that varies between runs of the same script on the same
+  build** — four Chrome runs scored 1/3, 1/3, 3/3 and 1/3. Firefox has only one
+  run per build, so same-build variance has not been observed there; what
+  Firefox shows is 2/3 on *both* builds, missing a different round in each.
+  Measured rather than guessed: `docs/evidence/m3-audio/README.md`, "The missing
+  cockpit HUD", scores 30 committed frames with
   `docs/evidence/m3-audio/cockpit-band.mjs`. It is **not** an M3 regression —
-  the M3 build reaches three of three — and the one plausible mechanism, M3's
-  per-callback mixing work landing on the main thread, is disproved there by a
-  run with that work removed on a byte-identical wasm. Open question for M4/M5.
+  the M3 build reaches three of three. The one plausible mechanism, M3's
+  per-callback mixing work landing on the main thread, is *narrowed* there
+  rather than dismissed: a run with the mixing **cost** removed on a
+  byte-identical wasm still scores 1/3, which rules that cost out — but the
+  audio callback, the open device and `pushAudio` all still run at 21.5/s in
+  that run, so "audio work on the main thread" as such is not excluded, and the
+  phenomenon is stochastic enough that one run cannot exclude a probabilistic
+  contribution anyway. Open question for M4/M5.
 - **Sound is produced, but nobody has heard it.** As of M3 both shipped WAVs
   decode and non-zero PCM reaches `SDL.audio.pushAudio` continuously through a
   match — every buffer of every round, in Chrome and Firefox, measured in

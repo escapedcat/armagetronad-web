@@ -322,15 +322,53 @@ per-callback mixing work on the **main thread** at 21.5 callbacks/second that
 did not exist in M2. So it was measured rather than filed under variance.
 
 The instrument is `cockpit-band.mjs` in this directory: it counts bright pixels
-in the bottom 110 rows of a frame, with no image library. It separates frames
-within an engine — Chrome 1242 = grid only, ≥2300 = cockpit; Firefox 0 = empty
-band, ≥2200 = cockpit — and both ends were confirmed by eye. It also agrees with
-M2's own prose about M2's own evidence, which says `firefox-04` has no cockpit
-in it: this scores that frame 0.
+in the bottom 110 rows of a frame, with no image library, and prints a verdict
+rather than leaving the rule in prose where it can go stale on its own.
+
+**The threshold is 1800, one value for both engines.** Over all 30 driving
+frames in `m2-gate/` and `m3-audio/`, the two classes are nowhere near each
+other — the highest no-cockpit frame scores **1242** and the lowest cockpit
+frame **2228** — so 1800 sits 45% above the one and 19% below the other:
+
+```
+no cockpit   0, 0, 0, 110, and 1242 nine times                    highest 1242
+cockpit      2228 2229 2233 2271 2288 2299 2302 2326 2365 2380
+             2690 3536 3542 3549 3632 3641 3669                    lowest 2228
+```
+
+An earlier revision of this file said "Chrome ≥2300, Firefox ≥2200" and **was
+falsified by its own table**: M2's committed `chrome-12` (2299), `chrome-13`
+(2288) and `chrome-14` (2271) all have the cockpit and all fall below 2300. The
+rule had been put one point above one of the two frames it was eye-anchored on.
+**Changing it to 1800 reclassifies nothing — every frame keeps the label it had,
+and no cell in the table below moves.**
+
+Six frames were read by a human eye, anchoring both ends in **both** engines.
+The earlier per-engine rule had all four of its anchors in Chrome, which left
+Firefox's positive threshold of 2200 sitting 1.3% under its lowest positive with
+nothing behind it:
+
+| | frame | score |
+|---|---|---|
+| cockpit | `m2-rerun/chrome-run3-round1-cockpit.png` | 2365 |
+| cockpit | `m2-gate/chrome-12-round3-driving-HUD-shows-enemies.png` | 2299 |
+| cockpit | `m2-rerun/firefox-round1-cockpit.png` | 2302 |
+| no cockpit | `m2-rerun/chrome-run1-round1-NO-cockpit.png` | 1242 |
+| no cockpit | `chrome-05-round3-driving.png` | 1242 |
+| no cockpit | `m2-rerun/firefox-round3-NO-cockpit.png` | 0 |
+
+It also agrees with M2's own prose about M2's own evidence, which says
+`firefox-04` has no cockpit in it: this scores that frame 0.
+
+**Every frame scored below is committed**, so the whole table is re-derivable —
+not only the rows whose pictures happened to survive a session:
 
 ```
 node docs/evidence/m3-audio/cockpit-band.mjs docs/evidence/m3-audio/m2-rerun/*.png
 ```
+
+prints all 15 `m2-rerun` scores with their verdicts, and exits non-zero if any
+verdict disagrees with the label in the filename.
 
 **M2's own gate script, unmodified, run five more times** — four Chrome, one
 Firefox — against this M3 build (`m2-rerun/`), scored at the same 5.5 s offset:
@@ -341,33 +379,49 @@ Firefox — against this M3 build (`m2-rerun/`), scored at the same 5.5 s offset
 | Chrome run 1 (M3 build) | 1242 | 3549 | 1242 | 1 of 3 |
 | Chrome run 2 (M3 build) | 1242 | 3542 | 1242 | 1 of 3 |
 | Chrome run 3 (M3 build) | **2365** | 3669 | **3641** | **3 of 3** |
-| Chrome, **silent bundle** (M3 build, no mixing work) | 1242 | 3536 | 1242 | 1 of 3 |
+| Chrome, **silent bundle** (M3 build, no mixing cost) | 1242 | 3536 | 1242 | 1 of 3 |
 | Firefox, M2's committed evidence (M2-era build) | **0** | 2228 | 2229 | 2 of 3 |
 | Firefox (M3 build) | 2302 | 2233 | **0** | 2 of 3 |
 
 **It varies run to run within a build.** Chrome run 3 on the M3 build reaches
 3 of 3 — the same as M2's committed evidence — so this build is not incapable of
 drawing it. `m2-rerun/chrome-run3-round1-cockpit.png` is that frame, with the
-full instrument panel, `Enemies: 3 Friends: 1` and `FPS: 60`; **that one was
-read by a human eye**, as were one Chrome 1242 frame and the M2-era Chrome `12`.
-On Firefox both builds score 2 of 3 and differ only in *which* round misses —
-M2's own evidence misses round 1, which its README already records, and the M3
+full instrument panel, `Enemies: 3 Friends: 1` and `FPS: 60`, and it was read by
+eye. On Firefox both builds score 2 of 3 and differ only in *which* round misses
+— M2's own evidence misses round 1, which its README already records, and the M3
 build misses round 3 instead.
 
-Two things this rules out rather than assumes:
+Two things this rules out, and the exact size of each:
 
 - **Not the audio gate's script.** The audio gate's own Firefox run has the
   cockpit in round 2 (`firefox-04-round2-driving.png` scores 2326), so that
   script draws it too when a run happens to.
-- **Not the per-callback mixing work.** The silent-bundle run removes exactly
+- **Not the per-callback mixing *cost*.** The silent-bundle run removes exactly
   that work — `eWavData::Mix` returns before its resampling loop when no WAV
-  decodes, on a **byte-identical wasm** — and still scores 1 of 3. If the mixing
-  cost were the mechanism, removing it should have restored the HUD. It did not.
+  decodes, on a **byte-identical wasm** — and still scores 1 of 3.
+
+**Read that second one narrowly, because it is narrow.** Three limits, all of
+which follow from evidence on this page:
+
+1. It refutes the **mixing cost**, not "M3 put audio work on the main thread".
+   The audio callback, the open device and `pushAudio` all still run at
+   21.5 callbacks/second in the silent bundle — the negative control counts
+   **1020 unpaused pushes** under the same lesion. Only the resampling inside
+   `eWavData::Mix` is gone.
+2. It is **one run against a stochastic phenomenon.** The same section shows the
+   same script and build producing 1/3, 1/3 and 3/3, so a single silent-bundle
+   run at 1/3 rules out a *deterministic* mechanism. It cannot exclude a
+   probabilistic contribution, and it is not claimed to.
+3. **The M2-era 3/3 is also a single run**, and it is the one the whole
+   "regression?" question started from.
+
+So: the mixing cost is not the cause, on the evidence here. Anything stronger
+than that sentence is not supported.
 
 The honest residual: **nobody has explained what the HUD's first draw actually
-waits on**, and this does not attempt to. It is an open question for M4/M5; the
-one plausible mechanism has been tested and found wanting, so nobody need
-re-derive it. It is not an M3 regression, and it is not fixed here because
+waits on**, and this does not attempt to. It is an open question for M4/M5, with
+the one plausible mechanism narrowed as above so nobody re-derives it. It is not
+an M3 regression — this build reaches 3 of 3 — and it is not fixed here because
 fixing it is outside M3.
 
 ### The no-regression check itself, in both engines
@@ -405,7 +459,7 @@ All three are in the transcript itself:
    observation rather than a silence. M1's Firefox transcript was read as clean
    when it was merely deaf (`docs/porting/browser-runtime-notes.md` section 9).
 3. **The game's own boot-time `console.error` lines** — the GL-emulation
-   warnings and the `tDirectories` relocation message, 8 of them per run in both
+   warnings and the `tDirectories` relocation message, 7 of them per run in both
    engines (**A11b**). A10 and A11 are absence claims over `console.error`, and
    an absence claim over a dead channel is worth nothing. Control 2 does not
    cover this one: an uncaught exception reaches the driver by a different route
@@ -423,12 +477,14 @@ All three are in the transcript itself:
 - **No claim about the audio rests on a screenshot.** Every audio figure comes
   from a transcript and is re-derivable with `check-audio-transcript.mjs`. The
   *only* conclusion here that involves looking at pictures is the cockpit-HUD
-  section, and it is backed by `cockpit-band.mjs`, which turns each frame into a
-  number — so that conclusion is re-derivable too. Four frames were additionally
-  read by a human eye to anchor the metric's two ends: `m2-rerun/`'s
-  `chrome-run3-round1-cockpit.png` and `chrome-run1-round1-NO-cockpit.png`, this
-  directory's `chrome-05-round3-driving.png`, and `m2-gate/`'s
-  `chrome-12-round3-driving-HUD-shows-enemies.png`.
+  section, and every frame it scores is committed — `cockpit-band.mjs` over
+  `m2-rerun/*.png` reproduces all 15 of that table's `m2-rerun` numbers, and the
+  remaining six come from `m2-gate/` and from this directory. An earlier
+  revision of this file made the same re-derivability claim while nine of the
+  table's scores rested on frames that existed only in a scratch directory; that
+  is fixed, and it is why the sentence now names where each number comes from.
+  Six frames were additionally read by a human eye to anchor the metric at both
+  ends in both engines; they are listed in the table in that section.
 - **Chrome runs with `--mute-audio` and Firefox headless.** The output end is
   deliberately silent in both. Nothing here could have been heard even in
   principle.

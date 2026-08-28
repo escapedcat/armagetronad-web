@@ -12,16 +12,38 @@
 // whole of the format Chrome and Firefox screenshots use (8-bit, RGB or RGBA,
 // non-interlaced).
 //
-// HOW TO READ THE NUMBER. It is not calibrated in the abstract; it separates
-// frames WITHIN one engine, because the two cameras leave different amounts of
-// grid in the band. Measured over the frames in this directory:
+// THE THRESHOLD, AND HOW IT WAS SET. Scored over all 30 driving frames in
+// docs/evidence/m2-gate/ and docs/evidence/m3-audio/, the two classes do not
+// overlap and are nowhere near each other:
 //
-//   Chrome    1242 = grid lines only, no cockpit    >= 2300 = cockpit present
-//   Firefox      0 = empty band, no cockpit         >= 2200 = cockpit present
+//   no cockpit   0 (x3), 110, 1242 (x9)                    highest: 1242
+//   cockpit      2228 2229 2233 2271 2288 2299 2302 2326
+//                2365 2380 2690 3536 3542 3549 3632 3641
+//                3669                                       lowest: 2228
 //
-// Both ends were confirmed by eye before the thresholds were written down, and
-// the metric agrees with M2's own prose about M2's own evidence: that README
-// says firefox-04 has no cockpit in it, and this scores that frame 0.
+// One threshold at 1800 therefore serves BOTH engines, with 45% headroom over
+// the highest negative and 19% under the lowest positive. An earlier revision
+// of this comment said "Chrome >= 2300, Firefox >= 2200" and was falsified by
+// its own table: M2's committed chrome-12 (2299), chrome-13 (2288) and
+// chrome-14 (2271) all have the cockpit and all sit under 2300. The rule had
+// been placed one point above one of the two frames it was eye-anchored on.
+// Changing it to 1800 reclassifies NOTHING -- every frame keeps the label it
+// already had.
+//
+// The two engines' negatives differ (Chrome's camera leaves 1242 pixels of grid
+// in the band, Firefox's leaves 0-110) but that only widens the margin, so the
+// per-engine split the earlier revision used bought nothing.
+//
+// EYE ANCHORS, both ends, both engines -- because a threshold nobody looked
+// through is just a number:
+//   cockpit      m2-rerun/chrome-run3-round1-cockpit.png     2365
+//                m2-gate/chrome-12-round3-...png             2299
+//                m2-rerun/firefox-round1-cockpit.png         2302
+//   no cockpit   m2-rerun/chrome-run1-round1-NO-cockpit.png  1242
+//                m3-audio/chrome-05-round3-driving.png       1242
+//                m2-rerun/firefox-round3-NO-cockpit.png         0
+// It also agrees with M2's own prose about M2's own evidence, which says
+// firefox-04 has no cockpit in it: this scores that frame 0.
 import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 
@@ -72,6 +94,8 @@ function decode(path) {
 // The cockpit band: the bottom 110 rows, where Scores / Rubber / Speed /
 // Brakes / Enemies are drawn. Without the cockpit this region holds only grid
 // lines, which are dim; the cockpit's text is near-white or saturated colour.
+const THRESHOLD = 1800;
+let bad = 0;
 for (const f of process.argv.slice(2)) {
   const { w, h, bpp, stride, out } = decode(f);
   let bright = 0;
@@ -80,5 +104,17 @@ for (const f of process.argv.slice(2)) {
       const i = y * stride + x * bpp;
       if (out[i] + out[i + 1] + out[i + 2] > 330) bright++;
     }
-  console.log(`${String(bright).padStart(6)}  ${f.split('/').slice(-2).join('/')}`);
+  // The verdict is printed, not left to the reader, so the rule cannot go stale
+  // separately from the numbers the way the 2300 one did. A filename claiming
+  // the opposite of the score is flagged rather than quietly disagreed with:
+  // the frames in this directory carry their label in their name, which makes
+  // that a free consistency check on the evidence.
+  const verdict = bright >= THRESHOLD ? 'cockpit' : 'no cockpit';
+  const claimed = /NO-cockpit/.test(f) ? 'no cockpit'
+                : /cockpit/.test(f)    ? 'cockpit' : null;
+  const clash = claimed && claimed !== verdict ? '   <- DISAGREES WITH FILENAME' : '';
+  console.log(`${String(bright).padStart(6)}  ${verdict.padEnd(10)}  `
+            + `${f.split('/').slice(-2).join('/')}${clash}`);
+  if (clash) bad++;
 }
+process.exit(bad === 0 ? 0 : 1);

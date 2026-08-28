@@ -124,6 +124,22 @@ check(D.probe_error === null && D.installed_at_ms !== null && D.spec !== null, '
       + `spec ${D.spec ? 'read' : 'MISSING'}) and reported no error `
       + `(probe_error: ${JSON.stringify(D.probe_error)})`);
 
+// EVERY OPTIONAL SUB-OBJECT OF THE PAYLOAD IS READ THROUGH ONE OF THESE, and
+// that is a rule, not a convenience. A malformed payload must produce FAIL
+// lines rather than a stack trace: a checker that dies on the first missing
+// field stops reporting the dozen checks after it, and the operator learns less
+// than if it had printed nothing at all. Fix round 1 guarded `D.spec` at A2 and
+// the crash simply MOVED to the next dereference (the A8 scheduling-lead note)
+// -- the site was patched and the class was not. Aliasing to {} makes a missing
+// field read as `undefined`, which formats as "undefined" and arithmetics to
+// NaN: both honest, neither fatal. The top-level catch at the bottom of this
+// file is the backstop for whatever these miss.
+const SP = D.spec ?? {};
+const WR = D.whole_run ?? {};
+const PG = D.pre_gesture ?? null;
+
+try {
+
 // ------------------------------------- A2: two instruments describe one device
 // The C++ side prints the spec SDL_OpenAudio actually handed back
 // (se_SoundInit's "[SND] device opened" line, which is deliberately unbudgeted
@@ -147,8 +163,8 @@ if (!dev || !D.spec) {
 } else {
   const [, hz, ch, depth, frames, shift] = dev;
   console.log(`device: C++ says ${hz} Hz, ${ch} ch, ${depth}, ${frames} frames/callback, `
-            + `SOUND_BUFFER_SHIFT ${shift}; JS says ${D.spec.freq} Hz, ${D.spec.channels} ch, `
-            + `${D.spec.bytesPerSample * 8}-bit, ${D.spec.samples} frames`);
+            + `SOUND_BUFFER_SHIFT ${shift}; JS says ${SP.freq} Hz, ${SP.channels} ch, `
+            + `${SP.bytesPerSample * 8}-bit, ${SP.samples} frames`);
   check(devLines.length === 1
         && Number(hz) === D.spec.freq
         && Number(ch) === D.spec.channels
@@ -158,8 +174,8 @@ if (!dev || !D.spec) {
         'A2',
         `the C++ device line and the JS probe describe the same 16-bit device `
         + `(${devLines.length} device line(s))`);
-  note(`the AudioContext runs at ${D.spec.ctxSampleRate} Hz while the device is `
-     + `${D.spec.freq} Hz, so Web Audio resamples every buffer. Nothing here depends on it.`);
+  note(`the AudioContext runs at ${SP.ctxSampleRate} Hz while the device is `
+     + `${SP.freq} Hz, so Web Audio resamples every buffer. Nothing here depends on it.`);
 }
 
 // -------------------------------- A3: the window starts at a real user gesture
@@ -245,8 +261,8 @@ if (W) {
   // these over the gesture-to-match-end window, and the two are not the same
   // span. Without both numbers side by side the comparison looks like a change.
   console.log(`  over the WHOLE run, for comparison with task 2's unwindowed figures: `
-            + `${D.whole_run.buffers_with_nonzero_pcm}/${D.whole_run.calls_unpaused} non-zero, `
-            + `peak ${D.whole_run.peak_abs_sample}`);
+            + `${WR.buffers_with_nonzero_pcm}/${WR.calls_unpaused} non-zero, `
+            + `peak ${WR.peak_abs_sample}`);
   // 0.5 and 1000 are deliberately far below both measured engines (0.835-0.838
   // and 5145-5467) and far above the pipeline negative control, which reads
   // exactly 0 and 0. The bar separates "sound" from "silence"; it does not pin
@@ -334,16 +350,16 @@ console.log('');
 if (W) {
   console.log(`push gaps in the window: p50 ${W.push_gap_ms.p50}ms, p99 ${W.push_gap_ms.p99}ms, `
             + `max ${W.push_gap_ms.max}ms   |   over the WHOLE run, including the `
-            + `pre-gesture region: max ${D.whole_run.push_gap_max_ms}ms`);
+            + `pre-gesture region: max ${WR.push_gap_max_ms}ms`);
   note(`scheduling lead: p50 ${W.latency_ms.p50}ms, max ${W.latency_ms.max}ms. Emscripten keeps `
      + `bufferingDelay + queued x bufferDuration = `
-     + `${Math.round(1000 * (D.spec.bufferingDelay + D.spec.queued * D.spec.bufferDurationSecs))}ms `
+     + `${Math.round(1000 * (SP.bufferingDelay + SP.queued * SP.bufferDurationSecs))}ms `
      + `of audio ahead of the clock, which is both the latency and the stall the device can survive.`);
   check(W.push_gap_ms.max !== null && W.push_gap_ms.max <= 1000, 'A8',
         `buffers arrive continuously through the match: worst gap between consecutive `
         + `unpaused pushAudio calls ${W.push_gap_ms.max}ms (bar: 1000ms)`);
-  if (D.whole_run.push_gap_max_ms > 1000)
-    note(`the UNWINDOWED worst gap is ${D.whole_run.push_gap_max_ms}ms. That is the suspended `
+  if (WR.push_gap_max_ms > 1000)
+    note(`the UNWINDOWED worst gap is ${WR.push_gap_max_ms}ms. That is the suspended `
        + `AudioContext before the first trusted key press, not a defect, and it is exactly why `
        + `A8 is measured over the window. This same check applied to the whole run would fail here.`);
 }
@@ -364,7 +380,7 @@ console.log('');
 if (W) {
   const st = W.ctx_states ?? {};
   console.log(`AudioContext state at each in-window push: ${JSON.stringify(st)}`);
-  const parked = D.pre_gesture ? D.pre_gesture.calls : 0;
+  const parked = PG ? PG.calls : 0;
   check(Object.keys(st).length > 0 && Object.keys(st).every((k) => k === 'running'),
         'A9',
         `every buffer in the window was handed to a RUNNING AudioContext `
@@ -374,12 +390,12 @@ if (W) {
              + `the check discriminates here.`
            : `This transcript recorded NO push while the context was parked, so the check `
              + `had nothing to discriminate against -- see the note below.`));
-  note(`whole run, including before the gesture: ${JSON.stringify(D.whole_run.ctx_states)}`);
-  if (D.pre_gesture)
-    note(`BEFORE the gesture: ${D.pre_gesture.calls} calls, `
-       + `${D.pre_gesture.buffers_with_nonzero_pcm} non-zero, peak `
-       + `${D.pre_gesture.peak_abs_sample}, worst gap ${D.pre_gesture.push_gap_max_ms}ms, states `
-       + `${JSON.stringify(D.pre_gesture.ctx_states)}. Reported, never asserted on: this region is `
+  note(`whole run, including before the gesture: ${JSON.stringify(WR.ctx_states)}`);
+  if (PG)
+    note(`BEFORE the gesture: ${PG.calls} calls, `
+       + `${PG.buffers_with_nonzero_pcm} non-zero, peak `
+       + `${PG.peak_abs_sample}, worst gap ${PG.push_gap_max_ms}ms, states `
+       + `${JSON.stringify(PG.ctx_states)}. Reported, never asserted on: this region is `
        + `the harness's own synthetic click, not the game.`);
   if (W.calls_paused) note(`${W.calls_paused} in-window calls arrived with SDL.audio.paused set; `
                          + `pushAudio returns immediately on those, so they are excluded above.`);
@@ -542,6 +558,23 @@ check(ctlThrow.length > 0, 'A19',
       + '"no [EXCEPTION]" is an observation rather than a silence');
 for (const h of ctlThrow.slice(0, 2)) console.log(`        ${h.trim().slice(0, 160)}`);
 
+// ----------------------------------------------------- the backstop, closed
+} catch (e) {
+  // The aliases above cover every optional sub-object of the payload that is
+  // read today. This catches the one the NEXT edit forgets. It is not a
+  // substitute for them: reaching here means the checks after the throw did not
+  // run, and AZ below turns that into a failure with their ids named. What it
+  // buys is that the operator gets a report ending in a verdict instead of a
+  // stack trace ending in nothing.
+  console.log('');
+  console.log(`FAIL  AE  the checker hit an internal error and stopped early: `
+            + `${e && e.message ? e.message : e}`);
+  console.log(`        ${(e && e.stack ? e.stack.split('\n')[1] : '').trim()}`);
+  console.log(`        This is a defect in check-audio-transcript.mjs, not a verdict on the `
+            + `transcript. The checks listed as NOT REACHED below were not evaluated.`);
+  failures++;
+}
+
 // ------------------------------- AZ: every check declared above actually ran
 // A1 exits early and loudly when the payload is missing. The guards further
 // down do not: A5/A5b/A6/A8/A9 sit inside `if (W)`, A7b inside `if (W && R)`,
@@ -549,7 +582,9 @@ for (const h of ctlThrow.slice(0, 2)) console.log(`        ${h.trim().slice(0, 1
 // makes four of them disappear from the output entirely, and a reader scanning
 // for FAIL sees a shorter list of passes. That is the difference between "this
 // was checked and held" and "this was not checked", and only one of them is
-// evidence -- so the declared list is checked against the emitted one.
+// evidence -- so the declared list is checked against the emitted one. It is
+// also what makes the catch above safe to have: an early exit cannot be
+// mistaken for a pass, because every unevaluated id is named here.
 console.log('');
 {
   const EXPECTED = ['A1', 'A2', 'A3', 'A4', 'A4b', 'A5', 'A5b', 'A6', 'A7', 'A7b',
