@@ -186,8 +186,9 @@ A successful run shows the game's language menu on the canvas within a few
 seconds of the click. Enter chooses a language, the first-run setup menu
 follows, Escape leaves it, and a tutorial match against three AI opponents
 starts. The arrow keys steer. What that looks like, in both browsers, is
-committed under `docs/evidence/m1-task7/` (menus, M1) and
-`docs/evidence/m2-gate/` (gameplay, M2).
+committed under `docs/evidence/m1-task7/` (menus, M1),
+`docs/evidence/m2-gate/` (gameplay, M2) and `docs/evidence/m3-audio/` (audio,
+M3).
 
 ### Expected browser-console noise
 
@@ -202,10 +203,18 @@ None of these is a failure:
   `python3 -m http.server` has none. **Any *other* 404 is a real failure**: it
   means an asset the page needs was not published.
 - `Trying to start sound. Just restart Armagetron Advanced in case of crash.` —
-  the game's own message. The audio device does open; nothing is ever loaded
-  into it. See *Known limitations*.
-- `The AudioContext was not allowed to start` — audio is M3's; the client does
-  not yet resume the context on the Play click.
+  the game's own message. The device does open, and as of M3 it is fed. See
+  *Known limitations*.
+- `[SND] device opened: …` and `[WAV] loaded …` — M3's own diagnostics, and the
+  only report of what `SDL_OpenAudio` actually handed back. Every `[WAV]`/`[SND]`
+  class is budgeted at 16 lines and then goes quiet, so **do not count them**;
+  `docs/evidence/m3-audio/check-audio-transcript.mjs` explains what that does to
+  a naive assertion.
+- `The AudioContext was not allowed to start` — Chrome only, and expected: the
+  client does not resume the context on the Play click, because a synthetic
+  click is not a user gesture. The first real key press resumes it. Firefox
+  says nothing here and instead simply stops asking for buffers, which is why
+  the M3 gate windows its measurement to the first *trusted* keydown.
 - `TODO: glShadeModel` — an Emscripten GL-emulation stub, not a crash.
 - `[L] …` lines — the ladder log, on because
   `web/webdefaults/autoexec.cfg` sets `CONSOLE_LADDER_LOG 1`. This is the
@@ -277,6 +286,44 @@ in sync with `web/tools/gameplay-gate.steps`: it is the record of what produced
 those numbers, and the evidence README lists the two things corrected in the live
 script since.
 
+### Re-running the M3 gate
+
+`web/tools/audio-gate.steps` is the **M3** gate: the same first-run flow and
+three-round match, with an in-page probe wrapped around `SDL.audio.pushAudio`
+instead of M2's per-frame sampler. Same server, same drivers:
+
+```sh
+node web/tools/drive-browser.mjs --headed --out /tmp/audio-chrome \
+     --script-file web/tools/audio-gate.steps
+node web/tools/drive-firefox.mjs         --out /tmp/audio-firefox \
+     --script-file web/tools/audio-gate.steps
+
+node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-chrome/console.log
+node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-firefox/console.log
+```
+
+20 checks, exit 0 or 1. What passing means is narrow and the checker says so
+itself after the verdict: **non-zero PCM reached `SDL.audio.pushAudio`.** It is
+not a claim that the buffers were rendered to a device — `pushAudio` is
+upstream of the Web Audio graph, and the harness mutes Chrome and runs Firefox
+headless — and it is not a claim that the mix is correct. Nobody has heard it.
+
+Two things make that verdict worth something, and both are re-runnable:
+
+```sh
+# every check flips to FAIL under a targeted mutation: 20 mutations, 20 flips
+node docs/evidence/m3-audio/prove-checks-can-fail.mjs docs/evidence/m3-audio/chrome-console.log
+
+# and a genuinely silent build fails the gate rather than passing it quietly
+node docs/evidence/m3-audio/check-audio-transcript.mjs \
+     docs/evidence/m3-audio/negative-control-chrome-console.log   # exits 1
+```
+
+`docs/evidence/m3-audio/README.md` has the numbers, the two traps the gate is
+built around (the untrusted-click AudioContext and the 16-line diagnostic
+budgets), and `make-silent-bundle.mjs`, which builds that silent bundle from
+`web/dist-m1` without a rebuild.
+
 `web/tools/menu-gate.steps` is the M1 gate, still re-runnable the same way with
 the filename swapped. It passes with ten screenshots, all ten different from each
 other, and a transcript with no `Stack overflow detected`, no `[EXCEPTION]`, no
@@ -299,10 +346,17 @@ defaults.
   mislead someone reading a screenshot of this port. Mechanism, the three
   measurements that confirm it, and why `CAMERA_IN` is not a workaround:
   `docs/porting/browser-runtime-notes.md` § 11.
-- **No sound.** The audio device opens and nothing is ever loaded into it:
-  `eWavData::Load()` short-circuits under Emscripten because the WAV loader is a
-  NULL-returning stub, and without that short-circuit a missing WAV throws and
-  makes it impossible to enter a round at all. M3.
+- **Sound is produced, but nobody has heard it.** As of M3 both shipped WAVs
+  decode and non-zero PCM reaches `SDL.audio.pushAudio` continuously through a
+  match — every buffer of every round, in Chrome and Firefox, measured in
+  `docs/evidence/m3-audio/`. `pushAudio` is *upstream* of the Web Audio graph,
+  so that is not the same as "the buffers were rendered to a device", and
+  nothing anywhere assesses whether the mix is *correct*: no audio has been
+  captured to a file and no human has listened. The two known gaps are that the
+  client does not resume the `AudioContext` on the Play click (the first key
+  press does it, via Emscripten's `autoResumeAudioContext`), and that the
+  voice limiter has only one voice of margin — it peaks at 9 against
+  `SOUND_SOURCES 10`.
 - **Nothing persists.** No IndexedDB yet, so every page load is a first run and
   the first-run setup menu appears every time. Worse, settings are not saved on
   tab close either — the `SDL_QUIT` path that calls `st_SaveConfig()` is
