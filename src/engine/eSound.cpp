@@ -101,13 +101,18 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     // in SDL_OpenAudio and hands the same block back every time, uninitialised
     // on the first pass and holding the previous callback's mix afterwards.
     //
-    // On the web client that is not a subtle glitch: no WAV ever loads (see
-    // eWavData::Load below), so NOTHING writes to the buffer at all, and
-    // uninitialised heap bytes get reinterpreted as signed 16-bit samples and
-    // scheduled straight into the Web Audio graph. The symptom is loud noise
-    // where the port intends silence. It also matters once M3 does load real
-    // sounds, because the "add into an unspecified buffer" hazard survives
-    // that change -- so this stays even when the Load() short-circuit goes.
+    // Under M2 that was not a subtle glitch. NO WAV COULD LOAD -- Load() was
+    // short-circuited (see eWavData::Load below) -- so nothing wrote to the
+    // buffer at all, and uninitialised heap bytes got reinterpreted as signed
+    // 16-bit samples and scheduled straight into the Web Audio graph. The
+    // symptom was loud noise where the port intended silence.
+    //
+    // M3 gave eWavData::Load a real WAV decoder, so wavs DO load now and the
+    // mixing paths below DO write. That removes the "nothing writes at all"
+    // case; it does NOT remove the reason for this memset, because the "add
+    // into a buffer whose prior contents are unspecified" hazard is unchanged
+    // -- Emscripten still hands back the previous callback's mix. So this
+    // stays. It outlived the short-circuit it was written alongside.
     //
     // BUT IT IS ONLY CORRECT FOR THE SDL_OpenAudio REGISTRATION. fill_audio
     // has a second one: Mix_SetPostMix( &fill_audio, NULL ) at :270. A *post*
@@ -406,7 +411,14 @@ eWavData::eWavData(const char * fileName,const char *alternative)
 
 #ifdef __EMSCRIPTEN__
 
+// Named rather than inherited, matching src/emscripten/eCompat.cpp: everything
+// this parser calls comes from one of these two. <stdio.h> for fopen/fread/
+// fseek/ftell/fclose/printf, <string.h> for the memcmp that matches chunk ids.
+// (free/malloc are already covered by this file's own <stdlib.h> at :40.) The
+// rest of eSound.cpp reaches memset and memcpy through a transitive include;
+// that is upstream's and is left alone, but new code should not add to it.
 #include <stdio.h>
+#include <string.h>
 
 // ---------------------------------------------------------------------------
 // The web client's WAV loader.
@@ -496,17 +508,30 @@ static bool se_WavReadU16( FILE * f, Uint16 & out )
     return true;
 }
 
-// Every diagnostic on the failure path goes through this budget. A malformed
-// or unreadable WAV is a real defect worth seeing once, but it does not stay
-// seen once: eSoundPlayer::Reset() calls Load() unconditionally -- it does
-// NOT consult loadError -- and so does the eSoundPlayer(w,loop=true)
-// constructor. Measured against a deliberately corrupted cyclrun.wav: a
-// permanently failing cycle_run produces EIGHT load attempts per round (four
-// cycles x constructor + Reset), in 26 ms, forever. The budget is what keeps
-// that from becoming a log flood emitted partly from the audio callback.
-static bool se_WavMayReport()
+// EVERY "[WAV]" line goes through a budget -- successes included, not just
+// failures -- because every one of them can be emitted from inside the audio
+// callback and none of them is bounded by anything else.
+//
+// Failures: eSoundPlayer::Reset() calls Load() unconditionally -- it does NOT
+// consult loadError -- and so does the eSoundPlayer(w,loop=true) constructor.
+// Measured against a deliberately corrupted cyclrun.wav: a permanently failing
+// cycle_run produces EIGHT load attempts per round (four cycles x constructor
+// + Reset), in 26 ms, forever.
+//
+// Successes: eWavData::Unload sets loadError = false and data = NULL, so the
+// next eWavData::Mix re-arms its `if( !loadError ) Load()` -- from fill_audio.
+// se_SoundExit -> UnloadAll runs on every SOUND_QUALITY change, so a load that
+// succeeds is not a once-per-program event either.
+//
+// The two have SEPARATE allowances so neither can starve the other: a flood of
+// failures must not be what hides the successful loads, and vice versa. When
+// an allowance runs out the lines simply stop -- absence of a later "[WAV]"
+// line means the budget is spent, NOT that no further load happened.
+static int se_wavFailureBudget = 16;
+static int se_wavSuccessBudget = 16;
+
+static bool se_WavMayReport( int & budget )
 {
-    static int budget = 16;
     if ( budget <= 0 )
         return false;
     --budget;
@@ -516,7 +541,7 @@ static bool se_WavMayReport()
 // Single exit for every "the file exists but I will not guess at it" case.
 static SDL_AudioSpec * se_WavReject( char const * file, char const * why, FILE * f, Uint8 * buffer )
 {
-    if ( se_WavMayReport() )
+    if ( se_WavMayReport( se_wavFailureBudget ) )
         printf( "[WAV] rejected %s: %s\n", file, why );
 
     if ( buffer )
@@ -647,8 +672,41 @@ static SDL_AudioSpec * SDLCALL SDL_LoadWAV( char const * file, SDL_AudioSpec * s
         return se_WavReject( file, "neither mono nor stereo", f, buffer );
     if ( 8 != bits && 16 != bits )
         return se_WavReject( file, "not 8 or 16 bits per sample", f, buffer );
-    if ( 0 == sampleRate )
-        return se_WavReject( file, "sample rate of zero", f, buffer );
+    // This is the last fmt field that reaches eWavData::Mix's arithmetic
+    // unchecked, and one end of the range hangs the audio callback.
+    //
+    // THE HANG IS THE SIGNED ONE. spec.freq is `int`, so a rate above INT_MAX
+    // arrives NEGATIVE. Mix clamps with `if (Speed<0) Speed=0;` BEFORE it
+    // applies `Speed *= spec.freq`, so the clamp does not catch it and Speed
+    // is never re-checked; `speed` goes negative; and eAudioPos::pos is Uint32
+    // (eSound.h), so `pos.pos += speed` unsigned-wraps to just under 2^32.
+    // The `pos.pos < samples` guard still keeps every read in bounds -- this
+    // is not a memory-safety bug -- but for a LOOPING player the outer
+    // `while (goon)` then walks `pos.pos -= samples` all the way down, about
+    // 2^32/samples iterations, and does it again on EVERY callback because the
+    // next `pos.pos += speed` re-wraps. Measured on this target with a rate of
+    // 0xF0000000 and Speed 1: spec.freq -268435456, speed -12174, pos.pos
+    // 4294955122, and 106302 outer iterations against cyclrun.wav's 40403
+    // samples -- 42949551 against a 100-sample file. The float-to-int
+    // conversion does not trap (speed stays well inside int), so this is a
+    // hang, not an abort. Same failure the empty-data-chunk rejection above
+    // exists to prevent.
+    //
+    // A large rate that is still POSITIVE does not hang -- measured: 3000000
+    // Hz gives speed 136 and ZERO outer iterations, because the walk costs
+    // only about speed/samples and `speed` cannot get far ahead of `samples`
+    // while it stays inside int. That half of the range is rejected because
+    // the parser's contract is to reject what it does not understand, not
+    // because it is dangerous: 3 MHz mono PCM is a corrupt field, and
+    // accepting it would play the sound at 136x.
+    //
+    // 192000 is the highest rate in common use and comfortably above the
+    // 22050/11025 this tree ships. It covers the signed case as a side effect,
+    // which is the property that actually matters.
+    if ( 0 == sampleRate || sampleRate > 192000 )
+        return se_WavReject( file, "sample rate outside 1..192000 Hz; above INT_MAX "
+                                   "it turns negative and hangs the mixer's loop",
+                             f, buffer );
 
     Uint32 const frame = Uint32( channels ) * Uint32( bits / 8 );
     if ( 0 != blockAlign && Uint32( blockAlign ) != frame )
@@ -675,9 +733,10 @@ static SDL_AudioSpec * SDLCALL SDL_LoadWAV( char const * file, SDL_AudioSpec * s
     *audio_buf = buffer;
     *audio_len = bufferLen;
 
-    printf( "[WAV] loaded %s: %u bytes, %d-bit %s @ %d Hz (fopen misses so far: %d)\n",
-            file, unsigned( bufferLen ), int( bits ),
-            ( 1 == channels ) ? "mono" : "stereo", int( sampleRate ), se_wavMisses );
+    if ( se_WavMayReport( se_wavSuccessBudget ) )
+        printf( "[WAV] loaded %s: %u bytes, %d-bit %s @ %d Hz (fopen misses so far: %d)\n",
+                file, unsigned( bufferLen ), int( bits ),
+                ( 1 == channels ) ? "mono" : "stereo", int( sampleRate ), se_wavMisses );
 
     // The caller tests `result != &spec`, so the identity matters, not just
     // non-NULL.
@@ -776,7 +835,7 @@ void eWavData::Load(){
 #if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
                 // Fail the load, never the process -- see the M3 note above.
                 // Both names were tried; there is nothing left to fall back to.
-                if ( se_WavMayReport() )
+                if ( se_WavMayReport( se_wavFailureBudget ) )
                     printf( "[WAV] load failed: neither %s nor %s could be read\n",
                             static_cast< char const * >( filename ),
                             static_cast< char const * >( filename_alt ) );
@@ -798,7 +857,7 @@ void eWavData::Load(){
             {
 #if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
                 // Fail the load, never the process -- see the M3 note above.
-                if ( se_WavMayReport() )
+                if ( se_WavMayReport( se_wavFailureBudget ) )
                     printf( "[WAV] load failed: neither %s nor the sound/expl.wav "
                             "stand-in could be read\n",
                             static_cast< char const * >( filename ) );
@@ -812,6 +871,21 @@ void eWavData::Load(){
 #endif
             }
             else
+                // UPSTREAM'S SILENT-PLACEHOLDER IDIOM, AND THE ONE IN-TREE
+                // PRODUCER OF THE SHAPE THE PARSER REFUSES TO LOAD. This keeps
+                // sound/expl.wav's buffer but reports zero bytes, so the
+                // eWavData ends up with data != NULL and samples == 0 -- the
+                // exact wav the "empty data chunk" rejection above (see the
+                // comment on it) exists to keep out of eWavData::Mix, because
+                // Mix's outer `while (goon)` cannot terminate on one when
+                // loop is true. Reachable only for gGame.cpp's intro/extro,
+                // which have no alternative filename; both are driven by the
+                // NON-looping eSoundPlayer(w) overload, which is the only
+                // reason this is safe. Anyone who makes them loop, or who
+                // copies this idiom for a looping sound, freezes the tab.
+                //
+                // New as of M3: under M2 no eWavData ever had data at all, so
+                // this line could not produce anything.
                 len=0;
         }
         /*
@@ -837,7 +911,7 @@ void eWavData::Load(){
         // on this port before, and because the alternative here is two more
         // throws on the fill_audio path (landmine 1). Drop the buffer so the
         // mixer cannot reinterpret bytes in a layout it has no case for.
-        if ( se_WavMayReport() )
+        if ( se_WavMayReport( se_wavFailureBudget ) )
             printf( "[WAV] load failed: %s decoded to unsupported format 0x%x; "
                     "the web client has no format conversion\n",
                     static_cast< char const * >( filename ),
