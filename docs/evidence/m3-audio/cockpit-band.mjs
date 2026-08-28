@@ -44,6 +44,14 @@
 //                m2-rerun/firefox-round3-NO-cockpit.png         0
 // It also agrees with M2's own prose about M2's own evidence, which says
 // firefox-04 has no cockpit in it: this scores that frame 0.
+//
+// WHAT IT IS NOT CALIBRATED FOR. All 30 frames come from one machine at
+// 1024x768 with Chrome 152 and Firefox 154. The band is a fixed 110 rows and
+// the count is an absolute pixel total, so BOTH scale with resolution: at a
+// different canvas size these numbers mean nothing and the threshold has to be
+// re-anchored by eye. It will print a confident verdict anyway -- it has no way
+// to know -- so check the frame size before believing it on frames from
+// anywhere but docs/evidence/.
 import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 
