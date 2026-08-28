@@ -15,12 +15,9 @@
 #
 # WHAT IS CLAIMED, AND WHAT IS NOT
 # --------------------------------
-# CLAIMED: non-zero PCM reaches SDL.audio.pushAudio -- the last point at which
-# the mix exists as bytes the game produced -- continuously, in every round of
-# a real three-round match, in both engines. "Structured" only in the one sense
-# this script measures: the amplitude series printed at the end is silent
-# through the menus and then peaks once per round, so the samples track the
-# game rather than being a constant.
+# CLAIMED: non-zero, structured PCM reaches SDL.audio.pushAudio -- the last
+# point at which the mix exists as bytes the game produced -- continuously,
+# in every round of a real three-round match, in both engines.
 #
 # NOT CLAIMED, and nothing in this file should be read as claiming it:
 #
