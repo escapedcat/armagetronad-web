@@ -176,8 +176,10 @@ the section to read before touching the renderer.
 - **Nothing persists.** Every page load is a first run, so the first-run setup
   menu appears every time and no setting or rebinding survives a reload. M4.
 - **It is 8,854,277 bytes of wasm** before any size work, and no page has been
-  deployed anywhere. M5. (**8,878,433 as of M3**: `eSound.cpp`'s WAV parser and
-  mixing repairs added 24,156 bytes. Still nothing deployed.)
+  deployed anywhere. M5. (**8,878,433 as of M3**: the WAV parser and mixing
+  repairs added 24,156 bytes — nearly all of it `eSound.cpp`, plus a near-zero
+  contribution from `eCompat.cpp` that was never measured apart. Still nothing
+  deployed.)
 
 M1 still holds: the client boots to a navigable menu with WebGL on a real GPU
 (Chrome reports `ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max)`, Firefox

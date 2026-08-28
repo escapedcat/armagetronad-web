@@ -41,10 +41,10 @@ node docs/evidence/m3-audio/check-audio-transcript.mjs docs/evidence/m3-audio/ch
 node docs/evidence/m3-audio/check-audio-transcript.mjs docs/evidence/m3-audio/firefox-console.log
 ```
 
-Both exit **0**, with 24 checks each: A1–A19 plus A4b, A5b, A7b and A11b, and
-AZ — which fails if any of the other 23 was silently *skipped* rather than run,
-because a check that vanishes behind a guard reads exactly like one that passed.
-The checker is the arbiter; everything below describes what it is checking.
+Both exit **0**, with 25 checks each: A1–A19 plus A4b, A5b, A7b, A7c and A11b,
+and AZ — which fails if any of the other 24 was silently *skipped* rather than
+run, because a check that vanishes behind a guard reads exactly like one that
+passed. The checker is the arbiter; everything below describes what it checks.
 
 ```
 node docs/evidence/m3-audio/check-audio-transcript.mjs \
@@ -146,7 +146,29 @@ pass both. **A5b** therefore asserts the *median* per-buffer peak (967 Chrome,
 990 Firefox; 0 in the negative control), and **A7b** asserts, per round, that the
 *quietest whole second* clears a floor — 1347 / 1146 / 1189 in Chrome and
 1227 / 1245 / 1018 in Firefox, against a bar of 300. A round cannot be mostly
-silent and still pass.
+silent and still pass. **A7's per-round bar is `nonzero_fraction === 1`, not
+≥0.8**, so "every buffer of every round" is now an assertion and not a reading
+of a printed number.
+
+### The one check that fails when there is too much sound
+
+Every assertion listed so far gets *more* satisfied as the buffer gets louder.
+That is a blind spot with a specific name: M3 task 2 turned `fill_audio`'s
+`memset` from unconditional into runtime-conditional (on `uses_sdl_mixer`), and
+if that condition is ever wrong the callback hands over uninitialised heap
+reinterpreted as S16 — the loud noise M2 produced. A5, A5b, A6, A7, A7b, A8, A9
+and A13 would all pass **harder** on that than they do on the real mix. M3
+created the first route back to that regression, so the gate needs a check that
+points the other way.
+
+**A7c** asserts that every whole second of the window *before round 1 begins* —
+the language menu, First Setup, the welcome message — is **exactly zero**. Not
+quiet: zero. Nothing in this configuration plays a sound before the match
+starts, so a non-zero sample there is something in the buffer the game did not
+put there. Measured: 7 zero seconds in Chrome, 7 in Firefox, and 7 in the
+negative control too, because silence is the one thing a silent build gets
+right. It is also the half of the steps file's "structured" claim that nothing
+else checked — A7b asserts the peaks, A7c asserts the silence between them.
 
 For comparison with M3 task 2's figures, which were taken over the whole run
 rather than this window, the checker also prints the unwindowed pair: Chrome
@@ -540,10 +562,23 @@ All three are in the transcript itself:
   renaming a file to agree with a wrong verdict passes silently. And it only
   inspects files with "cockpit" in the name — `cockpit-band.mjs
   docs/evidence/m2-gate/*.png` scores 36 frames, checks zero of them, and exits
-  0 having verified nothing. The labels in `m2-rerun/` do hold, but on separate
-  evidence: five read by eye and nine verified byte-identical to what the driver
-  wrote. The self-check is not what establishes them, and it should not be
-  quoted as though it were.
+  0 having verified nothing.
+
+  **How the 15 `m2-rerun/` labels are actually established: four by eye, eleven
+  by the tool.** The four are `chrome-run3-round1-cockpit.png` (2365),
+  `chrome-run1-round1-NO-cockpit.png` (1242), `firefox-round1-cockpit.png`
+  (2302) and `firefox-round3-NO-cockpit.png` (0) — the same four that anchor the
+  threshold. The other eleven are named from the tool's own verdict, which makes
+  the self-check circular for exactly those eleven: it confirms the tool agrees
+  with a name the tool produced. They sit 1242-or-below and 2233-or-above, far
+  from the bar, so nothing here turns on them — but the self-check is not what
+  establishes any of the 15, and it must not be quoted as though it were.
+
+  (An earlier revision of this bullet said "five read by eye and nine verified
+  byte-identical", which is 14 of 15 and wrong on both halves: four were read,
+  and the byte-identity was to scratch files that no longer exist, so it was not
+  re-derivable either. Same counting defect, in the paragraph whose whole job is
+  to say how the labels were established.)
 - **Roughly half the gate's payload is decorative — printed, never asserted.**
   A review fuzzed 221 malformed transcripts (every top-level key, every
   `window.*` and `spec.*` field, `per_round[0]`, each set to null / 5 / `"x"` /
@@ -552,14 +587,35 @@ All three are in the transcript itself:
   `install_polls`, `rounds_started`, `window.calls`, `window.calls_unpaused`,
   `window.calls_paused`, `window.buffers_with_nonzero_pcm`, `window.latency_ms`
   and all of `whole_run` and `pre_gesture` can be set to *any* value without
-  failing a check. This is by design — they are context for a reader, and the
-  claim is carried by `nonzero_fraction`, `maxabs.p50`, `peak_abs_sample` and
-  the per-round fields, which *are* asserted. The consequence is specific and
-  worth stating plainly: **the headline "853 of 1021 buffers" pair has no
-  checker behind it.** A5 asserts the *fraction*, and nothing verifies that the
-  fraction equals that numerator over that denominator. Quote the fraction, the
-  median and the peak with confidence; treat the raw counts as reported, not
-  checked.
+  failing a check.
+
+  **And so can five of the nine `per_round` fields** — `round`, `span_s`,
+  `calls_unpaused`, `buffers_with_nonzero_pcm` and `push_gap_max_ms`. An earlier
+  revision of this bullet said "the per-round fields, which *are* asserted",
+  which was false, and false in the direction that matters: it told the reader
+  the per-round counts were checked while warning that the window counts were
+  not. Demonstrated rather than inferred — setting all three rounds'
+  `calls_unpaused` to 999999, `buffers_with_nonzero_pcm` to 0 and `span_s` to
+  0.001 makes the checker print `round 1: 0.001s, 0/999999 buffers non-zero (1),
+  peak 4473` and still exit 0. The fuzz behind the 62 mutated `per_round[0]` as
+  a *whole object* and never its sub-fields, so this was invisible to it, and
+  the enumeration then read as exhaustive when it was not. That is the
+  milestone's recurring defect class showing up one last time, inside the
+  paragraph written to prevent it.
+
+  **So both headline count pairs are unchecked: "853 of 1021 buffers" over the
+  window, and "219/219 in every round".** A5 and A7 assert the *fractions*, and
+  nothing verifies that a fraction equals its printed numerator over its printed
+  denominator.
+
+  What **is** asserted: `window.nonzero_fraction`, `window.maxabs.p50`,
+  `window.peak_abs_sample`, and per round only `nonzero_fraction` — tightened to
+  **exactly 1**, so "every buffer of every round" is now an assertion rather
+  than a reading — and `peak_abs_sample`. `per_round.from_ms` and `to_ms` are
+  not asserted directly but decide the windows A4b, A7b and A7c are computed
+  over, so they are load-bearing rather than decorative. Quote the fractions,
+  the median and the peaks with confidence; treat every raw count as reported,
+  not checked.
 - **Chrome runs with `--mute-audio` and Firefox headless.** The output end is
   deliberately silent in both. Nothing here could have been heard even in
   principle.

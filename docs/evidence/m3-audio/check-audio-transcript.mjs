@@ -42,11 +42,21 @@
 // anything, which is how M1's Firefox transcript was misread
 // (docs/porting/browser-runtime-notes.md section 9).
 //
-// EVERY CHECK IS ID'd (A1..A19) so that
+// "STRUCTURED" IS ASSERTED, NOT JUST ASSERTED-ABOUT. Both halves of it:
+// A7b requires every whole second inside every round to clear an amplitude
+// floor, and A7c requires every whole second BEFORE round 1 to be exactly zero.
+// A7c is the only check in this file that fails when there is too MUCH signal,
+// and it is the only one that could see the regression M3 newly made possible
+// -- task 2 turned fill_audio's memset runtime-conditional, and uninitialised
+// heap played as S16 would satisfy every other assertion here more emphatically
+// than the real mix does.
+//
+// EVERY CHECK IS ID'd (A1..A19, plus A4b/A5b/A7b/A7c/A11b, plus AZ) so that
 // docs/evidence/m3-audio/prove-checks-can-fail.mjs can mutate a transcript,
 // re-run this file, and demonstrate that each one individually flips to FAIL.
 // An assertion never shown to fail is not evidence; that rule is M2's and it
-// applies to its own checker too.
+// applies to its own checker too. One route, AE, is not covered by that tool
+// and cannot be -- see the prover's header for why, and for the by-hand test.
 
 import { readFileSync } from 'node:fs';
 
@@ -316,13 +326,26 @@ for (const r of R) {
 // The per-round bar is higher than the overall one, not lower, and that is not
 // a mistake: the window includes the menus between the first key press and the
 // first round, where silence is CORRECT and drags the overall fraction to
-// ~0.83. Inside a round the engine sound loops continuously, and both engines
-// measure a per-round fraction of exactly 1.000 -- every single buffer.
+// ~0.83. Inside a round the engine sound loops continuously.
+//
+// THE BAR IS EXACTLY 1, NOT 0.8, AND THAT IS A DELIBERATE TIGHTENING. "Every
+// buffer of every round" is the strongest sentence this milestone makes, and at
+// 0.8 it was a READING of a number rather than a checked claim -- a regression
+// to 0.85 would have passed this check while the README went on printing the
+// sentence. Measured 1.000 in every per-round window of every run ever taken on
+// this build: two gate runs here, two more at M3 exit, both engines each time.
+//
+// If this ever fails, the right response is to find out WHY a round contained a
+// callback with no live voice -- not to lower the bar back to 0.8. A single
+// short buffer is a real change in behaviour and worth stopping on; if it turns
+// out to be legitimate, the sentence in the README has to change with the bar,
+// because the two are now the same statement. The peaks are reported alongside
+// so a near-miss (0.995) is legible as a near-miss rather than as a collapse.
 check(R.length >= 3
-      && R.every((r) => r.nonzero_fraction >= 0.8 && r.peak_abs_sample >= 500),
+      && R.every((r) => r.nonzero_fraction === 1 && r.peak_abs_sample >= 500),
       'A7',
-      `EVERY round carried near-continuous non-zero PCM: fractions `
-      + `${R.map((r) => r.nonzero_fraction).join(', ')} (bar: 0.8 each), peaks `
+      `EVERY round carried non-zero PCM in EVERY buffer: fractions `
+      + `${R.map((r) => r.nonzero_fraction).join(', ')} (bar: exactly 1 each), peaks `
       + `${R.map((r) => r.peak_abs_sample).join(', ')} (bar: 500 each)`);
 
 // A7 has the same blind spot A5/A6 had, one level down: a round of dither with
@@ -357,6 +380,51 @@ if (W && R.length >= 3) {
           `no round has a quiet second in it: quietest whole-second peak per round `
           + `${mins.map((m) => m.min).join(', ')} (bar: ${FLOOR} each, over `
           + `${mins.map((m) => m.n).join('/')} whole seconds)`);
+
+    // ------------------- A7c: SILENCE WHERE SILENCE IS CORRECT
+    //
+    // THE ONLY CHECK HERE THAT CAN FAIL BECAUSE THERE IS TOO MUCH SOUND, and
+    // the gate was blind without it. Every other assertion in this file gets
+    // MORE satisfied as the buffer gets louder -- A5, A5b, A6, A7, A7b, A8, A9
+    // and A13 would all pass harder on a buffer full of noise than they do on
+    // the real mix.
+    //
+    // That matters specifically because of what M3 changed. Task 2 turned
+    // fill_audio's `memset` from unconditional into runtime-conditional (on
+    // `uses_sdl_mixer`). If that condition is ever wrong, the callback hands
+    // over uninitialised heap reinterpreted as S16 -- which is exactly the loud
+    // noise M2 produced, and which this gate would have reported as a healthier
+    // result than success. M3 created the first route back to that regression;
+    // this is the check that can see it.
+    //
+    // WHAT IT ASSERTS: the whole seconds of the window BEFORE round 1 begins --
+    // the language menu, First Setup and the welcome message -- are EXACTLY
+    // zero. Not "quiet": zero. Nothing in this configuration plays a sound
+    // before the match starts (the one menu-era voice, moviesounds/intro.wav,
+    // is the len = 0 stand-in that produces no samples), so any non-zero sample
+    // there is something in the buffer that the game did not put there.
+    //
+    // This is also the half of the steps file's "structured" claim that nothing
+    // else checked: "silent through the menus and then peaks once per round".
+    // A7b asserts the peaks; this asserts the silence.
+    //
+    // Measured: exactly 7 zero seconds in Chrome and in Firefox, and 7 in the
+    // negative control too -- silence is the one thing a silent build gets
+    // right, which is why this check passing there is correct and not a
+    // weakness. `n >= 3` stops it going vacuous if a future script shortens the
+    // menu phase; today n is 7.
+    const preN = Math.floor((R[0].from_ms - W.from_ms) / 1000);
+    const pre = [];
+    for (let k = 0; k < preN; k++) pre.push(series[k] ?? 0);
+    const loud = pre.filter((v) => v !== 0);
+    console.log(`before round 1: ${pre.length} whole seconds of window, peaks `
+              + `[${pre.join(',')}]`);
+    check(pre.length >= 3 && loud.length === 0, 'A7c',
+          `the menus are EXACTLY silent -- the same instrument that reports the sound `
+          + `reads 0 in all ${pre.length} whole seconds before round 1 `
+          + `(${loud.length} non-zero). This is the only check here that fails when there `
+          + `is too MUCH signal, and the only one that can see uninitialised heap being `
+          + `played`);
   }
 }
 
@@ -609,7 +677,7 @@ for (const h of ctlThrow.slice(0, 2)) console.log(`        ${h.trim().slice(0, 1
 console.log('');
 {
   const EXPECTED = ['A1', 'A2', 'A3', 'A4', 'A4b', 'A5', 'A5b', 'A6', 'A7', 'A7b',
-                    'A8', 'A9', 'A10', 'A11', 'A11b', 'A12', 'A13', 'A14',
+                    'A7c', 'A8', 'A9', 'A10', 'A11', 'A11b', 'A12', 'A13', 'A14',
                     'A15', 'A16', 'A17', 'A18', 'A19'];
   // Snapshot before calling check(), which appends AZ itself.
   const seen    = emitted.slice();

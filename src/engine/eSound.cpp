@@ -593,7 +593,14 @@ eWavData::eWavData(const char * fileName,const char *alternative)
 #undef SDL_LoadWAV
 #endif
 
-#ifdef __EMSCRIPTEN__
+// Spelled as the compound guard rather than a bare `#ifdef __EMSCRIPTEN__`,
+// even though it is nested inside the `#ifndef DEDICATED` opened just above and
+// the two are equivalent here. The reason is the rule this file states at the
+// `errorName` declaration further down: grepping for the guard must find every
+// site it governs, and a bare form hides the single largest addition M3 made to
+// this file from that grep. Behaviour is unchanged -- verified by the dedicated
+// object's md5 being byte-identical across this edit.
+#if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
 
 // The parser's <stdio.h> and <string.h> now live at the top of the file, in
 // the include block beside upstream's <stdlib.h>, because M3 task 2 added a
@@ -1007,6 +1014,21 @@ void eWavData::Load(){
     // PLAN.md's M3 note calls this block "M3's to delete". Deleting it without
     // guarding the throws would have re-armed both of them on the fill_audio
     // path; see docs/superpowers/plans/2026-08-28-m3-audio.md landmines 1-2.
+    //
+    // "NOTHING HERE MAY THROW" MEANS tGenericException, NOT EVERY THROW, and
+    // the enumeration above is only honest if it says so. All four
+    // tGenericException sites in this function are compiled out under
+    // Emscripten -- but `operator new` remains a throw source on this path and
+    // is not removable: each GetReadPath() call below constructs a
+    // tArray<tString>, a tString and an std::ifstream, up to three times per
+    // attempt, and Load() runs from fill_audio, where an escaping exception is
+    // a process abort rather than a caught error.
+    //
+    // Left as it is, deliberately. std::bad_alloc in a browser tab is a dead
+    // end whatever catches it -- the heap that failed to grow is the same heap
+    // any handler would need -- so the defensible claim is that this path is
+    // no-throw for the failures something could be done about, and the
+    // enumeration names exactly those rather than implying it covers all.
 
 #ifndef DEDICATED
 

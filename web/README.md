@@ -141,12 +141,26 @@ because M5's size budget was drawn against those):
 | `armagetronad.html` | 10,061 B | 10,061 B | the page. It is `web/shell.html`, passed to `--shell-file` |
 | `armagetronad.js` | 637,202 B | 637,202 B | the loader/glue: fetches the other two, sets up the runtime |
 | `armagetronad.wasm` | 8,878,433 B | 8,854,277 B | the game. Big because of Asyncify — see *Known limitations* |
-| `armagetronad.data` | 687,620 B | 683,791 B | the preloaded asset tree (config, language, textures, models, sound, maps) |
+| `armagetronad.data` | 688,393 B | 683,791 B | the preloaded asset tree (config, language, textures, models, sound, maps) |
 
-Both M3 deltas are accounted for and neither is an asset change: the wasm grew
-**24,156 B** from `eSound.cpp`'s WAV parser and mixing repairs, and the data
-grew **3,829 B** because `web/webdefaults/autoexec.cfg` — which is preloaded —
-gained the comment block arguing `SOUND_BUFFER_SHIFT` down from 3 to 1.
+Both M3 deltas are accounted for and neither is an asset change.
+
+The wasm grew **24,156 B**, and M3 changed **two** source files, not one:
+`src/engine/eSound.cpp` (the WAV parser and the mixing repairs — nearly all of
+the growth) and `src/emscripten/eCompat.cpp`, which *deleted* `SDL_LoadWAV_RW`
+and gave `SDL_FreeWAV` a one-line `free()` body. The second file's contribution
+is near zero and is plausibly negative, but it is not zero by construction, so
+the delta should not be attributed to `eSound.cpp` alone — an earlier revision
+of this file did, in all three places it quotes the figure. The two were never
+measured separately; if that ever matters, link each object in isolation rather
+than reasoning about it.
+
+The data grew **4,602 B** because `web/webdefaults/autoexec.cfg` — which is
+preloaded — gained the comment block arguing `SOUND_BUFFER_SHIFT` down from 3
+to 1, and later the correction recording that the sound menu offers five shift
+values while the measured table covers four different ones. Verified rather
+than inferred: the config grew 773 B in that second edit and the `.data` grew
+by exactly 773 B with the `.wasm` md5 unchanged.
 
 The directory name still says `m1`. It is where the client has lived since M1 and
 renaming it would break every path in this file, the harness scripts and the
@@ -311,7 +325,7 @@ node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-chrome/console
 node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-firefox/console.log
 ```
 
-24 checks, exit 0 or 1. What passing means is narrow and the checker says so
+25 checks, exit 0 or 1. What passing means is narrow and the checker says so
 itself after the verdict: **non-zero PCM reached `SDL.audio.pushAudio`.** It is
 not a claim that the buffers were rendered to a device — `pushAudio` is
 upstream of the Web Audio graph, and the harness mutes Chrome and runs Firefox
@@ -320,7 +334,7 @@ headless — and it is not a claim that the mix is correct. Nobody has heard it.
 Two things make that verdict worth something, and both are re-runnable:
 
 ```sh
-# every check flips to FAIL under a targeted mutation: 24 mutations, 24 flips
+# every check flips to FAIL under a targeted mutation: 25 mutations, 25 flips
 node docs/evidence/m3-audio/prove-checks-can-fail.mjs docs/evidence/m3-audio/chrome-console.log
 
 # and a genuinely silent build fails the gate rather than passing it quietly
@@ -336,13 +350,23 @@ budgets), and `make-silent-bundle.mjs`, which builds that silent bundle from
 **Before quoting a number the checker printed, know which kind it is.** Roughly
 half of the gate's JSON payload is *printed for context and never asserted on* —
 `install_polls`, `rounds_started`, `window.calls*`,
-`window.buffers_with_nonzero_pcm`, `window.latency_ms`, and all of `whole_run`
-and `pre_gesture` can be set to any value and the gate still exits 0 (a fuzz of
-221 malformed transcripts found 62 that do). That includes the headline
-"853 of 1021 buffers" pair: A5 asserts the non-zero *fraction*, and nothing
-checks that the fraction equals that numerator over that denominator. The
-fraction, the median per-buffer peak and the peak sample **are** checked. Quote
-those with confidence; treat the raw counts as reported rather than verified.
+`window.buffers_with_nonzero_pcm`, `window.latency_ms`, all of `whole_run` and
+`pre_gesture`, and **five of the nine `per_round` fields** (`round`, `span_s`,
+`calls_unpaused`, `buffers_with_nonzero_pcm`, `push_gap_max_ms`) can be set to
+any value and the gate still exits 0 (a fuzz of 221 malformed transcripts found
+62 that do, and the per-round five were demonstrated separately). That includes
+**both** headline count pairs: "853 of 1021 buffers" over the window *and*
+"219/219 in every round". A5 and A7 assert the non-zero *fractions*; nothing
+checks that a fraction equals its printed numerator over its printed
+denominator.
+
+What **is** checked: `window.nonzero_fraction`, `window.maxabs.p50`,
+`window.peak_abs_sample`, and per round only `nonzero_fraction` — now to
+**exactly 1**, so "every buffer of every round" is an assertion rather than a
+reading — and `peak_abs_sample`. `per_round.from_ms`/`to_ms` are not asserted
+directly but decide the windows A4b and A7b are computed over. Quote the
+fractions, the median and the peaks with confidence; treat every raw count as
+reported rather than verified.
 
 `web/tools/menu-gate.steps` is the M1 gate, still re-runnable the same way with
 the filename swapped. It passes with ten screenshots, all ten different from each
@@ -416,8 +440,11 @@ defaults.
   tab close either — the `SDL_QUIT` path that calls `st_SaveConfig()` is
   unreachable in the browser (`gArmagetron.cpp:840-844`). M4.
 - **The wasm is 8,878,433 bytes** as of M3, up from M2's 8,854,277 — M3's WAV
-  parser and mixing-path repairs in `eSound.cpp` cost **+24,156 bytes**, which
-  is the whole of the delta. Asyncify nearly triples the total (+5,888,604 over
+  parser and mixing-path repairs cost **+24,156 bytes**, which is the whole of
+  the delta. Nearly all of it is `src/engine/eSound.cpp`; `src/emscripten/
+  eCompat.cpp` also changed in that link (a deleted function and a one-line
+  `free()` body, so a near-zero and plausibly negative contribution) and the two
+  were never measured apart. Asyncify nearly triples the total (+5,888,604 over
   the same objects linked without it) and `-fexceptions` adds a further 827,185;
   both of those deltas were measured on the M2 tree and have not been re-taken.
   All are mandatory today. That is M5's size budget, and

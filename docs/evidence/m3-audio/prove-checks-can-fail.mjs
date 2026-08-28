@@ -35,6 +35,21 @@
 // ONE clause. So the proven statement is "every check ID can be made to fail",
 // not "every clause of every check has been shown to be load-bearing". Nobody
 // should upgrade the claim without adding the mutations that would earn it.
+//
+// AND IT DOES NOT COVER `AE`, THE 25TH FAILURE ROUTE -- structurally, not by
+// omission. AE is the checker's top-level catch: it fires when an unguarded
+// dereference throws, and it exists so a malformed payload produces a verdict
+// instead of a stack trace. This prover cannot test it, because the list of
+// ids it expects to see is seeded from the verdicts of the PASSING baseline,
+// and AE never appears in a passing baseline. The tool cannot even notice AE
+// is missing from its own coverage.
+//
+// So AE is verified by hand instead, and the method is recorded here rather
+// than left as a claim: feed the checker a payload whose `per_round` is a
+// number instead of an array (`5` will do). The `.map` over it throws, and the
+// expected output is `FAIL AE` naming the field, followed by `FAIL AZ` naming
+// every check that never ran, exit 1, and no stack trace. If that stops being
+// true, this comment is the only thing that will notice.
 
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -78,24 +93,29 @@ const insertAfterFirstRound = (...texts) => (ls) => {
 const dropLinesMatching = (needle) => (ls) =>
   ls.filter((l) => isHarness(l) || !l.includes(needle));
 
-// Silence one whole second in the middle of round 2 of the amplitude series --
-// the per-second peaks the per-round amplitude floor is computed from. The
-// index is derived from the payload in the same file rather than hardcoded, so
-// this targets a real round in whichever transcript it is handed.
-const silenceOneSecondOfRound2 = (ls) => {
+// Rewrite the per-second amplitude series in place. `fn` receives the array and
+// the parsed payload, so an index can be derived from the round boundaries in
+// the same file rather than hardcoded -- which is what lets these mutations
+// target a real round in whichever transcript they are handed.
+const editSeries = (fn) => (ls) => {
   const d = ls[dumpIndex(ls)];
   const D = JSON.parse(d.slice(d.indexOf('[AUDIODUMP] ') + 12));
-  const r = D.per_round[1];
-  const k = Math.floor(((r.from_ms + r.to_ms) / 2 - D.window.from_ms) / 1000);
   const i = ls.findIndex((l) => !isHarness(l) && l.includes('[AUDIOSERIES] '));
   if (i < 0) throw new Error('no [AUDIOSERIES] line');
   const at = ls[i].indexOf('[AUDIOSERIES] ') + 14;
   const series = JSON.parse(ls[i].slice(at));
-  series[k] = 0;
+  fn(series, D);
   const out = ls.slice();
   out[i] = ls[i].slice(0, at) + JSON.stringify(series);
   return out;
 };
+
+// Silence one whole second in the middle of round 2 -- the per-second peaks the
+// per-round amplitude floor is computed from.
+const silenceOneSecondOfRound2 = editSeries((s, D) => {
+  const r = D.per_round[1];
+  s[Math.floor(((r.from_ms + r.to_ms) / 2 - D.window.from_ms) / 1000)] = 0;
+});
 
 const editFirstLineMatching = (needle, fn) => (ls) => {
   const i = ls.findIndex((l) => !isHarness(l) && l.includes(needle));
@@ -139,6 +159,16 @@ const MUTATIONS = [
   ['A7b', 'one whole second in the middle of round 2 goes quiet, while that '
         + "round's buffer count and peak stay healthy",
    silenceOneSecondOfRound2],
+
+  // The regression this simulates is the one M3 newly made possible: fill_audio's
+  // memset is runtime-conditional since task 2, and if the condition goes wrong
+  // the callback plays uninitialised heap. That is LOUD, so every other check in
+  // the gate passes harder; only A7c, which requires the menus to be exactly
+  // silent, gets worse. One non-zero second before round 1 is what that looks
+  // like from the transcript.
+  ['A7c', 'a menu second before round 1 carries sound, as uninitialised heap '
+        + 'played through the device would',
+   editSeries((s) => { s[2] = 9000; })],
 
   ['A8', 'a 6 s hole opens in the buffer stream -- the size of the real '
        + 'suspended-context gap this windowing exists to exclude',
