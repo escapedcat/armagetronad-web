@@ -28,6 +28,13 @@
 // both WAVs made unloadable -- a genuinely silent build, whose transcript this
 // same checker rejects. See README.md; both are needed, and neither replaces
 // the other.
+//
+// WHAT "EVERY CHECK CAN FAIL" MEANS HERE, EXACTLY. One mutation per check ID.
+// Several checks are conjunctions -- A2 compares four device fields, A3 two
+// conditions, A12 two instruments, A13 four clauses -- and each mutation breaks
+// ONE clause. So the proven statement is "every check ID can be made to fail",
+// not "every clause of every check has been shown to be load-bearing". Nobody
+// should upgrade the claim without adding the mutations that would earn it.
 
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -68,6 +75,28 @@ const insertAfterFirstRound = (...texts) => (ls) => {
   return out;
 };
 
+const dropLinesMatching = (needle) => (ls) =>
+  ls.filter((l) => isHarness(l) || !l.includes(needle));
+
+// Silence one whole second in the middle of round 2 of the amplitude series --
+// the per-second peaks the per-round amplitude floor is computed from. The
+// index is derived from the payload in the same file rather than hardcoded, so
+// this targets a real round in whichever transcript it is handed.
+const silenceOneSecondOfRound2 = (ls) => {
+  const d = ls[dumpIndex(ls)];
+  const D = JSON.parse(d.slice(d.indexOf('[AUDIODUMP] ') + 12));
+  const r = D.per_round[1];
+  const k = Math.floor(((r.from_ms + r.to_ms) / 2 - D.window.from_ms) / 1000);
+  const i = ls.findIndex((l) => !isHarness(l) && l.includes('[AUDIOSERIES] '));
+  if (i < 0) throw new Error('no [AUDIOSERIES] line');
+  const at = ls[i].indexOf('[AUDIOSERIES] ') + 14;
+  const series = JSON.parse(ls[i].slice(at));
+  series[k] = 0;
+  const out = ls.slice();
+  out[i] = ls[i].slice(0, at) + JSON.stringify(series);
+  return out;
+};
+
 const editFirstLineMatching = (needle, fn) => (ls) => {
   const i = ls.findIndex((l) => !isHarness(l) && l.includes(needle));
   if (i < 0) throw new Error(`no line matching ${needle}`);
@@ -98,11 +127,18 @@ const MUTATIONS = [
   ['A5', 'most buffers are silent',
    editDump((D) => { D.window.nonzero_fraction = 0.1; })],
 
+  ['A5b', 'the typical buffer drops to dither while the peak stays healthy',
+   editDump((D) => { D.window.maxabs.p50 = 3; })],
+
   ['A6', 'the peak amplitude collapses to dither',
    editDump((D) => { D.window.peak_abs_sample = 12; })],
 
   ['A7', 'one round of three carries no sound, while the overall figures stay healthy',
    editDump((D) => { D.per_round[1].buffers_with_nonzero_pcm = 0; D.per_round[1].nonzero_fraction = 0; })],
+
+  ['A7b', 'one whole second in the middle of round 2 goes quiet, while that '
+        + "round's buffer count and peak stay healthy",
+   silenceOneSecondOfRound2],
 
   ['A8', 'a 6 s hole opens in the buffer stream -- the size of the real '
        + 'suspended-context gap this windowing exists to exclude',
@@ -119,6 +155,10 @@ const MUTATIONS = [
 
   ['A11', 'pushAudio throws internally',
    insertAfterFirstRound('[console.error] Web Audio API error playing back audio: TypeError: deliberate')],
+
+  ['A11b', 'the console.error channel A10 and A11 are absence claims over goes '
+         + 'dark, so their silence would prove nothing',
+   dropLinesMatching('[console.error]')],
 
   ['A12', 'the payload reports two completed rounds',
    editDump((D) => { D.rounds_won = 2; })],
@@ -150,6 +190,14 @@ const MUTATIONS = [
      const s = ls.findIndex((l) => l.includes('positive-control-deliberate'));
      return ls.filter((l, i) => !(i > s && l.includes('[EXCEPTION]')));
    }],
+
+  // AZ is the meta-check: it catches checks that were SKIPPED rather than
+  // failed. Nulling the window is the way that actually happens -- seven checks
+  // live behind `if (W)` guards and would otherwise vanish from the output with
+  // no FAIL line anywhere. A4 legitimately fails alongside it, and is reported.
+  ['AZ', 'the payload has no window, so seven checks are silently skipped '
+       + 'instead of failing',
+   editDump((D) => { D.window = null; })],
 ];
 
 // --------------------------------------------------------------------- drive

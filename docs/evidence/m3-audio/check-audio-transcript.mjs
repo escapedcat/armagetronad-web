@@ -68,7 +68,17 @@ const ladder = game
   .filter(Boolean);
 
 let failures = 0;
-const check = (ok, id, text) => { if (!ok) failures++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${id}  ${text}`); };
+// Every id that actually got a verdict. Several checks live inside `if (W)` or
+// `if (dev)` guards, and a guard that is not taken makes a check VANISH from
+// the output rather than fail -- which reads, to anyone scanning for the word
+// FAIL, exactly like a check that passed. AZ at the bottom compares this list
+// against the declared one, so a silently skipped check is itself a failure.
+const emitted = [];
+const check = (ok, id, text) => {
+  emitted.push(id);
+  if (!ok) failures++;
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${id}  ${text}`);
+};
 const note  = (text) => console.log(`note      ${text}`);
 
 // The driver stamps every line with its own wall clock as it receives it,
@@ -103,8 +113,15 @@ if (!D) {
 }
 console.log(`probe: installed at ${D.installed_at_ms}ms after ${D.install_polls} polls; `
           + `spec ${JSON.stringify(D.spec)}`);
-check(D.probe_error === null, 'A1',
-      `the probe wrapped SDL.audio.pushAudio and reported no error `
+// All three clauses, because the label claims all three. `probe_error` alone is
+// not enough: if the 50 ms poll never found SDL.audio, the wrapper was never
+// installed, nothing ever threw, and `S.err` stays null -- so a payload from a
+// probe that did nothing at all would satisfy a probe_error-only test. A2 would
+// still catch it downstream, but a check whose sentence is wider than its test
+// is how a gate ends up meaning less than it says.
+check(D.probe_error === null && D.installed_at_ms !== null && D.spec !== null, 'A1',
+      `the probe wrapped SDL.audio.pushAudio (installed at ${D.installed_at_ms}ms, `
+      + `spec ${D.spec ? 'read' : 'MISSING'}) and reported no error `
       + `(probe_error: ${JSON.stringify(D.probe_error)})`);
 
 // ------------------------------------- A2: two instruments describe one device
@@ -119,8 +136,14 @@ console.log('');
 const devLines = game.filter((l) => l.includes('[SND] device opened:'));
 const dev = devLines.length ? /(\d+) Hz, (\d+) ch, (\S+?), (\d+) frames\/callback.*SOUND_BUFFER_SHIFT (\d+)/
   .exec(devLines[0]) : null;
-if (!dev) {
-  check(false, 'A2', 'se_SoundInit printed a parseable "[SND] device opened" line');
+// D.spec is guarded alongside dev: without it every comparison below is a
+// dereference of null, and the operator gets a stack trace where they should
+// get a FAIL line. A checker that crashes still exits non-zero, but it stops
+// telling you which claim broke, which is the only reason to run it.
+if (!dev || !D.spec) {
+  check(false, 'A2', `se_SoundInit printed a parseable "[SND] device opened" line `
+                   + `(${devLines.length} found) and the probe read a device spec `
+                   + `(${D.spec ? 'yes' : 'MISSING'})`);
 } else {
   const [, hz, ch, depth, frames, shift] = dev;
   console.log(`device: C++ says ${hz} Hz, ${ch} ch, ${depth}, ${frames} frames/callback, `
@@ -209,21 +232,38 @@ if (!W || R.length < 3) {
   }
 }
 
-// ------------------------------------------------- A5, A6: THE CLAIM ITSELF
+// -------------------------------------------- A5, A5b, A6: THE CLAIM ITSELF
 console.log('');
 if (W) {
   console.log(`PCM in the window: ${W.buffers_with_nonzero_pcm}/${W.calls_unpaused} unpaused `
             + `pushAudio calls carried a non-zero sample (${W.nonzero_fraction}), peak `
             + `${W.peak_abs_sample}/32768 = ${(100 * W.peak_abs_sample / 32768).toFixed(1)}% of `
             + `full scale; per-buffer peak p10/p50/p90 = ${W.maxabs.p10}/${W.maxabs.p50}/${W.maxabs.p90}`);
-  // 0.5 and 1000 are deliberately far below both measured engines (0.86-0.9 and
-  // 4500-5400) and far above the pipeline negative control, which reads exactly
-  // 0 and 0. The bar is set to separate "sound" from "silence", not to pin down
-  // a level nobody has judged.
+  // The unwindowed pair, printed rather than asserted on, because it is what a
+  // reader comparing against M3 task 2's figures (1028/1193 Chrome,
+  // 1022/1191 Firefox) actually wants: those were measured over the whole run,
+  // these over the gesture-to-match-end window, and the two are not the same
+  // span. Without both numbers side by side the comparison looks like a change.
+  console.log(`  over the WHOLE run, for comparison with task 2's unwindowed figures: `
+            + `${D.whole_run.buffers_with_nonzero_pcm}/${D.whole_run.calls_unpaused} non-zero, `
+            + `peak ${D.whole_run.peak_abs_sample}`);
+  // 0.5 and 1000 are deliberately far below both measured engines (0.835-0.838
+  // and 5145-5467) and far above the pipeline negative control, which reads
+  // exactly 0 and 0. The bar separates "sound" from "silence"; it does not pin
+  // down a level, because nobody has judged the level.
   check(W.nonzero_fraction >= 0.5, 'A5',
         `most buffers carry sound: non-zero fraction ${W.nonzero_fraction} (bar: 0.5)`);
+  // A5 and A6 together are still satisfiable by dither plus one loud buffer:
+  // A5 counts buffers containing ANY non-zero sample, and A6 reads the single
+  // loudest sample in the window. Neither says anything about the TYPICAL
+  // buffer. The median per-buffer peak does, and it is the cheapest statistic
+  // that a stream of ones cannot fake -- 967 (Chrome) and 990 (Firefox) here,
+  // 0 in the negative control.
+  check(W.maxabs.p50 !== null && W.maxabs.p50 >= 300, 'A5b',
+        `the TYPICAL buffer carries real amplitude, not dither: median per-buffer peak `
+        + `${W.maxabs.p50} (bar: 300)`);
   check(W.peak_abs_sample >= 1000, 'A6',
-        `the peak is well clear of dither: ${W.peak_abs_sample}/32768 (bar: 1000)`);
+        `the loudest buffer is well clear of dither: ${W.peak_abs_sample}/32768 (bar: 1000)`);
 }
 
 // ------------------------------------------------- A7: every round, not just one
@@ -247,6 +287,41 @@ check(R.length >= 3
       `EVERY round carried near-continuous non-zero PCM: fractions `
       + `${R.map((r) => r.nonzero_fraction).join(', ')} (bar: 0.8 each), peaks `
       + `${R.map((r) => r.peak_abs_sample).join(', ')} (bar: 500 each)`);
+
+// A7 has the same blind spot A5/A6 had, one level down: a round of dither with
+// one loud buffer in it satisfies both a fraction of 1.0 and a peak of 4000.
+// The per-round payload carries no median, but the amplitude series does carry
+// the loudest sample of every whole second of the window -- so requiring the
+// QUIETEST whole second of each round to clear a floor is an amplitude
+// statement about the round rather than about its best moment. Whole seconds
+// fully inside the round only; the partial seconds at either end are dropped
+// rather than counted as a dip.
+if (W && R.length >= 3) {
+  const serLine = game.find((l) => l.includes('[AUDIOSERIES] '));
+  let series = null;
+  if (serLine) {
+    try { series = JSON.parse(serLine.slice(serLine.indexOf('[AUDIOSERIES] ') + 14)); }
+    catch { /* reported as a failure below */ }
+  }
+  if (!Array.isArray(series)) {
+    check(false, 'A7b', 'the transcript carries a parseable [AUDIOSERIES] amplitude series');
+  } else {
+    const FLOOR = 300;
+    const mins = R.map((r) => {
+      const k0 = Math.ceil((r.from_ms - W.from_ms) / 1000);
+      const k1 = Math.floor((r.to_ms - W.from_ms) / 1000) - 1;
+      const secs = [];
+      for (let k = k0; k <= k1; k++) secs.push(series[k] ?? 0);
+      return { round: r.round, n: secs.length, min: secs.length ? Math.min(...secs) : null };
+    });
+    console.log(`quietest whole second of each round: `
+              + mins.map((m) => `r${m.round} ${m.min} (${m.n}s)`).join(', '));
+    check(mins.every((m) => m.n >= 5 && m.min !== null && m.min >= FLOOR), 'A7b',
+          `no round has a quiet second in it: quietest whole-second peak per round `
+          + `${mins.map((m) => m.min).join(', ')} (bar: ${FLOOR} each, over `
+          + `${mins.map((m) => m.n).join('/')} whole seconds)`);
+  }
+}
 
 // ------------------------------------------------- A8: continuity, and the artifact
 // The bar is 1000 ms: about six times the worst gap either engine has produced
@@ -274,17 +349,31 @@ if (W) {
 }
 
 // ------------------------------- A9: handed to a RUNNING context, not a parked one
-// Still not proof that anything was rendered -- see the header. But it removes
-// the one alternative explanation the transcript can rule out: that the buffers
-// were pushed into a context whose clock was not moving.
+// Still not proof that anything was rendered -- see the header.
+//
+// AND IT IS ONLY LOAD-BEARING WHERE THE PARKED REGION CONTAINS PUSHES. A9 rules
+// out "the buffers went into a context whose clock was not moving" exactly to
+// the extent that this transcript ever recorded a push while the context was
+// parked. Measured: Firefox does (5 pre-gesture pushes, all reported
+// `suspended`, all zero PCM), so there A9 is a real discrimination. Chrome
+// makes ZERO pre-gesture pushes -- a suspended context stops Emscripten asking
+// for buffers at all -- so every Chrome reading is from after the gesture and
+// could not have been anything but `running`. The pre_gesture note printed
+// below is what tells the two cases apart, so read it before quoting A9.
 console.log('');
 if (W) {
   const st = W.ctx_states ?? {};
   console.log(`AudioContext state at each in-window push: ${JSON.stringify(st)}`);
+  const parked = D.pre_gesture ? D.pre_gesture.calls : 0;
   check(Object.keys(st).length > 0 && Object.keys(st).every((k) => k === 'running'),
         'A9',
         `every buffer in the window was handed to a RUNNING AudioContext `
-        + `(states seen: ${Object.keys(st).join(', ') || 'none'})`);
+        + `(states seen: ${Object.keys(st).join(', ') || 'none'}). `
+        + (parked > 0
+           ? `This transcript recorded ${parked} push(es) while the context was parked, so `
+             + `the check discriminates here.`
+           : `This transcript recorded NO push while the context was parked, so the check `
+             + `had nothing to discriminate against -- see the note below.`));
   note(`whole run, including before the gesture: ${JSON.stringify(D.whole_run.ctx_states)}`);
   if (D.pre_gesture)
     note(`BEFORE the gesture: ${D.pre_gesture.calls} calls, `
@@ -296,7 +385,7 @@ if (W) {
                          + `pushAudio returns immediately on those, so they are excluded above.`);
 }
 
-// ------------------------------------------- A10, A11: what Emscripten itself says
+// -------------------------------------- A10, A11, A11b: what Emscripten itself says
 // Emscripten's own ASSERTIONS-gated warning is the independent second opinion
 // on continuity: pushAudio compares currentTime against nextPlayTime on every
 // call and warns when the device ran dry. It arrives on console.error, so it is
@@ -309,6 +398,26 @@ for (const [id, needle, what] of [
   const hits = lines.filter((l) => !isHarness(l) && l.includes(needle));
   check(hits.length === 0, id, `${what} (no "${needle}", ${hits.length} hits)`);
   for (const h of hits.slice(0, 3)) console.log(`        ${h.trim().slice(0, 160)}`);
+}
+// A10 and A11 are absence claims over ONE channel, and an absence claim over a
+// dead channel is worth nothing. A19's control does not cover this one: an
+// uncaught exception reaches the driver through a different route entirely
+// (Runtime.exceptionThrown on CDP, an error-level log entry on BiDi), so a
+// driver change that stopped capturing console API calls would leave A19
+// passing while A10 and A11 went quiet for the wrong reason.
+//
+// Both strings above are emitted by Emscripten's err(), which is console.error.
+// So are the GL-emulation warnings and the tDirectories relocation message the
+// game prints at boot -- the SAME function on the SAME channel, unprompted,
+// every run. Requiring at least one of them present is therefore an on-channel
+// liveness control, not a proxy for one.
+{
+  const errs = game.filter((l) => l.includes('[console.error]'));
+  check(errs.length > 0, 'A11b',
+        `the console.error channel that A10 and A11 are absence claims over is LIVE in `
+        + `this transcript (${errs.length} [console.error] lines in the run half), so their `
+        + `silence is an observation rather than a dead subscription`);
+  for (const h of errs.slice(0, 2)) console.log(`        ${h.trim().slice(0, 140)}`);
 }
 
 // --------------------------------- A12: the audio was measured during a real match
@@ -389,10 +498,16 @@ console.log('');
   for (const [n, h] of hits.slice(0, 5)) console.log(`        ${n}: ${h.trim().slice(0, 150)}`);
 }
 
+// Scoped to browser-reported network lines on purpose -- both drivers prefix
+// them "[browser." -- so the label says that rather than "every 404". A "404"
+// in game output or in an eval payload is not a failed fetch and should not be
+// read as one; the price is that this cannot see a 404 the browser did not
+// report, which is why drive-firefox.mjs subscribes to network.responseCompleted.
 const notFound    = game.filter((l) => /\b404\b/.test(l) && l.includes('[browser.'));
 const badNotFound = notFound.filter((l) => !l.includes('/favicon.ico'));
 check(badNotFound.length === 0, 'A16',
-      `every 404 is /favicon.ico (${notFound.length} total, ${badNotFound.length} other)`);
+      `every BROWSER-REPORTED 404 is /favicon.ico (${notFound.length} total, `
+      + `${badNotFound.length} other)`);
 for (const h of badNotFound.slice(0, 5)) console.log(`        ${h.trim().slice(0, 160)}`);
 
 // A driver records an expired `until:` and keeps going -- deliberately, so a
@@ -427,9 +542,34 @@ check(ctlThrow.length > 0, 'A19',
       + '"no [EXCEPTION]" is an observation rather than a silence');
 for (const h of ctlThrow.slice(0, 2)) console.log(`        ${h.trim().slice(0, 160)}`);
 
+// ------------------------------- AZ: every check declared above actually ran
+// A1 exits early and loudly when the payload is missing. The guards further
+// down do not: A5/A5b/A6/A8/A9 sit inside `if (W)`, A7b inside `if (W && R)`,
+// A2's comparisons inside `if (dev && D.spec)`. A payload with a null `window`
+// makes four of them disappear from the output entirely, and a reader scanning
+// for FAIL sees a shorter list of passes. That is the difference between "this
+// was checked and held" and "this was not checked", and only one of them is
+// evidence -- so the declared list is checked against the emitted one.
+console.log('');
+{
+  const EXPECTED = ['A1', 'A2', 'A3', 'A4', 'A4b', 'A5', 'A5b', 'A6', 'A7', 'A7b',
+                    'A8', 'A9', 'A10', 'A11', 'A11b', 'A12', 'A13', 'A14',
+                    'A15', 'A16', 'A17', 'A18', 'A19'];
+  // Snapshot before calling check(), which appends AZ itself.
+  const seen    = emitted.slice();
+  const missing = EXPECTED.filter((id) => !seen.includes(id));
+  const extra   = seen.filter((id) => !EXPECTED.includes(id));
+  check(missing.length === 0 && extra.length === 0, 'AZ',
+        `all ${EXPECTED.length} declared checks were reached `
+        + `(${seen.length} emitted before this one`
+        + `${missing.length ? `; NOT REACHED: ${missing.join(', ')}` : ''}`
+        + `${extra.length ? `; undeclared: ${extra.join(', ')}` : ''})`);
+}
+
 console.log('');
 console.log(failures === 0 ? 'ALL CHECKS PASSED' : `${failures} CHECK(S) FAILED`);
-console.log('Passing means: non-zero PCM reached SDL.audio.pushAudio. It does NOT mean the');
+console.log(`${failures === 0 ? 'Passing means' : 'A pass would mean'}: non-zero PCM reached `
+          + `SDL.audio.pushAudio. It does NOT mean the`);
 console.log('buffers were rendered to a device (pushAudio is upstream of the Web Audio graph),');
 console.log('and it does NOT mean the mix is correct. Nobody has heard this.');
 process.exit(failures === 0 ? 0 : 1);

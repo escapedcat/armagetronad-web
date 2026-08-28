@@ -41,8 +41,10 @@ node docs/evidence/m3-audio/check-audio-transcript.mjs docs/evidence/m3-audio/ch
 node docs/evidence/m3-audio/check-audio-transcript.mjs docs/evidence/m3-audio/firefox-console.log
 ```
 
-Both exit **0**, with 20 checks each (A1–A19). The checker is the arbiter;
-everything below is a description of what it is checking.
+Both exit **0**, with 24 checks each: A1–A19 plus A4b, A5b, A7b and A11b, and
+AZ — which fails if any of the other 23 was silently *skipped* rather than run,
+because a check that vanishes behind a guard reads exactly like one that passed.
+The checker is the arbiter; everything below describes what it is checking.
 
 ```
 node docs/evidence/m3-audio/check-audio-transcript.mjs \
@@ -137,6 +139,21 @@ rather than 1.0 because the window also contains the seven seconds of menus
 between the first key press and the start of round 1, where silence is the
 correct answer.
 
+Counting buffers is not the same as measuring amplitude, and two checks say so.
+A5 counts buffers holding *any* non-zero sample and A6 reads the single loudest
+sample in the window; between them a stream of dither plus one loud buffer would
+pass both. **A5b** therefore asserts the *median* per-buffer peak (967 Chrome,
+990 Firefox; 0 in the negative control), and **A7b** asserts, per round, that the
+*quietest whole second* clears a floor — 1347 / 1146 / 1189 in Chrome and
+1227 / 1245 / 1018 in Firefox, against a bar of 300. A round cannot be mostly
+silent and still pass.
+
+For comparison with M3 task 2's figures, which were taken over the whole run
+rather than this window, the checker also prints the unwindowed pair: Chrome
+**1030/1198**, peak 5467; Firefox **1023/1192**, peak 5145. Task 2 measured
+1028/1193 and 1022/1191. Do not read the windowed and unwindowed numbers as a
+change — they are different spans of the same instrument.
+
 The 278 ms scheduling lead is not a free parameter: `queueNewAudioData` keeps
 `bufferingDelay + numSimultaneouslyQueuedBuffers x bufferDuration` =
 `0.05 + 5 x 0.0464` = 0.282 s of audio ahead of the clock. That single quantity
@@ -167,7 +184,7 @@ something else in the buffer; it is not a claim that they sound right.
 
 ## Falsifiability: two controls, because one is not enough
 
-### 1. Every check can be made to fail — 20 of 20
+### 1. Every check can be made to fail — 24 of 24
 
 ```
 node docs/evidence/m3-audio/prove-checks-can-fail.mjs docs/evidence/m3-audio/chrome-console.log
@@ -176,11 +193,19 @@ node docs/evidence/m3-audio/prove-checks-can-fail.mjs docs/evidence/m3-audio/chr
 Exits 0, and so does the same command against `firefox-console.log`. It applies
 one targeted mutation per check to a copy of the passing transcript, re-runs
 **the real checker** as a child process, and requires the targeted check to
-flip to FAIL. All 20 flip in both engines' transcripts, and — reported rather
-than assumed — each flips **in isolation**: no mutation took a second check
-down with it. It also refuses to run if the unmutated transcript does not pass,
-and fails if any check has no mutation aimed at it, so the list cannot rot by
-someone adding a check and forgetting the control for it.
+flip to FAIL. All 24 flip in both engines' transcripts, and — reported rather
+than assumed — 23 of them flip **in isolation**. The exception is AZ, whose
+mutation nulls the payload's window: that is the situation AZ exists for, and
+A4 legitimately fails alongside it. The prover prints collateral failures rather
+than hiding them. It also refuses to run if the unmutated transcript does not
+pass, and fails if any check has no mutation aimed at it, so the list cannot rot
+by someone adding a check and forgetting the control for it.
+
+**What that phrase means exactly:** one mutation per check *id*. Several checks
+are conjunctions — A2 compares four device fields, A13 has four clauses — and
+each mutation breaks one clause. So "every check can fail" is proven at the
+granularity of ids, not of clauses, and the prover's header says so where
+someone might be tempted to upgrade it.
 
 This proves a property of the *checker*. It says nothing about the game, which
 is why it is not the only control here.
@@ -204,11 +229,13 @@ Result (`negative-control-chrome-console.log`, checker exits **1**):
 
 ```
 PCM in the window: 0/1020 unpaused pushAudio calls carried a non-zero sample (0), peak 0/32768
-round 1: 0/220 buffers non-zero, peak 0        FAIL  A5  non-zero fraction 0 (bar: 0.5)
-round 2: 0/218 buffers non-zero, peak 0        FAIL  A6  peak 0/32768 (bar: 1000)
-round 3: 0/240 buffers non-zero, peak 0        FAIL  A7  fractions 0, 0, 0
-                                               FAIL  A13 neither WAV decoded
-                                               FAIL  A14 two budgets spent
+round 1: 0/220 buffers non-zero, peak 0    FAIL A5  non-zero fraction 0 (bar: 0.5)
+round 2: 0/218 buffers non-zero, peak 0    FAIL A5b median per-buffer peak 0 (bar: 300)
+round 3: 0/240 buffers non-zero, peak 0    FAIL A6  peak 0/32768 (bar: 1000)
+                                           FAIL A7  fractions 0, 0, 0
+                                           FAIL A7b quietest second 0, 0, 0
+                                           FAIL A13 neither WAV decoded
+                                           FAIL A14 two budgets spent
 ```
 
 **Exactly zero, over the same ~1020 unpaused calls at the same 278 ms lead**,
@@ -216,9 +243,9 @@ with all three rounds still completed, no exception and no hang. The plumbing
 is identical and only the content differs, which is the strongest form this
 control can take. Silence and success do not look the same to this measurement.
 
-Everything structural still passed in that run — A1–A4b, A8–A12, A15–A19 — so
-the failure is localised to the audio content rather than to the harness
-falling over, which is what makes it a control rather than a crash.
+Everything structural still passed in that run — A1–A4b, A8–A12, A11b, A15–A19
+and AZ — so the failure is localised to the audio content rather than to the
+harness falling over, which is what makes it a control rather than a crash.
 
 ## Two traps this gate is built around
 
@@ -283,34 +310,89 @@ fails accordingly — which is the check doing its job, not noise.
 | `06-after-the-match` | the post-match screen — the match ended at three rounds, which `SP_LIMIT_ROUNDS`' shipped default of 10 would not have done |
 | `07-after-deliberate-uncaught-error` | the page AFTER the script deliberately throws. The red failure banner is `web/shell.html` doing its job and is **expected in this shot only** |
 
-**The cockpit HUD is not in any of the driving shots, and that is not a
-finding.** Its first draw within a round varies run to run, which M2 already
-recorded (`docs/evidence/m2-gate/README.md`, on Firefox's `04`). That was
-checked here rather than assumed, because "it varies" is exactly the sort of
-thing that gets said instead of measured: M2's **own** gate script was re-run
-unmodified against this same M3 build, and the three
-`m2-gate-rerun-roundN-*.png` files in this directory are its driving shots at
-the same 5.5 s offset — **no cockpit in round 1, cockpit in round 2, no cockpit
-in round 3**. Same script, same build, same offset, different answer per round.
-
-That re-run also passes M2's checker unchanged (`m2-gate-rerun-console.log`):
-
-```
-node docs/evidence/m2-gate/check-transcript.mjs docs/evidence/m3-audio/m2-gate-rerun-console.log
--> ALL CHECKS PASSED
-   3 rounds completed, ai_team roster = 3 in all three,
-   frames-per-second median 60 / minimum 52 over 39.61 s,
-   0 non-zero glGetError out of 126 polls
-```
-
-So M3's audio work has not regressed anything M2 measured. That is a byproduct
-of chasing the missing HUD, and it is worth more than the HUD was.
-
 Nothing in `01`–`06` is staged or edited. `07` is a deliberate fault.
 
-## The two controls inside every run
+### The missing cockpit HUD: measured, not waved away
 
-Both are in the transcript itself, after the run:
+**The cockpit HUD is absent from all three Chrome driving shots**, and M2's
+committed Chrome evidence has it in all three (`m2-gate/README.md` lists it for
+`04`, `08` and `12`). `3/3 → 0/3` across a build change is consistent with M3
+having changed something, and there is a plausible mechanism: M3 put real
+per-callback mixing work on the **main thread** at 21.5 callbacks/second that
+did not exist in M2. So it was measured rather than filed under variance.
+
+The instrument is `cockpit-band.mjs` in this directory: it counts bright pixels
+in the bottom 110 rows of a frame, with no image library. It separates frames
+within an engine — Chrome 1242 = grid only, ≥2300 = cockpit; Firefox 0 = empty
+band, ≥2200 = cockpit — and both ends were confirmed by eye. It also agrees with
+M2's own prose about M2's own evidence, which says `firefox-04` has no cockpit
+in it: this scores that frame 0.
+
+```
+node docs/evidence/m3-audio/cockpit-band.mjs docs/evidence/m3-audio/m2-rerun/*.png
+```
+
+**M2's own gate script, unmodified, run five more times** — four Chrome, one
+Firefox — against this M3 build (`m2-rerun/`), scored at the same 5.5 s offset:
+
+| run | round 1 | round 2 | round 3 | cockpit in |
+|---|---|---|---|---|
+| Chrome, M2's committed evidence (**M2-era build**) | 2380 | 2301 | 2299 | **3 of 3** |
+| Chrome run 1 (M3 build) | 1242 | 3549 | 1242 | 1 of 3 |
+| Chrome run 2 (M3 build) | 1242 | 3542 | 1242 | 1 of 3 |
+| Chrome run 3 (M3 build) | **2365** | 3669 | **3641** | **3 of 3** |
+| Chrome, **silent bundle** (M3 build, no mixing work) | 1242 | 3536 | 1242 | 1 of 3 |
+| Firefox, M2's committed evidence (M2-era build) | **0** | 2228 | 2229 | 2 of 3 |
+| Firefox (M3 build) | 2302 | 2233 | **0** | 2 of 3 |
+
+**It varies run to run within a build.** Chrome run 3 on the M3 build reaches
+3 of 3 — the same as M2's committed evidence — so this build is not incapable of
+drawing it. `m2-rerun/chrome-run3-round1-cockpit.png` is that frame, with the
+full instrument panel, `Enemies: 3 Friends: 1` and `FPS: 60`; **that one was
+read by a human eye**, as were one Chrome 1242 frame and the M2-era Chrome `12`.
+On Firefox both builds score 2 of 3 and differ only in *which* round misses —
+M2's own evidence misses round 1, which its README already records, and the M3
+build misses round 3 instead.
+
+Two things this rules out rather than assumes:
+
+- **Not the audio gate's script.** The audio gate's own Firefox run has the
+  cockpit in round 2 (`firefox-04-round2-driving.png` scores 2326), so that
+  script draws it too when a run happens to.
+- **Not the per-callback mixing work.** The silent-bundle run removes exactly
+  that work — `eWavData::Mix` returns before its resampling loop when no WAV
+  decodes, on a **byte-identical wasm** — and still scores 1 of 3. If the mixing
+  cost were the mechanism, removing it should have restored the HUD. It did not.
+
+The honest residual: **nobody has explained what the HUD's first draw actually
+waits on**, and this does not attempt to. It is an open question for M4/M5; the
+one plausible mechanism has been tested and found wanting, so nobody need
+re-derive it. It is not an M3 regression, and it is not fixed here because
+fixing it is outside M3.
+
+### The no-regression check itself, in both engines
+
+All five re-runs pass M2's checker unchanged:
+
+```
+node docs/evidence/m2-gate/check-transcript.mjs docs/evidence/m3-audio/m2-rerun/chrome-run1-console.log
+```
+
+| run | verdict | rounds | ai_team roster | fps/s median, min | glGetError |
+|---|---|---|---|---|---|
+| Chrome run 1 | ALL CHECKS PASSED | 3 | 3, 3, 3 | 60, 52 | 0 / 126 |
+| Chrome run 2 | ALL CHECKS PASSED | 3 | 3, 3, 3 | 60, 52 | 0 / 126 |
+| Chrome run 3 | ALL CHECKS PASSED | 3 | 3, 3, 3 | 60, 52 | 0 / 126 |
+| Chrome, silent bundle | ALL CHECKS PASSED | 3 | 3, 3, 3 | 60, 53 | 0 / 126 |
+| Firefox | ALL CHECKS PASSED | 3 | 3, 3, 3 | 59, 56 | 0 / 120 |
+
+**M3's audio work has not regressed anything M2's gate measures**, over four
+Chrome runs and one Firefox run. That is a byproduct of chasing the missing HUD,
+and it is worth more than the HUD was.
+
+## The three controls inside every run
+
+All three are in the transcript itself:
 
 1. **`[AUDIOCONTROL] all-zero=>[0,0] three-non-zero=>[32767,3]`** — the probe's
    own scanner, the same function it calls per buffer, run over two hand-made
@@ -322,11 +404,31 @@ Both are in the transcript itself, after the run:
    engines (**A19**), which is what makes "no `[EXCEPTION]` during the run" an
    observation rather than a silence. M1's Firefox transcript was read as clean
    when it was merely deaf (`docs/porting/browser-runtime-notes.md` section 9).
+3. **The game's own boot-time `console.error` lines** — the GL-emulation
+   warnings and the `tDirectories` relocation message, 8 of them per run in both
+   engines (**A11b**). A10 and A11 are absence claims over `console.error`, and
+   an absence claim over a dead channel is worth nothing. Control 2 does not
+   cover this one: an uncaught exception reaches the driver by a different route
+   entirely (`Runtime.exceptionThrown` on CDP, an error-level log entry on
+   BiDi), so a driver change that stopped capturing console API calls would
+   leave A19 passing while A10 and A11 fell quiet for the wrong reason. These
+   lines come from Emscripten's `err()` — the *same function on the same
+   channel* as the starvation warning A10 watches for — so this is an on-channel
+   liveness control rather than a proxy for one.
 
 ## The caveats, in full
 
 - **`pushAudio` is upstream of the Web Audio graph.** Repeated because it is
   the caveat most likely to be dropped when this is quoted.
+- **No claim about the audio rests on a screenshot.** Every audio figure comes
+  from a transcript and is re-derivable with `check-audio-transcript.mjs`. The
+  *only* conclusion here that involves looking at pictures is the cockpit-HUD
+  section, and it is backed by `cockpit-band.mjs`, which turns each frame into a
+  number — so that conclusion is re-derivable too. Four frames were additionally
+  read by a human eye to anchor the metric's two ends: `m2-rerun/`'s
+  `chrome-run3-round1-cockpit.png` and `chrome-run1-round1-NO-cockpit.png`, this
+  directory's `chrome-05-round3-driving.png`, and `m2-gate/`'s
+  `chrome-12-round3-driving-HUD-shows-enemies.png`.
 - **Chrome runs with `--mute-audio` and Firefox headless.** The output end is
   deliberately silent in both. Nothing here could have been heard even in
   principle.
@@ -335,6 +437,22 @@ Both are in the transcript itself, after the run:
   `docs/evidence/m2-gate/README.md`. It does not touch `numAIs` or
   `limitRounds`, and no audio figure here depends on any of the six, but a
   busier arena would mix more voices.
+- **A9 is only load-bearing in Firefox.** "Every buffer went to a `running`
+  AudioContext" discriminates exactly to the extent that a transcript contains
+  pushes taken while the context was parked. Firefox has 5 such pushes, all
+  recorded `suspended`, so there the check is real. **Chrome makes zero pushes
+  before the gesture** — a parked context stops Emscripten asking for buffers
+  at all — so all 1021 Chrome readings come from after the gesture and could not
+  have been anything but `running`. The checker says which case it is in the
+  A9 line itself and prints the `pre_gesture` counts underneath.
+- **A14 is deliberately stricter than anything that depends on it.** No check in
+  this gate reads a non-zero `[WAV]`/`[SND]` count, so a spent budget cannot
+  actually corrupt a result today; A14 fails on it anyway, because the moment
+  one does read a count the failure would be silent. The cost is that a *longer*
+  match — more rounds, more AIs, a `SOUND_SOURCES` low enough to make the
+  limiter oscillate — could reach 16 lines with nothing wrong and fail the gate.
+  That is the same warning as the AI-count one below: if you change the match,
+  you have changed the experiment, and this is one of the places it shows.
 - **The voice limiter never engages in the shipped configuration.** `[SND] live
   voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)` in every run
   here. One voice of margin. Raising `SP_NUM_AIS`, or a player lowering

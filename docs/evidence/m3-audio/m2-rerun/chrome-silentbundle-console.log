@@ -1,0 +1,150 @@
+[   1162ms] [harness] chrome: Chrome/152.0.7977.65
+[   1166ms] [harness] navigating to http://localhost:8001/armagetronad.html
+[     49ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     52ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     56ms] [page] load event fired
+[     59ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8001/favicon.ico
+[    115ms] [console.error] warning: browser could not fully decode audio /data/sound/cyclrun.wav, trying slower base64 approach
+[    117ms] [console.error] warning: browser could not fully decode audio /data/sound/expl.wav, trying slower base64 approach
+[   1036ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   8041ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => "canvas 1024x768"
+[   8072ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   8073ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   8073ms] [console.error] 
+[   8074ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   8075ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   8075ms] [console.log] 
+[   8250ms] [console.log] [L] ENCODING latin1
+[   8263ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   8418ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   8445ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   8448ms] [console.error] TODO: glShadeModel
+[   8453ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8001/armagetronad.js
+[   8505ms] [harness] click #start: clicked
+[   8507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[   8507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[   8507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[   8507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[   8508ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[  14507ms] [harness] === first-run-flow-language-menu ===
+[  14570ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/01-language-menu.png
+[  14616ms] [harness] key Enter (1/1)
+[  17987ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/02-first-setup-menu.png
+[  17987ms] [harness] === escape-accepts-the-defaults-and-leaves-first-setup ===
+[  18020ms] [harness] key Escape (1/1)
+[  22389ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/03-welcome-message.png
+[  22389ms] [harness] === enter-dismisses-the-welcome-message-and-starts-the-match ===
+[  22415ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  22420ms] [console.log] [L] TEAM_CREATED web_user
+[  22420ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  22425ms] [console.log] [WAV] rejected /data/sound/expl.wav: not uncompressed PCM (fmt tag is not 1)
+[  22425ms] [console.log] [WAV] load failed: neither moviesounds/intro.wav nor the sound/expl.wav stand-in could be read
+[  22425ms] [console.log] [WAV] rejected /data/sound/expl.wav: not uncompressed PCM (fmt tag is not 1)
+[  22426ms] [console.log] [WAV] load failed: neither moviesounds/intro.wav nor the sound/expl.wav stand-in could be read
+[  22436ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  22437ms] [console.log] [L] NEW_ROUND 2026-08-28 14:45:58 UTC+0200
+[  22508ms] [console.log] [L] TEAM_CREATED ai_team
+[  22509ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  22509ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  22509ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  22512ms] [console.log] [WAV] rejected /data/sound/cyclrun.wav: not uncompressed PCM (fmt tag is not 1)
+[  22512ms] [console.log] [WAV] load failed: neither moviesounds/engine.wav nor sound/cyclrun.wav could be read
+[  22530ms] [console.log] [WAV] rejected /data/sound/cyclrun.wav: not uncompressed PCM (fmt tag is not 1)
+[  22530ms] [console.log] [WAV] load failed: neither moviesounds/engine.wav nor sound/cyclrun.wav could be read
+[  22531ms] [console.log] [WAV] rejected /data/sound/cyclrun.wav: not uncompressed PCM (fmt tag is not 1)
+[  22531ms] [console.log] [WAV] load failed: neither moviesounds/engine.wav nor sound/cyclrun.wav could be read
+[  22531ms] [console.log] [WAV] rejected /data/sound/cyclrun.wav: not uncompressed PCM (fmt tag is not 1)
+[  22532ms] [console.log] [WAV] load failed: neither moviesounds/engine.wav nor sound/cyclrun.wav could be read
+[  22532ms] [console.log] [WAV] rejected /data/sound/cyclrun.wav: not uncompressed PCM (fmt tag is not 1)
+[  22532ms] [console.log] [WAV] load failed: neither moviesounds/engine.wav nor sound/cyclrun.wav could be read
+[  22532ms] [console.log] [WAV] rejected /data/sound/cyclrun.wav: not uncompressed PCM (fmt tag is not 1)
+[  22532ms] [console.log] [WAV] load failed: neither moviesounds/engine.wav nor sound/cyclrun.wav could be read
+[  22553ms] [harness] key Enter (1/1)
+[  22554ms] [console.log] [WAV] retiring a voice on moviesounds/engine.wav: no sample data (loadError=1)
+[  22554ms] [console.log] [WAV] retiring a voice on sound/expl.wav: no sample data (loadError=1)
+[  22555ms] [console.log] [WAV] retiring a voice on moviesounds/engine.wav: no sample data (loadError=1)
+[  22555ms] [console.log] [WAV] retiring a voice on sound/expl.wav: no sample data (loadError=1)
+[  22555ms] [console.log] [WAV] retiring a voice on moviesounds/engine.wav: no sample data (loadError=1)
+[  22555ms] [console.log] [WAV] retiring a voice on sound/expl.wav: no sample data (loadError=1)
+[  22555ms] [console.log] [WAV] retiring a voice on moviesounds/engine.wav: no sample data (loadError=1)
+[  22555ms] [console.log] [WAV] retiring a voice on sound/expl.wav: no sample data (loadError=1)
+[  22555ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: no sample data (loadError=1)
+[  22556ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  22855ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  22855ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  22856ms] [harness] === ROUND-1-STARTED ===
+[  28413ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/04-round1-driving-HUD-shows-enemies.png
+[  28449ms] [harness] key Left (1/1)
+[  28455ms] [console.log] [WAV] retiring a voice on moviesounds/cycturn.wav: no sample data (loadError=1)
+[  28959ms] [console.log] [WAV] retiring a voice on moviesounds/cycturn.wav: no sample data (loadError=1)
+[  28959ms] [console.log] [WAV] retiring a voice on moviesounds/cycturn.wav: no sample data (loadError=1)
+[  30023ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/05-round1-after-LEFT.png
+[  30056ms] [harness] key Right (1/1)
+[  30079ms] [console.log] [WAV] retiring a voice on moviesounds/cycturn.wav: no sample data (loadError=1)
+[  30806ms] [console.log] [L] DEATH_FRAG web_user word
+[  30826ms] [console.log] [WAV] retiring a voice on moviesounds/dietron.wav: no sample data (loadError=1)
+[  31425ms] [console.log] [WAV] retiring a voice on moviesounds/cycturn.wav: no sample data (loadError=1)
+[  31569ms] [console.log] [WAV] retiring a voice on moviesounds/cycturn.wav: no sample data (loadError=1)
+[  31618ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/06-round1-after-RIGHT.png
+[  31619ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
+[  32588ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  32628ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
+[  32628ms] [harness] === ROUND-1-COMPLETE ===
+[  32728ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/07-round1-ended.png
+[  32728ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  36657ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  36658ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  36658ms] [console.log] [L] NEW_ROUND 2026-08-28 14:46:12 UTC+0200
+[  36663ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  36664ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  36666ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  36666ms] [harness] === ROUND-2-STARTED ===
+[  42223ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/08-round2-driving-HUD-shows-enemies.png
+[  42259ms] [harness] key Right (1/1)
+[  43814ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/09-round2-after-RIGHT.png
+[  43848ms] [harness] key Left (1/1)
+[  45076ms] [console.log] [L] DEATH_FRAG web_user excel
+[  45420ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/10-round2-after-LEFT.png
+[  45420ms] [harness] until 2x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
+[  46812ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  46835ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  46836ms] [harness] === ROUND-2-COMPLETE ===
+[  46932ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/11-round2-ended.png
+[  46932ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 60000ms, have 2)
+[  50894ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  50894ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  50895ms] [console.log] [L] NEW_ROUND 2026-08-28 14:46:27 UTC+0200
+[  50970ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  50970ms] [harness] === ROUND-3-STARTED ===
+[  56542ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/12-round3-driving-HUD-shows-enemies.png
+[  56579ms] [harness] key Left (1/1)
+[  58131ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/13-round3-after-LEFT.png
+[  58164ms] [harness] key Left (1/1)
+[  59733ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/14-round3-after-LEFT-again.png
+[  59733ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  60666ms] [console.log] [L] DEATH_SUICIDE web_user
+[  62046ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  62063ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
+[  62064ms] [harness] === ROUND-3-COMPLETE ===
+[  62157ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/15-round3-ended.png
+[  66116ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
+[  70219ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/16-after-the-match.png
+[  70227ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => "{\"total_frames_sampled\":3690,\"rounds_started\":3,\"rounds_won\":3,\"overall\":{\"span_s\":39.61,\"frames\":2367,\"mean_fps\":59.76,\"frame_ms\":{\"p50\":16.7,\"p90\":18.7,\"p99\":21.7,\"max\":46.2},\"inst_fps\":{\"median\":59.88,\"p10\":53.48,\"p01\":46.08,\"min\":21.65},\"fps_per_second\":[53,60,60,60,58,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,59,61,59,61,59,61],\"fps_per_second_min\":53,\"fps_per_second_median\":60},\"per_round\":[{\"span_s\":10.15,\"frames\":600,\"mean_fps\":59.11,\"frame_ms\":{\"p50\":16.7,\"p90\":18.1,\"p99\":21.7,\"max\":46.2},\"inst_fps\":{\"median\":59.88,\"p10\":55.25,\"p01\":46.08,\"min\":21.65},\"fps_per_second\":[53,60,60,60,58,60,60,60,60,60],\"fps_per_second_min\":53,\"fps_per_second_median\":60},{\"span_s\":10.15,\"frames\":609,\"mean_fps\":59.97,\"frame_ms\":{\"p50\":16.7,\"p90\":18.6,\"p99\":21.5,\"max\":24.4},\"inst_fps\":{\"median\":59.88,\"p10\":53.76,\"p01\":46.51,\"min\":40.98},\"fps_per_second\":[60,60,60,60,60,60,60,60,60,60],\"fps_per_second_min\":60,\"fps_per_second_median\":60},{\"span_s\":11.15,\"frames\":669,\"mean_fps\":59.99,\"frame_ms\":{\"p50\":16.8,\"p90\":19.2,\"p99\":21.8,\"max\":27.4},\"inst_fps\":{\"median\":59.52,\"p10\":52.08,\"p01\":45.87,\"min\":36.5},\"fps_per_second\":[60,60,60,60,60,60,60,60,60,60,60],\"fps_per_second_min\":60,\"fps_per_second_median\":60}]}"
+[  70228ms] [harness] === positive-control-deliberate-webgl-warning-follows ===
+[  70232ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+[  70232ms] [harness] eval (()=>{const c=document.createElement('canvas');const g=c.getContext('webgl');if(!g)return 'no webgl context for the control';g.hint(0x0C50,g.FASTEST);return 'deliberate bad glHint issued, gl.getError()=0x'+g.getError().toString(16)+' (0x500 == INVALID_ENUM)'})() => "deliberate bad glHint issued, gl.getError()=0x500 (0x500 == INVALID_ENUM)"
+[  70416ms] [console.log] [L] DEATH_TEAMKILL excel outlook
+[  71849ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/17-final-state.png
+[  71850ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const codes={};for(const g of S.gl)codes['0x'+g[1].toString(16)]=(codes['0x'+g[1].toString(16)]||0)+1;return JSON.stringify({glGetError_polls:S.polls,glGetError_nonzero:S.gl.length,codes:codes,first:S.gl.slice(0,5)})})() => "{\"glGetError_polls\":126,\"glGetError_nonzero\":0,\"codes\":{},\"first\":[]}"
+[  71851ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  71852ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 10250
+[  71852ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  71852ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  71852ms] [EXCEPTION] structured stack, 1 frames:
+[  71852ms]     <anonymous> @ :0:27
+[  73218ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  73218ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  73218ms] [console.log] [L] NEW_ROUND 2026-08-28 14:46:49 UTC+0200
+[  73218ms] [console.log] [L] NEW_MATCH 2026-08-28 14:46:49 UTC+0200
+[  73901ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/m2-silent/18-after-deliberate-uncaught-error.png

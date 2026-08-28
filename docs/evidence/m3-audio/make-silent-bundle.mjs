@@ -36,8 +36,17 @@ import { join } from 'node:path';
 const [src, dst] = process.argv.slice(2);
 if (!src || !dst) { console.error('usage: make-silent-bundle.mjs <dist dir> <output dir>'); process.exit(2); }
 
-mkdirSync(dst, { recursive: true });
-for (const f of readdirSync(src)) copyFileSync(join(src, f), join(dst, f));
+// Recursive, because a flat copyFileSync loop throws EISDIR the day the dist
+// grows a subdirectory -- and a control that dies while being built is one
+// nobody re-runs.
+const copyTree = (from, to) => {
+  mkdirSync(to, { recursive: true });
+  for (const e of readdirSync(from, { withFileTypes: true })) {
+    if (e.isDirectory()) copyTree(join(from, e.name), join(to, e.name));
+    else copyFileSync(join(from, e.name), join(to, e.name));
+  }
+};
+copyTree(src, dst);
 
 const dataPath = join(dst, 'armagetronad.data');
 const buf = readFileSync(dataPath);
@@ -45,11 +54,23 @@ const before = buf.length;
 
 // Walk every "WAVEfmt " header in the packed data file. Layout after the tag:
 // 4 bytes of chunk size, then the 2-byte audioFormat this rewrites.
+//
+// EVERY HEADER MUST READ 1 BEFORE IT IS TOUCHED, and that is the difference
+// between a control and a ritual. This lesion only means something if the file
+// it starts from is decodable: run against a dist whose WAVs were already
+// non-PCM, an unconditional write would produce a bundle that is silent for a
+// reason that predates the patch, and a checker failing on it would be
+// "proving" nothing. Refuse instead of assuming.
 let patched = 0;
 for (let i = 0; i + 12 < buf.length; i++) {
   if (buf.toString('latin1', i, i + 8) !== 'WAVEfmt ') continue;
   const at = i + 12;
   const was = buf.readUInt16LE(at);
+  if (was !== 1) {
+    console.error(`fmt tag at offset ${at} is ${was}, not 1 (uncompressed PCM). This dist's `
+                + `WAVs are not decodable to begin with, so silencing them would prove nothing.`);
+    process.exit(1);
+  }
   buf.writeUInt16LE(0x11, at);
   console.log(`  patched fmt tag at offset ${at}: ${was} -> 0x11 (IMA ADPCM)`);
   patched++;
