@@ -124,16 +124,37 @@ check(D.probe_error === null && D.installed_at_ms !== null && D.spec !== null, '
       + `spec ${D.spec ? 'read' : 'MISSING'}) and reported no error `
       + `(probe_error: ${JSON.stringify(D.probe_error)})`);
 
-// EVERY OPTIONAL SUB-OBJECT OF THE PAYLOAD IS READ THROUGH ONE OF THESE, and
-// that is a rule, not a convenience. A malformed payload must produce FAIL
-// lines rather than a stack trace: a checker that dies on the first missing
-// field stops reporting the dozen checks after it, and the operator learns less
-// than if it had printed nothing at all. Fix round 1 guarded `D.spec` at A2 and
-// the crash simply MOVED to the next dereference (the A8 scheduling-lead note)
-// -- the site was patched and the class was not. Aliasing to {} makes a missing
-// field read as `undefined`, which formats as "undefined" and arithmetics to
-// NaN: both honest, neither fatal. The top-level catch at the bottom of this
-// file is the backstop for whatever these miss.
+// A malformed payload must produce FAIL lines rather than a stack trace: a
+// checker that dies on the first missing field stops reporting the dozen checks
+// after it, and the operator learns less than if it had printed nothing at all.
+// Fix round 1 guarded `D.spec` at A2 and the crash simply MOVED to the next
+// dereference (the A8 scheduling-lead note) -- the site was patched and the
+// class was not. Aliasing to {} makes a missing field read as `undefined`,
+// which formats as "undefined" and arithmetics to NaN: both honest, neither
+// fatal.
+//
+// THE FILE USES TWO MECHANISMS, NOT ONE, AND THE COMMENT HERE USED TO CLAIM
+// OTHERWISE. It said "every optional sub-object of the payload is read through
+// one of these aliases", and the file does not do that -- a stated rule the
+// code does not follow is exactly the defect class this milestone kept hitting,
+// so it is corrected rather than quietly widened. What is actually true:
+//
+//   * aliased here, so a missing field degrades to undefined/NaN:
+//     `D.spec` -> SP, `D.whole_run` -> WR, `D.pre_gesture` -> PG,
+//     and `D.per_round` -> R (`?? []`, further down, next to W).
+//   * NOT aliased, and relying on a guard instead: `D.spec` is also
+//     dereferenced directly in A2 (`D.spec.freq` and friends), which is safe
+//     only because A2 sits behind an explicit `if (!dev || !D.spec)`.
+//   * NOT aliased and NOT guarded at the read: `D.window` -> W is a plain
+//     assignment. A null `window` is handled by the `if (!W || ...)` at A4 and
+//     by `if (W)` at the checks below, so it is safe in practice; anything it
+//     misses lands in the top-level catch as `FAIL AE`, with AZ naming every
+//     check that never ran.
+//
+// The backstop is what makes the difference between the three tolerable. It is
+// not an accident that it is there, and it is load-bearing: a review's fuzz of
+// 221 malformed transcripts produced zero raw stack traces and only exit codes
+// 0 and 1.
 const SP = D.spec ?? {};
 const WR = D.whole_run ?? {};
 const PG = D.pre_gesture ?? null;

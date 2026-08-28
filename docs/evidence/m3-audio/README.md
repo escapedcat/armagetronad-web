@@ -325,28 +325,70 @@ The instrument is `cockpit-band.mjs` in this directory: it counts bright pixels
 in the bottom 110 rows of a frame, with no image library, and prints a verdict
 rather than leaving the rule in prose where it can go stale on its own.
 
-**The threshold is 1800, one value for both engines.** Over all 30 driving
-frames in `m2-gate/` and `m3-audio/`, the two classes are nowhere near each
-other — the highest no-cockpit frame scores **1242** and the lowest cockpit
-frame **2228** — so 1800 sits 45% above the one and 19% below the other:
+**The threshold is 1800, one value for both engines.** Over **all 39** driving
+frames in `m2-gate/`, `m3-audio/` and `m2-rerun/`, the two classes do not
+overlap — the highest no-cockpit frame scores **1591** and the lowest cockpit
+frame **2198** — so 1800 sits 13% above the one and 18% below the other:
 
 ```
-no cockpit   0, 0, 0, 110, and 1242 nine times                    highest 1242
-cockpit      2228 2229 2233 2271 2288 2299 2302 2326 2365 2380
-             2690 3536 3542 3549 3632 3641 3669                    lowest 2228
+no cockpit   0 ×7, 2 ×2, 110, 1242 ×9, 1591                       highest 1591
+cockpit      2198 2228 2229 2233 2271 2288 2299 2301 2302 2326
+             2365 2380 2690 3536 3542 3549 3632 3641 3669          lowest 2198
 ```
+
+That is 20 + 19 = 39, and unlike the "30" it replaces, the set is defined by a
+command rather than by a choice — score every committed frame and drop the ones
+that are not mid-round:
+
+```
+node docs/evidence/m3-audio/cockpit-band.mjs \
+     docs/evidence/m2-gate/*.png docs/evidence/m3-audio/*.png \
+     docs/evidence/m3-audio/m2-rerun/*.png \
+  | grep -Ev 'language-menu|first-setup|welcome-message|ended|after-the-match|final-state|uncaught-error' \
+  | sort -n
+```
+
+prints exactly the 39 scores above, in that order.
 
 An earlier revision of this file said "Chrome ≥2300, Firefox ≥2200" and **was
 falsified by its own table**: M2's committed `chrome-12` (2299), `chrome-13`
 (2288) and `chrome-14` (2271) all have the cockpit and all fall below 2300. The
 rule had been put one point above one of the two frames it was eye-anchored on.
-**Changing it to 1800 reclassifies nothing — every frame keeps the label it had,
-and no cell in the table below moves.**
 
-Six frames were read by a human eye, anchoring both ends in **both** engines.
-The earlier per-engine rule had all four of its anchors in Chrome, which left
-Firefox's positive threshold of 2200 sitting 1.3% under its lowest positive with
-nothing behind it:
+**Two corrections to the revision that replaced it with 1800**, recorded rather
+than quietly rewritten, because its figures are what a reader may already have
+quoted:
+
+1. It enumerated **"all 30 driving frames"** and put the margins at 45% and
+   19%. That was a *selected* 30 of the 39 above. It omitted
+   `m2-gate/firefox-05-round1-after-LEFT.png` (**1591**, no cockpit), which is
+   the real highest negative, and `m2-gate/firefox-10-round2-after-LEFT.png`
+   (**2198**, cockpit — read by eye for this correction, full instrument panel
+   and `Enemies: 3 Friends: 1`), which is the real lowest positive. Both
+   margins were overstated. It also omitted `m2-gate/chrome-08` (2301) from
+   both lists while quoting it as a cell of the table below. **Classification
+   is unaffected** — 1591 is still under the bar, 2198 still over it, and no
+   cell of any table here moves.
+2. It said the change to 1800 **"reclassifies nothing"**. That is false for
+   frames outside the tool's two classes. `m2-gate/chrome-11-round2-ended.png`
+   (**1993**) and `m2-gate/firefox-11-round2-ended.png` (**1902**) are
+   round-end frames with no cockpit, and 1800 labels both "cockpit" where the
+   old per-engine numbers labelled them correctly. In both, ~99% of the counted
+   pixels sit in a single 128-px column of the band — a bright near-camera wall
+   texture, *not* the "Winner: AI team" caption, which is above the band
+   entirely. The threshold is **not** being moved back for them: nothing here
+   rests on a round-end frame. What changed instead is `cockpit-band.mjs`'s
+   "WHAT IT IS NOT CALIBRATED FOR" block, which now says that the tool is
+   calibrated on **driving frames only** and has no verdict for round-end,
+   menu or post-match frames.
+
+**Eight** frames have been read by a human eye, anchoring both ends in **both**
+engines. The earlier per-engine rule had all four of its anchors in Chrome,
+which left Firefox's positive threshold of 2200 sitting 1.3% under its lowest
+positive with nothing behind it. The last two rows were added by the correction
+above, and they are the two that matter most: they are the actual extremes of
+the full 39-frame set, so both ends of the margin now rest on a frame somebody
+looked at rather than on the edge of a selected subset.
 
 | | frame | score |
 |---|---|---|
@@ -356,6 +398,8 @@ nothing behind it:
 | no cockpit | `m2-rerun/chrome-run1-round1-NO-cockpit.png` | 1242 |
 | no cockpit | `chrome-05-round3-driving.png` | 1242 |
 | no cockpit | `m2-rerun/firefox-round3-NO-cockpit.png` | 0 |
+| cockpit — **lowest positive of all 39** | `m2-gate/firefox-10-round2-after-LEFT.png` | 2198 |
+| no cockpit — **highest negative of all 39** | `m2-gate/firefox-05-round1-after-LEFT.png` | 1591 |
 
 It also agrees with M2's own prose about M2's own evidence, which says
 `firefox-04` has no cockpit in it: this scores that frame 0.
@@ -479,12 +523,43 @@ All three are in the transcript itself:
   *only* conclusion here that involves looking at pictures is the cockpit-HUD
   section, and every frame it scores is committed — `cockpit-band.mjs` over
   `m2-rerun/*.png` reproduces all 15 of that table's `m2-rerun` numbers, and the
-  remaining six come from `m2-gate/` and from this directory. An earlier
-  revision of this file made the same re-derivability claim while nine of the
-  table's scores rested on frames that existed only in a scratch directory; that
-  is fixed, and it is why the sentence now names where each number comes from.
-  Six frames were additionally read by a human eye to anchor the metric at both
-  ends in both engines; they are listed in the table in that section.
+  remaining six are **all** from `m2-gate/` (`chrome-04`, `chrome-08`,
+  `chrome-12`, `firefox-04`, `firefox-08`, `firefox-12`). An earlier revision
+  said they came "from `m2-gate/` and from this directory"; the second half
+  pointed at nothing. An earlier revision still made the same re-derivability
+  claim while nine of the table's scores rested on frames that existed only in
+  a scratch directory; that is fixed, and it is why the sentence now names
+  where each number comes from. Eight frames were additionally read by a human
+  eye to anchor the metric at both ends in both engines; they are listed in the
+  table in that section.
+- **`cockpit-band.mjs`'s filename self-check is a *consistency* check, not a
+  *validity* one.** It exits non-zero when a score contradicts the label in a
+  filename, which catches a replaced frame, a moved threshold, or a rename that
+  disagrees with the number. It **cannot** catch a *mislabelled* frame: the
+  labels and the frames were written by the same hand in the same commit, so
+  renaming a file to agree with a wrong verdict passes silently. And it only
+  inspects files with "cockpit" in the name — `cockpit-band.mjs
+  docs/evidence/m2-gate/*.png` scores 36 frames, checks zero of them, and exits
+  0 having verified nothing. The labels in `m2-rerun/` do hold, but on separate
+  evidence: five read by eye and nine verified byte-identical to what the driver
+  wrote. The self-check is not what establishes them, and it should not be
+  quoted as though it were.
+- **Roughly half the gate's payload is decorative — printed, never asserted.**
+  A review fuzzed 221 malformed transcripts (every top-level key, every
+  `window.*` and `spec.*` field, `per_round[0]`, each set to null / 5 / `"x"` /
+  `[]` / `{}` / true, plus unparseable JSON and a deleted payload line). No raw
+  stack traces and only exit codes 0 and 1 — but **62 of the 221 still exit 0**.
+  `install_polls`, `rounds_started`, `window.calls`, `window.calls_unpaused`,
+  `window.calls_paused`, `window.buffers_with_nonzero_pcm`, `window.latency_ms`
+  and all of `whole_run` and `pre_gesture` can be set to *any* value without
+  failing a check. This is by design — they are context for a reader, and the
+  claim is carried by `nonzero_fraction`, `maxabs.p50`, `peak_abs_sample` and
+  the per-round fields, which *are* asserted. The consequence is specific and
+  worth stating plainly: **the headline "853 of 1021 buffers" pair has no
+  checker behind it.** A5 asserts the *fraction*, and nothing verifies that the
+  fraction equals that numerator over that denominator. Quote the fraction, the
+  median and the peak with confidence; treat the raw counts as reported, not
+  checked.
 - **Chrome runs with `--mute-audio` and Firefox headless.** The output end is
   deliberately silent in both. Nothing here could have been heard even in
   principle.
@@ -518,12 +593,32 @@ All three are in the transcript itself:
   below both engines (0.835/0.838 and 5467/5145) and far above the negative
   control (0 and 0). They are set to tell sound from silence, not to pin down a
   level nobody has judged.
-- **One run per engine.** The peak varies run to run — M3 task 2 measured 5349
-  and then 4593 on the same build — so treat it as a scale, not a constant.
-  What has been stable across every run taken is the shape: the windowed
-  fraction is 0.835 and 0.838 here (task 2 measured 0.862 and 0.858 over a
-  wider, unwindowed span, so those figures are not directly comparable), and
-  the per-round fraction is 1.000 everywhere it has been measured.
+- **One run per engine, committed.** The peak varies run to run — M3 task 2
+  measured 5349 and then 4593 on the same build — so treat it as a scale, not a
+  constant. What has been stable across every run taken is the shape: the
+  windowed fraction is 0.835 and 0.838 here (task 2 measured 0.862 and 0.858
+  over a wider, unwindowed span, so those figures are not directly comparable),
+  and the per-round fraction is 1.000 everywhere it has been measured.
+
+  **Reproduced at M3 exit from a `make clean` rebuild**, both engines, checker
+  exit 0 both times. The wasm came out **byte-identical** to the one these
+  transcripts were taken against (`md5 364233c6542fd97a21e9a5fe872e0507`), so
+  this is a re-run of the same binary rather than of the same source:
+
+  | | committed run | M3-exit re-run |
+  |---|---|---|
+  | Chrome, window | 853/1021 (0.835), peak 5467 | 852/1019 (0.836), peak **6298** |
+  | Chrome, per round | 219/219, 219/219, 240/240 | 219/219, 218/218, 239/239 |
+  | Firefox, window | 850/1014 (0.838), peak 5145 | 850/1014 (0.838), peak 5564 |
+  | Firefox, per round | 218/218, 218/218, 240/240 | 218/218, 218/218, 240/240 |
+  | median per-buffer peak | 967 / 990 | 970 / 977 |
+  | voice limiter peak | 9 | 9 |
+
+  The fractions, the medians and the every-buffer-of-every-round result all
+  land where they did. The peak does not: **6298** is higher than any figure
+  previously recorded on this build (5467, 5349, 5145, 4593), which is the
+  clearest demonstration available that the peak is a scale and should never be
+  quoted as a property of the build.
 - **The device runs at 48000 Hz while `SDL.audio.freq` is 22050**, so Web Audio
   resamples every buffer. Nothing here depends on it; it is noted so a future
   reader comparing sample rates is not surprised.

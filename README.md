@@ -47,7 +47,50 @@ committed** — each gets its own go/no-go decision once the Demo ships:
 
 ## Status
 
-🚧 **M2 complete: the game is playable. Three complete rounds against three AI
+🚧 **M3 complete: the game produces sound — and nobody has heard it.**
+
+Read the second clause as seriously as the first. What M3 established, and what
+its gate mechanically checks, is one narrow thing: **non-zero PCM reaches
+`SDL.audio.pushAudio`**, the point at which Emscripten's SDL 1.2 takes the
+buffer the game's own `fill_audio` callback just mixed and schedules it into Web
+Audio. Through a real three-round match that is **853 of 1021** buffers in
+Chrome and **850 of 1014** in Firefox — and inside the rounds themselves it is
+*every single buffer, in all three rounds, in both engines*. A control build
+whose two WAVs cannot be decoded reads **0 of 1020** over the same call count at
+the same latency, so silence and success do not look alike to this measurement.
+
+**Three things that is not.** `pushAudio` is *upstream* of the Web Audio graph —
+it is the function that creates an `AudioBufferSourceNode` and calls `start()` —
+so this does not show the buffers were rendered to a device. Nothing anywhere
+assesses whether the mix is *correct*: not the pitch, not the panning, not the
+resampling from the 11025 Hz source to the 22050 Hz device. And no audio was
+captured to a file and no human listened — the harness in fact guarantees the
+output end is silent, since Chrome runs with `--mute-audio` and Firefox
+headless. "The game has sound" is a fair summary; "the sound is good" is not a
+claim anyone here is entitled to make. Nor is "it works everywhere": this is
+still one machine, one GPU, two browsers.
+
+The evidence is [docs/evidence/m3-audio/](docs/evidence/m3-audio/), arbitrated
+by `check-audio-transcript.mjs` — 24 checks, exit status rather than prose, with
+a companion that mutates a passing transcript and proves each of the 24 can
+fail. Re-verified at M3's exit from a `make clean` rebuild: both engines pass,
+the dedicated wasm is still byte-identical at 2,488,298 bytes, and the client
+wasm came out byte-identical to the one the evidence was taken against.
+
+```sh
+node docs/evidence/m3-audio/check-audio-transcript.mjs docs/evidence/m3-audio/chrome-console.log
+node docs/evidence/m3-audio/check-audio-transcript.mjs docs/evidence/m3-audio/firefox-console.log
+node docs/evidence/m3-audio/check-audio-transcript.mjs \
+     docs/evidence/m3-audio/negative-control-chrome-console.log   # exits 1, deliberately
+```
+
+One caveat to carry with any number lifted from that directory: roughly half the
+gate's JSON payload is **printed rather than asserted**, including the raw
+`853`/`1021` counts above. The non-zero *fraction*, the median per-buffer
+amplitude and the peak are checked by A5/A5b/A6; the raw counts are reported
+with no checker behind them. The evidence README says which is which.
+
+**M2 still holds: the game is playable. Three complete rounds against three AI
 opponents, in Chrome and Firefox, with the arrow keys steering.**
 
 The gate is a script, not a claim. It drives a first-time visitor's path — Play,
@@ -126,12 +169,15 @@ the section to read before touching the renderer.
 - **One machine, one GPU, two browsers.** macOS 26.5, Apple M1 Max, Chrome 152
   and Firefox 154. No Windows, no Linux, no Intel or AMD GPU, no Safari, no
   mobile. A ≥30 fps result on an M1 Max is not a ≥30 fps result anywhere else.
-- **It is silent.** M2 ships with the audio path stubbed so a missing WAV cannot
-  abort round entry; nothing plays. Real audio is M3.
+- ~~**It is silent.**~~ M2 shipped with the audio path stubbed so a missing WAV
+  could not abort round entry; nothing played. **Closed by M3** — see the M3
+  section above, and read its three caveats before upgrading "has sound" to
+  "sounds right".
 - **Nothing persists.** Every page load is a first run, so the first-run setup
   menu appears every time and no setting or rebinding survives a reload. M4.
 - **It is 8,854,277 bytes of wasm** before any size work, and no page has been
-  deployed anywhere. M5.
+  deployed anywhere. M5. (**8,878,433 as of M3**: `eSound.cpp`'s WAV parser and
+  mixing repairs added 24,156 bytes. Still nothing deployed.)
 
 M1 still holds: the client boots to a navigable menu with WebGL on a real GPU
 (Chrome reports `ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max)`, Firefox
@@ -142,12 +188,13 @@ M0 still holds and is still checked on every change: the dedicated server
 compiles to WebAssembly, boots under Node, and parses and validates its map
 through libxml2 — and its wasm is still byte-identical at 2,488,298 bytes, the
 tripwire that catches anything client-only leaking into the shared build. It was
-re-verified from a `make clean` at the end of M2. What M0 did not prove about
-gameplay correctness is still open: its playback diagnostic covered boot and idle
-only, so whether native and wasm compute identical results *during play* remains
-untested.
+re-verified from a `make clean` at the end of M2, and again at the end of M3 —
+which matters more than usual there, because M3 edited `eSound.cpp`, a file that
+compiles into *both* builds. What M0 did not prove about gameplay correctness is
+still open: its playback diagnostic covered boot and idle only, so whether native
+and wasm compute identical results *during play* remains untested.
 Full M0 boot log: [docs/m0/boot-evidence.log](docs/m0/boot-evidence.log).
-Next: M3 — audio.
+Next: M4 — persistence and shell polish.
 
 ## Build and run it
 

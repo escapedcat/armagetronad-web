@@ -12,23 +12,40 @@
 // whole of the format Chrome and Firefox screenshots use (8-bit, RGB or RGBA,
 // non-interlaced).
 //
-// THE THRESHOLD, AND HOW IT WAS SET. Scored over all 30 driving frames in
-// docs/evidence/m2-gate/ and docs/evidence/m3-audio/, the two classes do not
-// overlap and are nowhere near each other:
+// THE THRESHOLD, AND HOW IT WAS SET. Scored over ALL 39 driving frames in
+// docs/evidence/m2-gate/, docs/evidence/m3-audio/ and m3-audio/m2-rerun/, the
+// two classes do not overlap:
 //
-//   no cockpit   0 (x3), 110, 1242 (x9)                    highest: 1242
-//   cockpit      2228 2229 2233 2271 2288 2299 2302 2326
-//                2365 2380 2690 3536 3542 3549 3632 3641
-//                3669                                       lowest: 2228
+//   no cockpit   0 (x7), 2 (x2), 110, 1242 (x9), 1591      highest: 1591
+//   cockpit      2198 2228 2229 2233 2271 2288 2299 2301
+//                2302 2326 2365 2380 2690 3536 3542 3549
+//                3632 3641 3669                             lowest: 2198
 //
-// One threshold at 1800 therefore serves BOTH engines, with 45% headroom over
-// the highest negative and 19% under the lowest positive. An earlier revision
+// One threshold at 1800 therefore serves BOTH engines, with 13% headroom over
+// the highest negative and 18% under the lowest positive. An earlier revision
 // of this comment said "Chrome >= 2300, Firefox >= 2200" and was falsified by
 // its own table: M2's committed chrome-12 (2299), chrome-13 (2288) and
 // chrome-14 (2271) all have the cockpit and all sit under 2300. The rule had
 // been placed one point above one of the two frames it was eye-anchored on.
-// Changing it to 1800 reclassifies NOTHING -- every frame keeps the label it
-// already had.
+//
+// TWO CORRECTIONS TO THE REVISION THAT INTRODUCED 1800, kept inline because
+// the wrong figures are what a reader may already have quoted:
+//
+//   * It enumerated "all 30 driving frames" and gave the margins as 45% and
+//     19%. That set was a SELECTED 30 of the 39 above -- it omitted
+//     m2-gate/firefox-05-round1-after-LEFT (1591, no cockpit), which is the
+//     real highest negative, and m2-gate/firefox-10-round2-after-LEFT (2198,
+//     cockpit, read by eye for this correction), which is the real lowest
+//     positive. Both margins were therefore overstated. Classification is
+//     unaffected: 1591 is still below the bar and 2198 still above it.
+//   * It said changing the threshold to 1800 "reclassifies NOTHING -- every
+//     frame keeps the label it already had". FALSE, for frames outside this
+//     tool's two classes. m2-gate/chrome-11-round2-ended (1993) and
+//     m2-gate/firefox-11-round2-ended (1902) are round-end frames with no
+//     cockpit in them, and 1800 calls both "cockpit" where the old per-engine
+//     numbers called them correctly. Nothing rests on those two frames -- no
+//     table cell, no verdict, no conclusion -- so the threshold is NOT being
+//     moved back to accommodate them. See the calibration note below instead.
 //
 // The two engines' negatives differ (Chrome's camera leaves 1242 pixels of grid
 // in the band, Firefox's leaves 0-110) but that only widens the margin, so the
@@ -45,13 +62,27 @@
 // It also agrees with M2's own prose about M2's own evidence, which says
 // firefox-04 has no cockpit in it: this scores that frame 0.
 //
-// WHAT IT IS NOT CALIBRATED FOR. All 30 frames come from one machine at
-// 1024x768 with Chrome 152 and Firefox 154. The band is a fixed 110 rows and
-// the count is an absolute pixel total, so BOTH scale with resolution: at a
-// different canvas size these numbers mean nothing and the threshold has to be
-// re-anchored by eye. It will print a confident verdict anyway -- it has no way
-// to know -- so check the frame size before believing it on frames from
-// anywhere but docs/evidence/.
+// WHAT IT IS NOT CALIBRATED FOR. Two limits, and it will print a confident
+// verdict outside both -- it has no way to know it is out of range.
+//
+//   1. RESOLUTION. All 39 anchoring frames come from one machine at 1024x768
+//      with Chrome 152 and Firefox 154. The band is a fixed 110 rows and the
+//      count is an absolute pixel total, so BOTH scale with resolution: at a
+//      different canvas size these numbers mean nothing and the threshold has
+//      to be re-anchored by eye. Check the frame size before believing it on
+//      frames from anywhere but docs/evidence/.
+//   2. FRAME KIND. The two classes were separated on DRIVING frames only --
+//      mid-round, camera over the grid. Round-end, menu, welcome and
+//      post-match frames are outside both classes and this tool has no verdict
+//      for them, because what fills the bottom band there is not the cockpit
+//      and not grid either. The measured example: the round-end frames
+//      m2-gate/chrome-11 (1993) and m2-gate/firefox-11 (1902) both read
+//      "cockpit" and have none. In both, ~99% of the counted pixels fall in a
+//      single 128-px-wide column of the band -- a bright near-camera wall
+//      texture, NOT the "Winner: AI team" caption, which sits above the band
+//      entirely. A cockpit spreads its pixels across the full width, so the
+//      shape of the distribution distinguishes them; the total does not.
+//      Score driving frames with this; read anything else by eye.
 import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 
@@ -115,8 +146,19 @@ for (const f of process.argv.slice(2)) {
   // The verdict is printed, not left to the reader, so the rule cannot go stale
   // separately from the numbers the way the 2300 one did. A filename claiming
   // the opposite of the score is flagged rather than quietly disagreed with:
-  // the frames in this directory carry their label in their name, which makes
-  // that a free consistency check on the evidence.
+  // the frames in this directory carry their label in their name.
+  //
+  // THAT IS A CONSISTENCY CHECK, NOT A VALIDITY ONE, and the difference matters
+  // because it is easy to quote as though the labels were independently
+  // verified. It catches: a frame replaced by a different one, a moved
+  // THRESHOLD, a rename that contradicts the score. It CANNOT catch a
+  // mislabelled frame -- the labels and the frames were written by the same
+  // hand in the same commit, so renaming a file to agree with a wrong verdict
+  // passes silently. And it only checks files whose name contains "cockpit":
+  // `cockpit-band.mjs docs/evidence/m2-gate/*.png` scores 36 frames and checks
+  // exactly zero of them, exiting 0 while having verified nothing. The labels
+  // in m2-rerun/ do hold, but on separate evidence -- five frames read by eye
+  // and nine verified byte-identical to what the driver wrote -- not on this.
   const verdict = bright >= THRESHOLD ? 'cockpit' : 'no cockpit';
   const claimed = /NO-cockpit/.test(f) ? 'no cockpit'
                 : /cockpit/.test(f)    ? 'cockpit' : null;
