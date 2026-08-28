@@ -404,6 +404,288 @@ eWavData::eWavData(const char * fileName,const char *alternative)
 #undef SDL_LoadWAV
 #endif
 
+#ifdef __EMSCRIPTEN__
+
+#include <stdio.h>
+
+// ---------------------------------------------------------------------------
+// The web client's WAV loader.
+//
+// WHY IT IS HERE AND NOT IN src/emscripten/eCompat.cpp. Emscripten's SDL 1.2
+// emulation has no WAV decoder, so M1 shimmed SDL_LoadWAV_RW to return NULL
+// and M2 short-circuited eWavData::Load() so that NULL could not turn into a
+// thrown exception. Writing a real SDL_LoadWAV_RW is not an option: it takes
+// an SDL_RWops*, and Emscripten's SDL_RWFromFile (libsdl.js:3543-3550) does
+// not return one. It returns a small integer -- an index into a JS-side array
+// -- cast to a pointer, and it never fails, so a C implementation has nothing
+// it can legally dereference and no failure to test for. The function this
+// file needs is the *file*-taking SDL_LoadWAV, which upstream declares as a
+// macro over SDL_LoadWAV_RW and which this translation unit has already
+// #undef'd above and replaced with its own static since upstream commit
+// 7171696a ("Work around crash in sdl12-compat when trying to load sound
+// files that do not exist"). The decoder goes behind that same static and
+// reads the file with
+// fopen. See docs/superpowers/plans/2026-08-28-m3-audio.md landmine 3.
+//
+// WHAT IT DELIBERATELY DOES NOT DO. No format conversion, no resampling and
+// no endian swapping. It hands eWavData exactly what the file contains and
+// rejects everything it cannot hand over unchanged. That is enough because
+// the only two WAVs this tree ships (sound/cyclrun.wav, 22050 Hz, and
+// sound/expl.wav, 11025 Hz -- verified by reading their headers, not by
+// trusting a comment) are both 8-bit unsigned mono PCM, eSound.cpp's own
+// AUDIO_U8 branch below takes them without conversion, and eWavData::Mix
+// resamples per-sound against the device rate itself (Speed *= spec.freq;
+// Speed /= audio.freq). SDL_BuildAudioCVT and SDL_ConvertAudio therefore
+// stay the unreachable -1 stubs eCompat.cpp already has.
+//
+// REJECTING IS A FEATURE. eWavData::Mix has exactly four data layouts coded
+// into it (AUDIO_U8 / AUDIO_S16SYS x mono / stereo) and no way to express "I
+// do not understand this buffer" -- it would just reinterpret the bytes. So
+// anything this parser is not certain about has to fail the load here, where
+// failing is safe, rather than reach Mix, where it is not.
+//
+// FAILING MUST NOT THROW, AND THE FAILURE PATH IS THE COMMON ONE. Every
+// eWavData except gCycle.cpp:232's names a moviepack file first
+// (moviesounds/engine.wav, cycturn.wav, dietron.wav, intro.wav, extro.wav);
+// moviesounds/ does not exist in this tree and is not in web/Makefile's
+// --preload-file list, so the fopen below fails on the FIRST attempt of five
+// of the six loads, before any of them succeeds. That is the designed
+// behaviour of eWavData's fallback chain, not an error -- which is why a
+// missing file returns NULL silently and only counts itself. The louder
+// reason is landmine 1: Load() is reachable from eWavData::Mix, which runs
+// from fill_audio, which Emscripten drives at the completion of every
+// Asyncify rewind with wasm on the stack, and callUserCallback turns an
+// exception escaping that into a process abort. Nothing on this path may
+// throw. This function returns NULL; Load() below turns NULL into
+// loadError = true instead of tGenericException.
+// ---------------------------------------------------------------------------
+
+// AUDIO_S16SYS is what eSound.cpp compares against and what the mixer's
+// `short` reinterpretation assumes; RIFF stores 16-bit PCM little-endian.
+// wasm is little-endian by specification so the two coincide, but assert it
+// rather than assume it, because the whole 16-bit path is a silent
+// byte-swapped mess if it ever stops being true.
+static_assert( AUDIO_S16SYS == AUDIO_S16LSB,
+               "this WAV parser hands over RIFF's little-endian samples unswapped" );
+
+// Counts fopen() failures rather than printing one per failure: see the
+// comment above for why misses are routine. Reported on the next successful
+// load, so a transcript shows the miss path ran without a line per miss.
+static int se_wavMisses = 0;
+
+static bool se_WavRead( FILE * f, void * dest, size_t n )
+{
+    return fread( dest, 1, n, f ) == n;
+}
+
+static bool se_WavReadU32( FILE * f, Uint32 & out )
+{
+    unsigned char b[4];
+    if ( !se_WavRead( f, b, sizeof( b ) ) )
+        return false;
+    out = Uint32( b[0] ) | ( Uint32( b[1] ) << 8 ) | ( Uint32( b[2] ) << 16 ) | ( Uint32( b[3] ) << 24 );
+    return true;
+}
+
+static bool se_WavReadU16( FILE * f, Uint16 & out )
+{
+    unsigned char b[2];
+    if ( !se_WavRead( f, b, sizeof( b ) ) )
+        return false;
+    out = Uint16( Uint32( b[0] ) | ( Uint32( b[1] ) << 8 ) );
+    return true;
+}
+
+// Every diagnostic on the failure path goes through this budget. A malformed
+// or unreadable WAV is a real defect worth seeing once, but it does not stay
+// seen once: eSoundPlayer::Reset() calls Load() unconditionally -- it does
+// NOT consult loadError -- and so does the eSoundPlayer(w,loop=true)
+// constructor. Measured against a deliberately corrupted cyclrun.wav: a
+// permanently failing cycle_run produces EIGHT load attempts per round (four
+// cycles x constructor + Reset), in 26 ms, forever. The budget is what keeps
+// that from becoming a log flood emitted partly from the audio callback.
+static bool se_WavMayReport()
+{
+    static int budget = 16;
+    if ( budget <= 0 )
+        return false;
+    --budget;
+    return true;
+}
+
+// Single exit for every "the file exists but I will not guess at it" case.
+static SDL_AudioSpec * se_WavReject( char const * file, char const * why, FILE * f, Uint8 * buffer )
+{
+    if ( se_WavMayReport() )
+        printf( "[WAV] rejected %s: %s\n", file, why );
+
+    if ( buffer )
+        free( buffer );
+    if ( f )
+        fclose( f );
+
+    return NULL;
+}
+
+static SDL_AudioSpec * SDLCALL SDL_LoadWAV( char const * file, SDL_AudioSpec * spec, Uint8 ** audio_buf, Uint32 * audio_len )
+{
+    if ( !file || !spec || !audio_buf || !audio_len )
+        return NULL;
+
+    FILE * f = fopen( file, "rb" );
+    if ( !f )
+    {
+        // The routine case. Silent on purpose -- see the header comment.
+        ++se_wavMisses;
+        return NULL;
+    }
+
+    // The file's own length is the bound every chunk size is checked against,
+    // so a corrupt size field cannot become a multi-gigabyte malloc or an
+    // fseek past the end that later reads succeed off the back of.
+    if ( fseek( f, 0, SEEK_END ) != 0 )
+        return se_WavReject( file, "not seekable", f, NULL );
+
+    long const fileEnd = ftell( f );
+    if ( fileEnd < 12 )
+        return se_WavReject( file, "shorter than a RIFF/WAVE header", f, NULL );
+    if ( fseek( f, 0, SEEK_SET ) != 0 )
+        return se_WavReject( file, "cannot rewind", f, NULL );
+
+    Uint32 const limit = Uint32( fileEnd );
+
+    char id[4];
+    Uint32 riffSize = 0;
+    if ( !se_WavRead( f, id, sizeof( id ) ) || 0 != memcmp( id, "RIFF", 4 ) )
+        return se_WavReject( file, "not a RIFF file", f, NULL );
+    if ( !se_WavReadU32( f, riffSize ) )
+        return se_WavReject( file, "truncated RIFF header", f, NULL );
+    if ( !se_WavRead( f, id, sizeof( id ) ) || 0 != memcmp( id, "WAVE", 4 ) )
+        return se_WavReject( file, "RIFF form is not WAVE", f, NULL );
+
+    // riffSize is read for completeness and deliberately not enforced: the
+    // real bound is the file length above, and a WAV whose RIFF size field is
+    // stale is still perfectly playable.
+    (void)riffSize;
+
+    bool haveFmt = false;
+    Uint16 formatTag = 0, channels = 0, blockAlign = 0, bits = 0;
+    Uint32 sampleRate = 0, byteRate = 0;
+    Uint8 * buffer = NULL;
+    Uint32 bufferLen = 0;
+
+    // Walk the chunk list until the data chunk. Chunks may appear in any
+    // order and unknown ones must be stepped over, not treated as an error:
+    // sound/expl.wav ends with a 66-byte LIST (INFO) chunk after its data.
+    while ( !buffer )
+    {
+        Uint32 chunkSize = 0;
+        if ( !se_WavRead( f, id, sizeof( id ) ) || !se_WavReadU32( f, chunkSize ) )
+            return se_WavReject( file, "end of file before a data chunk", f, NULL );
+
+        if ( chunkSize > limit )
+            return se_WavReject( file, "chunk claims more bytes than the file holds", f, NULL );
+
+        if ( 0 == memcmp( id, "fmt ", 4 ) )
+        {
+            if ( chunkSize < 16 )
+                return se_WavReject( file, "fmt chunk shorter than 16 bytes", f, NULL );
+
+            if ( !se_WavReadU16( f, formatTag ) || !se_WavReadU16( f, channels ) ||
+                 !se_WavReadU32( f, sampleRate ) || !se_WavReadU32( f, byteRate ) ||
+                 !se_WavReadU16( f, blockAlign ) || !se_WavReadU16( f, bits ) )
+                return se_WavReject( file, "truncated fmt chunk", f, NULL );
+
+            haveFmt = true;
+
+            // Step over anything the chunk holds beyond those 16 bytes (a
+            // WAVE_FORMAT_EXTENSIBLE cbSize block, say) plus RIFF's pad byte
+            // for an odd size. formatTag is checked after the walk, so an
+            // extensible header is rejected there rather than here.
+            Uint32 const rest = ( chunkSize - 16 ) + ( chunkSize & 1 );
+            if ( rest && 0 != fseek( f, long( rest ), SEEK_CUR ) )
+                return se_WavReject( file, "truncated fmt chunk", f, NULL );
+        }
+        else if ( 0 == memcmp( id, "data", 4 ) )
+        {
+            if ( !haveFmt )
+                return se_WavReject( file, "data chunk before fmt chunk", f, NULL );
+            if ( 0 == chunkSize )
+                // Not pedantry: eWavData::Mix's `while (goon)` loop spins
+                // forever on a LOOPING player whose sample count is zero --
+                // every inner loop is guarded by `pos.pos < samples` so none
+                // runs, and then its `pos.pos -= samples` cannot make
+                // pos.pos < samples either, so goon never goes false. That is
+                // a frozen tab, from inside the audio callback. Never hand
+                // Mix a zero-length sample.
+                return se_WavReject( file, "empty data chunk", f, NULL );
+
+            buffer = static_cast< Uint8 * >( malloc( chunkSize ) );
+            if ( !buffer )
+                return se_WavReject( file, "out of memory for the sample data", f, NULL );
+            if ( !se_WavRead( f, buffer, chunkSize ) )
+                return se_WavReject( file, "truncated data chunk", f, buffer );
+
+            bufferLen = chunkSize;
+            // Whatever follows the data chunk is metadata this loader has no
+            // use for, so stop here rather than seek over a pad byte that
+            // sound/cyclrun.wav (odd data size, last chunk, no pad) omits.
+        }
+        else
+        {
+            Uint32 const skip = chunkSize + ( chunkSize & 1 );
+            if ( 0 != fseek( f, long( skip ), SEEK_CUR ) )
+                return se_WavReject( file, "unreadable chunk", f, NULL );
+        }
+    }
+
+    // Everything below is "reject rather than guess". Each test names a
+    // layout eWavData::Mix cannot represent.
+    if ( 1 != formatTag )
+        return se_WavReject( file, "not uncompressed PCM (fmt tag is not 1)", f, buffer );
+    if ( 1 != channels && 2 != channels )
+        return se_WavReject( file, "neither mono nor stereo", f, buffer );
+    if ( 8 != bits && 16 != bits )
+        return se_WavReject( file, "not 8 or 16 bits per sample", f, buffer );
+    if ( 0 == sampleRate )
+        return se_WavReject( file, "sample rate of zero", f, buffer );
+
+    Uint32 const frame = Uint32( channels ) * Uint32( bits / 8 );
+    if ( 0 != blockAlign && Uint32( blockAlign ) != frame )
+        return se_WavReject( file, "block alignment disagrees with channels x bits", f, buffer );
+    if ( bufferLen < frame )
+        return se_WavReject( file, "less than one whole frame of sample data", f, buffer );
+
+    // byteRate is redundant with sampleRate and blockAlign and is not used to
+    // decide anything; read only so the fmt chunk is parsed in one pass.
+    (void)byteRate;
+
+    fclose( f );
+
+    spec->freq     = int( sampleRate );
+    spec->format   = ( 8 == bits ) ? AUDIO_U8 : AUDIO_S16SYS;
+    spec->channels = Uint8( channels );
+    spec->silence  = ( 8 == bits ) ? 0x80 : 0x00;
+    spec->samples  = 4096;          // SDL 1.2's own value; nothing here reads it
+    spec->padding  = 0;
+    spec->size     = bufferLen;
+    spec->callback = NULL;
+    spec->userdata = NULL;
+
+    *audio_buf = buffer;
+    *audio_len = bufferLen;
+
+    printf( "[WAV] loaded %s: %u bytes, %d-bit %s @ %d Hz (fopen misses so far: %d)\n",
+            file, unsigned( bufferLen ), int( bits ),
+            ( 1 == channels ) ? "mono" : "stereo", int( sampleRate ), se_wavMisses );
+
+    // The caller tests `result != &spec`, so the identity matters, not just
+    // non-NULL.
+    return spec;
+}
+
+#else // __EMSCRIPTEN__
+
 static SDL_AudioSpec * SDLCALL SDL_LoadWAV(char const *file, SDL_AudioSpec *spec, Uint8 **audio_buf, Uint32 *audio_len)
 {
     auto *rw = SDL_RWFromFile(file, "rb");
@@ -412,6 +694,8 @@ static SDL_AudioSpec * SDLCALL SDL_LoadWAV(char const *file, SDL_AudioSpec *spec
 
     return SDL_LoadWAV_RW(rw,1, spec,audio_buf,audio_len);
 }
+
+#endif // __EMSCRIPTEN__
 
 #endif
 
@@ -424,49 +708,56 @@ void eWavData::Load(){
         return;
     }
 
-#if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
-    // The browser client is deliberately silent, and this is where that
-    // decision is enforced. It is NOT a bug being papered over: Emscripten's
-    // SDL 1.2 emulation implements the playback half of the audio API
-    // (SDL_OpenAudio/PauseAudio/Lock/Unlock/Close) but not the WAV-decoding
-    // half, so M1 shims SDL_LoadWAV_RW in src/emscripten/eCompat.cpp to
-    // return SDL's documented failure value, NULL, for every file.
+    // M3 NOTE ON WHAT USED TO BE HERE. Until M3 this function began, under
+    // __EMSCRIPTEN__, with an unconditional `loadError = true; return;`. The
+    // decoder it was standing in for now exists (the static SDL_LoadWAV
+    // above), so the short-circuit is gone -- but the reason it existed has
+    // NOT gone away and is not allowed to. What it was really protecting
+    // against was not a missing decoder, it was the `throw` statements
+    // further down this function.
     //
-    // Without this early return, that NULL is fatal rather than merely quiet.
-    // The code below reacts to it by retrying the alternative filename, then
-    // sound/expl.wav, and then throwing tGenericException("Sound Error").
-    // The nearest catch is sg_EnterGame (src/tron/gGame.cpp:4635), which runs
-    // sg_EnterGameCleanup() and shows a modal -- and the FIRST Load() of the
-    // whole program is introPlayer.MakeGlobal() on the sixth line of
-    // sg_EnterGameCore (gGame.cpp:4544). So a missing WAV did not mute the
-    // web client, it made it impossible to enter a round at all.
+    // Load() is reachable from eWavData::Mix, which runs from fill_audio,
+    // which Emscripten drives at the completion of every Asyncify rewind with
+    // wasm still on the stack (measured: Asyncify.state == Normal in 750/750
+    // samples). callUserCallback turns a C++ exception escaping that into a
+    // process abort, not a catchable error. And the nearest catch for the
+    // throws below is sg_EnterGame (src/tron/gGame.cpp:4635), which aborts
+    // entry into the round and shows a "Sound Error" modal -- so even on the
+    // paths where the throw IS caught, a missing WAV does not mute the client,
+    // it stops the game.
     //
-    // Short-circuiting Load() itself, rather than each of its callers, is
-    // deliberate: all four ways a load can start funnel through here --
-    // eWavData::Mix (which then sees !data and returns false),
-    // eSoundPlayer::Reset, eSoundPlayer::MakeGlobal, and the
-    // eSoundPlayer(w,loop=true) constructor. The Mix path is the one that
-    // makes throwing unacceptable rather than just inconvenient: it runs from
-    // fill_audio, which Emscripten drives from SDL.audio.queueNewAudioData
-    // registered on Asyncify.sleepCallbacks, so it re-enters wasm on every
-    // unwind. An exception escaping an Asyncify rewind is not something to
-    // debug in a browser.
+    // So the guard was replaced, not removed: every `throw` on this path now
+    // has a `#if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )` arm that
+    // fails the LOAD instead -- `loadError = true; return;` -- leaving the
+    // caller in exactly the state a failed load leaves it in. loadError = true
+    // rather than false is still load-bearing for the same reason it was
+    // before: eWavData::Mix calls Load() only while !loadError, so setting it
+    // stops a permanently impossible load from being retried on every audio
+    // callback, forever.
     //
-    // loadError = true rather than false is load-bearing, not defensive:
-    // eWavData::Mix calls Load() only while !loadError, so setting it makes
-    // the first (permanent) failure stick instead of re-attempting a load
-    // that cannot succeed on every audio callback, forever.
+    // It does NOT stop every retry, and M2's version of this comment implied
+    // it did. eSoundPlayer::Reset() and the eSoundPlayer(w,loop=true)
+    // constructor both call Load() without consulting loadError, so a
+    // permanently failing sound is re-attempted once per player per round --
+    // measured at eight attempts per round for cycle_run against a
+    // deliberately corrupted cyclrun.wav. That is bounded and cheap (an fopen
+    // that fails), but it is why the diagnostics on the failure path are
+    // budgeted rather than printed per attempt.
     //
-    // This block is M3's to delete. Real audio means giving eCompat.cpp a
-    // working decoder; when SDL_LoadWAV_RW can succeed, remove this and the
-    // original error handling below becomes correct again as written.
-    loadError = true;
-    return;
-#endif
+    // PLAN.md's M3 note calls this block "M3's to delete". Deleting it without
+    // guarding the throws would have re-armed both of them on the fill_audio
+    // path; see docs/superpowers/plans/2026-08-28-m3-audio.md landmines 1-2.
 
 #ifndef DEDICATED
 
+// Only the throwing arms below name errorName, and under Emscripten there are
+// none, so declaring it unconditionally is an unused-variable warning. The
+// condition is spelled as the negation of the guard the rest of this file uses
+// rather than the equivalent-here `#ifndef __EMSCRIPTEN__`, so that grepping
+// for the guard finds every site it governs.
+#if !( defined( __EMSCRIPTEN__ ) && !defined( DEDICATED ) )
     static char const * errorName = "Sound Error";
+#endif
 
     freeData = false;
 
@@ -482,10 +773,21 @@ void eWavData::Load(){
             result=SDL_LoadWAV( path.GetReadPath( filename_alt ),&spec,&data,&len);
             if (result!=&spec || !data)
             {
+#if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
+                // Fail the load, never the process -- see the M3 note above.
+                // Both names were tried; there is nothing left to fall back to.
+                if ( se_WavMayReport() )
+                    printf( "[WAV] load failed: neither %s nor %s could be read\n",
+                            static_cast< char const * >( filename ),
+                            static_cast< char const * >( filename_alt ) );
+                loadError = true;
+                return;
+#else
                 tOutput err;
                 err.SetTemplateParameter(1, filename);
                 err << "$sound_error_filenotfound";
                 throw tGenericException(err, errorName);
+#endif
             }
             else
                 alt=true;
@@ -494,10 +796,20 @@ void eWavData::Load(){
             result=SDL_LoadWAV( path.GetReadPath( "sound/expl.wav" ) ,&spec,&data,&len);
             if (result!=&spec || !data)
             {
+#if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
+                // Fail the load, never the process -- see the M3 note above.
+                if ( se_WavMayReport() )
+                    printf( "[WAV] load failed: neither %s nor the sound/expl.wav "
+                            "stand-in could be read\n",
+                            static_cast< char const * >( filename ) );
+                loadError = true;
+                return;
+#else
                 tOutput err;
                 err.SetTemplateParameter(1, "sound/expl.waw");
                 err << "$sound_error_filenotfount";
                 throw tGenericException(err, errorName);
+#endif
             }
             else
                 len=0;
@@ -513,6 +825,29 @@ void eWavData::Load(){
         samples=len;
     else
     {
+#if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
+        // Unreachable by construction rather than by luck: the only producer
+        // of `spec` in this build is the static SDL_LoadWAV above, and it
+        // writes AUDIO_U8 or AUDIO_S16SYS and rejects every other file. That
+        // is also why src/emscripten/eCompat.cpp's SDL_BuildAudioCVT and
+        // SDL_ConvertAudio stay -1 stubs -- this is the branch that would
+        // have called them, and it no longer does.
+        //
+        // Written out anyway, because "unreachable" arguments have been wrong
+        // on this port before, and because the alternative here is two more
+        // throws on the fill_audio path (landmine 1). Drop the buffer so the
+        // mixer cannot reinterpret bytes in a layout it has no case for.
+        if ( se_WavMayReport() )
+            printf( "[WAV] load failed: %s decoded to unsupported format 0x%x; "
+                    "the web client has no format conversion\n",
+                    static_cast< char const * >( filename ),
+                    unsigned( spec.format ) );
+        SDL_FreeWAV( data );    // freeData is false here: set at the top of Load()
+        data = NULL;
+        len  = 0;
+        loadError = true;
+        return;
+#else
         // prepare error message
         tOutput err;
         err.SetTemplateParameter(1, filename);
@@ -542,6 +877,7 @@ void eWavData::Load(){
         len    = len * cvt.len_ratio;
 
         samples = len >> 1;
+#endif
     }
 
     samples/=spec.channels;
