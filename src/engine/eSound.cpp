@@ -104,11 +104,30 @@ static REAL loudness_thresh=0;
 static int real_sound_sources=0;
 
 #if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
+// se_WavMayReport is the one budgeting mechanism these diagnostics use. It is
+// DEFINED with the WAV parser further down, beside the [WAV] budgets and the
+// measurements that explain why every line in this file needs an allowance;
+// declared here because fill_audio sits above that point and uses it too.
+// Declaring it beats open-coding `if (b > 0) { --b; printf(...); }` at each
+// site: the rule about what an exhausted budget means is then stated once.
+static bool se_WavMayReport( int & budget );
+
 // State for the voice-limiter watch at the bottom of fill_audio; see the
-// comment there for why it exists and why it is edge-triggered.
+// comment there for what each line means and why both are edge-triggered.
+//
+// TWO ALLOWANCES, NOT ONE, for the reason the [WAV] budgets are three and not
+// one. The peak line fires once per new maximum, so a count climbing 0 -> 9 can
+// spend nine lines before any limiter transition happens; the transition line
+// then fired six times in a measured three-round run. Sharing sixteen between
+// them means the ramp can silence the transitions -- the more interesting of
+// the two events -- and one more oscillation than measured would have done it.
+// Each also keeps a full allowance rather than a small one: the last peak is
+// the number worth having, so a budget that runs out mid-climb would report a
+// peak that is merely the budget.
 static int se_peakSoundSources = 0;
+static int se_peakBudget = 16;
 static bool se_limiterCutting = false;
-static int se_soundSourcesBudget = 16;
+static int se_limiterBudget = 16;
 #endif
 
 static tList<eSoundPlayer> se_globalPlayers;
@@ -139,33 +158,48 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     // -- Emscripten still hands back the previous callback's mix. So this
     // stays. It outlived the short-circuit it was written alongside.
     //
+    // EVERY SAME-FILE REFERENCE BELOW NAMES A SYMBOL, NOT A LINE, and that is
+    // a rule rather than a style. Line citations in this file have now gone
+    // stale twice in one milestone -- M2 left a ":270" that M3 task 2 was sent
+    // to fix, and task 2's own replacement rotted by 67 lines before it was
+    // committed, because inserting a comment block above a citation silently
+    // invalidates it. A symbol survives that and is greppable; a line number is
+    // neither. The project already applies this rule to emsdk citations for the
+    // same reason. Keep line numbers only for CROSS-file pointers, where they
+    // drift far less and there is nothing local to grep for.
+    //
     // IT IS ONLY CORRECT FOR THE SDL_OpenAudio REGISTRATION, WHICH IS WHY IT
-    // IS CONDITIONAL. fill_audio has a second registration:
-    // Mix_SetPostMix( &fill_audio, NULL ) at :306. A *post*-mix callback is
-    // handed a buffer that ALREADY holds SDL_mixer's output, to be modified in
-    // place -- zeroing it there would silence the music this function is meant
-    // to mix on top of. That path is dead in this build (it sits inside
-    // #ifdef HAVE_LIBSDL_MIXER, opened at :290, and HAVE_LIBSDL_MIXER is
-    // defined only under WIN32 at :63-65; nothing in src/emscripten/ or
-    // web/Makefile defines it), so uses_sdl_mixer is false on every path this
-    // build can take and the memset runs exactly as often as the unconditional
-    // version M2 shipped did. The condition costs one load of a file-static
-    // bool per callback and buys the property that enabling SDL_mixer stops
-    // being a silent-audio bug.
+    // IS CONDITIONAL. fill_audio has a second registration: the
+    // `Mix_SetPostMix( &fill_audio, NULL )` in se_SoundInit. A *post*-mix
+    // callback is handed a buffer that ALREADY holds SDL_mixer's output, to be
+    // modified in place -- zeroing it there would silence the music this
+    // function is meant to mix on top of. That path is dead in this build (it
+    // sits inside se_SoundInit's `#ifdef HAVE_LIBSDL_MIXER`, and
+    // HAVE_LIBSDL_MIXER is `#define`d only under WIN32 near the top of this
+    // file; nothing in src/emscripten/ or web/Makefile defines it), so
+    // uses_sdl_mixer is false on every path this build can take and the memset
+    // runs exactly as often as the unconditional version M2 shipped did. The
+    // condition costs one load of a file-static bool per callback and buys the
+    // property that enabling SDL_mixer stops being a silent-audio bug.
     //
     // WHY uses_sdl_mixer AND NOT #ifndef HAVE_LIBSDL_MIXER, which would be
     // free. Which callback fill_audio is registered as is a RUNTIME fact even
-    // in a build that HAS SDL_mixer: se_SoundInit's format fallback (:322-331)
-    // reacts to Mix_OpenAudio handing back a format other than AUDIO_S16SYS by
-    // setting uses_sdl_mixer = false, closing the mixer, and re-opening the
-    // device with plain SDL_OpenAudio -- after which fill_audio is the
-    // SDL_OpenAudio callback again and the memset is needed again. A
-    // compile-time guard would zero nothing on exactly that path and play
-    // uninitialised heap, which is the failure this whole comment is about.
-    // The static is assigned before Mix_SetPostMix and before every
-    // SDL_OpenAudio call in se_SoundInit (:291 then :306, :319 then :320,
-    // :324 then :328), and its initialiser at :75 is false, so it is never
-    // read here before it describes reality.
+    // in a build that HAS SDL_mixer: se_SoundInit's format fallback -- the
+    // `if (sound_is_there && (audio.format!=AUDIO_S16SYS))` block -- reacts to
+    // Mix_OpenAudio handing back a format other than AUDIO_S16SYS by setting
+    // uses_sdl_mixer = false, closing the mixer, and re-opening the device with
+    // plain SDL_OpenAudio -- after which fill_audio is the SDL_OpenAudio
+    // callback again and the memset is needed again. A compile-time guard would
+    // zero nothing on exactly that path and play uninitialised heap, which is
+    // the failure this whole comment is about.
+    //
+    // The static is assigned before every registration, on all three paths:
+    // `uses_sdl_mixer=true` precedes Mix_OpenAudio/Mix_SetPostMix, and both
+    // `uses_sdl_mixer=false` assignments precede their SDL_OpenAudio call (the
+    // plain #else open, and the format-fallback re-open just described). Its
+    // initialiser, `static bool uses_sdl_mixer=false` above, covers the window
+    // before se_SoundInit runs at all. So it is never read here before it
+    // describes reality.
     //
     // `len` is SDL's byte count for this callback, which is exactly the
     // buffer's size; SDL_AudioSpec::size is the same number. It is `int`,
@@ -215,24 +249,26 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     //
     // EDGE-TRIGGERED ON A NEW PEAK, so it is self-limiting without needing to
     // be trusted: real_sound_sources only ever produces a finite number of new
-    // maxima, and each one is printed at most once. se_soundSourcesBudget is
-    // belt and braces on top of that, and it is a SEPARATE allowance from the
-    // three [WAV] ones for the same reason those are separate from each other
-    // -- a different event at a different rate must not spend their lines.
+    // maxima, and each one is printed at most once. se_peakBudget is belt and
+    // braces on top of that, and it is a SEPARATE allowance from the three
+    // [WAV] ones and from the transition line below, for the same reason those
+    // are separate from each other -- a different event at a different rate
+    // must not spend their lines.
     //
-    // It cannot use se_WavMayReport: that helper and its budgets are declared
-    // with the WAV parser several hundred lines below, and this is the audio
-    // callback at the top of the file. Two statements are not worth a forward
-    // declaration.
+    // WHAT THE NUMBER MEANS, EXACTLY: real_sound_sources is zeroed at the top
+    // of this function and read here at the bottom, and eSoundPlayer::Mix -- its
+    // only writer -- runs nowhere except between those two points. So each
+    // reading is the COMPLETE voice count for that callback, not a sample of a
+    // continuously varying quantity, and there is no window between callbacks in
+    // which a higher count could hide. Measured 9 at every buffer size, i.e. at
+    // callback rates from 5.4/s to 43/s, which is a consistency check rather
+    // than a coincidence.
     if ( real_sound_sources > se_peakSoundSources )
     {
         se_peakSoundSources = real_sound_sources;
-        if ( se_soundSourcesBudget > 0 )
-        {
-            --se_soundSourcesBudget;
+        if ( se_WavMayReport( se_peakBudget ) )
             printf( "[SND] live voices peaked at %d (SOUND_SOURCES %d, loudness_thresh %.4f)\n",
                     real_sound_sources, sound_sources, double( loudness_thresh ) );
-        }
     }
 
     // AND THE OTHER EDGE: loudness_thresh leaving or returning to zero, which
@@ -240,9 +276,11 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     // a new peak and cannot be inferred from one -- the threshold moves in
     // .0001-to-.01 steps per callback, so it crosses zero long after whatever
     // voice count pushed it there, and it can oscillate without the peak ever
-    // changing again. Sharing the one allowance is deliberate: both lines are
-    // the same class (limiter behaviour, once per callback at most) and 16
-    // between them is plenty to see a start, a stop and a few oscillations.
+    // changing again. It gets its OWN allowance for exactly that reason: a
+    // count ramping up to its peak can spend nine lines on peak reporting
+    // before the limiter does anything at all, and a measured three-round run
+    // produced six transitions -- fifteen of a shared sixteen, with one more
+    // oscillation enough to silence the half worth reading.
     //
     // Measured in the shipped configuration: the count peaks at 9 against
     // SOUND_SOURCES 10, so neither raising arm ever fires and this never
@@ -251,14 +289,11 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     if ( ( loudness_thresh > 0 ) != se_limiterCutting )
     {
         se_limiterCutting = ( loudness_thresh > 0 );
-        if ( se_soundSourcesBudget > 0 )
-        {
-            --se_soundSourcesBudget;
+        if ( se_WavMayReport( se_limiterBudget ) )
             printf( "[SND] voice limiter %s cutting: %d live voices, SOUND_SOURCES %d, "
                     "loudness_thresh %.4f\n",
                     se_limiterCutting ? "STARTED" : "stopped",
                     real_sound_sources, sound_sources, double( loudness_thresh ) );
-        }
     }
 #endif
 #endif
@@ -430,16 +465,34 @@ void se_SoundInit()
             // Unbudgeted, unlike the [WAV] lines, and the difference is the
             // call rate, not a difference of opinion about noise:
             // se_SoundInit runs once from SDLSoundCleanup's constructor and
-            // again only when the sound menu changes SOUND_QUALITY,
-            // SOUND_CHANNELS or SOUND_BUFFER_SHIFT (se_SoundMenu, :1569). It
-            // is not reachable from fill_audio.
-            printf( "[SND] device opened: %d Hz, %d ch, %d-bit, %d frames/callback"
-                    " (%.1f ms per callback, SOUND_BUFFER_SHIFT %d)\n",
-                    int( audio.freq ), int( audio.channels ),
-                    ( audio.format == AUDIO_S16SYS ) ? 16 : 8,
-                    int( audio.samples ),
-                    audio.freq > 0 ? ( 1000.0 * audio.samples / audio.freq ) : 0.0,
-                    buffer_shift );
+            // again only when se_SoundMenu (below) sees SOUND_QUALITY,
+            // SOUND_CHANNELS or SOUND_BUFFER_SHIFT change. It is not reachable
+            // from fill_audio.
+            //
+            // The format is printed as a NUMBER unless it is one of the two the
+            // mixer can actually handle. A line whose job is to report the
+            // obtained spec must not answer "8-bit" for a format it does not
+            // recognise -- that is the kind of confident-and-wrong diagnostic
+            // that costs an afternoon. AUDIO_U8 is unreachable here (se_SoundInit
+            // re-opens the device forcing AUDIO_S16SYS if it gets anything else)
+            // and is listed anyway, because "unreachable" has been wrong before
+            // on this port.
+            if ( audio.format == AUDIO_S16SYS || audio.format == AUDIO_U8 )
+                printf( "[SND] device opened: %d Hz, %d ch, %d-bit, %d frames/callback"
+                        " (%.1f ms per callback, SOUND_BUFFER_SHIFT %d)\n",
+                        int( audio.freq ), int( audio.channels ),
+                        ( audio.format == AUDIO_S16SYS ) ? 16 : 8,
+                        int( audio.samples ),
+                        audio.freq > 0 ? ( 1000.0 * audio.samples / audio.freq ) : 0.0,
+                        buffer_shift );
+            else
+                printf( "[SND] device opened: %d Hz, %d ch, UNSUPPORTED FORMAT 0x%x,"
+                        " %d frames/callback (%.1f ms per callback,"
+                        " SOUND_BUFFER_SHIFT %d)\n",
+                        int( audio.freq ), int( audio.channels ),
+                        unsigned( audio.format ), int( audio.samples ),
+                        audio.freq > 0 ? ( 1000.0 * audio.samples / audio.freq ) : 0.0,
+                        buffer_shift );
 #endif
             se_SoundPause(false);
         }
@@ -542,11 +595,11 @@ eWavData::eWavData(const char * fileName,const char *alternative)
 
 #ifdef __EMSCRIPTEN__
 
-// The parser's <stdio.h> and <string.h> now live at the top of the file (:44),
-// because M3 task 2 added a printf ABOVE this point -- se_SoundInit's device
-// line -- and a declaration cannot be used before the #include that provides
-// it. The reasoning for naming them rather than inheriting them is unchanged
-// and is recorded there.
+// The parser's <stdio.h> and <string.h> now live at the top of the file, in
+// the include block beside upstream's <stdlib.h>, because M3 task 2 added a
+// printf ABOVE this point -- se_SoundInit's device line -- and a declaration
+// cannot be used before the #include that provides it. The reasoning for
+// naming them rather than inheriting them is unchanged and is recorded there.
 
 // ---------------------------------------------------------------------------
 // The web client's WAV loader.
@@ -657,14 +710,16 @@ static bool se_WavReadU16( FILE * f, Uint16 & out )
 // line means the budget is spent, NOT that no further load happened.
 // A THIRD ALLOWANCE, not a share of either of the two above, because it counts
 // a different event and one that fires at a different rate. The two above count
-// LOADS; this one counts VOICES RETIRED for want of samples in eWavData::Mix
-// (:1147, :1184), which is called once per player per camera per audio
-// callback. At the buffer size this port ships that is ~11 callbacks a second
-// (see the SOUND_BUFFER_SHIFT note in web/webdefaults/autoexec.cfg), each one
-// walking every gCycle's three players, so a single unloadable wav in a
-// four-cycle round can reach this line dozens of times a second -- more than an
-// order of magnitude above the load rate the other two budgets were measured
-// against, and enough to bury them if it shared their allowance.
+// LOADS; this one counts VOICES RETIRED for want of samples, at the two early
+// returns in eWavData::Mix (the `!data` arm and the `0 == samples` guard),
+// which is called once per player per camera per audio callback. At the buffer
+// size this port ships -- 1024 frames against a 22050 Hz device, SOUND_BUFFER_
+// SHIFT 1 -- that is 21.5 callbacks a second (see the note beside the setting
+// in web/webdefaults/autoexec.cfg), each one walking every gCycle's three
+// players, so a single unloadable wav in a four-cycle round can reach this line
+// well over a hundred times a second -- orders of magnitude above the load rate
+// the other two budgets were measured against, and enough to bury them if it
+// shared their allowance.
 //
 // It exists at all because the retirement is otherwise INVISIBLE: it turns a
 // voice off, and a voice that was already producing no samples sounds exactly
@@ -1189,8 +1244,9 @@ bool eWavData::Mix( Uint8* dest_u8, Uint32 playlen, eAudioPos& pos,
         {
 #if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
             // RETIRE THE VOICE INSTEAD OF LEAVING IT RUNNING SILENT. This
-            // function's return value means "end reached"; eSoundPlayer::Mix
-            // (:1446) inverts it into `goon[viewer]`, so `false` here says
+            // function's return value means "end reached"; the
+            // `goon[viewer]=!wav->Mix(...)` in eSoundPlayer::Mix inverts it,
+            // so `false` here says
             // "still playing, call me again next callback" about a sound that
             // has no data and, once loadError is set, will not acquire any
             // before the next eSoundPlayer::Reset(). The player then never
@@ -1198,7 +1254,8 @@ bool eWavData::Mix( Uint8* dest_u8, Uint32 playlen, eAudioPos& pos,
             // function, and -- the part that has teeth now that sound actually
             // plays -- eSoundPlayer::Mix increments real_sound_sources on the
             // way in. That counter is the ONLY input to the loudness_thresh
-            // voice limiter at the bottom of fill_audio (:187-196), which
+            // voice limiter -- the block of `real_sound_sources` comparisons
+            // at the bottom of fill_audio -- which
             // raises the threshold by .01 per callback once the count exceeds
             // SOUND_SOURCES+4. Voices that produce no samples would therefore
             // push the threshold up until they silenced the voices that do.
@@ -1224,7 +1281,8 @@ bool eWavData::Mix( Uint8* dest_u8, Uint32 playlen, eAudioPos& pos,
 #if defined( __EMSCRIPTEN__ ) && !defined( DEDICATED )
     // THE ZERO-SAMPLE WAV, WHICH IS A HANG BELOW RATHER THAN A SILENCE. `data`
     // being non-NULL does not imply there is anything to play: Load()'s
-    // stand-in arm (:968) keeps sound/expl.wav's buffer and then sets len = 0,
+    // stand-in arm -- the `len=0` in Load()'s no-alternative else -- keeps
+    // sound/expl.wav's buffer and then reports zero bytes,
     // upstream's silent-placeholder idiom, which leaves this object with
     // data != NULL and samples == 0. On that shape the outer `while (goon)`
     // below cannot terminate when loop is true -- every inner loop is guarded
