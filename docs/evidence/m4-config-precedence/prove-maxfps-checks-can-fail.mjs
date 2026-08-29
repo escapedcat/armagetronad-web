@@ -99,6 +99,31 @@ const cases = [
         mutate: t => dropFirst( t, /\[MAXFPS\] .*"phase":"before-change"/ ),
     },
     {
+        // ADDED IN REVIEW. The case above was the only one aimed at
+        // "classified consistently throughout", and it does not reach the
+        // `consistent` half of that check: dropping a probe trips
+        // `probes.length === 7` while `consistent` stays true. The two
+        // editAllProbes cases set autoexec_max_fps on EVERY probe, which keeps
+        // the classification uniform and so also leaves `consistent` true.
+        //
+        // So `consistent` had no mutation of its own -- which is exactly the
+        // defect this file's own header describes one level up: the classifier
+        // was split off autoexec_sound_buffer_shift because "It could not fail,
+        // so it was not evidence." The same sentence applied here and nobody
+        // had noticed.
+        //
+        // Editing a SINGLE probe breaks it: `overrides` goes true via .some(),
+        // while the six untouched probes still read null, so .every() is false.
+        // Collateral is expected and real -- flipping `overrides` also flips
+        // `kind` to 'control' and trips the --expect check. This prover matches
+        // on "at least the named check failed" rather than set equality, so
+        // that is tolerated here; task 2's prover is the stricter one and
+        // requires collateral to be declared.
+        name: 'exactly one probe carries an autoexec MAX_FPS override',
+        expect: 'classified consistently',
+        mutate: t => editProbe( t, 'before-change', o => { o.autoexec_max_fps = '60'; } ),
+    },
+    {
         name: 'the page is actually the control page (autoexec sets MAX_FPS)',
         expect: 'as asserted with --expect',
         mutate: t => editAllProbes( t, o => { o.autoexec_max_fps = '60'; } ),

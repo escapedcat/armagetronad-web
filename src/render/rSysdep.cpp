@@ -497,7 +497,8 @@ rSysDep::rSwapMode rSysDep::swapMode_ = rSysDep::rSwap_glFlush;
 //
 // BOTH HALVES OF THE GUARD ARE LOAD-BEARING.
 //   !defined( DEDICATED ) -- this definition sits OUTSIDE the file's
-//     `#ifndef DEDICATED` region, which opens on the next line. It therefore
+//     `#ifndef DEDICATED` region, which opens below the `// buffer swap:`
+//     heading a few lines past this definition's `#endif`. It therefore
 //     compiles into the M0 dedicated server too, and that build's wasm has to
 //     stay byte-identical at 2,488,298 bytes / md5 9718a2a6...
 //

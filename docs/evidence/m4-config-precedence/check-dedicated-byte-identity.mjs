@@ -88,6 +88,17 @@ import { tmpdir } from 'node:os';
 // The commit this task branched from: the tree before autoexec.cfg lost its
 // two settings and before either .cpp grew a guard. `git show BASE_REF:<path>`
 // is what makes a fresh, toolchain-correct base object every run.
+//
+// IF THIS REF NO LONGER RESOLVES, this gate stops running -- a squash or a
+// rebase before merge will do that, and M4 task 5's exit step is a clean
+// rebuild PLUS this gate, so it is the likely moment to discover it. The fix is
+// not to delete the check. Repoint BASE_REF at any commit whose tree predates
+// this task's two .cpp guards and the autoexec.cfg deletions; `git log --
+// src/render/rSysdep.cpp` finds the boundary. The base object md5s are
+// properties of that tree, not of this hash, so they do not change when the
+// hash does. What must NOT happen is repointing it at a commit that already
+// contains the guards -- the control would then compare the change against
+// itself and pass while proving nothing.
 const BASE_REF = '56df579d';
 
 // The invariant. Same two numbers as M0, M1, M2, M3 and M4 tasks 1-2.
@@ -370,10 +381,11 @@ for ( const unit of UNITS ) {
 // order artifact into the number this control reports, which is precisely the
 // number a reader would quote as "what the guard is worth".
 if ( unguardedObjs.length === UNITS.length ) {
-    const linkOut = run( 'make', [ '-f', 'web/Makefile', '-n', 'web/dist-m0/armagetronad-dedicated.js' ],
-        { env: { ...process.env } } );
     // Re-derive the link command the same way as the compile command: ask make.
-    // It prints nothing when the target is up to date, so force it.
+    // It prints nothing when the target is up to date, so force it with -B.
+    // (An earlier revision ran the un-forced `make -n` first and then discarded
+    // its output with `void linkOut;`. Removed in review -- it was one more
+    // make invocation whose result was never read.)
     const forced = run( 'make', [ '-f', 'web/Makefile', '-n', '-B',
         'web/dist-m0/armagetronad-dedicated.js' ] );
     const linkLine = forced.split( '\n' ).filter( l => l.trim().startsWith( 'em++' ) ).pop();
@@ -403,7 +415,6 @@ if ( unguardedObjs.length === UNITS.length ) {
               'segment, so the segment is the same length and so is the module. This is\n' +
               'why the invariant has to be quoted as "2,488,298 bytes AND md5 9718a2a6..."\n' +
               'and why a size-only check would have passed a broken dedicated server.' ) );
-    void linkOut;
 }
 
 console.log( '' );
