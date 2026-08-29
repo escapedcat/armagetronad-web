@@ -459,7 +459,65 @@ static rFastForwardCommandLineAnalyzer analyzer;
 rSysDep::rSwapMode rSysDep::swapMode_ = rSysDep::rSwap_glFlush;
 //rSysDep::rSwapMode rSysDep::swapMode_ = rSysDep::rSwap_60Hz;
 
+// MAX_FPS's COMPILED DEFAULT. 360 everywhere upstream; 60 in the browser
+// client only.
+//
+// This 60 used to be a line in web/webdefaults/autoexec.cfg, and that was the
+// wrong place for it. st_LoadConfig() (src/tools/tConfiguration.cpp) loads
+// user.cfg FIRST and autoexec.cfg LAST, so every item named in autoexec.cfg is
+// a HARD OVERRIDE, not a default: it wins over whatever the player saved. For
+// a correctness setting that is exactly right (INFINITY_PLANE and
+// USE_DISPLAYLISTS are still there for that reason). For a player preference
+// it is a bug, and MAX_FPS is a player preference -- it is menu-reachable via
+// System Setup / Display Settings / Screen Mode, where sg_ScreenModeMenu
+// (src/tron/gMenus.cpp) builds a uMenuItemSelection<int> over a hand-picked
+// list that contains 60, bound to sr_maxFPS; and sr_maxFPSConf below is a
+// tConfItem, so the choice IS written back to user.cfg. The player could
+// change it, the change was saved, and then autoexec.cfg silently undid it on
+// the next load. Nothing reported an error; the value just reappeared as 60.
+//
+// RE-ORDERING THE LOADS CANNOT FIX THAT, which is why the value had to move
+// into the binary rather than swap places with something. In st_LoadConfig,
+// Load( var, "user.cfg" ) is the FIRST load performed and the two
+// autoexec.cfg loads are the LAST; there is no slot ahead of user.cfg to move
+// autoexec.cfg into. A compiled default has the wanted precedence by
+// construction instead: it applies when there is no user.cfg, and it loses to
+// user.cfg the moment there is one, because after this change nothing loaded
+// after user.cfg mentions MAX_FPS at all.
+//
+// WHY 60 AND NOT UPSTREAM'S 360. 360 is a cap chosen for native hardware. In
+// the browser the limiter's sleep is an Asyncify yield (see the long comment
+// on sr_LimitFPS below), and this port has never been measured much above 60
+// frames per second anyway: docs/evidence/m1-task7 clocked ~63 fps in Chrome
+// and ~61 in Firefox against this same cap, and the M2 gate held a 60/59 fps
+// per-second median over three real rounds. So 360 would not raise the frame
+// rate, it would only remove the cap that keeps the frame budget predictable.
+// It is a default, not a decree: a player who wants 0 (uncapped), 30 or 120
+// can now pick it from the menu and keep it.
+//
+// BOTH HALVES OF THE GUARD ARE LOAD-BEARING.
+//   !defined( DEDICATED ) -- this definition sits OUTSIDE the file's
+//     `#ifndef DEDICATED` region, which opens on the next line. It therefore
+//     compiles into the M0 dedicated server too, and that build's wasm has to
+//     stay byte-identical at 2,488,298 bytes / md5 9718a2a6...
+//
+//     AND THE SIZE HALF OF THAT PAIR WOULD NOT HAVE CAUGHT AN UNGUARDED EDIT.
+//     Measured: relinking the dedicated server with this guard weakened to
+//     `#if defined( __EMSCRIPTEN__ )` yields a wasm of EXACTLY 2,488,298
+//     bytes with a DIFFERENT md5. 360 -> 60 rewrites the initialiser of an
+//     i32 that already exists in the data segment, so nothing changes length.
+//     A size-only check passes a server that has silently had its frame cap
+//     changed. docs/evidence/m4-config-precedence/check-dedicated-byte-identity.mjs
+//     CONTROL 1b re-measures this on demand.
+//   defined( __EMSCRIPTEN__ ) -- keeps native builds on upstream's 360. Note
+//     em++ defines __EMSCRIPTEN__ for BOTH wasm builds this repo produces, so
+//     __EMSCRIPTEN__ alone would NOT spare the dedicated server; the DEDICATED
+//     half is what does that. See docs/porting/browser-runtime-notes.md § 1.
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+int sr_maxFPS = 60;
+#else
 int sr_maxFPS = 360;
+#endif
 
 // buffer swap:
 #ifndef DEDICATED
