@@ -170,6 +170,29 @@ negative control too, because silence is the one thing a silent build gets
 right. It is also the half of the steps file's "structured" claim that nothing
 else checked — A7b asserts the peaks, A7c asserts the silence between them.
 
+**A7c's fragility, and it is not the one you would guess.** "Nothing in this
+configuration plays a sound before the match starts" is true, but one of the two
+reasons it is true is an accident. A sound *is* triggered before round 1:
+`gGame.cpp:4543-4544` runs `introPlayer.MakeGlobal(); introPlayer.Reset();` at
+match start. It produces no samples because `intro` is one of the two
+`samples == 0` placeholders — it names `moviesounds/intro.wav`, that directory
+does not exist in this tree, and `eWavData::Load`'s no-alternative arm loads
+`sound/expl.wav` as a stand-in and then sets `len = 0`. (The other reason is
+real and would hold anyway: `sg_SoundPause( true, false )` on the next line.)
+
+The consequence for whoever maintains this next: **shipping a moviepack with a
+real `intro.wav` would make A7c fail while the game is behaving correctly.** So
+an A7c failure is not by itself proof of the uninitialised-heap regression it
+was built to catch — check first whether `moviesounds/` gained a file. That does
+not weaken A7c's purpose; it is still the only check here that fails when there
+is too *much* signal, and the regression it guards is one M3 itself made
+possible by turning `fill_audio`'s `memset` runtime-conditional. It just means
+the check is asserting "before round 1 this build is silent", not the broader
+"this game has nothing to say before round 1".
+
+Found by the controller during the final review, by asking why A7c passes rather
+than being satisfied that it does.
+
 For comparison with M3 task 2's figures, which were taken over the whole run
 rather than this window, the checker also prints the unwindowed pair: Chrome
 **1030/1198**, peak 5467; Firefox **1023/1192**, peak 5145. Task 2 measured
