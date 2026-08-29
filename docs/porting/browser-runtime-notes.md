@@ -681,7 +681,14 @@ is ever revisited.
 
 ### What this costs, and what to watch for
 
-The frame rate is capped again, at `MAX_FPS` (60 in `web/webdefaults/autoexec.cfg`).
+The frame rate is capped again, at `MAX_FPS` — 60, which since M4 task 3 is the
+compiled default of `sr_maxFPS` in `rSysdep.cpp`, guarded by
+`#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )`. It is **no longer a
+line in `web/webdefaults/autoexec.cfg`**: that file loads after `user.cfg`, so
+the cap was a hard override a player could change in the menu and never keep.
+As a compiled default it applies absent a `user.cfg` and loses to one the
+moment there is one. `docs/evidence/m4-config-precedence/` has the
+before/after.
 It is still not `requestAnimationFrame`-aligned: `emscripten_sleep` is
 `setTimeout`, which browsers clamp to ~4ms once timeouts nest, so expect uneven
 pacing and treat 60 as a ceiling rather than a cadence. Converting the render
