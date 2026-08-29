@@ -35,6 +35,7 @@ what happens when IndexedDB is unavailable. See "Known and accepted" below.
 | `negative-chrome-console.log` | real | `persist-negative.steps` | **FAIL** (P10 P11 P12 P13) |
 | `slowgate-chrome-console.log` | populate slowed 3 s | `persist-gate.steps` | **PASS** (18/18) |
 | `slowungated-chrome-console.log` | populate slowed 3 s, gate deleted | `persist-gate.steps` | **FAIL** (P3 P4) |
+| `ungated-chrome-console.log` | gate deleted, populate unchanged | `persist-gate.steps` | **PASS** — the control that fails to control |
 
 Measured, Chrome 152 and Firefox, localhost:
 
@@ -69,6 +70,9 @@ node web/tools/drive-browser.mjs --headed --out /tmp/slowgate \
      --script-file web/tools/persist-gate.steps
 node web/tools/drive-browser.mjs --headed --out /tmp/slowungated \
      --url http://localhost:8000/armagetronad-slowungated.html \
+     --script-file web/tools/persist-gate.steps
+node web/tools/drive-browser.mjs --headed --out /tmp/ungated \
+     --url http://localhost:8000/armagetronad-ungated.html \
      --script-file web/tools/persist-gate.steps
 kill %1
 ```
@@ -111,40 +115,43 @@ fresh file over the top. Saving keeps working, nothing is ever read back, and
 from inside the game it is indistinguishable from success.
 
 **The obvious control does not work, and that is itself the finding.** Deleting
-the run dependency and re-running left P3/P4 *passing*:
+the run dependency and re-running left P3/P4 *passing* — `ungated-chrome-console.log`
+is that run, kept and re-runnable, and the checker scores it PASS 18/18:
 
 ```
-[   116ms] [PERSIST] populate ok in 36ms
-[   394ms] [PERSIST] runtime initialized, Play enabled
+[   108ms] [PERSIST] populate ok in 34ms
+[   379ms] [PERSIST] runtime initialized, Play enabled
 ```
 
 Emscripten's `run()` does `await new Promise(r => setTimeout(r, 1))` between
 `preRun()` and `initRuntime()`, and `initRuntime()` then takes ~280 ms of
 synchronous wasm work here. So with the gate removed the ordering is a race
-between a 1 ms timer plus ~280 ms of constructors on one side and a ~36 ms
+between a 1 ms timer plus ~280 ms of constructors on one side and a ~34 ms
 IndexedDB round trip on the other — and on this machine IndexedDB happened to
 win. **That is exactly the intermittency that makes this bug dangerous**, and
 it is why the real control widens the window instead.
 
 `make-control-pages.mjs` therefore delays the `FS.syncfs` *callback* by 3000 ms
 (the populate still really runs; its completion is reported and acted on three
-seconds later) and emits two pages:
+seconds later). It emits three control pages in all:
 
-| | run dependency | `[PERSIST] populate ok` | `[PERSIST] runtime initialized` |
-|---|---|---|---|
-| real page | kept | 102 ms | 373 ms |
-| `armagetronad-slowgate.html` | kept | **3106 ms** | **3186 ms** |
-| `armagetronad-slowungated.html` | deleted | 3116 ms | **380 ms** |
+| | run dependency | populate | `[PERSIST] populate ok` | `[PERSIST] runtime initialized` |
+|---|---|---|---|---|
+| real page | kept | normal | 102 ms | 373 ms |
+| `armagetronad-ungated.html` | deleted | normal | 108 ms | 379 ms |
+| `armagetronad-slowgate.html` | kept | +3 s | **3106 ms** | **3186 ms** |
+| `armagetronad-slowungated.html` | deleted | +3 s | 3116 ms | **380 ms** |
 
-The middle row is the positive demonstration: no accident of timing delays
-`onRuntimeInitialized` — and with it the Play button — by three seconds. Only
-the run dependency does. The bottom row is the control that makes P3/P4
-falsifiable: the runtime came up 2.7 s before the filesystem it was supposed to
-read.
+Row 2 is the control that fails to control. Row 3 is the positive
+demonstration: no accident of timing delays `onRuntimeInitialized` — and with
+it the Play button — by three seconds. Only the run dependency does. Row 4 is
+the control that makes P3/P4 falsifiable: the runtime came up 2.7 s before the
+filesystem it was supposed to read.
 
-Both control pages still PASS P10–P13, because the gate script waits for the
-populate line before it clicks Play and so never enters the race itself.
-Exactly two checks move; that isolation is the point.
+All three control pages still PASS P10–P13, because the gate script waits for
+the populate line before it clicks Play and so never enters the race itself.
+Between `slowgate` and `slowungated`, exactly two checks move; that isolation
+is the point.
 
 ### Coverage, stated honestly
 
@@ -178,4 +185,4 @@ exercised in a browser.
 | `persist-gate.steps.asrun` | the gate script exactly as run for the transcripts here. |
 | `persist-negative.steps.asrun` | the wipe control, exactly as run. |
 | `chrome-*.png`, `firefox-*.png` | boot 1 ready / language menu, boot 2 ready / language menu, and the deliberate error banner. |
-| `*-console.log` | the five transcripts in the results table. |
+| `*-console.log` | the six transcripts in the results table. |

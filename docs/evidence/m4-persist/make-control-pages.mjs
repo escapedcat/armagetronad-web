@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Build the two ORDERING control pages for the M4 persistence gate.
+// Build the three ORDERING control pages for the M4 persistence gate.
 //
 //   node docs/evidence/m4-persist/make-control-pages.mjs
-//   # writes web/dist-m1/armagetronad-slowgate.html
+//   # writes web/dist-m1/armagetronad-ungated.html
+//   #        web/dist-m1/armagetronad-slowgate.html
 //   #        web/dist-m1/armagetronad-slowungated.html
 //
 //   node web/tools/drive-browser.mjs --headed --out /tmp/slowgate \
@@ -16,6 +17,12 @@
 //   node docs/evidence/m4-persist/check-persist-transcript.mjs /tmp/slowungated/console.log
 //   # expected: exit status 1, with P3 and P4 FAIL
 //
+//   node web/tools/drive-browser.mjs --headed --out /tmp/ungated \
+//        --url http://localhost:8000/armagetronad-ungated.html \
+//        --script-file web/tools/persist-gate.steps
+//   node docs/evidence/m4-persist/check-persist-transcript.mjs /tmp/ungated/console.log
+//   # expected: PASS -- and that is the point, see below
+//
 // WHY THESE EXIST, AND WHY THE OBVIOUS CONTROL IS NOT ENOUGH
 // ----------------------------------------------------------
 // P3/P4 in the checker assert that "[PERSIST] populate ok" precedes
@@ -25,25 +32,27 @@
 // that starts before the populate reads an empty /persist, then saves over
 // it, and looks exactly like a working one from the inside.
 //
-// The obvious control -- delete the run dependency and re-run -- was tried
-// first and DOES NOT WORK, which is worth recording because it looks like it
-// should. Measured on this machine, with the dependency deleted:
+// The obvious control -- delete the run dependency and re-run -- DOES NOT
+// WORK, which is worth recording because it looks like it should. That is
+// what armagetronad-ungated.html below is for: it is the control that fails
+// to control, kept and re-runnable so the claim is checkable. Measured:
 //
-//     [   116ms] [PERSIST] populate ok in 36ms
-//     [   394ms] [PERSIST] runtime initialized, Play enabled
+//     [   108ms] [PERSIST] populate ok in 34ms
+//     [   379ms] [PERSIST] runtime initialized, Play enabled
 //
-// i.e. P3/P4 still passed. The reason is that Emscripten's run() does
+// (docs/evidence/m4-persist/ungated-chrome-console.log, which the checker
+// scores PASS 18/18.) i.e. P3/P4 still passed. The reason is that Emscripten's run() does
 // `await new Promise(resolve => setTimeout(resolve, 1))` between preRun() and
 // initRuntime() (it is the yield that lets the browser paint "Running..."),
 // and initRuntime() itself then takes ~280 ms of synchronous wasm work here.
 // So without the dependency the ordering is a RACE between a 1 ms timer plus
-// a ~280 ms constructor run on one side and a ~36 ms IndexedDB round trip on
+// a ~280 ms constructor run on one side and a ~34 ms IndexedDB round trip on
 // the other -- and on this machine, on that day, IndexedDB won. That is
 // precisely the "intermittent, and the failure looks like success" hazard the
 // run dependency exists to remove, and it is why a control has to widen the
 // window instead of relying on the default one.
 //
-// WHAT THESE TWO PAGES DO. Both delay the FS.syncfs(true) CALLBACK by 3000 ms
+// WHAT THE OTHER TWO PAGES DO. Both delay the FS.syncfs(true) CALLBACK by 3000 ms
 // -- the real populate still happens, its completion is simply reported and
 // acted on three seconds later, which is what "a slow populate" means from
 // run()'s point of view. Then:
@@ -101,6 +110,16 @@ function edit(html, text, replacement, name) {
 
 const original = readFileSync(SRC, 'utf8');
 
+// 1. The control that does NOT discriminate, kept so that fact stays checkable.
+let ungated = original;
+ungated = edit(ungated, ADD,
+  `        // [control] addRunDependency call deleted by make-control-pages.mjs\n`, 'the addRunDependency call');
+ungated = edit(ungated, REMOVE,
+  `          // [control] removeRunDependency call deleted by make-control-pages.mjs\n`, 'the removeRunDependency call');
+writeFileSync('web/dist-m1/armagetronad-ungated.html', ungated);
+console.log('wrote web/dist-m1/armagetronad-ungated.html     (populate unchanged, run dependency DELETED -- expected to PASS anyway)');
+
+// 2 and 3. The controls that do.
 const slowGate = edit(original, SYNCFS, SLOW + SYNCFS, 'the FS.syncfs(true) call');
 writeFileSync('web/dist-m1/armagetronad-slowgate.html', slowGate);
 console.log('wrote web/dist-m1/armagetronad-slowgate.html   (populate callback +3000ms, run dependency KEPT)');

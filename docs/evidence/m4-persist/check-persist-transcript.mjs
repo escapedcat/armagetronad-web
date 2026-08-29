@@ -51,8 +51,8 @@
 //                                   the finding: the runtime waited three
 //                                   seconds for the filesystem.
 // Deleting the run dependency WITHOUT slowing the populate does NOT flip
-// P3/P4 on this machine -- measured, and explained at length in
-// make-control-pages.mjs. That is not a weakness in the checks; it is the
+// P3/P4 on this machine -- measured (ungated-chrome-console.log, which this
+// checker scores PASS), and explained at length in make-control-pages.mjs. That is not a weakness in the checks; it is the
 // intermittency that makes the bug they exclude dangerous.
 //
 // The remaining checks are structural (a payload is present and well formed,
