@@ -362,6 +362,13 @@ for ( const unit of UNITS ) {
 // CONTROL 1b -- the same mistake carried through to the artifact the invariant
 // is actually stated about. One extra link; worth it, because "the object
 // changed" and "the shipped wasm changed" are different claims.
+//
+// IT SUBSTITUTES THE OBJECTS IN PLACE ON THE REAL LINK LINE AND DOES NOT
+// APPEND THEM. Object order changes the output: measured on the client link,
+// appending two rebuilt objects instead of substituting them moved the wasm by
+// 700 bytes with no source change at all. Appending here would fold a link-
+// order artifact into the number this control reports, which is precisely the
+// number a reader would quote as "what the guard is worth".
 if ( unguardedObjs.length === UNITS.length ) {
     const linkOut = run( 'make', [ '-f', 'web/Makefile', '-n', 'web/dist-m0/armagetronad-dedicated.js' ],
         { env: { ...process.env } } );

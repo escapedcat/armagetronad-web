@@ -1,0 +1,87 @@
+==============================================================================
+PROVING check-maxfps-transcript.mjs CAN FAIL
+==============================================================================
+checker    /Users/user/data/src/armagetronad-web/.worktrees/m4-persistence/docs/evidence/m4-config-precedence/check-maxfps-transcript.mjs
+input      docs/evidence/m4-config-precedence/chrome-console.log (18021 bytes)
+cases      14 (1 control that must pass, 13 mutations that must fail)
+run at     2026-08-29T15:37:47.354Z
+
+Every input below is FABRICATED. Nothing here is evidence that the fix
+works -- that is the two real transcripts and the screenshots. This only
+shows the instrument responds.
+
+  [OK] CONTROL (expected to PASS): the transcript exactly as recorded
+          checker exits 0 with no FAILED lines, so every failure below is caused by
+          its mutation and was not already present.
+
+  [OK] a probe line goes missing
+          checker exit 1; FAILED lines:
+            FAILED: the transcript is classified consistently throughout
+            FAILED: before-change: max_fps is 60 -- still the default when the player arrives at the menu row
+          looked for a failure naming: "classified consistently"
+
+  [OK] the page is actually the control page (autoexec sets MAX_FPS)
+          checker exit 1; FAILED lines:
+            FAILED: transcript is the real page, as asserted with --expect
+            FAILED: boot3-in-menu: max_fps is 60 -- CONTROL: autoexec.cfg loads last, so the player's 30 is expected to be GONE
+          looked for a failure naming: "as asserted with --expect"
+
+  [OK] one of the three boots did not populate /persist
+          checker exit 1; FAILED lines:
+            FAILED: all three boots populated /persist from IndexedDB
+          looked for a failure naming: "all three boots populated"
+
+  [OK] something threw during the run, before the positive control
+          checker exit 1; FAILED lines:
+            FAILED: the run is clean up to the positive control
+          looked for a failure naming: "the run is clean up to the positive control"
+
+  [OK] the deliberate uncaught error did not register (blind detector)
+          checker exit 1; FAILED lines:
+            FAILED: the exception detector is not blind -- the deliberate error registered
+          looked for a failure naming: "the exception detector is not blind"
+
+  [OK] the audio device opened at a different buffer shift
+          checker exit 1; FAILED lines:
+            FAILED: the audio device opened at SOUND_BUFFER_SHIFT 1 on every boot
+          looked for a failure naming: "the audio device opened at SOUND_BUFFER_SHIFT 1"
+
+  [OK] autoexec.cfg turns out to set SOUND_BUFFER_SHIFT after all
+          checker exit 1; FAILED lines:
+            FAILED: and on the real page nothing but the binary could have supplied that 1
+          looked for a failure naming: "nothing but the binary could have supplied that 1"
+
+  [OK] the compiled default did not apply on a fresh profile
+          checker exit 1; FAILED lines:
+            FAILED: boot1-nothing-chosen-yet: max_fps is 60 -- the default applies before the player chooses anything
+          looked for a failure naming: "boot1-nothing-chosen-yet"
+
+  [OK] the value was already the chosen one before the player chose it
+          checker exit 1; FAILED lines:
+            FAILED: before-change: max_fps is 60 -- still the default when the player arrives at the menu row
+          looked for a failure naming: "before-change"
+
+  [OK] the file was written while the menu was still open
+          checker exit 1; FAILED lines:
+            FAILED: changed-menu-still-open: max_fps is 60 -- the change is in memory only while the menu is open
+          looked for a failure naming: "changed-menu-still-open"
+
+  [OK] leaving the menu did not write the choice
+          checker exit 1; FAILED lines:
+            FAILED: after-menu-leave: max_fps is 30 -- leaving the menu writes the choice (M4 task 2's mechanism)
+          looked for a failure naming: "after-menu-leave"
+
+  [OK] the choice did not survive the IndexedDB round trip
+          checker exit 1; FAILED lines:
+            FAILED: boot3-before-play: max_fps is 30 -- the choice survived the IndexedDB round trip
+          looked for a failure naming: "boot3-before-play"
+
+  [OK] THE HEADLINE: the choice survived the reload but the game overrode it
+          checker exit 1; FAILED lines:
+            FAILED: boot3-in-menu: max_fps is 30 -- the player's choice survives the game's own config load
+          looked for a failure naming: "boot3-in-menu"
+
+==============================================================================
+All 14 cases behaved as designed: the control passes and each of the
+13 mutations is caught by the check it was aimed at.
+==============================================================================

@@ -1,0 +1,154 @@
+[   1491ms] [harness] firefox: 154.0.1 (headless=true)
+[   1491ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     51ms] [page] load event fired
+[    128ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    147ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    147ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    149ms] [page] load event fired
+[    149ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[    203ms] [console.log] [PERSIST] populate ok in 6ms
+[    251ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    334ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1261ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1261ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1261ms] [console.error] 
+[   1262ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1262ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1262ms] [console.log] 
+[   1400ms] [console.log] [L] ENCODING latin1
+[   1404ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1549ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1595ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1598ms] [console.error] TODO: glShadeModel
+[   1622ms] [harness] click #start: clicked
+[  10650ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/01-boot1-language-menu.png
+[  10653ms] [console.log] [MAXFPS] {"phase":"boot1-nothing-chosen-yet","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":21646,"autoexec_bytes":12180}
+[  10653ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot1-nothing-chosen-yet',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  10666ms] [harness] key Enter (1/1)
+[  10690ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10968ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10968ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13492ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/02-boot1-first-setup.png
+[  13497ms] [harness] key Escape (1/1)
+[  13523ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13800ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13801ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16338ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/03-boot1-welcome.png
+[  16338ms] [harness] === RELOAD-REQUESTED ===
+[  16343ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16343ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16343ms] [harness] eval location.reload() => undefined
+[  16344ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16357ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  16357ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  16372ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  16385ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16386ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16387ms] [page] load event fired
+[  16437ms] [console.log] [PERSIST] populate ok in 4ms
+[  16444ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  16445ms] [harness] === BOOT-2-POPULATED ===
+[  16464ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17949ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17950ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17950ms] [console.error] 
+[  17950ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17950ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17950ms] [console.log] 
+[  18098ms] [console.log] [L] ENCODING latin1
+[  18099ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18115ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18118ms] [console.error] TODO: glShadeModel
+[  18126ms] [harness] click #start: clicked
+[  27156ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/04-boot2-main-menu.png
+[  27161ms] [console.log] [MAXFPS] {"phase":"boot2-main-menu","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12180}
+[  27161ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot2-main-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  27166ms] [harness] key Down (1/2)
+[  27471ms] [harness] key Down (2/2)
+[  28696ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/05-boot2-cursor-on-system-setup.png
+[  28698ms] [harness] key Enter (1/1)
+[  30815ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/06-boot2-system-setup.png
+[  30818ms] [harness] key Enter (1/1)
+[  32935ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/07-boot2-display-settings.png
+[  32938ms] [harness] key Enter (1/1)
+[  35764ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/08-boot2-screen-mode.png
+[  35766ms] [harness] key Down (1/7)
+[  36072ms] [harness] key Down (2/7)
+[  36381ms] [harness] key Down (3/7)
+[  36686ms] [harness] key Down (4/7)
+[  36992ms] [harness] key Down (5/7)
+[  37306ms] [harness] key Down (6/7)
+[  37612ms] [harness] key Down (7/7)
+[  39132ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/09-boot2-cursor-on-max-fps.png
+[  39135ms] [console.log] [MAXFPS] {"phase":"before-change","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12180}
+[  39135ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'before-change',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  39135ms] [harness] === THE-PLAYER-LOWERS-MAX-FPS-TO-30 ===
+[  39137ms] [harness] key Left (1/2)
+[  39439ms] [harness] key Left (2/2)
+[  41257ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/10-boot2-max-fps-now-30.png
+[  41260ms] [console.log] [MAXFPS] {"phase":"changed-menu-still-open","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12180}
+[  41260ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'changed-menu-still-open',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  41260ms] [harness] === ESCAPE-LEAVES-SCREEN-MODE ===
+[  41262ms] [harness] key Escape (1/1)
+[  41319ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  41564ms] [harness] until 3x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 3)
+[  41564ms] [harness] until SATISFIED: saw 3x <<[PERSISTSAVE] menu-leave>>
+[  43102ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/11-boot2-back-in-display-settings.png
+[  43105ms] [console.log] [MAXFPS] {"phase":"after-menu-leave","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12180}
+[  43105ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'after-menu-leave',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  43105ms] [harness] === ESCAPE-LEAVES-DISPLAY-SETTINGS ===
+[  43107ms] [harness] key Escape (1/1)
+[  43151ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  43409ms] [harness] until 4x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 4)
+[  43409ms] [harness] until SATISFIED: saw 4x <<[PERSISTSAVE] menu-leave>>
+[  44647ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/12-boot2-back-in-system-setup.png
+[  44647ms] [harness] === SECOND-RELOAD-REQUESTED ===
+[  44654ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  44655ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  44655ms] [harness] eval location.reload() => undefined
+[  44655ms] [harness] until 3x <<[PERSIST] populate ok>> (timeout 90000ms, have 2)
+[  44667ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  44667ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  44680ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  44695ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  44695ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  44696ms] [page] load event fired
+[  44745ms] [console.log] [PERSIST] populate ok in 3ms
+[  44756ms] [harness] until SATISFIED: saw 3x <<[PERSIST] populate ok>>
+[  44756ms] [harness] === BOOT-3-POPULATED ===
+[  44771ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  46269ms] [console.log] [MAXFPS] {"phase":"boot3-before-play","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12180}
+[  46269ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot3-before-play',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  46276ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  46277ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  46277ms] [console.error] 
+[  46277ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  46278ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  46278ms] [console.log] 
+[  46425ms] [console.log] [L] ENCODING latin1
+[  46426ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  46446ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  46449ms] [console.error] TODO: glShadeModel
+[  46458ms] [harness] click #start: clicked
+[  55462ms] [harness] key Down (1/2)
+[  55768ms] [harness] key Down (2/2)
+[  56980ms] [harness] key Enter (1/1)
+[  59085ms] [harness] key Enter (1/1)
+[  61190ms] [harness] key Enter (1/1)
+[  63997ms] [harness] key Down (1/7)
+[  64302ms] [harness] key Down (2/7)
+[  64609ms] [harness] key Down (3/7)
+[  64921ms] [harness] key Down (4/7)
+[  65225ms] [harness] key Down (5/7)
+[  65538ms] [harness] key Down (6/7)
+[  65849ms] [harness] key Down (7/7)
+[  67381ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/13-boot3-max-fps-still-30.png
+[  67385ms] [console.log] [MAXFPS] {"phase":"boot3-in-menu","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12180}
+[  67385ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot3-in-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  67385ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  67386ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1655
+[  67386ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[  67387ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+    <anonymous> @ http://localhost:8000/armagetronad.html:0
+    <anonymous> @ http://localhost:8000/armagetronad.html:0
+[  69427ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ff/14-after-deliberate-uncaught-error.png

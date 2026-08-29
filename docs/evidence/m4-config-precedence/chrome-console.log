@@ -1,0 +1,156 @@
+[   1068ms] [harness] chrome: Chrome/152.0.7977.65
+[   1069ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[      7ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     39ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     39ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     43ms] [page] load event fired
+[     48ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    112ms] [console.log] [PERSIST] populate ok in 35ms
+[    212ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    385ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1265ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1265ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1265ms] [console.error] 
+[   1267ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1267ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1267ms] [console.log] 
+[   1440ms] [console.log] [L] ENCODING latin1
+[   1452ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1454ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1478ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1483ms] [console.error] TODO: glShadeModel
+[   1487ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1538ms] [harness] click #start: clicked
+[   1540ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1540ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1541ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1541ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1541ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10635ms] [harness] screenshot -> docs/evidence/m4-config-precedence/01-boot1-language-menu.png
+[  10637ms] [console.log] [MAXFPS] {"phase":"boot1-nothing-chosen-yet","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":21950,"autoexec_bytes":12180}
+[  10637ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot1-nothing-chosen-yet',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => "read"
+[  10664ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10684ms] [harness] key Enter (1/1)
+[  10987ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10987ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13560ms] [harness] screenshot -> docs/evidence/m4-config-precedence/02-boot1-first-setup.png
+[  13594ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13597ms] [harness] key Escape (1/1)
+[  13899ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13900ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16474ms] [harness] screenshot -> docs/evidence/m4-config-precedence/03-boot1-welcome.png
+[  16475ms] [harness] === RELOAD-REQUESTED ===
+[  16480ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16480ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16480ms] [harness] eval location.reload() => undefined
+[  16480ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16497ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16497ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16500ms] [page] load event fired
+[  16515ms] [console.log] [PERSIST] populate ok in 4ms
+[  16573ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  16582ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  16582ms] [harness] === BOOT-2-POPULATED ===
+[  18090ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  18091ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  18092ms] [console.error] 
+[  18092ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  18093ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  18093ms] [console.log] 
+[  18251ms] [console.log] [L] ENCODING latin1
+[  18255ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18271ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18273ms] [console.error] TODO: glShadeModel
+[  18276ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  18282ms] [harness] click #start: clicked
+[  27366ms] [harness] screenshot -> docs/evidence/m4-config-precedence/04-boot2-main-menu.png
+[  27368ms] [console.log] [MAXFPS] {"phase":"boot2-main-menu","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22758,"autoexec_bytes":12180}
+[  27368ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot2-main-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => "read"
+[  27402ms] [harness] key Down (1/2)
+[  27739ms] [harness] key Down (2/2)
+[  29018ms] [harness] screenshot -> docs/evidence/m4-config-precedence/05-boot2-cursor-on-system-setup.png
+[  29053ms] [harness] key Enter (1/1)
+[  31230ms] [harness] screenshot -> docs/evidence/m4-config-precedence/06-boot2-system-setup.png
+[  31264ms] [harness] key Enter (1/1)
+[  33447ms] [harness] screenshot -> docs/evidence/m4-config-precedence/07-boot2-display-settings.png
+[  33481ms] [harness] key Enter (1/1)
+[  36358ms] [harness] screenshot -> docs/evidence/m4-config-precedence/08-boot2-screen-mode.png
+[  36392ms] [harness] key Down (1/7)
+[  36731ms] [harness] key Down (2/7)
+[  37070ms] [harness] key Down (3/7)
+[  37409ms] [harness] key Down (4/7)
+[  37746ms] [harness] key Down (5/7)
+[  38087ms] [harness] key Down (6/7)
+[  38423ms] [harness] key Down (7/7)
+[  40003ms] [harness] screenshot -> docs/evidence/m4-config-precedence/09-boot2-cursor-on-max-fps.png
+[  40005ms] [console.log] [MAXFPS] {"phase":"before-change","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22758,"autoexec_bytes":12180}
+[  40005ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'before-change',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => "read"
+[  40005ms] [harness] === THE-PLAYER-LOWERS-MAX-FPS-TO-30 ===
+[  40037ms] [harness] key Left (1/2)
+[  40376ms] [harness] key Left (2/2)
+[  42258ms] [harness] screenshot -> docs/evidence/m4-config-precedence/10-boot2-max-fps-now-30.png
+[  42260ms] [console.log] [MAXFPS] {"phase":"changed-menu-still-open","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22758,"autoexec_bytes":12180}
+[  42260ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'changed-menu-still-open',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => "read"
+[  42260ms] [harness] === ESCAPE-LEAVES-SCREEN-MODE ===
+[  42293ms] [harness] key Escape (1/1)
+[  42302ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  42596ms] [harness] until 3x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 3)
+[  42597ms] [harness] until SATISFIED: saw 3x <<[PERSISTSAVE] menu-leave>>
+[  44194ms] [harness] screenshot -> docs/evidence/m4-config-precedence/11-boot2-back-in-display-settings.png
+[  44196ms] [console.log] [MAXFPS] {"phase":"after-menu-leave","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22758,"autoexec_bytes":12180}
+[  44196ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'after-menu-leave',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => "read"
+[  44196ms] [harness] === ESCAPE-LEAVES-DISPLAY-SETTINGS ===
+[  44229ms] [harness] key Escape (1/1)
+[  44237ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  44532ms] [harness] until 4x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 4)
+[  44533ms] [harness] until SATISFIED: saw 4x <<[PERSISTSAVE] menu-leave>>
+[  45782ms] [harness] screenshot -> docs/evidence/m4-config-precedence/12-boot2-back-in-system-setup.png
+[  45782ms] [harness] === SECOND-RELOAD-REQUESTED ===
+[  45788ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  45788ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  45789ms] [harness] eval location.reload() => undefined
+[  45789ms] [harness] until 3x <<[PERSIST] populate ok>> (timeout 90000ms, have 2)
+[  45807ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  45807ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  45808ms] [page] load event fired
+[  45826ms] [console.log] [PERSIST] populate ok in 4ms
+[  45882ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  45890ms] [harness] until SATISFIED: saw 3x <<[PERSIST] populate ok>>
+[  45890ms] [harness] === BOOT-3-POPULATED ===
+[  47400ms] [console.log] [MAXFPS] {"phase":"boot3-before-play","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22758,"autoexec_bytes":12180}
+[  47401ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot3-before-play',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => "read"
+[  47405ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  47406ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  47406ms] [console.error] 
+[  47407ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  47407ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  47407ms] [console.log] 
+[  47553ms] [console.log] [L] ENCODING latin1
+[  47558ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  47575ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  47577ms] [console.error] TODO: glShadeModel
+[  47580ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  47587ms] [harness] click #start: clicked
+[  56627ms] [harness] key Down (1/2)
+[  56965ms] [harness] key Down (2/2)
+[  58206ms] [harness] key Enter (1/1)
+[  60345ms] [harness] key Enter (1/1)
+[  62481ms] [harness] key Enter (1/1)
+[  65322ms] [harness] key Down (1/7)
+[  65661ms] [harness] key Down (2/7)
+[  66000ms] [harness] key Down (3/7)
+[  66336ms] [harness] key Down (4/7)
+[  66676ms] [harness] key Down (5/7)
+[  67015ms] [harness] key Down (6/7)
+[  67362ms] [harness] key Down (7/7)
+[  68916ms] [harness] screenshot -> docs/evidence/m4-config-precedence/13-boot3-max-fps-still-30.png
+[  68918ms] [console.log] [MAXFPS] {"phase":"boot3-in-menu","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22758,"autoexec_bytes":12180}
+[  68918ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot3-in-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => "read"
+[  68918ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  68919ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1678
+[  68919ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  68919ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  68919ms] [EXCEPTION] structured stack, 1 frames:
+[  68919ms]     <anonymous> @ :0:27
+[  70982ms] [harness] screenshot -> docs/evidence/m4-config-precedence/14-after-deliberate-uncaught-error.png
