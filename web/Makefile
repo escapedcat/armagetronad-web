@@ -137,16 +137,31 @@ $(OBJDIR)/%.o: src/%.cpp web/Makefile
 # (native hides them in a .a) would add glCallList, glPushClientAttrib and
 # glPopClientAttrib as undefined symbols for no benefit.
 CLIENT_OBJDIR := web/build-m1
-# ...plus one translation unit the dedicated build does not have:
-# src/emscripten/eCompat.cpp, the compatibility shims for the symbols
-# Emscripten's SDL and GL emulation leave undefined. It has to be named here
-# because $(SRCS) above wildcards the six game source directories only, and
-# src/emscripten/ is not one of them (it holds the hand-written config.h, not
-# game source). No extra compile rule is needed for it: the
-# $(CLIENT_OBJDIR)/%.o: src/%.cpp rule below already matches, with a stem of
-# "emscripten/eCompat" -- pattern stems may contain slashes.
+# ...plus two translation units the dedicated build does not have:
+#
+#   src/emscripten/eCompat.cpp     the compatibility shims for the symbols
+#                                  Emscripten's SDL and GL emulation leave
+#                                  undefined.
+#   src/emscripten/eWebPersist.cpp M4 task 2: saves the config when the player
+#                                  leaves a menu, and exports the one function
+#                                  web/shell.html's unload backstop calls.
+#
+# They have to be named here because $(SRCS) above wildcards the six game
+# source directories only, and src/emscripten/ is not one of them (it holds
+# the hand-written config.h, not game source). No extra compile rule is needed
+# for either: the $(CLIENT_OBJDIR)/%.o: src/%.cpp rule below already matches,
+# with a stem of "emscripten/eCompat" -- pattern stems may contain slashes.
+#
+# Naming eWebPersist.cpp HERE rather than moving it into $(SRCS) is what keeps
+# the dedicated build's wasm byte-identical: $(SRCS) feeds BOTH targets, so a
+# file added there would compile into the server too. (The file also guards
+# its whole body with `#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)`, so
+# even a future move could not change the server's behaviour -- but it would
+# still change its size, because an empty translation unit is not a
+# non-existent one.)
 CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
-                 $(CLIENT_OBJDIR)/emscripten/eCompat.o
+                 $(CLIENT_OBJDIR)/emscripten/eCompat.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebPersist.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1

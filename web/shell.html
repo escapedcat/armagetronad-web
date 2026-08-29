@@ -297,8 +297,75 @@
       }
     };
 
+    // ---- M4 task 2: the unload/visibility BACKSTOP -----------------------
+    //
+    // IT IS A BACKSTOP AND NOTHING IN THE GATE MAY DEPEND ON IT. The primary
+    // mechanism is src/emscripten/eWebPersist.cpp's uCallbackMenuLeave: the
+    // game saves its own config when the player leaves a menu, from inside its
+    // own loop, while the page is fully alive. That is the regime that
+    // measures reliable. Everything below is for the change the player makes
+    // and then never leaves the menu on -- they alt-tab, or close the tab, or
+    // the mobile OS discards the page.
+    //
+    // web/tools/persist-settings-gate.steps is checked against a control page
+    // with this block disabled (docs/evidence/m4-persist/make-control-pages
+    // .mjs writes armagetronad-nobackstop.html) and must still PASS, which is
+    // what "not load-bearing" means here as a fact rather than an intention.
+    //
+    // WHY beforeunload IS ONLY A BACKSTOP: THE PAYLOAD CLIFF. M4 recon
+    // measured what actually survives a save issued from beforeunload. 50 KB
+    // of changed data survives; 500 KB survives; 2 MB loses THE ENTIRE BATCH
+    // -- including small files written in the same handler, because
+    // libidbfs.js's queuePersist syncs the whole mount in one transaction and
+    // that one transaction is what does not complete. An explicit FS.syncfs
+    // does not rescue it. It is the size of the DELTA that matters, not the
+    // size of the mount, and user.cfg is ~22 KB today -- comfortably on the
+    // safe side, with no guarantee that a future /persist stays there.
+    //
+    // WHY pagehide IS REJECTED, EVEN THOUGH IT IS THE USUAL ADVICE. It is not
+    // safer here, it is strictly worse, and this was measured twice: the
+    // pagehide handler provably runs (proved with sessionStorage), the write
+    // reaches MEMFS -- and the data is LOST, because queuePersist's
+    // setTimeout(0) never gets serviced. beforeunload runs early enough that
+    // the page still has a task loop to run that timer on; pagehide does not.
+    // Do not "improve" this by switching to pagehide.
+    //
+    // WHY visibilitychange IS LISTED FIRST. hidden fires while the page is
+    // still fully alive and still has a normal event loop, so the
+    // setTimeout(0) that carries the write to IndexedDB has somewhere to run
+    // -- and it is the one hook that fires before a mobile tab is discarded
+    // without any unload event at all. That reasoning is REASONED, NOT
+    // MEASURED here; treat it as the weaker of the two claims on this page.
+    //
+    // THE GUARD IS NOT DEFENSIVENESS. Before the Play click, Module's export
+    // getters are makeInvalidEarlyAccess stubs whose body is an abort(), and
+    // `typeof` reports them as functions -- so a bare feature test would pass
+    // and then take the runtime down. And main() is what tells tDirectories
+    // where --userdatadir is, so a save before it would write to the wrong
+    // path.
+    let gameStarted = false;
+    const persistBackstop = (why) => {
+      if (!gameStarted) return;
+      // aa_web_save_config MUST NOT YIELD -- see the long warning on it in
+      // src/emscripten/eWebPersist.cpp. Calling into wasm from here is safe
+      // only because it does not; a sleep on that path would start a second
+      // Asyncify unwind on top of the live one this page is almost always
+      // parked in.
+      try {
+        Module._aa_web_save_config();
+        console.log('[PERSISTBACKSTOP] ' + why);
+      } catch (e) {
+        console.log('[PERSISTBACKSTOP] ' + why + ' FAILED: ' + e);
+      }
+    };
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') persistBackstop('visibilitychange-hidden');
+    });
+    window.addEventListener('beforeunload', () => persistBackstop('beforeunload'));
+
     startEl.addEventListener('click', () => {
       overlayEl.remove();
+      gameStarted = true;             // arms the backstop above
       Module.canvas.focus();          // so the menu receives key events
       // .slice() matters: callMain(args) unshifts argv[0] onto whatever
       // array it's given, mutating it in place, so passing Module.arguments
