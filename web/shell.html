@@ -194,11 +194,21 @@
       // instead of silently reading an empty filesystem.
       //
       // Doing it here rather than with an `await` inside the Play handler is
-      // deliberate for a second reason: the handler stays SYNCHRONOUS, so
-      // callMain still runs inside the click's user-activation context. An
-      // await there would push SDL_OpenAudio's `new AudioContext()` past the
-      // gesture and could leave M3's audio suspended for a real user who
-      // never presses a key.
+      // deliberate for one more reason: the handler stays SYNCHRONOUS, so
+      // callMain still runs in the same task as the click.
+      //
+      // Be careful how strongly that is stated. Chrome and Firefox gate Web
+      // Audio autoplay on STICKY activation -- set by the click, not consumed
+      // by it, and it does not expire -- so an `await` here would very likely
+      // still be allowed to start audio in both. (WebKit is the engine that
+      // wants the gesture to still be executing, and it is a declared
+      // non-target.) The defensible form of the argument is narrower and does
+      // not depend on any autoplay rule: an `await` would change the exact
+      // timing relationship between the click, callMain and SDL_OpenAudio
+      // that M3's transcripts measured, and nothing in M4 re-establishes it.
+      // The two reasons above -- the stronger guarantee and the assert -- are
+      // the load-bearing ones; this is only the reason not to spend a
+      // re-measurement of M3 to buy nothing.
       //
       // preRun MUST be an array: the file packager appends its own callback
       // with Module['preRun'].push(...), which a bare function would break.
@@ -208,6 +218,27 @@
       // otherwise leave the page on "Loading..." for ever with no message.
       // Losing persistence is bad; failing to start is worse.
       //
+      // That promise has to be UNCONDITIONAL, which is what the try/catch and
+      // the `held` flag below are for, and an earlier version of this block
+      // got it wrong in a way worth naming. It registered the dependency
+      // AFTER the mkdir and mount, so a throw from either escaped preRun with
+      // no dependency held -- noisy, but not a hang. A synchronous throw out
+      // of FS.syncfs itself was the real hazard: by then the dependency IS
+      // held, nothing would ever release it, and the page sits on "Loading..."
+      // for ever -- exactly the outcome the paragraph above claims to have
+      // removed. `held` is set only once the dependency actually exists and is
+      // cleared by whichever path releases it, so double-release is
+      // impossible too (removeRunDependency asserts the id is still tracked,
+      // so a spurious second call would abort the runtime).
+      //
+      // A mkdir/mount throw now DEGRADES rather than escaping: the game
+      // starts with a plain in-memory /persist and no persistence. That is a
+      // deliberate choice, not an accident of where the catch landed -- the
+      // alternative is an unhandled rejection out of run(), which shell.html
+      // turns into a red banner over a page that never starts. It is not
+      // silent either: the [PERSIST] line says FAILED, and the M4 gate's
+      // check P2 ("two populate lines, both ok") fails on it.
+      //
       // KNOWN AND ACCEPTED: /persist collects more than user.cfg. The same
       // --userdatadir also holds var/ladderlog.txt and var/scorelog.txt
       // (CONSOLE_LADDER_LOG is 1 in web/webdefaults/autoexec.cfg) and
@@ -215,20 +246,30 @@
       // IndexedDB quota does not. Noted, not solved -- see docs.
       preRun: [() => {
         const FS = Module.FS, IDBFS = Module.IDBFS;
-        FS.mkdir('/persist');
-        FS.mount(IDBFS, { autoPersist: true }, '/persist');
-        Module.addRunDependency('persist-populate');
-        const t0 = performance.now();
-        FS.syncfs(true, (err) => {
-          const ms = Math.round(performance.now() - t0);
-          // One machine-readable line, because this is the fact every M4
-          // evidence run has to be able to assert on. `err` is null on
-          // success, including on the first ever visit when the object
-          // store is empty.
-          console.log('[PERSIST] populate ' + (err ? 'FAILED' : 'ok') +
-                      ' in ' + ms + 'ms' + (err ? ': ' + err : ''));
-          Module.removeRunDependency('persist-populate');
-        });
+        let held = false;
+        const release = () => { if (held) { held = false; Module.removeRunDependency('persist-populate'); } };
+        try {
+          FS.mkdir('/persist');
+          FS.mount(IDBFS, { autoPersist: true }, '/persist');
+          Module.addRunDependency('persist-populate');
+          held = true;
+          const t0 = performance.now();
+          FS.syncfs(true, (err) => {
+            const ms = Math.round(performance.now() - t0);
+            // One machine-readable line, because this is the fact every M4
+            // evidence run has to be able to assert on. `err` is null on
+            // success, including on the first ever visit when the object
+            // store is empty.
+            console.log('[PERSIST] populate ' + (err ? 'FAILED' : 'ok') +
+                        ' in ' + ms + 'ms' + (err ? ': ' + err : ''));
+            release();
+          });
+        } catch (e) {
+          // Same tag, so a checker counting "[PERSIST] populate" lines sees
+          // this one too and reports "not ok" rather than "missing".
+          console.log('[PERSIST] populate FAILED before it started: ' + e);
+          release();
+        }
       }],
       // callMain is invoked from the button below, not automatically -- the
       // button itself matters starting M3: browsers require a user gesture

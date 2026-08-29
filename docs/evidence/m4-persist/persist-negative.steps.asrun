@@ -8,8 +8,7 @@
 #   # expected: exit status 1, with P10/P11/P12/P13 FAIL
 #   kill %1
 #
-# HOW IT DIFFERS FROM THE GATE. Four diff hunks, three of which are this
-# header:
+# HOW IT DIFFERS FROM THE GATE. Five diff hunks, four of which are comment:
 #
 #   diff web/tools/persist-gate.steps web/tools/persist-negative.steps
 #
@@ -81,8 +80,7 @@
 # later transaction against the missing store would throw. So the probe aborts
 # the upgrade transaction in onupgradeneeded and reports absent:true instead.
 #
-# THE NEGATIVE CONTROL IS A SEPARATE FILE, web/tools/persist-negative.steps.
-# It is this script with one step added, and its checker output must be FAIL.
+# THIS IS THAT NEGATIVE CONTROL -- see the header at the top of this file.
 
 # ---------------------------------------------------------------------------
 # BOOT 1.
@@ -102,10 +100,25 @@ eval:(()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(
 
 # Watch libidbfs.js's own persist state machine. onAutoPersistStateChanged is
 # called with true when a MEMFS -> IndexedDB sync starts and with false only
-# when the queue has fully DRAINED -- queuePersist's 'again' state re-runs the
-# sync WITHOUT emitting false -- so an "idle" line guarantees that every write
-# issued before it has been committed. That is what the reload below depends
-# on. Armed before the Play click, so the game's own first save is seen.
+# when the QUEUE HAS DRAINED -- queuePersist's 'again' state re-runs the sync
+# WITHOUT emitting false, so an "idle" line means no write issued before it is
+# still waiting to be attempted. Armed before the Play click, so the game's
+# own first save is seen.
+#
+# IT IS A DRAINED SIGNAL, NOT A DURABILITY SIGNAL, and the difference matters
+# to whoever picks this up for M4's quota work. In
+# deps/emsdk/upstream/emscripten/src/lib/libidbfs.js, queuePersist's
+# onPersistComplete() takes NO error parameter and is passed straight to
+# IDBFS.syncfs(mount, false, ...), whose callback is the one that receives the
+# reconcile error. So a write-back that FAILED -- quota exceeded, storage
+# revoked mid-run -- still produces onAutoPersistStateChanged(false) and still
+# prints "idle" here. Nothing in libidbfs.js surfaces that error to a caller
+# at all.
+#
+# This gate does not lean on it: the claim that the bytes actually reached
+# IndexedDB is carried by the [PERSISTIDB] payloads (checks P9 and P13), which
+# open their own connection and read the keys back. The idle line is used only
+# to decide WHEN it is worth looking, which is all it can support.
 eval:(()=>{const W={n:0,probe:false};window.__pw=W;Module.IDBFS.onAutoPersistStateChanged=(a)=>{if(a){W.n++;console.log('[PERSISTSYNC] start '+W.n)}else{console.log('[PERSISTSYNC] idle after '+W.n+(W.probe?' PROBE-PERSISTED':''))}};return 'watcher armed'})()
 
 click:#start

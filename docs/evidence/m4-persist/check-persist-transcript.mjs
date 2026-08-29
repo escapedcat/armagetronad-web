@@ -59,9 +59,21 @@
 // the control error was seen) and are NOT individually proven-failable; that
 // is stated here rather than glossed over.
 //
-// EVERY CHECK IS ID'd (P1..P17, plus PZ) and PZ fails if any declared id did
-// not get a verdict -- a check that VANISHES inside a guard reads, to anyone
-// scanning for the word FAIL, exactly like a check that passed.
+// EVERY CHECK IS ID'd (P1..P17, plus PZ), and P1..P17 are the checks ON THE
+// TRANSCRIPT. PZ IS NOT ONE OF THEM: it is a guard on THIS FILE.
+//
+// It compares the ids that produced a verdict against the declared list, so a
+// check that VANISHES reads as what it is rather than as a pass -- because a
+// check that never printed looks, to anyone scanning for the word FAIL,
+// exactly like one that passed. As this file stands today all seventeen
+// check() calls are unconditional top-level statements, so PZ cannot fail on
+// ANY input: no transcript, however mutilated, can make one of them not run.
+// It is therefore a regression guard against a future edit that puts a check
+// behind an `if` (M3's AZ was the same idea, and was genuinely reachable
+// because its checks sat inside guards), and it is deliberately NOT listed
+// among the transcript checks whose failure has been demonstrated -- there is
+// nothing to demonstrate. prove-checks-can-fail.mjs reports it as
+// NOT-COVERABLE with this reason rather than skipping it silently.
 
 import { readFileSync } from 'node:fs';
 
@@ -157,17 +169,24 @@ for (const [i, s] of populate) note(`populate line ${i}: ${s}`);
 // One populate and one runtime-initialized line per page load; the populate
 // must come first in BOTH. See the header for why this is the check that
 // excludes the silent failure.
+// The parenthetical states WHERE the two lines are, never that one is before
+// the other: on a failing transcript "(lines 8 < 7)" reads as an observation
+// and is a falsehood printed by the tool that just caught it.
+const where = (p, r) => (p && r)
+  ? ` (populate at line ${p[0]}, runtime ready at line ${r[0]})`
+  : ' (a line is missing)';
+
 const p1 = populate.find(([i]) => inBoot1(i));
 const r1 = runtimeInit.find(([i]) => inBoot1(i));
 check(!!p1 && !!r1 && p1[0] < r1[0], 'P3',
   `boot 1: populate finished BEFORE the runtime reported ready / Play became clickable`
-  + (p1 && r1 ? ` (lines ${p1[0]} < ${r1[0]})` : ' (a line is missing)'));
+  + where(p1, r1));
 
 const p2 = populate.find(([i]) => inBoot2(i));
 const r2 = runtimeInit.find(([i]) => inBoot2(i));
 check(!!p2 && !!r2 && p2[0] < r2[0], 'P4',
   `boot 2: populate finished BEFORE the runtime reported ready / Play became clickable`
-  + (p2 && r2 ? ` (lines ${p2[0]} < ${r2[0]})` : ' (a line is missing)'));
+  + where(p2, r2));
 
 // --------------------------------------------------------------- boot 1 FS
 const b1pre = FS['boot1-before-play'];
@@ -273,6 +292,25 @@ check(controlSaw, 'P17',
   'the deliberate uncaught error at the end of the script WAS recorded, so this transcript can see failures');
 
 // ------------------------------------------------------ observations, not checks
+//
+// PROVENANCE. Four of the six committed transcripts are PASSes and only one of
+// them is the product; the rest are control pages that happen to pass. The
+// driver records the page it navigated to on its second line, so which green
+// is which need not be looked up in the README.
+const nav = lines.find((l) => l.includes('[harness] navigating to '));
+const url = nav ? nav.slice(nav.indexOf('navigating to ') + 'navigating to '.length).trim() : null;
+const page = url ? url.split('/').pop() : null;
+if (page && page !== 'armagetronad.html') {
+  console.log('');
+  console.log(`NOTE  this transcript is NOT the product page: it navigated to ${page}.`);
+  console.log('      It is one of the control pages built by make-control-pages.mjs, so a');
+  console.log('      PASS here says the control behaved as designed, not that the client is good.');
+} else if (!page) {
+  console.log('');
+  console.log('NOTE  no "[harness] navigating to" line: the page under test cannot be identified');
+  console.log('      from this transcript, so it may or may not be the product page.');
+}
+
 if (wipes.length) {
   console.log('');
   console.log('NOTE  this transcript contains a [PERSISTWIPE] step, so it is the negative');
