@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **`make -f web/Makefile dedicated` must still produce EXACTLY 2,488,298 bytes.**
+- **`make -f web/Makefile dedicated` must still produce EXACTLY 2,488,298 bytes AND md5 `9718a2a64978cb6e9b95ea2f0454cca5`.** **Size alone is not sufficient and never was** — corrected in Task 3, by measurement rather than argument: an *unguarded* build of Task 3's change links to **exactly 2,488,298 bytes with md5 `830a19dcd0687ad1a1f4101a457349f0`, size delta zero**, because both edits rewrite `i32` initialisers that already exist so nothing changes length. The recorded control is `docs/evidence/m4-config-precedence/byte-identity.asrun`. Every milestone since M0 has quoted this tripwire as a size; **always quote the md5 with it.**
 - Guard game-source changes: `#ifdef __EMSCRIPTEN__`, or `#if !defined(DEDICATED) && defined(__EMSCRIPTEN__)` where the file **also compiles into the dedicated build**. `web/Makefile` wildcards all six source directories for both targets, so assume any `src/` file does unless proven otherwise. Verify by compiling the object to a scratch path **at the same path with the same flags** and comparing md5 — a different path changes the md5 on its own.
 - **Do NOT add `-O` at link.** `ASSERTIONS` is what makes this port's defect classes announce themselves.
 - **Never call `SDL_Delay` in the client** — only sleeps in `ASYNCIFY_IMPORTS` (`docs/porting/browser-runtime-notes.md` §8).
@@ -111,7 +111,9 @@ Change a setting, reload, confirm it survived — without touching the resolutio
 
 - [ ] **Step 3: Verify byte-identity, twice**
 
-Both files compile into the dedicated server. Compile each object at the **same path with the same flags** to a scratch location, compare md5 against base, and confirm the dedicated wasm is still exactly 2,488,298 bytes.
+Both files compile into the dedicated server. Compile each object with the same flags to a scratch location, compare md5 against base, and confirm the dedicated wasm is still exactly 2,488,298 bytes **and md5 `9718a2a64978cb6e9b95ea2f0454cca5`** — see the Global Constraints for why the size alone would not catch this.
+
+> **CORRECTED IN TASK 3 — the original wording here said "compile each object at the **same path**", and that reason was wrong.** Measured, twice, independently: two different `-o` paths produce **identical** object md5s, so the output path is irrelevant. What perturbs the object is the **source basename** — the same content compiled under a different filename gives a different md5 at an identical size. Keeping the same path happened to work because it keeps the basename; but anyone who followed the stated reason by copying the source to a scratch *file* would have silently measured the rename instead of the change. Task 3's first control did exactly that and caught it. **Hold the basename constant; the directory and the `-o` do not matter.**
 
 - [ ] **Step 4: Verify the behaviour**
 
@@ -143,7 +145,7 @@ A player-chosen `MAX_FPS` must survive a reload now. That is the whole point of 
 
 **Files:** `web/README.md`, `README.md`, `PLAN.md`, `src/tron/gArmagetron.cpp`; this plan
 
-- [ ] **Step 1: Verify from a clean rebuild** — dedicated still 2,488,298 bytes, gate passes in both browsers.
+- [ ] **Step 1: Verify from a clean rebuild** — dedicated still 2,488,298 bytes **and md5 `9718a2a64978cb6e9b95ea2f0454cca5`** (size alone would not catch Task 3's class of change — see Global Constraints), gate passes in both browsers.
 
 - [ ] **Step 2: Delete the two false items in `web/README.md`** — the key-name item (refutation 2, never true) and the stated *cause* of "nothing persists" (refutation 1). Restate the latter as: the save runs, there was nowhere durable for it to land, and no save point followed a settings change.
 
