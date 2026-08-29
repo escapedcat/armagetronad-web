@@ -74,7 +74,8 @@ The evidence is [docs/evidence/m3-audio/](docs/evidence/m3-audio/), arbitrated
 by `check-audio-transcript.mjs` — 24 checks, exit status rather than prose, with
 a companion that mutates a passing transcript and proves each of the 24 can
 fail. Re-verified at M3's exit from a `make clean` rebuild: both engines pass,
-the dedicated wasm is still byte-identical at 2,488,298 bytes, and the client
+the dedicated wasm is still byte-identical at 2,488,298 bytes and md5
+`9718a2a64978cb6e9b95ea2f0454cca5`, and the client
 wasm came out byte-identical to the one the evidence was taken against.
 
 ```sh
@@ -188,8 +189,14 @@ M1 still holds: the client boots to a navigable menu with WebGL on a real GPU
 
 M0 still holds and is still checked on every change: the dedicated server
 compiles to WebAssembly, boots under Node, and parses and validates its map
-through libxml2 — and its wasm is still byte-identical at 2,488,298 bytes, the
-tripwire that catches anything client-only leaking into the shared build. It was
+through libxml2 — and its wasm is still byte-identical at 2,488,298 bytes **and
+md5 `9718a2a64978cb6e9b95ea2f0454cca5`**, the
+tripwire that catches anything client-only leaking into the shared build.
+**Quote both, always: the size alone does not catch this class of change.** M4
+task 3 measured an unguarded edit that links to *exactly* 2,488,298 bytes with a
+different md5, because it rewrote `i32` initialisers that already existed and so
+changed nothing's length. The recorded control link is
+`docs/evidence/m4-config-precedence/byte-identity.asrun`. It was
 re-verified from a `make clean` at the end of M2, and again at the end of M3 —
 which matters more than usual there, because M3 edited `eSound.cpp`, a file that
 compiles into *both* builds. What M0 did not prove about gameplay correctness is

@@ -668,7 +668,12 @@ Both guards are bare `#ifdef __EMSCRIPTEN__` / `#ifndef __EMSCRIPTEN__`, which
 §1 permits only inside an existing `#ifndef DEDICATED`. Checked, not assumed:
 `sr_LimitFPS()` is inside the region opened at `rSysdep.cpp:465`, and both
 `rScreen.cpp` waits are inside the one opened at `rScreen.cpp:432`. Neither
-appears in the dedicated build, whose wasm is unchanged at 2,488,298 bytes.
+appears in the dedicated build, whose wasm is unchanged at 2,488,298 bytes and
+md5 `9718a2a64978cb6e9b95ea2f0454cca5`. **Quote both.** M4 task 3 measured an
+unguarded edit that links to *exactly* 2,488,298 bytes with a different md5 —
+it rewrote `i32` initialisers that already existed, so nothing changed length.
+The size alone does not detect that class of change; the recorded control link
+is `docs/evidence/m4-config-precedence/byte-identity.asrun`.
 
 **Re-checked at M1 exit with a tool that works.** The nesting above was
 originally confirmed with §1's `awk` one-liner, which has since been shown to

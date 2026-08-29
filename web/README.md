@@ -87,8 +87,11 @@ this file was wrong to say M1 would fix it: M1 put `-sASYNCIFY=1` on the
 deliberately unchanged so its wasm stays byte-identical. The dedicated server is
 a build-validation artifact, not part of the Demo, so nothing on the roadmap
 fixes this — it would take adding Asyncify and a yield point to the M0 link,
-which would end the 2,488,298-byte identity check that guards the source files
-both builds share.
+which would end the byte-identity check that guards the source files
+both builds share — 2,488,298 bytes **and** md5 `9718a2a64978cb6e9b95ea2f0454cca5`.
+It is worth naming both halves: M4 task 3 measured an unguarded change that links
+to exactly the right size with the wrong md5, so a size-only reading of this
+tripwire would have passed it.
 
 **`--daemon < /dev/null` is mandatory, and dropping it is the one real trap.**
 Without it the process sits at ~0% CPU with a shorter log, looking calm — but
