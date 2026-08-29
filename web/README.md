@@ -495,8 +495,12 @@ defaults.
   when a write-back fails. **(c)** `beforeunload` has a measured payload cliff
   at ~2 MB of *delta* — the same problem seen from the other side. The
   `SDL_QUIT` call site (`gArmagetron.cpp`, in `filter`) is still unreachable in
-  the browser, but it is now one lost site out of eleven rather than the whole
-  story.
+  the browser, but it is now **one lost site out of the 11 the browser client
+  compiles** rather than the whole story. (Counting basis, since three numbers
+  are all correct: 12 call sites tree-wide before this task, 10 of them in code
+  any build here compiles — the other two are `src/macosx/SDLMain.mm`, which no
+  build here touches — plus the one M4 task 2 adds. The table is in
+  `docs/evidence/m4-persist-settings/README.md`.)
 - **The wasm is 8,878,433 bytes** as of M3, up from M2's 8,854,277 — M3's WAV
   parser and mixing-path repairs cost **+24,156 bytes**, which is the whole of
   the delta. Nearly all of it is `src/engine/eSound.cpp`; `src/emscripten/

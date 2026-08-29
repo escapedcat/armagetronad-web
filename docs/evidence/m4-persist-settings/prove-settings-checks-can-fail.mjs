@@ -23,10 +23,17 @@
 // what the check's prose says it means -- only a real browser doing the wrong
 // thing can show that, which is why the control BUILD exists.
 //
-// COLLATERAL IS DECLARED, NOT TOLERATED. Each case declares the FULL set of
-// ids it expects to fail and the run is green only if the observed set matches
-// exactly, so a mutation that quietly knocked out four unrelated checks cannot
-// look like a success.
+// COLLATERAL IS DECLARED, NOT TOLERATED. Each case may declare `also: [...]`,
+// the other ids it expects to knock out, and the run is green only if the
+// observed failure set matches the declared one EXACTLY -- so a mutation that
+// quietly took out four unrelated checks cannot look like a success.
+//
+// NO MUTATION IN THIS ROUND DECLARES ANY, and that is a result rather than an
+// unused feature: every one of the mutations below flips exactly one check and
+// nothing else, which is itself evidence that the checks are independent. The
+// facility is kept because the next check added may not be so clean, and the
+// summary line at the end prints the count so its emptiness stays visible
+// rather than becoming invisible.
 //
 // TWO ENTRIES SHARE THE ID S8 on purpose. S8 makes two claims at once -- that
 // IndexedDB holds the changed value, and that it was read BEFORE any unload
@@ -159,8 +166,16 @@ const MUTATIONS = [
   },
   {
     id: 'S9',
-    what: 'inject a backstop save into boot 1, so the unload path could explain the result',
+    what: "inject a boot-1 backstop save on the PAGE's witness ([PERSISTBACKSTOP])",
     apply: (L) => { L.splice(findMenuLeave(L, 0), 0, stamped('[console.log] [PERSISTBACKSTOP] visibilitychange-hidden')); return L; },
+  },
+  {
+    id: 'S9',
+    what: "inject one on the WASM's witness instead ([PERSISTSAVE] js-backstop)",
+    note: 'the page log comes from web/shell.html, which is the file the nobackstop controls '
+        + 'edit; this line is printed from inside aa_web_save_config, so no page edit can '
+        + 'suppress it. S9 must fail on either witness alone.',
+    apply: (L) => { L.splice(findMenuLeave(L, 0), 0, stamped('[console.log] [PERSISTSAVE] js-backstop n=1')); return L; },
   },
   {
     id: 'S10',
@@ -272,6 +287,12 @@ try {
   console.log('And the control that must PASS:');
   console.log('  armagetronad-nobackstop.html -- the real client with both unload handlers');
   console.log('  disabled. 18/18. That is what "the backstop is not load-bearing" means.');
+  console.log('');
+  const withCollateral = MUTATIONS.filter((m) => (m.also || []).length > 0).length;
+  console.log(`Mutations declaring collateral ("also"): ${withCollateral} of ${MUTATIONS.length}.`
+    + (withCollateral === 0
+      ? ' Every mutation flipped exactly one check and nothing else.'
+      : ''));
   console.log('');
   console.log(bad === 0
     ? `RESULT: PASS -- all ${MUTATIONS.length} mutations flipped exactly the checks they declared`

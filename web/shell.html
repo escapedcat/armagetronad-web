@@ -308,9 +308,20 @@
     // the mobile OS discards the page.
     //
     // web/tools/persist-settings-gate.steps is checked against a control page
-    // with this block disabled (docs/evidence/m4-persist/make-control-pages
-    // .mjs writes armagetronad-nobackstop.html) and must still PASS, which is
-    // what "not load-bearing" means here as a fact rather than an intention.
+    // with this block disabled, and must still PASS 18/18 -- which is what
+    // "not load-bearing" means here as a fact rather than an intention. That
+    // page is armagetronad-nobackstop.html, written by
+    //
+    //     docs/evidence/m4-persist-settings/make-settings-control-pages.mjs
+    //
+    // and NOT by task 1's docs/evidence/m4-persist/make-control-pages.mjs,
+    // which writes an entirely different set (ungated, slowgate, slowungated,
+    // noautopersist) and knows nothing about this block. An earlier version of
+    // this comment cited the wrong one, which sent a reader trying to
+    // re-derive the claim into a directory with no such page -- in the comment
+    // whose whole job is to stop the backstop being promoted to a mechanism.
+    // The committed transcript is nobackstop-chrome-console.log, beside the
+    // tool that made the page.
     //
     // WHY beforeunload IS ONLY A BACKSTOP: THE PAYLOAD CLIFF. M4 recon
     // measured what actually survives a save issued from beforeunload. 50 KB

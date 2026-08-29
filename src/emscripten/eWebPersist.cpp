@@ -5,24 +5,50 @@ THE GAP THIS CLOSES. M4 task 1 made /persist an IDBFS mount that is populated
 before main() and written back whenever a file under it is closed, so
 st_SaveConfig() alone is both necessary and sufficient to persist user.cfg --
 no FS.syncfs call is needed anywhere. What task 1 did NOT do is make that call
-happen at a moment related to the player changing something. st_SaveConfig has
-eleven call sites in this tree and rScreen.cpp's sr_InitDisplay /
-lowlevel_sr_InitDisplay call it unconditionally on every boot (a crash
-detector persisting FAILED_ATTEMPTS) and on every resolution change -- so the
-config file is flushed often, just never *because* the player edited it. In
-between, every edit is volatile: change your name, your colour or a toggle,
-reload, and it is gone.
+happen at a moment related to the player changing something.
+
+COUNT THE CALL SITES ON A STATED BASIS, because three different numbers are
+all correct and an unqualified one is not. Excluding the definition, the
+declaration and two mentions in comments, st_SaveConfig() is CALLED from 12
+places in the tree as it stood before this file existed:
+
+    tConfiguration.cpp   st_DoHandleSigHup                              1
+    rScreen.cpp          sr_InitDisplay / lowlevel_sr_InitDisplay       4
+    gArmagetron.cpp      filter (SDL_QUIT); the shutdown after MainMenu 2
+    macosx/SDLMain.mm    the Cocoa quit handlers                        2
+    ePlayer.cpp          se_DeletePasswords                             1
+    eSound.cpp           se_SoundInit, twice                            2
+
+The two in macosx/ are compiled by no build this repository produces --
+src/macosx is not one of the six directories web/Makefile wildcards -- so the
+browser client and the dedicated server each see 10. This file adds one,
+making it 11 in the browser client and 13 in the tree.
+
+Not one of those 12 ran because the player changed a setting, and rScreen.cpp's
+four dominate: sr_InitDisplay and lowlevel_sr_InitDisplay fire unconditionally
+on every boot (a crash detector persisting FAILED_ATTEMPTS) and on every
+resolution change. So the config file was flushed often and never at a moment
+related to an edit; in between, every edit was volatile -- change your name,
+your colour or a toggle, reload, and it is gone.
 
 WHY A MENU-LEAVE CALLBACK IS THE PRIMARY MECHANISM. It runs while the page is
 fully alive, inside the game's own loop, on a stack the game controls. It
 needs no promise from the browser about unload timing, no visibility hook and
 no storage API -- the three things that measure unreliable (see the comments
-on the backstop in web/shell.html). Every menu in this game that edits
-configuration binds its uMenuItem straight to the variable a tConfItem wraps
-(uMenu.h's uMenuItemToggle / uMenuItemSelection / uMenuItemString all hold a
-`T *target`), so by the time uMenu::OnEnter returns the in-memory config is
-already the value the player chose. Saving there is saving exactly what they
+on the backstop in web/shell.html). It works because the editing menu items
+bind DIRECTLY: uMenu.h's uMenuItemToggle, uMenuItemSelection and
+uMenuItemString each hold a `T *target` pointing at the same variable a
+tConfItem wraps, so by the time uMenu::OnEnter returns the in-memory config
+already holds what the player chose. Saving there is saving exactly what they
 just did.
+
+That is a property of the ITEM CLASSES, which is why it generalises. It is not
+a property that has been swept over every menu: the menus sampled while
+building this (First Setup, Misc Stuff, and the Settings tree above them) all
+bind that way, and the one construction that does NOT is recorded below. Nobody
+has enumerated every uMenu in the tree, so read "menus bind directly" as the
+rule the item classes impose and the exception below as the one instance found,
+not as a completed survey.
 
 WHY THE CALLBACK AND NOT AN EDIT TO uMenu.cpp. uMenu.cpp is one of the six
 source directories web/Makefile wildcards into BOTH the browser client and the
@@ -69,9 +95,12 @@ menu exit paying it once is not a new kind of cost.
 // Counts saves issued from this file, so a transcript can tell "the save ran
 // three times" from "the line was printed three times by three different
 // mechanisms". printf and not `con <<`: the game console is rConsoleGraph in
-// the client, and rConsoleGraph.cpp yields (emscripten_sleep) once per line of
-// output. That is merely slow on the menu path -- and FATAL on the JS path
-// below. See the warning on aa_web_save_config.
+// the client, and rConsole::DisplayAtNewline (rConsoleGraph.cpp) calls
+// rSysDep::SwapGL() once per line of output. The emscripten_sleep(0) itself is
+// in SwapGL, i.e. in rSysdep.cpp -- so a `con <<` does yield, but one hop away
+// rather than directly, and a re-checker should look there and not in
+// rConsoleGraph.cpp for the sleep. That is merely slow on the menu path -- and
+// FATAL on the JS path below. See the warning on aa_web_save_config.
 static unsigned int se_webPersistSaves = 0;
 
 static void se_WebPersistSave( char const * reason )
@@ -144,18 +173,28 @@ uCallbackMenuLeave se_webPersistMenuLeave( &se_WebPersistSaveOnMenuLeave );
 // it saved. The failure is silent corruption or an "unreachable" trap far
 // from here, not a diagnostic naming this function.
 //
-// st_SaveConfig satisfies the rule today, and the reason is worth writing
-// down so it can be re-checked rather than re-assumed: its whole body is a
-// tPath::Open (an ofstream open plus umask/chmod) and tConfItemBase::SaveAll,
-// which is a walk over the conf-item map writing to that stream. No sleep, no
-// console output, no rendering. Its ONE console-writing path is the
-// `con << tOutput("$config_file_write_error")` in the else branch when the
-// file cannot be opened -- which, if it ever fires here, is itself a yield
-// from a JS handler. It is left alone because it is the error path of a write
-// to an IDBFS mount that has already been proven writable by this point in
-// the run, and because silencing it would hide a real failure from the normal
-// path too; but if that ever becomes reachable in practice, the fix is to
-// give this function its own non-console save, not to remove this comment.
+// st_SaveConfig satisfies the rule today, and the reason is spelled out in
+// full so it can be RE-CHECKED against the function rather than re-assumed --
+// which means describing all four of its parts, not just the interesting two:
+//
+//   1. an early `if ( st_settingsFromRecording ) return;`, which does nothing
+//      at all and certainly does not yield;
+//   2. tPath::Open -- an std::ofstream open plus umask/chmod;
+//   3. on success, tConfItemBase::SaveAll, a walk over the conf-item map
+//      writing to that stream;
+//   4. on failure, an else branch that writes the same tOutput to BOTH
+//      `con` and std::cerr.
+//
+// Only (4) can yield, and only through `con`: rConsole::DisplayAtNewline calls
+// rSysDep::SwapGL, which sleeps. std::cerr does not -- it is Emscripten's
+// printErr, a plain console.error. There is no sleep and no rendering anywhere
+// else in the function.
+//
+// (4) is left alone rather than guarded, because it is the error path of a
+// write to an IDBFS mount already proven writable by this point in the run,
+// and because silencing it would hide a real failure from the normal path too.
+// If it ever becomes reachable in practice, the fix is to give this function
+// its own non-console save, not to remove this comment.
 //
 // EMSCRIPTEN_KEEPALIVE is what puts it in the export table and, with
 // EXPORT_KEEPALIVE (on by default), what makes the loader assign

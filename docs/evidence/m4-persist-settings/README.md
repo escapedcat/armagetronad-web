@@ -8,10 +8,31 @@ restored settings."* It also got its write for free — `rScreen.cpp`'s
 unconditionally on every boot, as a crash detector.
 
 This directory is about the thing that was missing: **a save caused by the
-player**. Before this task, `st_SaveConfig` had eleven call sites and not one
-of them ran because someone changed a setting. The in-memory config was
-authoritative and got flushed at moments unrelated to when the player edited
-it; in between, every edit was volatile.
+player**. Before this task, `st_SaveConfig` was called from **12 places in the
+tree — 10 of them in code any build here compiles** — and not one ran because
+someone changed a setting. The in-memory config was authoritative and got
+flushed at moments unrelated to when the player edited it; in between, every
+edit was volatile.
+
+The count needs its basis stated, because three different numbers are all
+correct and this project has already got the sentence wrong once (the dispatch
+for this task said "eleven", which matches none of them). Excluding the
+definition, the declaration and two mentions inside comments:
+
+| where | sites |
+| --- | --- |
+| `tConfiguration.cpp` — `st_DoHandleSigHup` | 1 |
+| `rScreen.cpp` — `sr_InitDisplay` / `lowlevel_sr_InitDisplay` | 4 |
+| `gArmagetron.cpp` — `filter` (`SDL_QUIT`); the shutdown after `MainMenu()` | 2 |
+| `macosx/SDLMain.mm` — the Cocoa quit handlers | 2 |
+| `ePlayer.cpp` — `se_DeletePasswords` | 1 |
+| `eSound.cpp` — `se_SoundInit`, twice | 2 |
+| **tree total, before this task** | **12** |
+
+`src/macosx` is not one of the six directories `web/Makefile` wildcards, so
+neither the browser client nor the dedicated server contains those two: both
+see **10**. This task adds one, making it **11 in the browser client and 13 in
+the tree**.
 
 The mechanism is `src/emscripten/eWebPersist.cpp`: a `uCallbackMenuLeave`
 registration that calls `st_SaveConfig()`. `uMenu::OnEnter` fires
@@ -84,8 +105,36 @@ is in this directory.
 | `armagetronad-nomenusave.html` | **no** | yes | FAIL — S6 S7 S8 S12 S16 |
 | `armagetronad-nomenusave-nobackstop.html` | **no** | **no** | FAIL — the above plus S10 S13 |
 
-**Row 3 is the one that matters most**, and it proves a negative: the gate
-passes with both unload handlers disabled. That is what "the backstop is not
+### What the checker prints for each committed transcript
+
+Every log in this directory, scored by the committed checker. Run them
+yourself; these are the exit codes to expect.
+
+| transcript | exit | verdict |
+| --- | --- | --- |
+| `chrome-console.log` | 0 | PASS 18/18 |
+| `firefox-console.log` | 0 | PASS 18/18 |
+| `nobackstop-chrome-console.log` | 0 | PASS 18/18 — **and the checker prints a NOTE saying this is a control page, not the product** |
+| `nomenusave-chrome-console.log` | 1 | FAIL 5 — S6 S7 S8 S12 S16 |
+| `nomenusave-nobackstop-chrome-console.log` | 1 | FAIL 7 — the above plus S10 S13 |
+| `settingsmenu-chrome-console.log` | 1 | FAIL 12 — **meaningless**: a demonstration, not this gate |
+| `backstop-chrome-console.log` | 1 | FAIL 13 — **meaningless**: same |
+
+The last two rows are why the checker leads with provenance rather than
+verdicts. It reads the driver's `navigating to` line to name the page, and
+treats the absence of any `[SETFS]` payload as "this is not a run of
+`persist-settings-gate.steps`", naming the `[BACKSTOP]` / `[SETMENU]` tag it
+found instead. Both notes print **before** the checks, because the case that
+needs them most is the one that ends in thirteen reds — a note underneath those
+has already been scrolled past.
+
+The `nobackstop` note matters for the opposite reason: that transcript is a
+green that is *not* the product, and here the control's PASS is the
+load-bearing claim of the whole task. Without the note it is one confusion away
+from being cited as the product.
+
+**Row 3 of the matrix is the one that matters most**, and it proves a negative:
+the gate passes with both unload handlers disabled. That is what "the backstop is not
 load-bearing" means as a fact rather than an intention. Check S9 covers the
 pre-reload half of that claim from a single transcript; only this control
 covers the post-reload half.
@@ -159,12 +208,20 @@ which does it on a menu a player would actually call "settings".
 ## The known limitation, stated plainly
 
 **A menu whose caller applies the player's choice AFTER the menu closes is not
-covered by a menu-leave save.** In this tree that is exactly one menu: First
-Setup. `sg_StartupPlayerMenu` reads its Colour, Controls and Connection items
-out of *local variables* after `firstSetup.Enter()` returns, so the save that
-fires on the way out has not seen them. Its Name field — the one the gate uses
-— binds straight to `ePlayer::name` and is covered. Every other configuration
-menu in the game binds directly too.
+covered by a menu-leave save.** The one such menu *found* is First Setup:
+`sg_StartupPlayerMenu` reads its Colour, Controls and Connection items out of
+*local variables* after `firstSetup.Enter()` returns, so the save that fires on
+the way out has not seen them. Its Name field — the one the gate uses — binds
+straight to `ePlayer::name` and is covered.
+
+"The one found", not "the only one". **Nobody has swept every `uMenu` in the
+tree**, and an earlier revision of this sentence claimed the universal. Every
+menu looked at while building this binds directly, and direct binding is what
+`uMenu.h`'s item classes impose — `uMenuItemToggle`, `uMenuItemSelection` and
+`uMenuItemString` each hold a `T *target` aimed at the variable a `tConfItem`
+wraps — so further exceptions should be rare. That is an expectation, not a
+survey. The sweep is roughly 28 `.Enter()` sites and is left for whoever wants
+the universal.
 
 The same gap swallows `FIRST_USE`. `gArmagetron.cpp`'s `welcome()` sets
 `st_FirstUse = false` only after `sg_StartupPlayerMenu` returns, and the next
@@ -195,7 +252,7 @@ which the game skips first setup *and* has no keys.
 | file | what it is |
 | --- | --- |
 | `check-settings-transcript.mjs` | the checker. 17 transcript checks (S1–S17) plus SZ, a guard on the checker's own source. Exit 0 or 1. |
-| `prove-settings-checks-can-fail.mjs` | 18 targeted transcript mutations, one per check plus a second for S8's timing clause, each declaring the full set of ids it expects to flip. Runs the real checker as a child process. |
+| `prove-settings-checks-can-fail.mjs` | 19 targeted transcript mutations: one per check, plus a second for S8's *timing* clause and a second for S9's *wasm-side* witness, since each of those checks makes two claims one mutation cannot separate. Runs the real checker as a child process. All 19 flip exactly one check and nothing else — no mutation needs the `also` collateral declaration, and the summary prints that count so its emptiness stays visible. |
 | `make-settings-control-pages.mjs` | writes the two backstop-disabled control pages by literal text substitution on the generated HTML. |
 | `chrome-console.log` | the gate on the real page, Chrome. PASS 18/18. |
 | `firefox-console.log` | the gate on the real page, Firefox. PASS 18/18. |
@@ -204,7 +261,7 @@ which the game skips first setup *and* has no keys.
 | `nomenusave-nobackstop-chrome-console.log` | both removed. FAIL, harder. |
 | `settingsmenu-chrome-console.log` | the Misc Stuff → Menu Wrap demonstration, three page loads. |
 | `backstop-chrome-console.log` | the `visibilitychange` demonstration. |
-| `persist-settings-gate.steps.asrun` | the gate script exactly as run for the transcripts here. |
+| `persist-settings-gate.steps.asrun` | the gate script exactly as run for the transcripts here, and deliberately not re-synced with `web/tools/` afterwards — same convention as `gameplay-gate.steps.asrun`. The live copy has since taken **comment-only** edits (the limitation paragraph, softened after review). Verify that claim rather than trusting it: `diff <(grep -v '^#' <asrun> \| grep -v '^$') <(grep -v '^#' web/tools/persist-settings-gate.steps \| grep -v '^$')` is empty, so no step changed. |
 | `chrome-*.png` | the gate's screenshots, Chrome. `08` and `09` are black on purpose — see the shutdown note above. |
 | `firefox-0*.png` | the three that carry the claim in Firefox. |
 | `settingsmenu-*.png` | the Misc Stuff toggle, before / after / after a reload. |

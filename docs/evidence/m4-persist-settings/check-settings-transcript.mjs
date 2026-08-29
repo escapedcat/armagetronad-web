@@ -25,12 +25,19 @@
 //     particular setting, including the one menu in the tree where the
 //     generalisation does NOT hold.
 //   * NOTHING ABOUT THE BACKSTOP. S9 asserts the beforeunload/visibilitychange
-//     path did not fire before the reload, so nothing measured up to that
-//     point can be attributed to it. That the checks AFTER the reload do not
-//     depend on it either is not knowable from one transcript: it is
-//     established by running this same script against
-//     armagetronad-nobackstop.html, and the resulting PASS is committed as
-//     nobackstop-chrome-console.log.
+//     path did not fire before the reload -- on BOTH of the two independent
+//     witnesses to such a save, the page's own log line and the one printed
+//     from inside the wasm -- so nothing measured up to that point can be
+//     attributed to it. That the checks AFTER the reload do not depend on it
+//     either is not knowable from one transcript: it is established by running
+//     this same script against armagetronad-nobackstop.html, and the resulting
+//     PASS is committed as nobackstop-chrome-console.log.
+//
+// SCORING THE WRONG TRANSCRIPT IS A REAL HAZARD HERE, so this tool says which
+// page and which script it is looking at BEFORE it prints a verdict. Two of
+// the committed logs in this directory are demonstrations driven by a
+// different steps file and score a meaningless wall of red; one of the PASSes
+// is a control page rather than the product. See the provenance block below.
 //
 // THE TWO CHECKS THAT CARRY THE MOST WEIGHT are S5 and S8, and neither is the
 // obvious one.
@@ -134,7 +141,14 @@ function taggedJson(tag) {
 const populate = tagged('[PERSIST] populate ');
 const saves = tagged('[PERSISTSAVE] ');
 const menuLeaveSaves = saves.filter(([, s]) => s.startsWith('menu-leave'));
+// TWO WITNESSES TO A BACKSTOP SAVE, and S9 asserts on both. The
+// [PERSISTBACKSTOP] line is emitted by web/shell.html -- which is exactly the
+// file the nobackstop control pages edit -- so a page-level change could
+// silence the log without silencing the save. "[PERSISTSAVE] js-backstop" is
+// printed from inside aa_web_save_config in the wasm, and no edit to the
+// generated HTML can reach it.
 const backstopSaves = tagged('[PERSISTBACKSTOP] ');
+const backstopSavesInWasm = saves.filter(([, s]) => s.startsWith('js-backstop'));
 const fsDumps = taggedJson('[SETFS] ');
 const idbDumps = taggedJson('[SETIDB] ');
 
@@ -162,7 +176,67 @@ const note = (text) => console.log(`      ..    ${text}`);
 
 console.log(`transcript: ${path}`);
 console.log(`lines: ${lines.length}   run region: 0..${runEnd}   reload mark at line ${reloadAt}`);
+
+// ----------------------------------------------- provenance, before the verdicts
+//
+// TWO THINGS A READER HAS TO KNOW BEFORE READING A SINGLE PASS OR FAIL, and
+// this directory holds transcripts where getting either wrong is a real
+// misreading rather than a nuisance:
+//
+//   * WHICH PAGE. Three of the five gate transcripts here are PASSes and only
+//     one of them is the product. nobackstop-chrome-console.log passes 18/18
+//     and is otherwise indistinguishable from chrome-console.log inside this
+//     tool -- and here the control's PASS is the load-bearing claim of the
+//     task ("the backstop is not load-bearing"), which is exactly one
+//     confusion away from someone citing the control AS the product.
+//   * WHICH SCRIPT. The two demonstrations in web/tools/ (persist-backstop
+//     .steps, persist-settings-menu.steps) are not this gate and were never
+//     meant to satisfy it. Scored here they print a wall of red that means
+//     nothing.
+//
+// PRINTED BEFORE THE CHECKS, not after them as in Task 1's checker, because
+// the case that needs it most is the one that ends in thirteen FAIL lines --
+// a note underneath those has already been scrolled past.
+const nav = lines.find((l) => l.includes('[harness] navigating to '));
+const url = nav ? nav.slice(nav.indexOf('navigating to ') + 'navigating to '.length).trim() : null;
+const page = url ? url.split('/').pop() : null;
+console.log(`page: ${page || '(no "[harness] navigating to" line -- page unidentifiable)'}`);
 console.log('');
+
+if (page && page !== 'armagetronad.html') {
+  console.log(`NOTE  this transcript is NOT the product page: it navigated to ${page}.`);
+  console.log('      It is one of the control pages (web/Makefile client-control, or');
+  console.log('      make-settings-control-pages.mjs), so a PASS here says the CONTROL behaved');
+  console.log('      as designed -- it is not a statement about the shipped client. See the');
+  console.log('      matrix in docs/evidence/m4-persist-settings/README.md for which is which.');
+  console.log('');
+} else if (!page) {
+  console.log('NOTE  the page under test cannot be identified from this transcript, so it may');
+  console.log('      or may not be the product page. Treat any verdict below as unattributed.');
+  console.log('');
+}
+
+// The gate always emits [SETFS] payloads; the demonstrations emit [BACKSTOP] or
+// [SETMENU] instead and emit no [SETFS] at all. Keying on the absence of the
+// gate's own payload rather than on the presence of a demo tag also catches a
+// gate run that died before its first probe, which is the other way this tool
+// can be handed something it cannot score.
+if (fsDumps.length === 0) {
+  const demo = ['[BACKSTOP] ', '[SETMENU] '].find((t) => tagged(t).length > 0);
+  console.log('NOTE  no [SETFS] payload anywhere in this transcript.');
+  if (demo) {
+    console.log(`      It carries ${demo.trim()} lines instead, so it is one of the`);
+    console.log('      DEMONSTRATIONS in web/tools/ (persist-backstop.steps,');
+    console.log('      persist-settings-menu.steps), not a run of persist-settings-gate.steps.');
+    console.log('      Those deliberately have no checker; read them with the transcript and the');
+    console.log('      screenshots. Every FAIL below is an artefact of scoring the wrong script.');
+  } else {
+    console.log('      This is either not a run of web/tools/persist-settings-gate.steps, or a');
+    console.log('      run that failed before its first probe. Either way the verdicts below');
+    console.log('      describe a missing transcript, not a failing client.');
+  }
+  console.log('');
+}
 
 // ---------------------------------------------------------------- structure
 const okPopulates = populate.filter(([, s]) => s.startsWith('ok'));
@@ -171,8 +245,12 @@ check(reloadAt >= 0 && okPopulates.length === 2
   'two real page loads, partitioned by the RELOAD-REQUESTED mark'
   + ` (populates at ${okPopulates.map(([i]) => i).join(',')}, reload mark at ${reloadAt})`);
 
+// The two conditions are kept disjoint (`> 1` rather than `!== 1`) so that a
+// transcript with no payloads at all reports eight missing phases rather than
+// the same eight names twice under two headings, which is what it did before
+// and which reads as a tool malfunction.
 const missingPhases = EXPECTED_PHASES.filter((p) => !FS[p]);
-const dupPhases = EXPECTED_PHASES.filter((p) => fsDumps.filter(([, o]) => o.phase === p).length !== 1);
+const dupPhases = EXPECTED_PHASES.filter((p) => fsDumps.filter(([, o]) => o.phase === p).length > 1);
 check(missingPhases.length === 0 && dupPhases.length === 0 && !!IDB['boot1-idb'], 'S2',
   'all eight [SETFS] phases and the one [SETIDB] phase are present exactly once'
   + (missingPhases.length ? ` (missing: ${missingPhases.join(' ')})` : '')
@@ -222,12 +300,19 @@ check(!!idb && idb.o.absent === false && idb.o.user_cfg_present === true
   'IndexedDB itself holds the changed value, read directly and BEFORE any unload event'
   + (idb ? ` (${JSON.stringify(idb.o.player_1)}, ${idb.o.bytes} bytes, ${idb.o.key_count} keys, line ${idb.i} < ${reloadAt})` : ' (payload missing)'));
 
-// The backstop must not be able to explain anything measured above.
+// The backstop must not be able to explain anything measured above. BOTH
+// witnesses are asserted -- the page's own log line and the one printed from
+// inside the wasm -- because the page is what the control edits, so the page's
+// silence alone is not evidence that no save happened. See their extraction
+// above.
 const backstopBefore = backstopSaves.filter(([i]) => inBoot1(i));
-check(backstopBefore.length === 0, 'S9',
-  'no [PERSISTBACKSTOP] line before the reload: nothing above came from beforeunload/visibilitychange'
-  + ` (saw ${backstopBefore.length})`);
+const backstopWasmBefore = backstopSavesInWasm.filter(([i]) => inBoot1(i));
+check(backstopBefore.length === 0 && backstopWasmBefore.length === 0, 'S9',
+  'no backstop save before the reload, on either witness: nothing above came from'
+  + ' beforeunload/visibilitychange'
+  + ` (page log ${backstopBefore.length}, wasm log ${backstopWasmBefore.length})`);
 for (const [i, s] of backstopSaves) note(`backstop line ${i}: ${s}`);
+for (const [i, s] of backstopSavesInWasm) note(`backstop save (from wasm) ${i}: ${s}`);
 
 // ------------------------------------------------------------- the round trip
 //
@@ -284,10 +369,16 @@ check(timeouts.length === 0, 'S16',
   `every until: step was satisfied rather than timing out (saw ${timeouts.length} timeouts)`);
 for (const [i, l] of timeouts) note(`line ${i}: ${l.slice(l.indexOf('[harness]'), l.indexOf('[harness]') + 140)}`);
 
+// Scoped to the run region, like S14 and S16 -- the three are one set and an
+// unexplained asymmetry between them is a bug waiting to be argued about. The
+// positive control at the end is a null dereference and produces no failed
+// fetch today, but a future control that did would otherwise be counted as a
+// run failure. Both favicon probes (one per page load) are inside the run
+// region and are excluded by name, so nothing real is lost.
 const loadFails = lines.map((l, i) => [i, l])
-  .filter(([, l]) => l.includes('Failed to load resource') && !l.includes('/favicon.ico'));
+  .filter(([i, l]) => inRun(i) && l.includes('Failed to load resource') && !l.includes('/favicon.ico'));
 check(loadFails.length === 0, 'S17',
-  `every failed resource load is the browser's own /favicon.ico probe (other failures: ${loadFails.length})`);
+  `every failed resource load in the run is the browser's own /favicon.ico probe (other failures: ${loadFails.length})`);
 for (const [i, l] of loadFails.slice(0, 5)) note(`line ${i}: ${l.slice(0, 160)}`);
 
 // ---------------------------------------------------------------- self-guard

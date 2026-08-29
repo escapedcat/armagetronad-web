@@ -97,11 +97,17 @@
 #
 # THE SAME MEASUREMENT IS ALSO THIS TASK'S KNOWN LIMITATION, stated plainly:
 # a menu whose caller applies the player's choice AFTER the menu closes is not
-# covered by a menu-leave save. In this tree that is exactly one menu, First
-# Setup, whose Colour / Controls / Connection items are read out of local
-# variables by sg_StartupPlayerMenu after firstSetup.Enter() returns. Its
-# Name field -- the one this gate uses -- binds straight to ePlayer::name and
-# is covered. Every other configuration menu in the game binds directly too.
+# covered by a menu-leave save. The one such menu FOUND is First Setup, whose
+# Colour / Controls / Connection items are read out of local variables by
+# sg_StartupPlayerMenu after firstSetup.Enter() returns. Its Name field -- the
+# one this gate uses -- binds straight to ePlayer::name and is covered.
+#
+# "The one found", not "the only one": nobody has swept every uMenu in the
+# tree. Every menu looked at while building this binds directly, and direct
+# binding is what uMenu.h's item classes impose (each holds a `T *target`), so
+# further exceptions should be rare -- but that is an expectation, not a
+# survey, and it is written this way so the next person can run the sweep
+# rather than inherit an unearned universal.
 #
 # THE TRANSCRIPT IS CUMULATIVE and covers two page loads. The mark
 # "RELOAD-REQUESTED" is the partition. Every payload also carries its own
