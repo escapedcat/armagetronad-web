@@ -1,0 +1,174 @@
+# THE NEGATIVE CONTROL for web/tools/persist-gate.steps. Same script, same
+# checker, ONE extra step -- and the checker must print FAIL.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/persist-negative \
+#        --script-file web/tools/persist-negative.steps
+#   node docs/evidence/m4-persist/check-persist-transcript.mjs /tmp/persist-negative/console.log
+#   # expected: exit status 1, with P10/P11/P12/P13 FAIL
+#   kill %1
+#
+# HOW IT DIFFERS FROM THE GATE. Four diff hunks, three of which are this
+# header:
+#
+#   diff web/tools/persist-gate.steps web/tools/persist-negative.steps
+#
+# The only EXECUTABLE difference is the last hunk: the [PERSISTWIPE] step that
+# replaces the gate's bare `eval:location.reload()`. Every probe, every
+# payload, every phase name is byte-identical, which is the point -- the two
+# runs are comparable, and the checks that flip are exactly the round-trip
+# ones.
+#
+# WHY THE WIPE IS WRITTEN THE WAY IT IS. `indexedDB.deleteDatabase('/persist')`
+# ON ITS OWN DOES NOT WORK: the page still holds an open connection, so the
+# request fires onblocked, returns BLOCKED, and the database survives -- after
+# which boot 2 reads the data back and the "negative" control PASSES, for
+# entirely the wrong reason. Measured. So the step first calls
+# Module.IDBFS.quit(), which closes every connection libidbfs.js has cached
+# (IDBFS.dbs), and the transcript records which of the two outcomes actually
+# happened, so a BLOCKED delete can never be mistaken for a wipe.
+#
+# It also neuters IDBFS.queuePersist before reloading. That is not a thumb on
+# the scale: without it, any write the still-running game makes between the
+# delete and the unload re-opens the database and re-persists the very files
+# just deleted, so the control becomes flaky rather than wrong. Neutering
+# queuePersist can only prevent data being ADDED back before the reload; it
+# cannot affect what boot 2 reads, which is what every assertion here is
+# about.
+#
+# Chrome is run --headed only for consistency with the M2/M3 gates and because
+# a headed window uses the real GPU. This script presses NO keys, so it is the
+# one gate in web/tools/ that headless Chrome would also be safe for -- the
+# headless keydown flood both drivers warn about cannot affect it.
+#
+# WHAT IS CLAIMED
+# ---------------
+#   1. /persist is an IDBFS mount whose IndexedDB -> MEMFS populate FINISHES
+#      before main() starts. Not "was started": web/shell.html holds an
+#      Emscripten run dependency across it, so the Play button is not even
+#      enabled until the callback has fired.
+#   2. Booting the game -- with NO player action beyond the Play click --
+#      writes /persist/var/user.cfg and that write reaches IndexedDB. The
+#      write is not staged by this script: rScreen.cpp's sr_InitDisplay and
+#      lowlevel_sr_InitDisplay call st_SaveConfig() unconditionally as a
+#      crash detector, so booting alone exercises the save path.
+#   3. Bytes written in boot 1 are readable in boot 2, after a real
+#      location.reload(). Proved twice over: by the game's own user.cfg
+#      (same byte count, same hash) and by a sentinel file carrying a nonce
+#      minted during boot 1, so "it read something back" cannot be confused
+#      with "something was already there".
+#   4. The IndexedDB side is read DIRECTLY, over a connection this script
+#      opens itself, not only through the MEMFS view that IDBFS maintains.
+#      A mount that never persisted anything would still show a populated
+#      /persist in FS.readdir within one page load; only [PERSISTIDB] can
+#      tell those apart without waiting for the reload.
+#
+# WHAT IS NOT CLAIMED. Nothing about the game USING the restored settings.
+# user.cfg surviving is a filesystem fact here; whether st_LoadConfig's values
+# actually take effect -- and whether key bindings in particular do -- is the
+# next task's problem and no line in this file speaks to it.
+#
+# THE TRANSCRIPT IS CUMULATIVE and covers two page loads. The harness mark
+# "RELOAD-REQUESTED" is the partition: everything before it is boot 1,
+# everything after it is boot 2. Every payload also carries its own "phase"
+# string, so the checker never has to infer which boot a line came from by
+# counting lines.
+#
+# WHY THE DIRECT IndexedDB PROBE NEVER CREATES THE DATABASE. indexedDB.open()
+# creates an empty database as a side effect if none exists, and an empty
+# '/persist' with no FILE_DATA object store is WORSE than no database at all:
+# libidbfs.js's getDB() would then open it without an upgrade event and every
+# later transaction against the missing store would throw. So the probe aborts
+# the upgrade transaction in onupgradeneeded and reports absent:true instead.
+#
+# THE NEGATIVE CONTROL IS A SEPARATE FILE, web/tools/persist-negative.steps.
+# It is this script with one step added, and its checker output must be FAIL.
+
+# ---------------------------------------------------------------------------
+# BOOT 1.
+#
+# Synchronise on the populate rather than sleeping for it. web/shell.html
+# prints exactly one "[PERSIST] populate ok in Nms" line per page load, from
+# inside the FS.syncfs(true) callback, so this waits for the fact itself.
+until:1:90000:[PERSIST] populate ok
+mark:BOOT-1-POPULATED
+wait:1000
+shot:00-boot1-ready
+
+# What is in /persist before anything has run. Each driver run creates a fresh
+# temp browser profile, so IndexedDB starts empty and this must be an empty
+# mount -- which is also what makes the nonce comparison later meaningful.
+eval:(()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot1-before-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})()
+
+# Watch libidbfs.js's own persist state machine. onAutoPersistStateChanged is
+# called with true when a MEMFS -> IndexedDB sync starts and with false only
+# when the queue has fully DRAINED -- queuePersist's 'again' state re-runs the
+# sync WITHOUT emitting false -- so an "idle" line guarantees that every write
+# issued before it has been committed. That is what the reload below depends
+# on. Armed before the Play click, so the game's own first save is seen.
+eval:(()=>{const W={n:0,probe:false};window.__pw=W;Module.IDBFS.onAutoPersistStateChanged=(a)=>{if(a){W.n++;console.log('[PERSISTSYNC] start '+W.n)}else{console.log('[PERSISTSYNC] idle after '+W.n+(W.probe?' PROBE-PERSISTED':''))}};return 'watcher armed'})()
+
+click:#start
+
+# NO key is pressed between the click and this line. If it is satisfied, the
+# game persisted to IndexedDB entirely on its own.
+until:1:90000:[PERSISTSYNC] start 1
+mark:GAME-BOOT-ALONE-TRIGGERED-A-PERSIST
+wait:6000
+shot:01-boot1-language-menu
+
+eval:(()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot1-after-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})()
+
+# THE SENTINEL. A nonce minted in this page load, written through the ordinary
+# FS write path (open/write/close) -- the same path the game's std::ofstream
+# takes -- so it tests the mount rather than a special case. It exists because
+# user.cfg alone cannot distinguish "boot 2 read boot 1's bytes" from "boot 2
+# wrote its own identical file"; a value that did not exist anywhere before
+# this line ran can.
+eval:(()=>{const n='m4-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);window.__pw.probe=true;Module.FS.writeFile('/persist/m4-probe.txt','nonce='+n+'\n');console.log('[PERSISTNONCE] '+n);return n})()
+
+until:1:60000:PROBE-PERSISTED
+mark:SENTINEL-COMMITTED
+
+# The IndexedDB side, read over a connection this script opens itself. This is
+# the check a MEMFS-only "persistence" would fail.
+eval:(async()=>{const P='boot1-idb';let names=null;try{if(indexedDB.databases)names=(await indexedDB.databases()).map(d=>d.name)}catch(e){names='ERR:'+e}const R=await new Promise((res)=>{const r=indexedDB.open('/persist',21);r.onupgradeneeded=(e)=>{try{e.target.transaction.abort()}catch(_){}res({db:null,absent:true})};r.onsuccess=()=>res({db:r.result,absent:false});r.onerror=()=>res({db:null,absent:true,err:String(r.error)});r.onblocked=()=>res({db:null,absent:false,err:'blocked'})});let stores=null,count=null,keys=null;if(R.db){stores=[...R.db.objectStoreNames];if(stores.includes('FILE_DATA')){const t=R.db.transaction(['FILE_DATA'],'readonly'),q=t.objectStore('FILE_DATA').getAllKeys();const k=await new Promise((res,rej)=>{q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});count=k.length;keys=k.slice(0,120)}R.db.close()}console.log('[PERSISTIDB] '+JSON.stringify({phase:P,databases:names,absent:!!R.absent,open_error:R.err||null,stores,count,keys}));return 'idb read'})()
+
+# ---------------------------------------------------------------------------
+# THE RELOAD. Everything after this mark is a different page load: a new
+# Module, a new MEMFS, a new mount, a new populate.
+mark:RELOAD-REQUESTED
+eval:(async()=>{const I=Module.IDBFS;I.quit();I.queuePersist=function(){};const del=await new Promise((res)=>{const r=indexedDB.deleteDatabase('/persist');r.onsuccess=()=>res('deleted');r.onerror=()=>res('error:'+r.error);r.onblocked=()=>res('BLOCKED')});let after=null;try{if(indexedDB.databases)after=(await indexedDB.databases()).map(d=>d.name)}catch(e){after='ERR:'+e}console.log('[PERSISTWIPE] '+JSON.stringify({quit:true,queuePersist_neutered:true,delete:del,databases_after:after}));setTimeout(()=>location.reload(),0);return 'wiped, reloading'})()
+
+# The second populate line. Waiting on it rather than on a wall clock is what
+# makes this robust to a slow reload, and its Nms is the measured populate
+# time for a NON-empty store -- the number that actually matters, since an
+# empty store populates in ~0 ms and would understate the race window.
+until:2:90000:[PERSIST] populate ok
+mark:BOOT-2-POPULATED
+wait:2000
+shot:02-boot2-ready
+
+# The whole point of the milestone: /persist in a page that has written
+# nothing. user.cfg's byte count and hash must equal boot 1's, and probe_text
+# must contain boot 1's nonce.
+eval:(()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot2-before-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})()
+
+eval:(async()=>{const P='boot2-idb';let names=null;try{if(indexedDB.databases)names=(await indexedDB.databases()).map(d=>d.name)}catch(e){names='ERR:'+e}const R=await new Promise((res)=>{const r=indexedDB.open('/persist',21);r.onupgradeneeded=(e)=>{try{e.target.transaction.abort()}catch(_){}res({db:null,absent:true})};r.onsuccess=()=>res({db:r.result,absent:false});r.onerror=()=>res({db:null,absent:true,err:String(r.error)});r.onblocked=()=>res({db:null,absent:false,err:'blocked'})});let stores=null,count=null,keys=null;if(R.db){stores=[...R.db.objectStoreNames];if(stores.includes('FILE_DATA')){const t=R.db.transaction(['FILE_DATA'],'readonly'),q=t.objectStore('FILE_DATA').getAllKeys();const k=await new Promise((res,rej)=>{q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});count=k.length;keys=k.slice(0,120)}R.db.close()}console.log('[PERSISTIDB] '+JSON.stringify({phase:P,databases:names,absent:!!R.absent,open_error:R.err||null,stores,count,keys}));return 'idb read'})()
+
+# Boot 2 also plays, so the screenshot shows a live game on top of a restored
+# /persist rather than a page that merely booted. Nothing is asserted on it.
+click:#start
+wait:8000
+shot:03-boot2-language-menu
+
+# ---------------------------------------------------------------------------
+# CONTROL: can this transcript see a browser-reported JS error at all? Last,
+# because web/shell.html turns an uncaught error into a red failure banner.
+# Without it, "no [EXCEPTION] in the run" is a silence, not an observation --
+# M1's Firefox transcript was read as clean when it was merely deaf
+# (docs/porting/browser-runtime-notes.md section 9).
+mark:positive-control-deliberate-uncaught-error-follows
+eval:setTimeout(function(){null.thisIsADeliberateUncaughtError;},0)
+wait:2000
+shot:04-after-deliberate-uncaught-error

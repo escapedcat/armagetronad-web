@@ -28,7 +28,7 @@
 // in FS.readdir for the rest of the page load; only the second witness, and
 // the reload, can tell that apart from real persistence.
 //
-// THE ORDERING CHECKS (P2/P3) ARE THE ONES THAT MATTER MOST, because the bug
+// THE ORDERING CHECKS (P3/P4) ARE THE ONES THAT MATTER MOST, because the bug
 // they exclude is silent. FS.syncfs(true, cb) is asynchronous; if main() is
 // allowed to start before that callback fires, st_LoadConfig reads an empty
 // /persist and the next save writes a fresh file over the top. Saving keeps
@@ -39,11 +39,22 @@
 // the Play button becomes clickable, i.e. the earliest moment main() can run.
 //
 // HOW EACH CHECK IS SHOWN TO BE ABLE TO FAIL. An assertion never seen to fail
-// is not evidence. Two committed control runs cover the load-bearing ones:
-//   docs/evidence/m4-persist/negative-*-console.log  (IndexedDB wiped between
-//       the boots, web/tools/persist-negative.steps) flips P10 P11 P12 P13.
-//   docs/evidence/m4-persist/ungated-*-console.log   (the same page with the
-//       run dependency deleted, make-ungated-page.mjs) flips P2 P3.
+// is not evidence. Three committed control runs cover the load-bearing ones:
+//   negative-chrome-console.log     IndexedDB wiped between the boots
+//                                   (web/tools/persist-negative.steps).
+//                                   Flips P10 P11 P12 P13.
+//   slowungated-chrome-console.log  the run dependency deleted AND the
+//                                   populate slowed to 3 s
+//                                   (make-control-pages.mjs). Flips P3 P4.
+//   slowgate-chrome-console.log     the populate slowed to 3 s with the
+//                                   dependency KEPT. Passes, and passing is
+//                                   the finding: the runtime waited three
+//                                   seconds for the filesystem.
+// Deleting the run dependency WITHOUT slowing the populate does NOT flip
+// P3/P4 on this machine -- measured, and explained at length in
+// make-control-pages.mjs. That is not a weakness in the checks; it is the
+// intermittency that makes the bug they exclude dangerous.
+//
 // The remaining checks are structural (a payload is present and well formed,
 // the control error was seen) and are NOT individually proven-failable; that
 // is stated here rather than glossed over.
