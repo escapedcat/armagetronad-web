@@ -133,14 +133,34 @@ comment in the script for why. Re-run only after `rm -rf deps/build/libxml2-*`.
     make -f web/Makefile client -j8
 
 Four files land in `web/dist-m1/`, all produced by the one `em++` invocation
-(sizes as built at the end of M2):
+(sizes as built from `make clean` at the end of M3; M2's are kept beside them
+because M5's size budget was drawn against those):
 
-| file | size | what it is |
-|---|---|---|
-| `armagetronad.html` | 10,061 B | the page. It is `web/shell.html`, passed to `--shell-file` |
-| `armagetronad.js` | 637,202 B | the loader/glue: fetches the other two, sets up the runtime |
-| `armagetronad.wasm` | 8,854,277 B | the game. Big because of Asyncify — see *Known limitations* |
-| `armagetronad.data` | 683,791 B | the preloaded asset tree (config, language, textures, models, sound, maps) |
+| file | size at M3 | at M2 | what it is |
+|---|---|---|---|
+| `armagetronad.html` | 10,061 B | 10,061 B | the page. It is `web/shell.html`, passed to `--shell-file` |
+| `armagetronad.js` | 637,202 B | 637,202 B | the loader/glue: fetches the other two, sets up the runtime |
+| `armagetronad.wasm` | 8,878,433 B | 8,854,277 B | the game. Big because of Asyncify — see *Known limitations* |
+| `armagetronad.data` | 688,393 B | 683,791 B | the preloaded asset tree (config, language, textures, models, sound, maps) |
+
+Both M3 deltas are accounted for and neither is an asset change.
+
+The wasm grew **24,156 B**, and M3 changed **two** source files, not one:
+`src/engine/eSound.cpp` (the WAV parser and the mixing repairs — nearly all of
+the growth) and `src/emscripten/eCompat.cpp`, which *deleted* `SDL_LoadWAV_RW`
+and gave `SDL_FreeWAV` a one-line `free()` body. The second file's contribution
+is near zero and is plausibly negative, but it is not zero by construction, so
+the delta should not be attributed to `eSound.cpp` alone — an earlier revision
+of this file did, in all three places it quotes the figure. The two were never
+measured separately; if that ever matters, link each object in isolation rather
+than reasoning about it.
+
+The data grew **4,602 B** because `web/webdefaults/autoexec.cfg` — which is
+preloaded — gained the comment block arguing `SOUND_BUFFER_SHIFT` down from 3
+to 1, and later the correction recording that the sound menu offers five shift
+values while the measured table covers four different ones. Verified rather
+than inferred: the config grew 773 B in that second edit and the `.data` grew
+by exactly 773 B with the `.wasm` md5 unchanged.
 
 The directory name still says `m1`. It is where the client has lived since M1 and
 renaming it would break every path in this file, the harness scripts and the
@@ -150,7 +170,10 @@ evidence directories for no gain; M2 added no build target.
 embeds the paths of its own temporary files in comments (`// include:
 /var/folders/.../tmpXXXXXXXX.js`), which differ every run. The `.wasm`, `.data`
 and `.html` *are* byte-identical across a `make clean` rebuild — verified at the
-end of M2 — so a `.js` diff that is only those comment lines is not a change.
+end of M2 and again at the end of M3, where the clean-rebuilt client wasm came
+out at `md5 364233c6542fd97a21e9a5fe872e0507`, matching the build
+`docs/evidence/m3-audio/` was taken against — so a `.js` diff that is only those
+comment lines is not a change.
 
 `web/dist-m1/` and the object directory `web/build-m1/` are **gitignored** —
 build output is never committed. That matters for the harness below: on a fresh
@@ -186,8 +209,9 @@ A successful run shows the game's language menu on the canvas within a few
 seconds of the click. Enter chooses a language, the first-run setup menu
 follows, Escape leaves it, and a tutorial match against three AI opponents
 starts. The arrow keys steer. What that looks like, in both browsers, is
-committed under `docs/evidence/m1-task7/` (menus, M1) and
-`docs/evidence/m2-gate/` (gameplay, M2).
+committed under `docs/evidence/m1-task7/` (menus, M1),
+`docs/evidence/m2-gate/` (gameplay, M2) and `docs/evidence/m3-audio/` (audio,
+M3).
 
 ### Expected browser-console noise
 
@@ -202,10 +226,18 @@ None of these is a failure:
   `python3 -m http.server` has none. **Any *other* 404 is a real failure**: it
   means an asset the page needs was not published.
 - `Trying to start sound. Just restart Armagetron Advanced in case of crash.` —
-  the game's own message. The audio device does open; nothing is ever loaded
-  into it. See *Known limitations*.
-- `The AudioContext was not allowed to start` — audio is M3's; the client does
-  not yet resume the context on the Play click.
+  the game's own message. The device does open, and as of M3 it is fed. See
+  *Known limitations*.
+- `[SND] device opened: …` and `[WAV] loaded …` — M3's own diagnostics, and the
+  only report of what `SDL_OpenAudio` actually handed back. Every `[WAV]`/`[SND]`
+  class is budgeted at 16 lines and then goes quiet, so **do not count them**;
+  `docs/evidence/m3-audio/check-audio-transcript.mjs` explains what that does to
+  a naive assertion.
+- `The AudioContext was not allowed to start` — Chrome only, and expected: the
+  client does not resume the context on the Play click, because a synthetic
+  click is not a user gesture. The first real key press resumes it. Firefox
+  says nothing here and instead simply stops asking for buffers, which is why
+  the M3 gate windows its measurement to the first *trusted* keydown.
 - `TODO: glShadeModel` — an Emscripten GL-emulation stub, not a crash.
 - `[L] …` lines — the ladder log, on because
   `web/webdefaults/autoexec.cfg` sets `CONSOLE_LADDER_LOG 1`. This is the
@@ -277,6 +309,65 @@ in sync with `web/tools/gameplay-gate.steps`: it is the record of what produced
 those numbers, and the evidence README lists the two things corrected in the live
 script since.
 
+### Re-running the M3 gate
+
+`web/tools/audio-gate.steps` is the **M3** gate: the same first-run flow and
+three-round match, with an in-page probe wrapped around `SDL.audio.pushAudio`
+instead of M2's per-frame sampler. Same server, same drivers:
+
+```sh
+node web/tools/drive-browser.mjs --headed --out /tmp/audio-chrome \
+     --script-file web/tools/audio-gate.steps
+node web/tools/drive-firefox.mjs         --out /tmp/audio-firefox \
+     --script-file web/tools/audio-gate.steps
+
+node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-chrome/console.log
+node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-firefox/console.log
+```
+
+25 checks, exit 0 or 1. What passing means is narrow and the checker says so
+itself after the verdict: **non-zero PCM reached `SDL.audio.pushAudio`.** It is
+not a claim that the buffers were rendered to a device — `pushAudio` is
+upstream of the Web Audio graph, and the harness mutes Chrome and runs Firefox
+headless — and it is not a claim that the mix is correct. Nobody has heard it.
+
+Two things make that verdict worth something, and both are re-runnable:
+
+```sh
+# every check flips to FAIL under a targeted mutation: 25 mutations, 25 flips
+node docs/evidence/m3-audio/prove-checks-can-fail.mjs docs/evidence/m3-audio/chrome-console.log
+
+# and a genuinely silent build fails the gate rather than passing it quietly
+node docs/evidence/m3-audio/check-audio-transcript.mjs \
+     docs/evidence/m3-audio/negative-control-chrome-console.log   # exits 1
+```
+
+`docs/evidence/m3-audio/README.md` has the numbers, the two traps the gate is
+built around (the untrusted-click AudioContext and the 16-line diagnostic
+budgets), and `make-silent-bundle.mjs`, which builds that silent bundle from
+`web/dist-m1` without a rebuild.
+
+**Before quoting a number the checker printed, know which kind it is.** Roughly
+half of the gate's JSON payload is *printed for context and never asserted on* —
+`install_polls`, `rounds_started`, `window.calls*`,
+`window.buffers_with_nonzero_pcm`, `window.latency_ms`, all of `whole_run` and
+`pre_gesture`, and **five of the nine `per_round` fields** (`round`, `span_s`,
+`calls_unpaused`, `buffers_with_nonzero_pcm`, `push_gap_max_ms`) can be set to
+any value and the gate still exits 0 (a fuzz of 221 malformed transcripts found
+62 that do, and the per-round five were demonstrated separately). That includes
+**both** headline count pairs: "853 of 1021 buffers" over the window *and*
+"219/219 in every round". A5 and A7 assert the non-zero *fractions*; nothing
+checks that a fraction equals its printed numerator over its printed
+denominator.
+
+What **is** checked: `window.nonzero_fraction`, `window.maxabs.p50`,
+`window.peak_abs_sample`, and per round only `nonzero_fraction` — now to
+**exactly 1**, so "every buffer of every round" is an assertion rather than a
+reading — and `peak_abs_sample`. `per_round.from_ms`/`to_ms` are not asserted
+directly but decide the windows A4b and A7b are computed over. Quote the
+fractions, the median and the peaks with confidence; treat every raw count as
+reported rather than verified.
+
 `web/tools/menu-gate.steps` is the M1 gate, still re-runnable the same way with
 the filename swapped. It passes with ten screenshots, all ten different from each
 other, and a transcript with no `Stack overflow detected`, no `[EXCEPTION]`, no
@@ -288,7 +379,7 @@ overflows SDL's event queue and loses the keystroke. Firefox headless is fine.
 Pass `--chrome PATH` / `--firefox PATH` if your browsers are not at the macOS
 defaults.
 
-### Known limitations of the client at M2
+### Known limitations of the client at M3
 
 - **The camera is permanently top-down, and no screenshot of this port has ever
   shown a correct 3D view.** Emscripten's `gluLookAt` (`libglemu.js:3888`) is a
@@ -299,17 +390,64 @@ defaults.
   mislead someone reading a screenshot of this port. Mechanism, the three
   measurements that confirm it, and why `CAMERA_IN` is not a workaround:
   `docs/porting/browser-runtime-notes.md` § 11.
-- **No sound.** The audio device opens and nothing is ever loaded into it:
-  `eWavData::Load()` short-circuits under Emscripten because the WAV loader is a
-  NULL-returning stub, and without that short-circuit a missing WAV throws and
-  makes it impossible to enter a round at all. M3.
+- **The cockpit HUD's first draw within a round is erratic**, and nobody has
+  explained what it waits on. Screenshotting 5.5 s into a round finds the
+  instrument panel present in anywhere from one round of three to three of
+  three. **In Chrome that varies between runs of the same script on the same
+  build** — four Chrome runs scored 1/3, 1/3, 3/3 and 1/3. Firefox has only one
+  run per build, so same-build variance has not been observed there; what
+  Firefox shows is 2/3 on *both* builds, missing a different round in each.
+  Measured rather than guessed: `docs/evidence/m3-audio/README.md`, "The missing
+  cockpit HUD", scores all 39 committed driving frames with
+  `docs/evidence/m3-audio/cockpit-band.mjs`. It is **not** an M3 regression —
+  the M3 build reaches three of three. The one plausible mechanism, M3's
+  per-callback mixing work landing on the main thread, is *narrowed* there
+  rather than dismissed: a run with the mixing **cost** removed on a
+  byte-identical wasm still scores 1/3, which rules that cost out. Only the cost
+  is ruled out — the audio callback, the open device and `pushAudio` all still
+  run at 21.5/s under that same lesion, so "audio work on the main thread" as
+  such is not excluded, and the phenomenon is stochastic enough that one run
+  cannot exclude a probabilistic contribution anyway. **Those two figures —
+  21.5 callbacks/s and 1020 unpaused pushes — come from the negative control**,
+  not from the silent-bundle run scored for the HUD. They are two different runs
+  of the same bundle: the negative control is driven by `audio-gate.steps` with
+  the probe attached, while the HUD run is driven by M2's `gameplay-gate.steps`,
+  which carries no audio probe at all, so no push count can be read off it. An
+  earlier revision of this bullet attributed both figures to the HUD run. Open
+  question for M4/M5.
+- **Sound is produced, but nobody has heard it.** As of M3 both shipped WAVs
+  decode and non-zero PCM reaches `SDL.audio.pushAudio` continuously through a
+  match — every buffer of every round, in Chrome and Firefox, measured in
+  `docs/evidence/m3-audio/`. `pushAudio` is *upstream* of the Web Audio graph,
+  so that is not the same as "the buffers were rendered to a device", and
+  nothing anywhere assesses whether the mix is *correct*: no audio has been
+  captured to a file and no human has listened. The two known gaps are that the
+  client does not resume the `AudioContext` on the Play click (the first key
+  press does it, via Emscripten's `autoResumeAudioContext`), and that the
+  voice limiter has only one voice of margin — it peaks at 9 against
+  `SOUND_SOURCES 10`, so it has never actually engaged and raising `SP_NUM_AIS`
+  would be the first time that code ran with real voices in it.
+- **`SOUND_BUFFER_SHIFT 1` is a hard override a player cannot keep changed.**
+  It lives in `web/webdefaults/autoexec.cfg`, which loads *after* `user.cfg`, so
+  the audio-buffer size is reachable from the in-game sound menu but will be
+  silently reset on every load once M4 lands persistence. Exactly the same
+  problem `MAX_FPS` has, and they should be fixed together. The value itself was
+  chosen on a measured margin argument — 278 ms of latency and starvation
+  tolerance against a worst observed main-thread stall of 119-142 ms — and the
+  full table is in the config file.
 - **Nothing persists.** No IndexedDB yet, so every page load is a first run and
   the first-run setup menu appears every time. Worse, settings are not saved on
   tab close either — the `SDL_QUIT` path that calls `st_SaveConfig()` is
   unreachable in the browser (`gArmagetron.cpp:840-844`). M4.
-- **The wasm is 8,854,277 bytes.** Asyncify nearly triples it (+5,888,604 over
-  the same objects linked without it) and `-fexceptions` adds a further 827,185.
-  Both are mandatory today. That is M5's size budget, and
+- **The wasm is 8,878,433 bytes** as of M3, up from M2's 8,854,277 — M3's WAV
+  parser and mixing-path repairs cost **+24,156 bytes**, which is the whole of
+  the delta. Nearly all of it is `src/engine/eSound.cpp`; `src/emscripten/
+  eCompat.cpp` also changed in that link (a deleted function and a one-line
+  `free()` body, so a near-zero and plausibly negative contribution) and the two
+  were never measured apart. Asyncify nearly triples the total (+5,888,604 over
+  the same objects linked without it) and `-fexceptions` adds a further 827,185;
+  both of those deltas were measured on the M2 tree and have not been re-taken.
+  All are mandatory today. That is M5's size budget, and
   `docs/porting/browser-runtime-notes.md` § 7 has the measurements and the two
   ways to reduce the Asyncify half.
 - **Frame pacing is `setTimeout`, not `requestAnimationFrame`.** `MAX_FPS` (60,

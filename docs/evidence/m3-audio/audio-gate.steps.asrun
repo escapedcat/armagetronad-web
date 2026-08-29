@@ -1,0 +1,255 @@
+# The M3 gate, as a re-runnable script: does non-zero PCM reach the audio
+# device interface while a real match is played?
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/audio-chrome \
+#        --script-file web/tools/audio-gate.steps
+#   node web/tools/drive-firefox.mjs          --out /tmp/audio-firefox \
+#        --script-file web/tools/audio-gate.steps
+#   node docs/evidence/m3-audio/check-audio-transcript.mjs /tmp/audio-chrome/console.log
+#   kill %1
+#
+# --headed is REQUIRED for Chrome and only for Chrome: headless Chrome 152
+# floods the page with thousands of spurious keydown events per real keypress
+# and drowns the SDL event queue. Both drivers' header comments explain it.
+#
+# WHAT IS CLAIMED, AND WHAT IS NOT
+# --------------------------------
+# CLAIMED: non-zero, structured PCM reaches SDL.audio.pushAudio -- the last
+# point at which the mix exists as bytes the game produced -- continuously,
+# in every round of a real three-round match, in both engines.
+#
+# NOT CLAIMED, and nothing in this file should be read as claiming it:
+#
+#   * that the buffers were RENDERED TO A DEVICE. pushAudio is UPSTREAM of the
+#     Web Audio graph: it is the function that creates an AudioBufferSourceNode
+#     and calls start() on it. Everything after that -- the graph, the output
+#     device, the speakers -- is outside this measurement. Chrome is driven
+#     with --mute-audio (drive-browser.mjs) and Firefox headless, so the output
+#     end is deliberately silent even when everything works.
+#   * that the mix is CORRECT. Nobody has heard this. Whether the engine pitch
+#     tracks speed, whether the panning is the right way round, whether the
+#     explosion is too quiet -- none of that is assessed anywhere in M3.
+#
+# The gate exists to make the first claim mechanically checkable and the second
+# impossible to accidentally imply. docs/evidence/m3-audio/README.md says the
+# same thing at more length; check-audio-transcript.mjs is the arbiter.
+#
+# WHY THIS IS NOT web/tools/gameplay-gate.steps WITH AUDIO BOLTED ON
+# -----------------------------------------------------------------
+# The gameplay flow below (Play -> language menu -> First Setup -> welcome ->
+# three rounds) is copied from that file and is deliberately the same path, so
+# the two gates measure the same game. They are separate scripts because:
+#   * M2's per-frame glFlush/glFinish sampler costs a performance.now() and an
+#     array store on every frame and a synchronous glGetError round trip twice
+#     a second. This gate measures TIMING of a main-thread callback, and the
+#     one thing it must not do is perturb the main thread more than necessary.
+#   * M3's assertions are about audio and M2's are about frames; a single
+#     script that fails is then ambiguous about which milestone regressed.
+# The match parameters are the tutorial ones -- see gameplay-gate.steps and
+# docs/evidence/m2-gate/README.md, which explain welcome()'s six temporary
+# settings. Nothing in this gate depends on them.
+#
+# WHY THE MEASUREMENT IS WINDOWED TO THE FIRST *TRUSTED* KEY PRESS
+# ----------------------------------------------------------------
+# `click:#start` runs through Runtime.evaluate / script.evaluate, which is not
+# a user gesture, so the AudioContext stays SUSPENDED after the module boots
+# and opens the device. Measured in M3 task 2: in Firefox that produces a
+# 6064 ms gap in pushAudio (8491 ms -> 14555 ms) with NO starvation warning at
+# all, because a suspended context's clock does not advance and Emscripten
+# therefore stops asking for buffers. Chrome does not show the gap (it emits
+# "AudioContext was not allowed to start" warnings instead). So a continuity
+# assertion over the whole run would fail in one engine and pass in the other
+# for a reason that has nothing to do with the game.
+#
+# The window therefore starts at the first keydown with event.isTrusted, which
+# is the first `key:` step below -- the same event that makes Emscripten's
+# autoResumeAudioContext() call ctx.resume(). It is watched from inside the
+# page rather than assumed from the script, and the checker cross-checks the
+# time it reports against the driver's own wall-clock stamp for that step.
+#
+# The dump reports the UNWINDOWED maximum push gap as well, so the artifact
+# stays visible instead of being silently cropped out: in Firefox those two
+# numbers differ by more than an order of magnitude, and that difference IS the
+# evidence that the windowing is load-bearing rather than decorative.
+#
+# WHY THE ASSERTIONS DO NOT COUNT LOG LINES
+# -----------------------------------------
+# eSound.cpp budgets its diagnostics: se_wavFailureBudget, se_wavSuccessBudget,
+# se_wavRetireBudget, se_peakBudget and se_limiterBudget are 16 lines EACH, and
+# after that the class goes silent forever. A gate that counted "[WAV]" lines
+# would therefore stop seeing them partway through a run and could pass because
+# a line stopped printing, which is the exact failure mode this project has
+# been burned by. So:
+#   * the PCM measurement is a single JSON payload from an in-page probe, not a
+#     log line, and no budget can reach it;
+#   * every log-line assertion is "must appear" or "must not appear at all",
+#     never "appears exactly N times" for an N anywhere near 16 -- absence is
+#     budget-safe because the budget prints the FIRST 16 of each class;
+#   * and the checker fails outright if any class reaches its 16-line
+#     allowance, because at that point the log is a lower bound and every
+#     count read off it is unreliable.
+
+# ---------------------------------------------------------------------------
+# THE PROBE. Installed before the module starts, so nothing is missed.
+#
+# WHAT IT WRAPS AND WHY THAT IS THE RIGHT PLACE. SDL.audio.pushAudio(ptr,
+# sizeBytes) is where Emscripten's SDL 1.2 emulation takes the buffer
+# eSound.cpp's fill_audio has just filled and schedules it into Web Audio. It
+# is the last point at which the mix is bytes the GAME produced: one call is
+# one callback's worth of finished mix. The probe reads that buffer out of
+# HEAP16 -- the same memory, before anything downstream can touch it -- and
+# records, per call: the peak absolute sample, the count of non-zero samples,
+# SDL.audio.paused, the AudioContext's state, and nextPlayTime - currentTime
+# (how far ahead of the clock this buffer will start).
+#
+# No source change is needed for any of it: the loader is not modularised, so
+# `SDL` and `HEAP16` are plain globals on window, and HEAP16 is re-read on
+# every call so a memory growth cannot leave the probe holding a stale view.
+#
+# It polls on a 50 ms interval rather than wrapping immediately, because
+# SDL_OpenAudio does not run until the module has booted (~8 s in) and
+# SDL.audio does not exist before that. The poll count is reported, so
+# "installed" is a fact in the transcript rather than an assumption.
+#
+# THE SCANNER IS A NAMED FUNCTION (S.scan) so that the control at the end of
+# this file can run the SAME code over hand-made input and print what it says.
+# That control tests the classifier, not the pipeline; the pipeline-level
+# control is a separate run with both WAVs made unloadable, whose transcript is
+# committed next to this one and whose checker output is a FAIL.
+#
+# It also timestamps every "[L] " ladder-log line in performance.now() time,
+# exactly as M2's sampler does and for the same reason: the round boundaries
+# have to be in the same clock as the audio samples for a per-round window to
+# mean anything. Module print routes stdout through console.log
+# (web/shell.html) and resolves `console` at call time, so replacing it here
+# catches everything the game prints; the original is kept bound, so CDP/BiDi
+# still see every line.
+wait:1000
+eval:(()=>{if(window.__aud)return 'already installed';const S={t:[],mx:[],nz:[],pa:[],cs:[],lat:[],marks:[],firstKey:null,installedAt:null,spec:null,err:null,polls:0};window.__aud=S;S.scan=function(a,from,to){let m=0,n=0;for(let i=from;i<to;i++){const v=a[i];if(v!==0){n++;const q=v<0?-v:v;if(q>m)m=q;}}return [m,n];};addEventListener('keydown',function(e){if(e.isTrusted&&S.firstKey===null){S.firstKey=performance.now();console.log('[AUDIOPROBE] first TRUSTED keydown at '+Math.round(S.firstKey)+'ms, AudioContext state '+((typeof SDL!=='undefined'&&SDL.audioContext)?SDL.audioContext.state:'none'));}},true);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};const iv=setInterval(function(){S.polls++;try{if(typeof SDL==='undefined'||!SDL.audio||!SDL.audio.pushAudio||SDL.audio.__probed)return;const orig=SDL.audio.pushAudio;SDL.audio.pushAudio=function(ptr,sizeBytes){try{const A=SDL.audio,c=SDL.audioContext;let m=-1,n=-1;if(A.bytesPerSample===2){const r=S.scan(HEAP16,ptr>>1,(ptr+sizeBytes)>>1);m=r[0];n=r[1];}else if(!S.err){S.err='bytesPerSample is '+A.bytesPerSample+', not 2';}S.t.push(performance.now());S.mx.push(m);S.nz.push(n);S.pa.push(A.paused?1:0);S.cs.push(c?c.state:'none');S.lat.push(c?Math.round((A.nextPlayTime-c.currentTime)*1000):null);}catch(e){if(!S.err)S.err=String(e);}return orig.apply(this,arguments);};SDL.audio.__probed=true;S.installedAt=performance.now();S.spec={freq:SDL.audio.freq,samples:SDL.audio.samples,channels:SDL.audio.channels,format:SDL.audio.format,bytesPerSample:SDL.audio.bytesPerSample,bufferSize:SDL.audio.bufferSize,bufferDurationSecs:SDL.audio.bufferDurationSecs,bufferingDelay:SDL.audio.bufferingDelay,queued:SDL.audio.numSimultaneouslyQueuedBuffers,ctxSampleRate:SDL.audioContext?SDL.audioContext.sampleRate:null};console.log('[AUDIOPROBE] installed on SDL.audio.pushAudio at '+Math.round(S.installedAt)+'ms after '+S.polls+' polls: '+JSON.stringify(S.spec));clearInterval(iv);}catch(e){if(!S.err)S.err=String(e);}},50);return 'audio probe armed: pushAudio wrapper pending, [L] lines timestamped, first trusted keydown watched';})()
+
+# The module needs ~7 s to fetch and instantiate before the Play button works.
+wait:7000
+click:#start
+wait:6000
+mark:first-run-flow-language-menu
+shot:01-language-menu
+
+# THE FIRST TRUSTED KEY PRESS, and the start of the measurement window. It is
+# also what resumes the AudioContext: Emscripten's autoResumeAudioContext()
+# registers a once-only keydown listener on document and on the canvas that
+# calls ctx.resume() if the state is still 'suspended'.
+key:Enter
+wait:3000
+mark:escape-accepts-the-defaults-and-leaves-first-setup
+key:Escape
+wait:4000
+shot:02-welcome-message
+mark:enter-dismisses-the-welcome-message-and-starts-the-match
+key:Enter
+
+# ------------------------------------------------------------------- round 1
+until:1:60000:[L] NEW_ROUND
+mark:ROUND-1-STARTED
+# ~5 s of countdown follows NEW_ROUND before the cycles move and the engine
+# sound starts; drive a little so there is more than idle to mix.
+wait:5500
+shot:03-round1-driving
+key:Left
+wait:1200
+key:Right
+until:1:150000:[L] ROUND_WINNER
+mark:ROUND-1-COMPLETE
+
+# ------------------------------------------------------------------- round 2
+until:2:60000:[L] NEW_ROUND
+mark:ROUND-2-STARTED
+wait:5500
+shot:04-round2-driving
+key:Right
+wait:1200
+key:Left
+until:2:150000:[L] ROUND_WINNER
+mark:ROUND-2-COMPLETE
+
+# ------------------------------------------------------------------- round 3
+until:3:60000:[L] NEW_ROUND
+mark:ROUND-3-STARTED
+wait:5500
+shot:05-round3-driving
+key:Left
+wait:1200
+key:Left
+until:3:150000:[L] ROUND_WINNER
+mark:ROUND-3-COMPLETE
+
+# SP_LIMIT_ROUNDS 3 means the match is over now.
+wait:8000
+shot:06-after-the-match
+
+# ---------------------------------------------------------------------------
+# THE DUMP. One console.log line, "[AUDIODUMP] {json}", which is what
+# check-audio-transcript.mjs parses.
+#
+# WHY A console.log RATHER THAN THE eval: RESULT. The drivers record an eval
+# result as `[harness] eval <the whole expression> => <value>`, and Chrome
+# JSON.stringify()s the value while Firefox records it raw -- so a checker has
+# to guess which driver wrote the file, and it has to find the payload inside a
+# line that also contains the entire expression that produced it. A console.log
+# line is recorded identically by both drivers and contains only the payload.
+#
+# FOUR WINDOWS, and the difference between them is the point:
+#   whole_run   -- every recorded call, including the suspended-context region
+#                  before the first trusted key press. Reported, not asserted
+#                  on. Its push_gap_max_ms is the artifact described at the top
+#                  of this file, ~6 s in Firefox and ~0.15 s in Chrome.
+#   pre_gesture -- device open .. first trusted keydown. Reported so the
+#                  artifact is a visible quantity rather than a claim in a
+#                  comment: it is where the AudioContext is parked, and the two
+#                  engines behave differently in it.
+#   window      -- first trusted keydown .. last [L] ROUND_WINNER. This is what
+#                  the gate asserts on.
+#   per_round  -- [L] NEW_ROUND i .. [L] ROUND_WINNER i, one entry per round.
+#                 A run in which sound happened once and then stopped passes
+#                 the overall check and fails these, which is why they exist.
+#
+# "unpaused" everywhere means SDL.audio.paused was false at the call: a paused
+# pushAudio returns immediately without touching the graph, so counting those
+# as delivered buffers would inflate every fraction below.
+eval:(()=>{const S=window.__aud;if(!S)return 'no probe';const q=function(a,p){if(!a.length)return null;const s=a.slice().sort(function(x,y){return x-y});return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const mark=function(pre){return S.marks.filter(function(m){return m[1].indexOf(pre)===0}).map(function(m){return m[0]})};const nr=mark('[L] NEW_ROUND');const rw=mark('[L] ROUND_WINNER');const stats=function(t0,t1){const I=[];for(let i=0;i<S.t.length;i++)if(S.t[i]>=t0&&S.t[i]<=t1)I.push(i);const up=I.filter(function(i){return !S.pa[i]});const gaps=[];for(let k=1;k<up.length;k++)gaps.push(Math.round(S.t[up[k]]-S.t[up[k-1]]));const mx=up.map(function(i){return S.mx[i]});const nzb=mx.filter(function(v){return v>0}).length;const lat=up.map(function(i){return S.lat[i]}).filter(function(v){return v!==null});const st={};for(const i of I)st[S.cs[i]]=(st[S.cs[i]]||0)+1;return{from_ms:Math.round(t0),to_ms:Math.round(t1),span_s:Math.round((t1-t0)/10)/100,calls:I.length,calls_unpaused:up.length,calls_paused:I.length-up.length,buffers_with_nonzero_pcm:nzb,nonzero_fraction:up.length?Math.round(1000*nzb/up.length)/1000:null,peak_abs_sample:mx.length?Math.max.apply(null,mx):null,maxabs:{p10:q(mx,0.1),p50:q(mx,0.5),p90:q(mx,0.9)},push_gap_ms:{p50:q(gaps,0.5),p99:q(gaps,0.99),max:gaps.length?Math.max.apply(null,gaps):null},latency_ms:{p50:q(lat,0.5),max:lat.length?Math.max.apply(null,lat):null},ctx_states:st}};const slim=function(s,n){return{round:n,from_ms:s.from_ms,to_ms:s.to_ms,span_s:s.span_s,calls_unpaused:s.calls_unpaused,buffers_with_nonzero_pcm:s.buffers_with_nonzero_pcm,nonzero_fraction:s.nonzero_fraction,peak_abs_sample:s.peak_abs_sample,push_gap_max_ms:s.push_gap_ms.max}};const brief=function(s){return{calls:s.calls,calls_unpaused:s.calls_unpaused,calls_paused:s.calls_paused,buffers_with_nonzero_pcm:s.buffers_with_nonzero_pcm,peak_abs_sample:s.peak_abs_sample,push_gap_max_ms:s.push_gap_ms.max,ctx_states:s.ctx_states}};const whole=stats(-1,1e12);const win=(S.firstKey!==null&&rw.length)?stats(S.firstKey,rw[rw.length-1]):null;const pre=(S.firstKey!==null)?stats(-1,S.firstKey):null;const per=[];for(let i=0;i<Math.min(nr.length,rw.length);i++)per.push(slim(stats(nr[i],rw[i]),i+1));const out={probe_error:S.err,install_polls:S.polls,installed_at_ms:S.installedAt===null?null:Math.round(S.installedAt),spec:S.spec,first_trusted_key_ms:S.firstKey===null?null:Math.round(S.firstKey),rounds_started:nr.length,rounds_won:rw.length,whole_run:brief(whole),pre_gesture:pre?brief(pre):null,window:win,per_round:per};console.log('[AUDIODUMP] '+JSON.stringify(out));return 'audio dump printed'})()
+
+# The amplitude series: the loudest sample in each whole second of the window.
+# Not a pass criterion -- it is what makes the numbers above legible as a
+# GAME's sound rather than as a constant, by showing the peaks land where the
+# rounds do. Printed separately so a long array cannot push the payload the
+# checker parses past whatever line length the two protocols are willing to
+# carry.
+eval:(()=>{const S=window.__aud;if(!S||S.firstKey===null)return 'no window';const t0=S.firstKey;const sec=[];for(let i=0;i<S.t.length;i++){if(S.t[i]<t0)continue;const k=Math.floor((S.t[i]-t0)/1000);if(sec[k]===undefined||S.mx[i]>sec[k])sec[k]=S.mx[i];}for(let k=0;k<sec.length;k++)if(sec[k]===undefined)sec[k]=0;console.log('[AUDIOSERIES] '+JSON.stringify(sec));return 'series printed'})()
+
+# ---------------------------------------------------------------------------
+# CONTROL 1: the classifier, on input whose answer is known before it runs.
+#
+# WHAT IT PROVES: that the function which reported the non-zero counts above
+# answers 0 for silence and answers the true peak for a signal. It is the same
+# S.scan the wrapper calls, not a copy of it.
+#
+# WHAT IT DOES NOT PROVE, and must not be read as proving: anything about the
+# audio pipeline. A build in which the mix never wrote a sample would still
+# print this line unchanged. The pipeline-level control is a separate run of
+# this same script against a bundle with both WAVs made unloadable, whose
+# transcript reports 0 non-zero buffers and whose checker output is a FAIL.
+mark:control-classifier-on-known-input
+eval:(()=>{const S=window.__aud;if(!S)return 'no probe';const z=new Int16Array(64);const s=new Int16Array(64);s[7]=-12345;s[9]=1;s[63]=32767;console.log('[AUDIOCONTROL] all-zero=>'+JSON.stringify(S.scan(z,0,64))+' three-non-zero=>'+JSON.stringify(S.scan(s,0,64)));return 'control printed'})()
+wait:500
+
+# ---------------------------------------------------------------------------
+# CONTROL 2, last because it makes the page report an uncaught error, which
+# web/shell.html turns into a red failure banner. It answers "can this
+# transcript see a browser-reported JS error at all?" -- which is what makes
+# the "no [EXCEPTION] during the run" result above an observation rather than
+# a silence. M1's Firefox transcript was read as clean when it was merely deaf
+# (docs/porting/browser-runtime-notes.md section 9); this is what stops that.
+mark:positive-control-deliberate-uncaught-error-follows
+eval:setTimeout(function(){null.thisIsADeliberateUncaughtError;},0)
+wait:2000
+shot:07-after-deliberate-uncaught-error
