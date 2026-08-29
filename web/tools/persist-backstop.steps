@@ -1,0 +1,85 @@
+# The M4 Task 2 BACKSTOP demonstration. Not a gate -- an isolated measurement
+# of the one case the primary mechanism cannot cover: the player changes a
+# setting and never leaves the menu.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/backstop-chrome \
+#        --script-file web/tools/persist-backstop.steps
+#   node web/tools/drive-firefox.mjs           --out /tmp/backstop-firefox \
+#        --script-file web/tools/persist-backstop.steps
+#   kill %1
+#
+# READ IT WITH THE TRANSCRIPT OPEN; there is no checker for this file, on
+# purpose. Nothing in web/tools/persist-settings-gate.steps depends on any of
+# it, and giving it a checker would invite someone to start treating the
+# backstop as load-bearing. The gate's own S9, and the fact that the gate
+# passes 18/18 on armagetronad-nobackstop.html, are the statements that matter.
+#
+# WHAT IT SHOWS, AND EXACTLY HOW FAR IT GOES
+# ------------------------------------------
+# The visibilitychange handler is dispatched SYNTHETICALLY here: the script
+# overrides document.visibilityState and fires the event itself. That is an
+# honest test of the HANDLER -- that it calls into wasm, that the call does not
+# corrupt the Asyncify state the module is parked in, and that a save really
+# lands -- and it is NOT a test of the browser's page-lifecycle behaviour. A
+# dispatched event is not the tab being backgrounded, in the same way that a
+# synthetic click is not a user gesture. Whether a real hidden/discarded tab
+# services the setTimeout(0) that carries the write to IndexedDB remains
+# REASONED (hidden fires while the page is still fully alive and still has an
+# event loop), not measured, and web/shell.html says so too.
+#
+# THE beforeunload HALF IS MEASURED FOR REAL, but not here: it is
+# docs/evidence/m4-persist-settings/nomenusave-chrome-console.log, a run of the
+# ordinary gate against a build with the menu-leave save compiled out. There,
+# nothing saves the typed name in-game -- S6, S7 and S8 fail -- and yet S10
+# passes: the name is still there after the reload, because beforeunload caught
+# it. That is the backstop working, in a real browser, with no synthetic
+# anything.
+
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+shot:01-language-menu
+key:Enter
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2500
+shot:02-first-setup
+
+key:Down
+wait:1000
+key:B
+key:K
+key:W
+wait:1500
+shot:03-name-typed-menu-still-open
+
+# The menu has NOT been left. The primary mechanism cannot have fired, and the
+# file proves it: PLAYER_1 is still the default.
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[BACKSTOP] '+JSON.stringify({phase:'typed-menu-still-open',player_1:pick(c,'PLAYER_1'),bytes:c?c.length:null}));return 'read'})()
+
+# Force the document to report itself hidden and fire the event. See the header
+# for what this does and does not establish.
+mark:SYNTHETIC-VISIBILITYCHANGE-HIDDEN
+eval:(()=>{try{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'hidden'})}catch(e){return 'override failed: '+e}document.dispatchEvent(new Event('visibilitychange'));return 'visibilityState now '+document.visibilityState})()
+wait:1500
+
+# If the backstop ran, PLAYER_1 is now the typed name -- written by a save that
+# no menu exit and no unload triggered.
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[BACKSTOP] '+JSON.stringify({phase:'after-synthetic-visibilitychange',player_1:pick(c,'PLAYER_1'),bytes:c?c.length:null}));return 'read'})()
+
+# And the game is still running afterwards -- which is the Asyncify claim in
+# src/emscripten/eWebPersist.cpp's warning, checked the only way a transcript
+# can check it: the module keeps rendering and keeps responding to keys after
+# being re-entered from a JS event handler.
+key:Down
+wait:1500
+shot:04-still-alive-after-reentry
+key:Up
+wait:1500
+shot:05-still-responding
+
+mark:positive-control-deliberate-uncaught-error-follows
+eval:setTimeout(function(){null.thisIsADeliberateUncaughtError;},0)
+wait:2000
+shot:06-after-deliberate-uncaught-error

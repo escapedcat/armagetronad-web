@@ -1,0 +1,116 @@
+[   1059ms] [harness] chrome: Chrome/152.0.7977.65
+[   1059ms] [harness] navigating to http://localhost:8000/armagetronad-nomenusave-nobackstop.html
+[      6ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     31ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     32ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     34ms] [page] load event fired
+[     37ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[     99ms] [console.log] [PERSIST] populate ok in 33ms
+[    108ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    108ms] [harness] === BOOT-1-POPULATED ===
+[    366ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1143ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/00-boot1-ready.png
+[   1144ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};S.pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};S.fs=(phase)=>{const c=S.rd('/persist/var/user.cfg');console.log('[SETFS] '+JSON.stringify({phase:phase,present:c!==null,bytes:c===null?null:c.length,hash:S.h(c),player_1:S.pick(c,'PLAYER_1'),first_use:S.pick(c,'FIRST_USE'),clobbered:c!==null&&c.indexOf('CLOBBERED-BY-THE-GATE')>=0}));return phase};window.__set=S;return 'helpers installed'})() => "helpers installed"
+[   1145ms] [console.log] [SETFS] {"phase":"boot1-before-play","present":false,"bytes":null,"hash":null,"player_1":null,"first_use":null,"clobbered":false}
+[   1146ms] [harness] eval window.__set.fs('boot1-before-play') => "boot1-before-play"
+[   1146ms] [harness] eval (()=>{const W={n:0,tag:''};window.__pw=W;Module.IDBFS.onAutoPersistStateChanged=(a)=>{if(a){W.n++;console.log('[PERSISTSYNC] start '+W.n)}else{console.log('[PERSISTSYNC] idle after '+W.n+(W.tag?' '+W.tag:''))}};return 'watcher armed'})() => "watcher armed"
+[   1165ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1165ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1165ms] [console.error] 
+[   1166ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1167ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1167ms] [console.log] 
+[   1333ms] [console.log] [L] ENCODING latin1
+[   1346ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1348ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1371ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1375ms] [console.error] TODO: glShadeModel
+[   1379ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad-nomenusave.js
+[   1430ms] [harness] click #start: clicked
+[   1430ms] [console.log] [PERSISTSYNC] start 1
+[   1431ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-nomenusave.js
+[   1431ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-nomenusave.js
+[   1432ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-nomenusave.js
+[   1432ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-nomenusave.js
+[   1432ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-nomenusave.js
+[   1458ms] [console.log] [PERSISTSYNC] idle after 1
+[  10480ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/01-boot1-language-menu.png
+[  10523ms] [harness] key Enter (1/1)
+[  10825ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 0)
+[  40923ms] [harness] until TIMED OUT after 30000ms: saw 0x <<[PERSISTSAVE] menu-leave>>, wanted 1
+[  43479ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/02-boot1-first-setup.png
+[  43481ms] [console.log] [SETFS] {"phase":"boot1-first-setup-open","present":true,"bytes":21950,"hash":"1ca4a3fe","player_1":"web_user","first_use":"1","clobbered":false}
+[  43481ms] [harness] eval window.__set.fs('boot1-first-setup-open') => "boot1-first-setup-open"
+[  43514ms] [harness] key Down (1/1)
+[  44897ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/03-boot1-cursor-on-name.png
+[  44930ms] [harness] key Q (1/1)
+[  45271ms] [harness] key Z (1/1)
+[  45610ms] [harness] key X (1/1)
+[  45947ms] [harness] key J (1/1)
+[  46287ms] [harness] key V (1/1)
+[  48158ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/04-boot1-name-typed.png
+[  48159ms] [console.log] [SETFS] {"phase":"boot1-typed-not-yet-left","present":true,"bytes":21950,"hash":"1ca4a3fe","player_1":"web_user","first_use":"1","clobbered":false}
+[  48159ms] [harness] eval window.__set.fs('boot1-typed-not-yet-left') => "boot1-typed-not-yet-left"
+[  48160ms] [harness] eval (()=>{window.__pw.tag='DRAINED-AFTER-MENU-LEAVE';return 'tag armed'})() => "tag armed"
+[  48160ms] [harness] === ESCAPE-LEAVES-THE-SETTINGS-MENU ===
+[  48193ms] [harness] key Escape (1/1)
+[  48496ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 0)
+[  78538ms] [harness] until TIMED OUT after 30000ms: saw 0x <<[PERSISTSAVE] menu-leave>>, wanted 2
+[  78539ms] [harness] === MENU-LEFT ===
+[  80102ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/05-boot1-after-escape.png
+[  80104ms] [console.log] [SETFS] {"phase":"boot1-after-menu-leave","present":true,"bytes":21950,"hash":"1ca4a3fe","player_1":"web_user","first_use":"1","clobbered":false}
+[  80104ms] [harness] eval window.__set.fs('boot1-after-menu-leave') => "boot1-after-menu-leave"
+[  80104ms] [harness] until 1x <<DRAINED-AFTER-MENU-LEAVE>> (timeout 30000ms, have 0)
+[ 110197ms] [harness] until TIMED OUT after 30000ms: saw 0x <<DRAINED-AFTER-MENU-LEAVE>>, wanted 1
+[ 110202ms] [console.log] [SETIDB] {"phase":"boot1-idb","absent":false,"open_error":null,"stores":["FILE_DATA"],"key_count":4,"user_cfg_present":true,"bytes":21950,"player_1":"web_user","first_use":"1"}
+[ 110202ms] [harness] eval (async()=>{const P='boot1-idb';const R=await new Promise((res)=>{const r=indexedDB.open('/persist',21);r.onupgradeneeded=(e)=>{try{e.target.transaction.abort()}catch(_){}res({db:null,absent:true})};r.onsuccess=()=>res({db:r.result,absent:false});r.onerror=()=>res({db:null,absent:true,err:String(r.error)});r.onblocked=()=>res({db:null,absent:false,err:'blocked'})});let txt=null,keyCount=null,stores=null;if(R.db){stores=[...R.db.objectStoreNames];if(stores.includes('FILE_DATA')){const o=R.db.transaction(['FILE_DATA'],'readonly').objectStore('FILE_DATA');keyCount=await new Promise((s,j)=>{const q=o.getAllKeys();q.onsuccess=()=>s(q.result.length);q.onerror=()=>j(q.error)});const rec=await new Promise((s,j)=>{const q=o.get('/persist/var/user.cfg');q.onsuccess=()=>s(q.result);q.onerror=()=>j(q.error)});if(rec&&rec.contents)txt=new TextDecoder().decode(rec.contents)}R.db.close()}const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[SETIDB] '+JSON.stringify({phase:P,absent:!!R.absent,open_error:R.err||null,stores:stores,key_count:keyCount,user_cfg_present:txt!==null,bytes:txt===null?null:txt.length,player_1:pick(txt,'PLAYER_1'),first_use:pick(txt,'FIRST_USE')}));return 'idb read'})() => "idb read"
+[ 110203ms] [harness] === RELOAD-REQUESTED ===
+[ 110204ms] [harness] eval location.reload() => undefined
+[ 110204ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[ 110219ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[ 110219ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[ 110223ms] [page] load event fired
+[ 110238ms] [console.log] [PERSIST] populate ok in 4ms
+[ 110270ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[ 110306ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[ 110306ms] [harness] === BOOT-2-POPULATED ===
+[ 111838ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/06-boot2-ready.png
+[ 111839ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};S.pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};S.fs=(phase)=>{const c=S.rd('/persist/var/user.cfg');console.log('[SETFS] '+JSON.stringify({phase:phase,present:c!==null,bytes:c===null?null:c.length,hash:S.h(c),player_1:S.pick(c,'PLAYER_1'),first_use:S.pick(c,'FIRST_USE'),clobbered:c!==null&&c.indexOf('CLOBBERED-BY-THE-GATE')>=0}));return phase};window.__set=S;return 'helpers installed'})() => "helpers installed"
+[ 111841ms] [console.log] [SETFS] {"phase":"boot2-before-play","present":true,"bytes":21950,"hash":"1ca4a3fe","player_1":"web_user","first_use":"1","clobbered":false}
+[ 111841ms] [harness] eval window.__set.fs('boot2-before-play') => "boot2-before-play"
+[ 111843ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[ 111844ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[ 111844ms] [console.error] 
+[ 111845ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[ 111845ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[ 111845ms] [console.log] 
+[ 111988ms] [console.log] [L] ENCODING latin1
+[ 111993ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[ 111995ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[ 112013ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[ 112015ms] [console.error] TODO: glShadeModel
+[ 112018ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad-nomenusave.js
+[ 112025ms] [harness] click #start: clicked
+[ 121098ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/07-boot2-first-screen.png
+[ 121100ms] [console.log] [SETFS] {"phase":"boot2-after-boot","present":true,"bytes":21950,"hash":"1ca4a3fe","player_1":"web_user","first_use":"1","clobbered":false}
+[ 121100ms] [harness] eval window.__set.fs('boot2-after-boot') => "boot2-after-boot"
+[ 121100ms] [harness] === USER-CFG-CLOBBERED-FROM-JS ===
+[ 121101ms] [harness] eval (()=>{Module.FS.writeFile('/persist/var/user.cfg','CLOBBERED-BY-THE-GATE\n');return 'clobbered'})() => "clobbered"
+[ 121103ms] [console.log] [SETFS] {"phase":"boot2-clobbered","present":true,"bytes":22,"hash":"b12c6861","player_1":null,"first_use":null,"clobbered":true}
+[ 121103ms] [harness] eval window.__set.fs('boot2-clobbered') => "boot2-clobbered"
+[ 121137ms] [harness] key Escape (1/1)
+[ 121440ms] [harness] until 3x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 0)
+[ 151533ms] [harness] until TIMED OUT after 30000ms: saw 0x <<[PERSISTSAVE] menu-leave>>, wanted 3
+[ 151533ms] [harness] === BOOT-2-REWROTE-IT-FROM-MEMORY ===
+[ 153123ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/08-boot2-after-escape.png
+[ 153124ms] [console.log] [SETFS] {"phase":"boot2-after-menu-leave","present":true,"bytes":22,"hash":"b12c6861","player_1":null,"first_use":null,"clobbered":true}
+[ 153124ms] [harness] eval window.__set.fs('boot2-after-menu-leave') => "boot2-after-menu-leave"
+[ 153197ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/09-boot2-final-frame.png
+[ 153197ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[ 153198ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 5694
+[ 153199ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[ 153199ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[ 153199ms] [EXCEPTION] structured stack, 1 frames:
+[ 153199ms]     <anonymous> @ :0:27
+[ 155268ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/nomenusave-nobackstop/10-after-deliberate-uncaught-error.png

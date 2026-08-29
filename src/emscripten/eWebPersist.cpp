@@ -99,7 +99,18 @@ static void se_WebPersistSaveOnMenuLeave()
 // It is deliberately NOT in an anonymous namespace and deliberately not
 // `static`: nothing references this object, and giving it external linkage
 // removes any question about whether the linker is entitled to drop it.
+//
+// AA_WEB_NO_MENU_SAVE IS A CONTROL-BUILD SWITCH AND NOTHING ELSE. It is never
+// defined by the `client` target; web/Makefile's `client-control` target
+// defines it to link a second page, armagetronad-nomenusave.html, that is
+// identical in every other respect and in which this callback does not exist.
+// That page is what makes web/tools/persist-settings-gate.steps' checks
+// falsifiable by a real browser running a real game, rather than by a mutated
+// transcript. See docs/evidence/m4-persist-settings/README.md. Deleting this
+// #ifndef deletes the control.
+#ifndef AA_WEB_NO_MENU_SAVE
 uCallbackMenuLeave se_webPersistMenuLeave( &se_WebPersistSaveOnMenuLeave );
+#endif
 
 // ---------------------------------------------------------------------------
 // The JS entry point for web/shell.html's unload/visibility BACKSTOP.

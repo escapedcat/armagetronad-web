@@ -398,6 +398,50 @@ $(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
 .PHONY: client
 client: data web/dist-m1/armagetronad.html
 
+# ---- M4 Task 2: the CONTROL client ---------------------------------------
+#
+#   source deps/emsdk/emsdk_env.sh
+#   make -f web/Makefile client client-control -j8
+#
+# A second, complete page -- armagetronad-nomenusave.html plus its own .js,
+# .wasm and .data -- that differs from the real client in exactly one thing:
+# src/emscripten/eWebPersist.cpp's uCallbackMenuLeave registration is compiled
+# out. The game still runs, still saves on boot via rScreen.cpp, still has the
+# JS backstop; what it does not have is a save caused by the player leaving a
+# menu.
+#
+# WHY A WHOLE SECOND LINK RATHER THAN A PAGE EDIT. The three control pages in
+# docs/evidence/m4-persist/make-control-pages.mjs are text edits to the
+# GENERATED html, which is enough when the thing being controlled lives in
+# web/shell.html. This task's primary mechanism lives in the wasm, and no edit
+# to the page can reach it. Without this target the settings gate's central
+# checks could only be falsified by mutating a transcript, which demonstrates
+# that the CHECKER can fail, not that the claim can. It is cheap: one extra
+# translation unit and one relink.
+#
+# It is deliberately NOT part of `client` and NOT part of any default goal --
+# it doubles the link time and writes ~9.5 MB of control artefacts that only
+# the evidence run wants.
+CONTROL_OBJS := $(filter-out $(CLIENT_OBJDIR)/emscripten/eWebPersist.o,$(CLIENT_OBJS)) \
+                $(CLIENT_OBJDIR)/emscripten/eWebPersist-nomenusave.o
+
+# Its own object path, so it can never collide with the real one in the shared
+# $(CLIENT_OBJDIR) -- two objects from the same source with different -D at the
+# same path would silently alternate depending on which target ran last.
+$(CLIENT_OBJDIR)/emscripten/eWebPersist-nomenusave.o: src/emscripten/eWebPersist.cpp web/Makefile
+	@mkdir -p $(dir $@)
+	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_NO_MENU_SAVE -c $< -o $@
+
+web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a \
+                                web/shell.html web/webdefaults/autoexec.cfg \
+                                language/languages.txt config/aiplayers.cfg \
+                                resource/included/.mapversion
+	@mkdir -p web/dist-m1
+	$(EMXX) $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+
+.PHONY: client-control
+client-control: data web/dist-m1/armagetronad-nomenusave.html
+
 # ---------------------------------------------------------------------------
 # Runtime data.
 #
