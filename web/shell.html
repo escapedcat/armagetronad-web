@@ -146,11 +146,90 @@
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
-      // config to /persist. Both are runtime switches the game already has --
-      // no path patches needed. /persist becomes an IDBFS mount in M4; until
-      // then it is in-memory, so settings do not survive a reload.
+      // config to /persist (--userdatadir), which tDirectories turns into
+      // /persist/var/user.cfg -- the file st_LoadConfig reads FIRST and
+      // st_SaveConfig writes. Both are runtime switches the game already has,
+      // so no path patches are needed. --userconfigdir is read-only input
+      // (the preloaded /data/webdefaults/autoexec.cfg); nothing is ever
+      // written there. /persist is the IDBFS mount -- see preRun below.
       arguments: ['--datadir','/data','--userdatadir','/persist',
                   '--userconfigdir','/data/webdefaults'],
+
+      // ---- M4: /persist is IndexedDB-backed --------------------------------
+      //
+      // WHAT THIS DOES. Creates /persist (it is in NO --preload-file mapping,
+      // so it does not exist at boot; the game would otherwise create it
+      // lazily in MEMFS via tDirectories.cpp's mkdir_recurse on the first
+      // save), mounts IDBFS over it, and copies IndexedDB -> MEMFS before
+      // anything can read the path.
+      //
+      // WHY autoPersist AND NOT AN FS.syncfs CALL IN C++. With
+      // {autoPersist:true} libidbfs.js wraps the mount's node_ops.mknod so
+      // every node created under /persist gets a stream_ops.close hook that
+      // calls IDBFS.queuePersist, batched behind a setTimeout(0). The game
+      // saves through a std::ofstream whose destructor closes the fd, so the
+      // save IS the persist trigger. src/tools/tConfiguration.cpp needs no
+      // change at all, and nothing has to be added to ASYNCIFY_IMPORTS.
+      // (MEMFS has no separate node_ops.mkdir -- FS.mkdir goes through
+      // mknod too -- so /persist/var and everything in it inherits the
+      // instrumented ops. Verified in src/lib/libmemfs.js.)
+      //
+      // WHY THE RUN DEPENDENCY, WHICH IS THE ENTIRE POINT OF THIS BLOCK.
+      // FS.syncfs(true, cb) -- the populate -- is ASYNCHRONOUS, and measured
+      // here at 3-160 ms. If main() is allowed to start before that callback
+      // fires, st_LoadConfig reads an empty /persist, and then the first
+      // st_SaveConfig writes a fresh file over the top: saving keeps working,
+      // nothing is ever read back, and from inside the game the failure is
+      // indistinguishable from success. It is also intermittent, because it
+      // is a race against a few tens of milliseconds.
+      //
+      // addRunDependency is what makes that unrepresentable rather than
+      // merely avoided. Emscripten's run() calls preRun() and then awaits
+      // resolveRunDependencies() before it reaches initRuntime,
+      // onRuntimeInitialized (which is what enables the Play button) and
+      // callMain. So the button cannot even be clicked until the populate has
+      // finished -- and callMain's own first assertion is
+      // `runDependencies == 0` ("cannot call main when async dependencies
+      // remain"), so a future edit that breaks this ordering aborts loudly
+      // instead of silently reading an empty filesystem.
+      //
+      // Doing it here rather than with an `await` inside the Play handler is
+      // deliberate for a second reason: the handler stays SYNCHRONOUS, so
+      // callMain still runs inside the click's user-activation context. An
+      // await there would push SDL_OpenAudio's `new AudioContext()` past the
+      // gesture and could leave M3's audio suspended for a real user who
+      // never presses a key.
+      //
+      // preRun MUST be an array: the file packager appends its own callback
+      // with Module['preRun'].push(...), which a bare function would break.
+      //
+      // FAILURE IS REPORTED, NOT SWALLOWED, AND STILL RELEASES THE
+      // DEPENDENCY. A private-mode browser with IndexedDB blocked would
+      // otherwise leave the page on "Loading..." for ever with no message.
+      // Losing persistence is bad; failing to start is worse.
+      //
+      // KNOWN AND ACCEPTED: /persist collects more than user.cfg. The same
+      // --userdatadir also holds var/ladderlog.txt and var/scorelog.txt
+      // (CONSOLE_LADDER_LOG is 1 in web/webdefaults/autoexec.cfg) and
+      // tPathScreenshot resolves under it. Those grow without bound and
+      // IndexedDB quota does not. Noted, not solved -- see docs.
+      preRun: [() => {
+        const FS = Module.FS, IDBFS = Module.IDBFS;
+        FS.mkdir('/persist');
+        FS.mount(IDBFS, { autoPersist: true }, '/persist');
+        Module.addRunDependency('persist-populate');
+        const t0 = performance.now();
+        FS.syncfs(true, (err) => {
+          const ms = Math.round(performance.now() - t0);
+          // One machine-readable line, because this is the fact every M4
+          // evidence run has to be able to assert on. `err` is null on
+          // success, including on the first ever visit when the object
+          // store is empty.
+          console.log('[PERSIST] populate ' + (err ? 'FAILED' : 'ok') +
+                      ' in ' + ms + 'ms' + (err ? ': ' + err : ''));
+          Module.removeRunDependency('persist-populate');
+        });
+      }],
       // callMain is invoked from the button below, not automatically -- the
       // button itself matters starting M3: browsers require a user gesture
       // before audio can start, so waiting for a click costs nothing now and
@@ -166,6 +245,14 @@
       onRuntimeInitialized: () => {
         statusEl.textContent = 'Ready';
         startEl.disabled = false;
+        // This line exists to make the preRun ordering above CHECKABLE rather
+        // than merely asserted. It is the exact moment the Play button becomes
+        // clickable, i.e. the earliest moment main() can start, so a
+        // transcript in which it follows "[PERSIST] populate ok" is evidence
+        // that the populate completed first. Delete the run dependency and
+        // the two lines swap order deterministically -- which is how
+        // docs/evidence/m4-persist demonstrates that this check can fail.
+        console.log('[PERSIST] runtime initialized, Play enabled');
       }
     };
 

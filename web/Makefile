@@ -258,6 +258,35 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 #
 # --shell-file replaces Emscripten's stock loader page with web/shell.html.
 #
+# ---- M4 Task 1: make /persist survive a reload --------------------------
+#
+# -lidbfs.js adds src/lib/libidbfs.js to the link. It is NOT part of the
+# default JS library set (nothing in tools/link.py, tools/system_libs.py or
+# emcc.py so much as mentions idbfs), and naming $IDBFS in
+# EXPORTED_RUNTIME_METHODS is not enough on its own: exporting a symbol that
+# no linked library defines is a link-time error, not an implicit include.
+# Both flags are needed, and both belong here rather than in LDFLAGS -- the
+# dedicated build runs under NODERAWFS, where the real filesystem already
+# persists and IndexedDB does not exist.
+#
+# EXPORTED_RUNTIME_METHODS is EXTENDED, not repeated. It is a plain
+# assignment, so a second -sEXPORTED_RUNTIME_METHODS= flag would REPLACE the
+# list rather than add to it, silently dropping callMain -- which is the
+# exact failure the long comment above describes (Play button, abort()).
+# Four names now:
+#   callMain   -- unchanged, see above.
+#   FS, IDBFS  -- web/shell.html mounts /persist with them, and the evidence
+#                 scripts in web/tools/ read the mount back through FS.
+#   addRunDependency, removeRunDependency
+#              -- how shell.html blocks main() until the IndexedDB->MEMFS
+#                 populate has FINISHED. See the long comment on preRun in
+#                 web/shell.html for why that is the whole point of the
+#                 mount and why an un-awaited populate fails silently.
+#                 (These two are also auto-exported by FORCE_FILESYSTEM's
+#                 isExportedByForceFilesystem() list in
+#                 src/runtime_debug.js, but that is a diagnostics helper,
+#                 not a promise about the export table -- name them.)
+#
 # -sEXPORTED_RUNTIME_METHODS=callMain is not optional either, and for a
 # reason that will not show up as a build error: Emscripten never
 # auto-exports callMain (postamble.js says as much -- it is explicitly the
@@ -276,7 +305,8 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
                   -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
-                  -sEXPORTED_RUNTIME_METHODS=callMain \
+                  -sEXPORTED_RUNTIME_METHODS=callMain,FS,IDBFS,addRunDependency,removeRunDependency \
+                  -lidbfs.js \
                   $(EXCEPTIONS) \
                   --use-preload-plugins \
                   --preload-file config@/data/config \
