@@ -1,0 +1,93 @@
+[    890ms] [harness] chrome: Chrome/152.0.7977.65
+[    891ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[      6ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     67ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     70ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     71ms] [page] load event fired
+[     74ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    148ms] [console.log] [PERSIST] populate ok in 38ms
+[    209ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    209ms] [harness] === BOOT-1-POPULATED ===
+[    481ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1257ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/persist-negative/00-boot1-ready.png
+[   1259ms] [console.log] [PERSISTFS] {"phase":"boot1-before-play","error":null,"entry_count":0,"entries":[],"user_cfg":{"present":false,"bytes":null,"hash":null},"probe_text":null}
+[   1260ms] [harness] eval (()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot1-before-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})() => "listed"
+[   1261ms] [harness] eval (()=>{const W={n:0,probe:false};window.__pw=W;Module.IDBFS.onAutoPersistStateChanged=(a)=>{if(a){W.n++;console.log('[PERSISTSYNC] start '+W.n)}else{console.log('[PERSISTSYNC] idle after '+W.n+(W.probe?' PROBE-PERSISTED':''))}};return 'watcher armed'})() => "watcher armed"
+[   1286ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1286ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1286ms] [console.error] 
+[   1287ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1288ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1288ms] [console.log] 
+[   1468ms] [console.log] [L] ENCODING latin1
+[   1480ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1482ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1506ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1510ms] [console.error] TODO: glShadeModel
+[   1514ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1567ms] [harness] click #start: clicked
+[   1567ms] [harness] until 1x <<[PERSISTSYNC] start 1>> (timeout 90000ms, have 0)
+[   1567ms] [console.log] [PERSISTSYNC] start 1
+[   1568ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1569ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1569ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1569ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1569ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1598ms] [console.log] [PERSISTSYNC] idle after 1
+[   1668ms] [harness] until SATISFIED: saw 1x <<[PERSISTSYNC] start 1>>
+[   1668ms] [harness] === GAME-BOOT-ALONE-TRIGGERED-A-PERSIST ===
+[   7727ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/persist-negative/01-boot1-language-menu.png
+[   7729ms] [console.log] [PERSISTFS] {"phase":"boot1-after-play","error":null,"entry_count":4,"entries":[{"path":"/persist/var/","size":null},{"path":"/persist/var/ladderlog.txt","size":16},{"path":"/persist/var/scorelog.txt","size":0},{"path":"/persist/var/user.cfg","size":21950}],"user_cfg":{"present":true,"bytes":21950,"hash":"a579ed3e"},"probe_text":null}
+[   7730ms] [harness] eval (()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot1-after-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})() => "listed"
+[   7731ms] [console.log] [PERSISTNONCE] m4-mteew5fq-dq7rg9eu
+[   7731ms] [harness] eval (()=>{const n='m4-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);window.__pw.probe=true;Module.FS.writeFile('/persist/m4-probe.txt','nonce='+n+'\n');console.log('[PERSISTNONCE] '+n);return n})() => "m4-mteew5fq-dq7rg9eu"
+[   7731ms] [harness] until 1x <<PROBE-PERSISTED>> (timeout 60000ms, have 0)
+[   7731ms] [console.log] [PERSISTSYNC] start 2
+[   7732ms] [console.log] [PERSISTSYNC] idle after 2 PROBE-PERSISTED
+[   7832ms] [harness] until SATISFIED: saw 1x <<PROBE-PERSISTED>>
+[   7833ms] [harness] === SENTINEL-COMMITTED ===
+[   7835ms] [console.log] [PERSISTIDB] {"phase":"boot1-idb","databases":["/persist"],"absent":false,"open_error":null,"stores":["FILE_DATA"],"count":5,"keys":["/persist/m4-probe.txt","/persist/var","/persist/var/ladderlog.txt","/persist/var/scorelog.txt","/persist/var/user.cfg"]}
+[   7836ms] [harness] eval (async()=>{const P='boot1-idb';let names=null;try{if(indexedDB.databases)names=(await indexedDB.databases()).map(d=>d.name)}catch(e){names='ERR:'+e}const R=await new Promise((res)=>{const r=indexedDB.open('/persist',21);r.onupgradeneeded=(e)=>{try{e.target.transaction.abort()}catch(_){}res({db:null,absent:true})};r.onsuccess=()=>res({db:r.result,absent:false});r.onerror=()=>res({db:null,absent:true,err:String(r.error)});r.onblocked=()=>res({db:null,absent:false,err:'blocked'})});let stores=null,count=null,keys=null;if(R.db){stores=[...R.db.objectStoreNames];if(stores.includes('FILE_DATA')){const t=R.db.transaction(['FILE_DATA'],'readonly'),q=t.objectStore('FILE_DATA').getAllKeys();const k=await new Promise((res,rej)=>{q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});count=k.length;keys=k.slice(0,120)}R.db.close()}console.log('[PERSISTIDB] '+JSON.stringify({phase:P,databases:names,absent:!!R.absent,open_error:R.err||null,stores,count,keys}));return 'idb read'})() => "idb read"
+[   7836ms] [harness] === RELOAD-REQUESTED ===
+[   7841ms] [console.log] [PERSISTWIPE] {"quit":true,"queuePersist_neutered":true,"delete":"deleted","databases_after":[]}
+[   7846ms] [harness] eval (async()=>{const I=Module.IDBFS;I.quit();I.queuePersist=function(){};const del=await new Promise((res)=>{const r=indexedDB.deleteDatabase('/persist');r.onsuccess=()=>res('deleted');r.onerror=()=>res('error:'+r.error);r.onblocked=()=>res('BLOCKED')});let after=null;try{if(indexedDB.databases)after=(await indexedDB.databases()).map(d=>d.name)}catch(e){after='ERR:'+e}console.log('[PERSISTWIPE] '+JSON.stringify({quit:true,queuePersist_neutered:true,delete:del,databases_after:after}));setTimeout(()=>location.reload(),0);return 'wiped, reloading'})() => "wiped, reloading"
+[   7846ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[   7860ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[   7862ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[   7863ms] [page] load event fired
+[   7879ms] [console.log] [PERSIST] populate ok in 5ms
+[   7911ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   7947ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[   7948ms] [harness] === BOOT-2-POPULATED ===
+[   9987ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/persist-negative/02-boot2-ready.png
+[   9988ms] [console.log] [PERSISTFS] {"phase":"boot2-before-play","error":null,"entry_count":0,"entries":[],"user_cfg":{"present":false,"bytes":null,"hash":null},"probe_text":null}
+[   9989ms] [harness] eval (()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot2-before-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})() => "listed"
+[   9991ms] [console.log] [PERSISTIDB] {"phase":"boot2-idb","databases":["/persist"],"absent":false,"open_error":null,"stores":["FILE_DATA"],"count":0,"keys":[]}
+[   9991ms] [harness] eval (async()=>{const P='boot2-idb';let names=null;try{if(indexedDB.databases)names=(await indexedDB.databases()).map(d=>d.name)}catch(e){names='ERR:'+e}const R=await new Promise((res)=>{const r=indexedDB.open('/persist',21);r.onupgradeneeded=(e)=>{try{e.target.transaction.abort()}catch(_){}res({db:null,absent:true})};r.onsuccess=()=>res({db:r.result,absent:false});r.onerror=()=>res({db:null,absent:true,err:String(r.error)});r.onblocked=()=>res({db:null,absent:false,err:'blocked'})});let stores=null,count=null,keys=null;if(R.db){stores=[...R.db.objectStoreNames];if(stores.includes('FILE_DATA')){const t=R.db.transaction(['FILE_DATA'],'readonly'),q=t.objectStore('FILE_DATA').getAllKeys();const k=await new Promise((res,rej)=>{q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});count=k.length;keys=k.slice(0,120)}R.db.close()}console.log('[PERSISTIDB] '+JSON.stringify({phase:P,databases:names,absent:!!R.absent,open_error:R.err||null,stores,count,keys}));return 'idb read'})() => "idb read"
+[   9993ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   9993ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   9993ms] [console.error] 
+[   9994ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   9994ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   9994ms] [console.log] 
+[  10118ms] [console.log] [L] ENCODING latin1
+[  10123ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[  10124ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  10144ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  10147ms] [console.error] TODO: glShadeModel
+[  10151ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  10158ms] [harness] click #start: clicked
+[  10160ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10160ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10160ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10160ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10161ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  18242ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/persist-negative/03-boot2-language-menu.png
+[  18242ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  18244ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1138
+[  18244ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  18244ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  18244ms] [EXCEPTION] structured stack, 1 frames:
+[  18244ms]     <anonymous> @ :0:27
+[  20333ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/persist-negative/04-after-deliberate-uncaught-error.png

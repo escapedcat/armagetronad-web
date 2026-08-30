@@ -1,0 +1,124 @@
+==============================================================================
+M4 TASK 3 GATE, PART 1: DEDICATED SERVER BYTE-IDENTITY
+==============================================================================
+cwd            /Users/user/data/src/armagetronad-web/.worktrees/m4-persistence
+HEAD           608925b58a9aec9a92309e3f4d42787df5f450c9
+worktree       32 modified/untracked path(s)
+base ref       56df579d  (pre-task source is pulled from here)
+toolchain      emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.8 (aeb67926e7de656da38bc807d83050af93578758)
+scratch        /var/folders/ct/rw11h7fj55s59lp5dst9xs6m0000gp/T/aa-m4t3-19195
+node           v22.12.0
+run at         2026-08-29T15:40:58.705Z
+
+Nothing below writes to src/ or to git. Control builds are compiled from
+mutated COPIES under the scratch directory above; CONTROL 2 is what earns
+the right to do that. The only tree paths this script writes are the ones
+`make -f web/Makefile dedicated` writes anyway.
+
+------------------------------------------------------------------------------
+BUILDING THE DEDICATED SERVER FROM THE CURRENT TREE
+------------------------------------------------------------------------------
+  make -f web/Makefile dedicated: ok
+
+------------------------------------------------------------------------------
+CHECKS
+------------------------------------------------------------------------------
+  [PASS] autoexec.cfg no longer sets MAX_FPS or SOUND_BUFFER_SHIFT
+         settings still in the file: INFINITY_PLANE 0 | USE_DISPLAYLISTS 0 | CONSOLE_LADDER_LOG 1 | SP_NUM_AIS 3 | SP_AUTO_AIS 0 | SP_LIMIT_ROUNDS 3
+  [PASS] autoexec.cfg still hard-overrides INFINITY_PLANE and USE_DISPLAYLISTS
+         both present
+  [PASS] dedicated build still sees upstream's sr_maxFPS (MAX_FPS)
+         em++ -E src/render/rSysdep.cpp (no -DAA_WEB_CLIENT) => int sr_maxFPS = 360;
+         expected value 360
+  [PASS] client build compiles MAX_FPS in as a default (sr_maxFPS)
+         em++ -E -DAA_WEB_CLIENT src/render/rSysdep.cpp => int sr_maxFPS = 60;
+         expected value 60 -- the value that used to be in autoexec.cfg
+  [PASS] dedicated build still sees upstream's buffer_shift (SOUND_BUFFER_SHIFT)
+         em++ -E src/engine/eSound.cpp (no -DAA_WEB_CLIENT) => static int buffer_shift=0;
+         expected value 0
+  [PASS] client build compiles SOUND_BUFFER_SHIFT in as a default (buffer_shift)
+         em++ -E -DAA_WEB_CLIENT src/engine/eSound.cpp => static int buffer_shift=1;
+         expected value 1 -- the value that used to be in autoexec.cfg
+  [PASS] web/build-m0/render/rSysdep.o is byte-identical to 56df579d
+         base (56df579d source, same flags) = 1022f9ec62b81304f47cca4366a13581
+         now  (this tree, web/build-m0/render/rSysdep.o) = 1022f9ec62b81304f47cca4366a13581
+  [PASS] web/build-m0/engine/eSound.o is byte-identical to 56df579d
+         base (56df579d source, same flags) = aca51a511f51fdee88a45a64b3bee59b
+         now  (this tree, web/build-m0/engine/eSound.o) = aca51a511f51fdee88a45a64b3bee59b
+  [PASS] web/dist-m0/armagetronad-dedicated.wasm is 2488298 bytes
+         actual 2488298
+  [PASS] web/dist-m0/armagetronad-dedicated.wasm md5 is 9718a2a64978cb6e9b95ea2f0454cca5
+         actual 9718a2a64978cb6e9b95ea2f0454cca5
+
+------------------------------------------------------------------------------
+CONTROLS -- every check above has to be shown able to come out the other way
+------------------------------------------------------------------------------
+A checker that has never failed is a checker nobody has tested. Each control
+below states what it is and which outcome counts as the control SUCCEEDING.
+
+CONTROL 1 -- "the guard is what protects the server, not luck".
+  Rebuilds both objects from copies whose guard has been weakened from
+  `#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )` to
+  `#if defined( __EMSCRIPTEN__ )`, and relinks the server with them.
+  THE CONTROL SUCCEEDS IF THESE DIFFER FROM BASE. If they matched, CHECK 4
+  and CHECK 5 would be measuring nothing.
+  [PASS] CONTROL 1: unguarded web/build-m0/render/rSysdep.o differs from base
+         base       = 1022f9ec62b81304f47cca4366a13581
+         unguarded  = f6516e659be1aaa54a3aa9c829f674db
+  [PASS] CONTROL 1: unguarded web/build-m0/engine/eSound.o differs from base
+         base       = aca51a511f51fdee88a45a64b3bee59b
+         unguarded  = 249e88f5de38bbfa05fd16a8b62f4cb7
+  [PASS] CONTROL 1b: an unguarded server links to a DIFFERENT wasm
+         required  2488298 bytes  9718a2a64978cb6e9b95ea2f0454cca5
+         unguarded 2488298 bytes  830a19dcd0687ad1a1f4101a457349f0
+         size delta 0 bytes
+         THE SIZE CHECK ALONE WOULD NOT HAVE CAUGHT THIS. Both values changed only
+         in content, not in length: sr_maxFPS 360 -> 60 and buffer_shift 0 -> 1 are
+         edits to the initialisers of two i32s that already exist in the data
+         segment, so the segment is the same length and so is the module. This is
+         why the invariant has to be quoted as "2,488,298 bytes AND md5 9718a2a6..."
+         and why a size-only check would have passed a broken dedicated server.
+
+CONTROL 2 -- A CONTROL THAT IS SUPPOSED TO PASS. Not filler: it is the only
+  thing standing between CONTROL 1 and the excuse "well, of course it
+  differs, it was compiled somewhere else". It compiles the CURRENT,
+  UNMODIFIED source from a scratch DIRECTORY, under the same filename, to a
+  scratch -o, and expects the canonical md5 anyway. THE CONTROL SUCCEEDS IF
+  THESE MATCH -- which means directory and -o are not variables here, so
+  CONTROL 1's difference is the guard and nothing else.
+  [PASS] CONTROL 2: src/render/rSysdep.cpp compiled from a scratch directory is unchanged
+         canonical dir/-o = 1022f9ec62b81304f47cca4366a13581
+         scratch   dir/-o = 1022f9ec62b81304f47cca4366a13581
+         (same basename, different directory, different -o: bytes must be identical)
+  [PASS] CONTROL 2: src/engine/eSound.cpp compiled from a scratch directory is unchanged
+         canonical dir/-o = aca51a511f51fdee88a45a64b3bee59b
+         scratch   dir/-o = aca51a511f51fdee88a45a64b3bee59b
+         (same basename, different directory, different -o: bytes must be identical)
+
+CONTROL 2b -- the other half of the same measurement, and the reason CONTROL 2
+  is worded as "directory" and not "path". Same content again, but written
+  under a DIFFERENT FILENAME. THE CONTROL SUCCEEDS IF IT DIFFERS: the source
+  basename is embedded in the object, so any control that renames its input
+  is measuring the rename as well as the edit. This is the trap the header
+  comment records; it is re-run here so it cannot quietly stop being true.
+  [PASS] CONTROL 2b: renaming rSysdep.cpp does change the object
+         as rSysdep.cpp = 1022f9ec62b81304f47cca4366a13581
+         as zzzzzzz.cpp = 1542354c8b889e094a330b884babe3be
+         sizes 20567 vs 20567 bytes -- same size, different bytes
+  [PASS] CONTROL 2b: renaming eSound.cpp does change the object
+         as eSound.cpp = aca51a511f51fdee88a45a64b3bee59b
+         as zzzzzz.cpp = 8c49f1600ee7d3b089915fa2151f62d2
+         sizes 28010 vs 28010 bytes -- same size, different bytes
+
+CONTROL 3 -- "the autoexec.cfg grep can fire". Re-runs CHECK 1's test against
+  a copy of the file with `MAX_FPS 60` appended. THE CONTROL SUCCEEDS IF IT
+  REPORTS THE LINE. Nothing is written to the real file.
+  [PASS] CONTROL 3: the grep detects a re-added MAX_FPS
+         found: ["MAX_FPS 60"]
+
+==============================================================================
+CHECKS   10/10 passed
+CONTROLS 8/8 behaved as designed
+VERDICT: PASS -- the dedicated server is unchanged, and the checks that say so
+         have each been shown able to fail.
+==============================================================================

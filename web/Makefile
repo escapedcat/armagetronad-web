@@ -137,16 +137,31 @@ $(OBJDIR)/%.o: src/%.cpp web/Makefile
 # (native hides them in a .a) would add glCallList, glPushClientAttrib and
 # glPopClientAttrib as undefined symbols for no benefit.
 CLIENT_OBJDIR := web/build-m1
-# ...plus one translation unit the dedicated build does not have:
-# src/emscripten/eCompat.cpp, the compatibility shims for the symbols
-# Emscripten's SDL and GL emulation leave undefined. It has to be named here
-# because $(SRCS) above wildcards the six game source directories only, and
-# src/emscripten/ is not one of them (it holds the hand-written config.h, not
-# game source). No extra compile rule is needed for it: the
-# $(CLIENT_OBJDIR)/%.o: src/%.cpp rule below already matches, with a stem of
-# "emscripten/eCompat" -- pattern stems may contain slashes.
+# ...plus two translation units the dedicated build does not have:
+#
+#   src/emscripten/eCompat.cpp     the compatibility shims for the symbols
+#                                  Emscripten's SDL and GL emulation leave
+#                                  undefined.
+#   src/emscripten/eWebPersist.cpp M4 task 2: saves the config when the player
+#                                  leaves a menu, and exports the one function
+#                                  web/shell.html's unload backstop calls.
+#
+# They have to be named here because $(SRCS) above wildcards the six game
+# source directories only, and src/emscripten/ is not one of them (it holds
+# the hand-written config.h, not game source). No extra compile rule is needed
+# for either: the $(CLIENT_OBJDIR)/%.o: src/%.cpp rule below already matches,
+# with a stem of "emscripten/eCompat" -- pattern stems may contain slashes.
+#
+# Naming eWebPersist.cpp HERE rather than moving it into $(SRCS) is what keeps
+# the dedicated build's wasm byte-identical: $(SRCS) feeds BOTH targets, so a
+# file added there would compile into the server too. (The file also guards
+# its whole body with `#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)`, so
+# even a future move could not change the server's behaviour -- but it would
+# still change its size, because an empty translation unit is not a
+# non-existent one.)
 CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
-                 $(CLIENT_OBJDIR)/emscripten/eCompat.o
+                 $(CLIENT_OBJDIR)/emscripten/eCompat.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebPersist.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
@@ -258,6 +273,35 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 #
 # --shell-file replaces Emscripten's stock loader page with web/shell.html.
 #
+# ---- M4 Task 1: make /persist survive a reload --------------------------
+#
+# -lidbfs.js adds src/lib/libidbfs.js to the link. It is NOT part of the
+# default JS library set (nothing in tools/link.py, tools/system_libs.py or
+# emcc.py so much as mentions idbfs), and naming $IDBFS in
+# EXPORTED_RUNTIME_METHODS is not enough on its own: exporting a symbol that
+# no linked library defines is a link-time error, not an implicit include.
+# Both flags are needed, and both belong here rather than in LDFLAGS -- the
+# dedicated build runs under NODERAWFS, where the real filesystem already
+# persists and IndexedDB does not exist.
+#
+# EXPORTED_RUNTIME_METHODS is EXTENDED, not repeated. It is a plain
+# assignment, so a second -sEXPORTED_RUNTIME_METHODS= flag would REPLACE the
+# list rather than add to it, silently dropping callMain -- which is the
+# exact failure the long comment above describes (Play button, abort()).
+# Four names now:
+#   callMain   -- unchanged, see above.
+#   FS, IDBFS  -- web/shell.html mounts /persist with them, and the evidence
+#                 scripts in web/tools/ read the mount back through FS.
+#   addRunDependency, removeRunDependency
+#              -- how shell.html blocks main() until the IndexedDB->MEMFS
+#                 populate has FINISHED. See the long comment on preRun in
+#                 web/shell.html for why that is the whole point of the
+#                 mount and why an un-awaited populate fails silently.
+#                 (These two are also auto-exported by FORCE_FILESYSTEM's
+#                 isExportedByForceFilesystem() list in
+#                 src/runtime_debug.js, but that is a diagnostics helper,
+#                 not a promise about the export table -- name them.)
+#
 # -sEXPORTED_RUNTIME_METHODS=callMain is not optional either, and for a
 # reason that will not show up as a build error: Emscripten never
 # auto-exports callMain (postamble.js says as much -- it is explicitly the
@@ -276,7 +320,8 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
                   -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
-                  -sEXPORTED_RUNTIME_METHODS=callMain \
+                  -sEXPORTED_RUNTIME_METHODS=callMain,FS,IDBFS,addRunDependency,removeRunDependency \
+                  -lidbfs.js \
                   $(EXCEPTIONS) \
                   --use-preload-plugins \
                   --preload-file config@/data/config \
@@ -352,6 +397,105 @@ $(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
 
 .PHONY: client
 client: data web/dist-m1/armagetronad.html
+
+# ---- M4 Task 2: the CONTROL client ---------------------------------------
+#
+#   source deps/emsdk/emsdk_env.sh
+#   make -f web/Makefile client client-control -j8
+#
+# A second, complete page -- armagetronad-nomenusave.html plus its own .js,
+# .wasm and .data -- that differs from the real client in exactly one thing:
+# src/emscripten/eWebPersist.cpp's uCallbackMenuLeave registration is compiled
+# out. The game still runs, still saves on boot via rScreen.cpp, still has the
+# JS backstop; what it does not have is a save caused by the player leaving a
+# menu.
+#
+# WHY A WHOLE SECOND LINK RATHER THAN A PAGE EDIT. The three control pages in
+# docs/evidence/m4-persist/make-control-pages.mjs are text edits to the
+# GENERATED html, which is enough when the thing being controlled lives in
+# web/shell.html. This task's primary mechanism lives in the wasm, and no edit
+# to the page can reach it. Without this target the settings gate's central
+# checks could only be falsified by mutating a transcript, which demonstrates
+# that the CHECKER can fail, not that the claim can. It is cheap: one extra
+# translation unit and one relink.
+#
+# It is deliberately NOT part of `client` and NOT part of any default goal --
+# it doubles the link time and writes ~9.5 MB of control artefacts that only
+# the evidence run wants.
+CONTROL_OBJS := $(filter-out $(CLIENT_OBJDIR)/emscripten/eWebPersist.o,$(CLIENT_OBJS)) \
+                $(CLIENT_OBJDIR)/emscripten/eWebPersist-nomenusave.o
+
+# Its own object path, so it can never collide with the real one in the shared
+# $(CLIENT_OBJDIR) -- two objects from the same source with different -D at the
+# same path would silently alternate depending on which target ran last.
+$(CLIENT_OBJDIR)/emscripten/eWebPersist-nomenusave.o: src/emscripten/eWebPersist.cpp web/Makefile
+	@mkdir -p $(dir $@)
+	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_NO_MENU_SAVE -c $< -o $@
+
+web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a \
+                                web/shell.html web/webdefaults/autoexec.cfg \
+                                language/languages.txt config/aiplayers.cfg \
+                                resource/included/.mapversion
+	@mkdir -p web/dist-m1
+	$(EMXX) $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+
+.PHONY: client-control
+client-control: data web/dist-m1/armagetronad-nomenusave.html
+
+# ---- M4 Task 3: the CONTROL client that still overrides the player ---------
+#
+#   source deps/emsdk/emsdk_env.sh
+#   make -f web/Makefile client client-oldautoexec -j8
+#
+# A second complete page -- armagetronad-oldautoexec.html plus its own .js,
+# .wasm and .data -- identical to the real client except that its preloaded
+# /data/webdefaults/autoexec.cfg has `MAX_FPS 60` and `SOUND_BUFFER_SHIFT 1`
+# appended. That is precisely task 3's fix undone: autoexec.cfg loads after
+# user.cfg, so with those two lines back the player's saved choice is
+# overridden on every load exactly as it was before the task.
+#
+# WHY THIS IS THE RIGHT CONTROL, AND WHY IT DOES NOT NEED A DIFFERENT BINARY.
+# The claim being tested is about PRECEDENCE, not about code: "a value named in
+# autoexec.cfg beats user.cfg". The compiled default the task added is simply
+# not consulted when a config file names the item, so re-adding the line
+# reproduces the old behaviour bit for bit while holding the wasm constant.
+# Holding the wasm constant is the point -- it means the two runs differ in
+# exactly one input, the config file, and a difference in outcome cannot be
+# blamed on anything else.
+#
+# THE CONTROL FILE IS DERIVED, NOT CHECKED IN. It is generated by appending to
+# the shipped autoexec.cfg, so it cannot drift away from it: any future edit to
+# the real file flows into the control automatically, and there is no second
+# copy of that long comment to keep in sync. The `#` heading the recipe printf's
+# ahead of the copied body is not decoration either -- a stray copy of this file
+# must announce what it is.
+#
+# It is deliberately NOT part of `client` and NOT part of any default goal: it
+# doubles link time and writes ~9.5 MB that only the evidence run wants.
+OLDCFG_DIR := $(CLIENT_OBJDIR)/webdefaults-oldautoexec
+
+$(OLDCFG_DIR)/autoexec.cfg: web/webdefaults/autoexec.cfg web/Makefile
+	@mkdir -p $(dir $@)
+	@cp $< $@
+	@printf '\n# ------------------------------------------------------------------\n' >> $@
+	@printf '# GENERATED CONTROL FILE -- NOT SHIPPED. web/Makefile appends the two\n' >> $@
+	@printf '# lines below to build armagetronad-oldautoexec.html, the page that\n' >> $@
+	@printf '# reproduces the pre-M4-task-3 bug on purpose. If you are reading this\n' >> $@
+	@printf '# inside the real bundle, something has gone badly wrong.\n' >> $@
+	@printf 'MAX_FPS 60\n' >> $@
+	@printf 'SOUND_BUFFER_SHIFT 1\n' >> $@
+
+web/dist-m1/armagetronad-oldautoexec.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
+                                web/shell.html $(OLDCFG_DIR)/autoexec.cfg \
+                                language/languages.txt config/aiplayers.cfg \
+                                resource/included/.mapversion
+	@mkdir -p web/dist-m1
+	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
+	  $(subst --preload-file web/webdefaults@/data/webdefaults,--preload-file $(OLDCFG_DIR)@/data/webdefaults,$(CLIENT_LDFLAGS)) \
+	  -o $@
+
+.PHONY: client-oldautoexec
+client-oldautoexec: data web/dist-m1/armagetronad-oldautoexec.html
 
 # ---------------------------------------------------------------------------
 # Runtime data.

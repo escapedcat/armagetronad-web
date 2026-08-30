@@ -87,8 +87,11 @@ this file was wrong to say M1 would fix it: M1 put `-sASYNCIFY=1` on the
 deliberately unchanged so its wasm stays byte-identical. The dedicated server is
 a build-validation artifact, not part of the Demo, so nothing on the roadmap
 fixes this — it would take adding Asyncify and a yield point to the M0 link,
-which would end the 2,488,298-byte identity check that guards the source files
-both builds share.
+which would end the byte-identity check that guards the source files
+both builds share — 2,488,298 bytes **and** md5 `9718a2a64978cb6e9b95ea2f0454cca5`.
+It is worth naming both halves: M4 task 3 measured an unguarded change that links
+to exactly the right size with the wrong md5, so a size-only reading of this
+tripwire would have passed it.
 
 **`--daemon < /dev/null` is mandatory, and dropping it is the one real trap.**
 Without it the process sits at ~0% CPU with a shorter log, looking calm — but
@@ -368,6 +371,53 @@ directly but decide the windows A4b and A7b are computed over. Quote the
 fractions, the median and the peaks with confidence; treat every raw count as
 reported rather than verified.
 
+### Re-running the M4 gates
+
+There are two, because M4 makes two separate claims.
+
+`web/tools/persist-gate.steps` is the **filesystem** claim: `/persist` is an
+IDBFS mount whose IndexedDB→MEMFS populate finishes *before* `main()` starts,
+and bytes written in one page load are readable after a real
+`location.reload()`. 17 checks, scored by
+`docs/evidence/m4-persist/check-persist-transcript.mjs`. It says explicitly
+what it does not cover: nothing about the game *using* what it read.
+
+`web/tools/persist-settings-gate.steps` is the **player** claim: a setting
+changed in a menu is durable. It types into the "Name:" field of the First
+Setup menu (the `tConfItemLine` `PLAYER_1`), shows that the file is still
+byte-identical while the menu is open, shows that leaving the menu writes it
+and that the bytes reach IndexedDB *before any unload event fires*, reloads,
+and then destroys `user.cfg` from JavaScript and makes the game rewrite it from
+its own memory. 17 checks, scored by
+`docs/evidence/m4-persist-settings/check-settings-transcript.mjs`.
+
+```sh
+node web/tools/drive-browser.mjs --headed --out /tmp/set-chrome \
+     --script-file web/tools/persist-settings-gate.steps
+node web/tools/drive-firefox.mjs         --out /tmp/set-firefox \
+     --script-file web/tools/persist-settings-gate.steps
+
+node docs/evidence/m4-persist-settings/check-settings-transcript.mjs /tmp/set-chrome/console.log
+node docs/evidence/m4-persist-settings/prove-settings-checks-can-fail.mjs
+```
+
+Both gates carry real-browser controls rather than only transcript mutations.
+The settings gate's are four pages built from two independent switches — the
+menu-leave save (a second link, `make -f web/Makefile client-control`) and the
+JS unload backstop (a text edit to the generated page,
+`make-settings-control-pages.mjs`). The row that matters most is the one that
+must **pass**: `armagetronad-nobackstop.html`, the real client with
+`visibilitychange` and `beforeunload` disabled, scores 18/18. That is what
+makes "the backstop is not load-bearing" a fact rather than an intention.
+`docs/evidence/m4-persist-settings/README.md` has the full matrix, two results
+in it that were measured rather than predicted, and the known limitation.
+
+`web/tools/persist-settings-menu.steps` and `web/tools/persist-backstop.steps`
+are demonstrations, not gates, and deliberately have no checker: the first
+toggles **Menu Wrap** in System Setup → Misc Stuff and shows it still off two
+page loads later; the second shows the `visibilitychange` handler saving a
+change the player never left the menu on.
+
 `web/tools/menu-gate.steps` is the M1 gate, still re-runnable the same way with
 the filename swapped. It passes with ten screenshots, all ten different from each
 other, and a transcript with no `Stack overflow detected`, no `[EXCEPTION]`, no
@@ -435,10 +485,25 @@ defaults.
   chosen on a measured margin argument — 278 ms of latency and starvation
   tolerance against a worst observed main-thread stall of 119-142 ms — and the
   full table is in the config file.
-- **Nothing persists.** No IndexedDB yet, so every page load is a first run and
-  the first-run setup menu appears every time. Worse, settings are not saved on
-  tab close either — the `SDL_QUIT` path that calls `st_SaveConfig()` is
-  unreachable in the browser (`gArmagetron.cpp:840-844`). M4.
+- **Persistence lands in M4 and is not finished.** `/persist` is an IDBFS mount
+  populated before `main()` (task 1) and leaving a menu saves the config
+  (task 2), so a setting a player changes now survives a reload — see
+  "Re-running the M4 gates" above. Three things are still open. **(a)** The one
+  menu whose caller applies the player's choice *after* the menu closes — First
+  Setup, for Colour / Controls / Connection, and with it `FIRST_USE` — is not
+  covered by a menu-leave save. The `beforeunload` backstop catches it today,
+  and a backstop is not a mechanism. **(b)** `/persist` collects more than
+  `user.cfg`: `var/ladderlog.txt` and `var/scorelog.txt` grow without bound,
+  IndexedDB quota does not, and `libidbfs.js` surfaces no error to any caller
+  when a write-back fails. **(c)** `beforeunload` has a measured payload cliff
+  at ~2 MB of *delta* — the same problem seen from the other side. The
+  `SDL_QUIT` call site (`gArmagetron.cpp`, in `filter`) is still unreachable in
+  the browser, but it is now **one lost site out of the 11 the browser client
+  compiles** rather than the whole story. (Counting basis, since three numbers
+  are all correct: 12 call sites tree-wide before this task, 10 of them in code
+  any build here compiles — the other two are `src/macosx/SDLMain.mm`, which no
+  build here touches — plus the one M4 task 2 adds. The table is in
+  `docs/evidence/m4-persist-settings/README.md`.)
 - **The wasm is 8,878,433 bytes** as of M3, up from M2's 8,854,277 — M3's WAV
   parser and mixing-path repairs cost **+24,156 bytes**, which is the whole of
   the delta. Nearly all of it is `src/engine/eSound.cpp`; `src/emscripten/
@@ -456,9 +521,16 @@ defaults.
   during three real rounds: a per-whole-second median of 60 (Chrome) and 59
   (Firefox), a minimum of 53 and 56 — and a worst *single* frame of 43.8 ms and
   41.0 ms, which is below 30 fps instantaneous in both.
-- **The binding menu shows blank key names** for arrows, Escape, Enter, Tab and
+- ~~**The binding menu shows blank key names** for arrows, Escape, Enter, Tab and
   the F-keys. Emscripten's `SDL_GetKeyName` names only `a-z` and `0-9`
-  (`libsdl.js:1754-1764`). Rebinding works; it displays nothing. Deferred to M4.
+  (`libsdl.js:1754-1764`). Rebinding works; it displays nothing. Deferred to M4.~~
+  **This was never true.** `su_EmscriptenKeyName` in `uInput.cpp` supplies those
+  names and is wired into `keyname()` under the correct guard; it was committed
+  in M2 task 6 (`422dfb2b`, 19:46) and this line was written at 21:31 the same
+  day, in the commit that closed M2 — **1h45m after the fix landed in the same
+  tree.** Deleted as an item rather than fixed, because there was nothing to fix.
+  Struck through rather than removed: it seeded M4's plan and this recon's own
+  question list, so a reader who acted on it needs to find the retraction.
 - **`default.cfg`'s mouse-camera bindings are dead** (`LOOK_LEFT`, `LOOK_RIGHT`,
   `BANK_UP`, `BANK_DOWN`, `ZOOM_IN`, lines 31-35). Those keycodes, 324-336, are
   the program's own mouse pseudo-keys defined as `SDLK_LAST+1…+13`, and

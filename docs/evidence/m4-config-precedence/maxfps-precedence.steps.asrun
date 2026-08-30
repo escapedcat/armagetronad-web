@@ -1,0 +1,213 @@
+# M4 Task 3 gate, part 2 of 2: a player-chosen MAX_FPS survives a reload.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out docs/evidence/m4-config-precedence \
+#        --script-file web/tools/maxfps-precedence.steps
+#   kill %1
+#
+# Then score the transcript with
+#   node docs/evidence/m4-config-precedence/check-maxfps-transcript.mjs <console.log>
+#
+# THE SAME FILE ALSO DRIVES THE CONTROL PAGE, unchanged:
+#   node web/tools/drive-browser.mjs --headed --out /tmp/oldcfg \
+#        --url http://localhost:8000/armagetronad-oldautoexec.html \
+#        --script-file web/tools/maxfps-precedence.steps
+# armagetronad-oldautoexec.html (web/Makefile, target client-oldautoexec) is
+# byte-identical in wasm to the real client and differs only in its preloaded
+# autoexec.cfg, which has `MAX_FPS 60` and `SOUND_BUFFER_SHIFT 1` appended --
+# i.e. this task's fix undone. It runs this script to completion and the player's
+# choice is gone by boot 3. THAT is the before/after: not two versions of a
+# script, one script against two builds that differ in one file.
+#
+# --headed IS REQUIRED. Chrome 152 headless drops the synthesised key events
+# this script is made of; see drive-browser.mjs's header.
+#
+# ---------------------------------------------------------------------------
+# WHY THE SETTING IS MAX_FPS AND NOT SOUND_BUFFER_SHIFT.
+#
+# Both moved in this task and both are checked here, but only one can be driven
+# through the menu cheaply. Changing SOUND_BUFFER_SHIFT from the Sound menu
+# tears down and re-opens the audio device on menu exit (se_SoundMenu calls
+# se_SoundExit/se_SoundInit when the shift changed), which is a real code path
+# but a noisy one to drive and an unrelated risk to take inside a precedence
+# test. So SOUND_BUFFER_SHIFT is verified the other way round: the transcript
+# must show the device opening at SOUND_BUFFER_SHIFT 1 on boot 1 -- when there
+# is no user.cfg AND, on the real page, no autoexec.cfg line either. The only
+# thing that can be supplying that 1 is the compiled default this task added.
+# On the control page the same line proves nothing, because there the config
+# file supplies it; the checker knows the difference.
+#
+# ---------------------------------------------------------------------------
+# MENU GEOMETRY. uMenu renders its item list in REVERSE of construction order
+# (uMenu::YPos) and uMenu's constructor adds "Back" FIRST, so Back is at the
+# BOTTOM and the LAST-constructed item is at the TOP and starts selected.
+# Read off the preprocessed source rather than guessed, because the Screen Mode
+# menu has two conditionally-compiled items:
+#
+#   Main menu       Play Game / Player Setup / System Setup / About / Exit Game
+#   System Setup    Display Settings / Sound / Misc Stuff / Back
+#   Display Settings Screen Mode / Preferences / Detail Settings /
+#                   Performance Tweaks / Load Defaults / Back
+#   Screen Mode     Window Size / Resolution / Fullscreen / Color Depth /
+#                   Z Depth / Grab Mouse / VSync / MAX FPS / Check Errors /
+#                   Keep Window Active / Apply Changes / Back
+#
+# So Display Settings and Screen Mode are both reached by pressing Enter on the
+# already-selected top item, and Max FPS is 7 Downs into Screen Mode. The two
+# conditional items matter: `#ifdef DIRTY` (Use SDL) is OUT of this build and
+# `SDL_VERSION_ATLEAST(1,2,10)` (VSync) is IN, confirmed with em++ -E on
+# gMenus.cpp. Had the VSync item been absent the count would be 6, so this is
+# not a detail to eyeball. Every navigation step below is screenshotted, so a
+# future drift shows up as a picture of the wrong menu rather than as a silent
+# mis-navigation that changes nothing and still "passes".
+#
+# THE VIEWPORT CONFIGURATION SCREEN IS NOT ON THIS ROUTE. It is a latent abort
+# in this port (rViewport.cpp), and M4 task 2's demonstration avoided Display
+# Settings entirely on the belief that it led there. That belief was wrong and
+# is worth correcting rather than inheriting: ArmageTron_viewport_menuitem and
+# the "Assign viewports" function item are both constructed in sg_PlayerMenu,
+# which hangs off PLAYER SETUP, not off Display Settings. Display Settings is
+# safe to walk. What this script still does not touch is the RESOLUTION item in
+# Screen Mode, which reinitialises the display -- Max FPS is seven rows below
+# it and is only ever reached with Down, never with Enter on the top item.
+#
+# MAX FPS IS A uMenuItemSelection<int>, so LEFT/RIGHT change it and Enter does
+# nothing. Its choices are built in sg_ScreenModeMenu from a hand-picked list:
+#   index 0  1   2   3   4   5   6    7    8    9    10   11   12 ...
+#   value  0 20  30  40  60  80 100  120  180  240  300  360  480 ...
+# ("0" renders as "off"). The compiled default is 60, i.e. index 4, so two
+# LEFTs select index 2 -- 30. 30 is chosen because it is unmistakable: it is
+# not 60 (the value this task moved out of autoexec.cfg), not 360 (upstream's
+# compiled default), and not 0 (which would uncap the frame rate and change how
+# the rest of the run behaves).
+
+# ---------------------------------------------------------------- BOOT 1
+# Walk the first-use flow far enough to persist FIRST_USE 0, so boot 2 lands on
+# the main menu. Nothing is claimed about this boot except the audio line.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+shot:01-boot1-language-menu
+
+# BOOT 1, BEFORE THE PLAYER HAS TOUCHED ANY SETTING. There IS a user.cfg by
+# now -- M4 tasks 1-2 mean the game saves one on boot -- but every value in it
+# is a value nobody chose. So on the real page, where autoexec.cfg names
+# neither item and nothing under config/ does either (checked: `grep -rn
+# 'MAX_FPS\|SOUND_BUFFER_SHIFT' config/` is empty), the MAX_FPS 60 and
+# SOUND_BUFFER_SHIFT 1 recorded here can ONLY have come from the compiled
+# defaults this task added. On the control page autoexec.cfg supplies both, and
+# this same line proves nothing -- which is exactly why both files' contents go
+# into the record, so the checker can tell the two situations apart instead of
+# trusting which URL it was pointed at.
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot1-nothing-chosen-yet',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})()
+
+key:Enter
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2500
+shot:02-boot1-first-setup
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+wait:2500
+shot:03-boot1-welcome
+
+mark:RELOAD-REQUESTED
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+mark:BOOT-2-POPULATED
+wait:1500
+
+# ---------------------------------------------------------------- BOOT 2
+# The player goes to Screen Mode and lowers the frame cap.
+click:#start
+wait:9000
+shot:04-boot2-main-menu
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot2-main-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})()
+
+key:Down:2
+wait:900
+shot:05-boot2-cursor-on-system-setup
+key:Enter
+wait:1800
+shot:06-boot2-system-setup
+
+# Display Settings is the top item and is already selected.
+key:Enter
+wait:1800
+shot:07-boot2-display-settings
+
+# Screen Mode is the top item and is already selected.
+key:Enter
+wait:2500
+shot:08-boot2-screen-mode
+
+key:Down:7
+wait:1200
+shot:09-boot2-cursor-on-max-fps
+
+# BEFORE. user.cfg has no MAX_FPS of the player's own yet; the menu shows the
+# compiled default.
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'before-change',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})()
+
+mark:THE-PLAYER-LOWERS-MAX-FPS-TO-30
+key:Left:2
+wait:1500
+shot:10-boot2-max-fps-now-30
+
+# STILL IN THE MENU. The change is in memory only; nothing has been written.
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'changed-menu-still-open',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})()
+
+mark:ESCAPE-LEAVES-SCREEN-MODE
+key:Escape
+until:3:30000:[PERSISTSAVE] menu-leave
+wait:1500
+shot:11-boot2-back-in-display-settings
+
+# AFTER. Task 2's mechanism has written MAX_FPS 30 to user.cfg.
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'after-menu-leave',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})()
+
+mark:ESCAPE-LEAVES-DISPLAY-SETTINGS
+key:Escape
+until:4:30000:[PERSISTSAVE] menu-leave
+wait:1200
+shot:12-boot2-back-in-system-setup
+
+# ---------------------------------------------------------------- BOOT 3
+# THE WHOLE POINT. Before this task, autoexec.cfg loaded after user.cfg and put
+# MAX_FPS back to 60 right here.
+mark:SECOND-RELOAD-REQUESTED
+eval:location.reload()
+until:3:90000:[PERSIST] populate ok
+mark:BOOT-3-POPULATED
+wait:1500
+
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot3-before-play',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})()
+
+# The file surviving is necessary but not sufficient -- the RUNNING GAME has to
+# be using it. Walk back to the same menu row; the item renders live sr_maxFPS,
+# so shot 13 is a picture of the value the game is actually capped at.
+click:#start
+wait:9000
+key:Down:2
+wait:900
+key:Enter
+wait:1800
+key:Enter
+wait:1800
+key:Enter
+wait:2500
+key:Down:7
+wait:1200
+shot:13-boot3-max-fps-still-30
+
+# CONFIG READBACK AFTER THE GAME HAS LOADED EVERYTHING, which is the moment
+# autoexec.cfg used to win.
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot3-in-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})()
+
+# POSITIVE CONTROL FOR THE HARNESS ITSELF: a deliberate uncaught error, so the
+# "no uncaught exceptions" check in the transcript checker is known to be able
+# to fire. Everything above it is the evidence; everything after it is not.
+mark:positive-control-deliberate-uncaught-error-follows
+eval:setTimeout(function(){null.thisIsADeliberateUncaughtError;},0)
+wait:2000
+shot:14-after-deliberate-uncaught-error

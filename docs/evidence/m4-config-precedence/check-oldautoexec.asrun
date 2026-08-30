@@ -1,0 +1,64 @@
+==============================================================================
+M4 TASK 3 GATE, PART 2: DOES A PLAYER-CHOSEN MAX_FPS SURVIVE A RELOAD
+==============================================================================
+transcript     docs/evidence/m4-config-precedence/oldautoexec-chrome-console.log
+               19214 bytes, modified 2026-08-29T15:31:15.317Z
+browser        chrome: Chrome/152.0.7977.65
+page           http://localhost:8000/armagetronad-oldautoexec.html
+repo HEAD      608925b58a9aec9a92309e3f4d42787df5f450c9
+probes         7 [MAXFPS] records, phases: boot1-nothing-chosen-yet, boot2-main-menu, before-change, changed-menu-still-open, after-menu-leave, boot3-before-play, boot3-in-menu
+
+THIS IS A CONTROL TRANSCRIPT, and here is why:
+  the game read an autoexec.cfg that SETS MAX_FPS 60 and
+  SOUND_BUFFER_SHIFT 1 (12549 bytes). That is this task's fix
+  UNDONE -- the armagetronad-oldautoexec.html control page. The player's
+  choice is EXPECTED TO BE LOST here; a control that passed the real
+  page's checks would mean the real page's checks measure nothing.
+  --expect control was passed; classification agrees.
+
+partition      mark "positive-control-deliberate-uncaught-error-follows"
+               148 transcript lines before it (the evidence),
+               9 after (the harness testing itself).
+
+------------------------------------------------------------------------------
+CHECKS
+------------------------------------------------------------------------------
+  [PASS] the transcript is classified consistently throughout
+         7/7 probes; every probe agrees the page DOES override MAX_FPS.
+         A transcript where some probes see an override and some do not would be two
+         runs concatenated, and nothing below it could be trusted.
+  [PASS] transcript is the control page, as asserted with --expect
+         classified from the transcript as: control
+  [PASS] all three boots populated /persist from IndexedDB
+         saw 3x "[PERSIST] populate ok" in console output (harness echoes excluded)
+  [PASS] the run is clean up to the positive control
+         no [EXCEPTION] lines before the mark
+  [PASS] the exception detector is not blind -- the deliberate error registered
+         2 [EXCEPTION] line(s) after the mark, as designed
+  [PASS] the audio device opened at SOUND_BUFFER_SHIFT 1 on every boot
+         1024 frames/callback, 46.4 ms, SOUND_BUFFER_SHIFT 1
+         1024 frames/callback, 46.4 ms, SOUND_BUFFER_SHIFT 1
+         1024 frames/callback, 46.4 ms, SOUND_BUFFER_SHIFT 1
+  [PASS] boot1-nothing-chosen-yet: max_fps is 60 -- the default applies before the player chooses anything
+         max_fps="60"  (autoexec max_fps="60")
+  [PASS] before-change: max_fps is 60 -- still the default when the player arrives at the menu row
+         max_fps="60"  (autoexec max_fps="60")
+  [PASS] changed-menu-still-open: max_fps is 60 -- the change is in memory only while the menu is open
+         max_fps="60"  (autoexec max_fps="60")
+  [PASS] after-menu-leave: max_fps is 30 -- leaving the menu writes the choice (M4 task 2's mechanism)
+         max_fps="30"  (autoexec max_fps="60")
+  [PASS] boot3-before-play: max_fps is 30 -- the choice survived the IndexedDB round trip
+         max_fps="30"  (autoexec max_fps="60")
+
+  ---- the check the whole task exists for --------------------------------
+  [PASS] boot3-in-menu: max_fps is 60 -- CONTROL: autoexec.cfg loads last, so the player's 30 is expected to be GONE
+         max_fps="60"  (autoexec max_fps="60")
+         The control reverted exactly as the pre-fix build did. Note the
+         reversion happens BETWEEN boot3-before-play (30) and boot3-in-menu
+         (60): the file was fine until the game loaded its config.
+
+==============================================================================
+12/12 checks passed on the CONTROL transcript
+VERDICT: PASS -- the control behaved as the pre-fix build did: the player's
+         MAX_FPS 30 was overwritten back to 60 by autoexec.cfg.
+==============================================================================

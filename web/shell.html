@@ -146,11 +146,131 @@
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
-      // config to /persist. Both are runtime switches the game already has --
-      // no path patches needed. /persist becomes an IDBFS mount in M4; until
-      // then it is in-memory, so settings do not survive a reload.
+      // config to /persist (--userdatadir), which tDirectories turns into
+      // /persist/var/user.cfg -- the file st_LoadConfig reads FIRST and
+      // st_SaveConfig writes. Both are runtime switches the game already has,
+      // so no path patches are needed. --userconfigdir is read-only input
+      // (the preloaded /data/webdefaults/autoexec.cfg); nothing is ever
+      // written there. /persist is the IDBFS mount -- see preRun below.
       arguments: ['--datadir','/data','--userdatadir','/persist',
                   '--userconfigdir','/data/webdefaults'],
+
+      // ---- M4: /persist is IndexedDB-backed --------------------------------
+      //
+      // WHAT THIS DOES. Creates /persist (it is in NO --preload-file mapping,
+      // so it does not exist at boot; the game would otherwise create it
+      // lazily in MEMFS via tDirectories.cpp's mkdir_recurse on the first
+      // save), mounts IDBFS over it, and copies IndexedDB -> MEMFS before
+      // anything can read the path.
+      //
+      // WHY autoPersist AND NOT AN FS.syncfs CALL IN C++. With
+      // {autoPersist:true} libidbfs.js wraps the mount's node_ops.mknod so
+      // every node created under /persist gets a stream_ops.close hook that
+      // calls IDBFS.queuePersist, batched behind a setTimeout(0). The game
+      // saves through a std::ofstream whose destructor closes the fd, so the
+      // save IS the persist trigger. src/tools/tConfiguration.cpp needs no
+      // change at all, and nothing has to be added to ASYNCIFY_IMPORTS.
+      // (MEMFS has no separate node_ops.mkdir -- FS.mkdir goes through
+      // mknod too -- so /persist/var and everything in it inherits the
+      // instrumented ops. Verified in src/lib/libmemfs.js.)
+      //
+      // WHY THE RUN DEPENDENCY, WHICH IS THE ENTIRE POINT OF THIS BLOCK.
+      // FS.syncfs(true, cb) -- the populate -- is ASYNCHRONOUS, and measured
+      // here at 3-160 ms. If main() is allowed to start before that callback
+      // fires, st_LoadConfig reads an empty /persist, and then the first
+      // st_SaveConfig writes a fresh file over the top: saving keeps working,
+      // nothing is ever read back, and from inside the game the failure is
+      // indistinguishable from success. It is also intermittent, because it
+      // is a race against a few tens of milliseconds.
+      //
+      // addRunDependency is what makes that unrepresentable rather than
+      // merely avoided. Emscripten's run() calls preRun() and then awaits
+      // resolveRunDependencies() before it reaches initRuntime,
+      // onRuntimeInitialized (which is what enables the Play button) and
+      // callMain. So the button cannot even be clicked until the populate has
+      // finished -- and callMain's own first assertion is
+      // `runDependencies == 0` ("cannot call main when async dependencies
+      // remain"), so a future edit that breaks this ordering aborts loudly
+      // instead of silently reading an empty filesystem.
+      //
+      // Doing it here rather than with an `await` inside the Play handler is
+      // deliberate for one more reason: the handler stays SYNCHRONOUS, so
+      // callMain still runs in the same task as the click.
+      //
+      // Be careful how strongly that is stated. Chrome and Firefox gate Web
+      // Audio autoplay on STICKY activation -- set by the click, not consumed
+      // by it, and it does not expire -- so an `await` here would very likely
+      // still be allowed to start audio in both. (WebKit is the engine that
+      // wants the gesture to still be executing, and it is a declared
+      // non-target.) The defensible form of the argument is narrower and does
+      // not depend on any autoplay rule: an `await` would change the exact
+      // timing relationship between the click, callMain and SDL_OpenAudio
+      // that M3's transcripts measured, and nothing in M4 re-establishes it.
+      // The two reasons above -- the stronger guarantee and the assert -- are
+      // the load-bearing ones; this is only the reason not to spend a
+      // re-measurement of M3 to buy nothing.
+      //
+      // preRun MUST be an array: the file packager appends its own callback
+      // with Module['preRun'].push(...), which a bare function would break.
+      //
+      // FAILURE IS REPORTED, NOT SWALLOWED, AND STILL RELEASES THE
+      // DEPENDENCY. A private-mode browser with IndexedDB blocked would
+      // otherwise leave the page on "Loading..." for ever with no message.
+      // Losing persistence is bad; failing to start is worse.
+      //
+      // That promise has to be UNCONDITIONAL, which is what the try/catch and
+      // the `held` flag below are for, and an earlier version of this block
+      // got it wrong in a way worth naming. It registered the dependency
+      // AFTER the mkdir and mount, so a throw from either escaped preRun with
+      // no dependency held -- noisy, but not a hang. A synchronous throw out
+      // of FS.syncfs itself was the real hazard: by then the dependency IS
+      // held, nothing would ever release it, and the page sits on "Loading..."
+      // for ever -- exactly the outcome the paragraph above claims to have
+      // removed. `held` is set only once the dependency actually exists and is
+      // cleared by whichever path releases it, so double-release is
+      // impossible too (removeRunDependency asserts the id is still tracked,
+      // so a spurious second call would abort the runtime).
+      //
+      // A mkdir/mount throw now DEGRADES rather than escaping: the game
+      // starts with a plain in-memory /persist and no persistence. That is a
+      // deliberate choice, not an accident of where the catch landed -- the
+      // alternative is an unhandled rejection out of run(), which shell.html
+      // turns into a red banner over a page that never starts. It is not
+      // silent either: the [PERSIST] line says FAILED, and the M4 gate's
+      // check P2 ("two populate lines, both ok") fails on it.
+      //
+      // KNOWN AND ACCEPTED: /persist collects more than user.cfg. The same
+      // --userdatadir also holds var/ladderlog.txt and var/scorelog.txt
+      // (CONSOLE_LADDER_LOG is 1 in web/webdefaults/autoexec.cfg) and
+      // tPathScreenshot resolves under it. Those grow without bound and
+      // IndexedDB quota does not. Noted, not solved -- see docs.
+      preRun: [() => {
+        const FS = Module.FS, IDBFS = Module.IDBFS;
+        let held = false;
+        const release = () => { if (held) { held = false; Module.removeRunDependency('persist-populate'); } };
+        try {
+          FS.mkdir('/persist');
+          FS.mount(IDBFS, { autoPersist: true }, '/persist');
+          Module.addRunDependency('persist-populate');
+          held = true;
+          const t0 = performance.now();
+          FS.syncfs(true, (err) => {
+            const ms = Math.round(performance.now() - t0);
+            // One machine-readable line, because this is the fact every M4
+            // evidence run has to be able to assert on. `err` is null on
+            // success, including on the first ever visit when the object
+            // store is empty.
+            console.log('[PERSIST] populate ' + (err ? 'FAILED' : 'ok') +
+                        ' in ' + ms + 'ms' + (err ? ': ' + err : ''));
+            release();
+          });
+        } catch (e) {
+          // Same tag, so a checker counting "[PERSIST] populate" lines sees
+          // this one too and reports "not ok" rather than "missing".
+          console.log('[PERSIST] populate FAILED before it started: ' + e);
+          release();
+        }
+      }],
       // callMain is invoked from the button below, not automatically -- the
       // button itself matters starting M3: browsers require a user gesture
       // before audio can start, so waiting for a click costs nothing now and
@@ -166,11 +286,97 @@
       onRuntimeInitialized: () => {
         statusEl.textContent = 'Ready';
         startEl.disabled = false;
+        // This line exists to make the preRun ordering above CHECKABLE rather
+        // than merely asserted. It is the exact moment the Play button becomes
+        // clickable, i.e. the earliest moment main() can start, so a
+        // transcript in which it follows "[PERSIST] populate ok" is evidence
+        // that the populate completed first. Delete the run dependency and
+        // the two lines swap order deterministically -- which is how
+        // docs/evidence/m4-persist demonstrates that this check can fail.
+        console.log('[PERSIST] runtime initialized, Play enabled');
       }
     };
 
+    // ---- M4 task 2: the unload/visibility BACKSTOP -----------------------
+    //
+    // IT IS A BACKSTOP AND NOTHING IN THE GATE MAY DEPEND ON IT. The primary
+    // mechanism is src/emscripten/eWebPersist.cpp's uCallbackMenuLeave: the
+    // game saves its own config when the player leaves a menu, from inside its
+    // own loop, while the page is fully alive. That is the regime that
+    // measures reliable. Everything below is for the change the player makes
+    // and then never leaves the menu on -- they alt-tab, or close the tab, or
+    // the mobile OS discards the page.
+    //
+    // web/tools/persist-settings-gate.steps is checked against a control page
+    // with this block disabled, and must still PASS 18/18 -- which is what
+    // "not load-bearing" means here as a fact rather than an intention. That
+    // page is armagetronad-nobackstop.html, written by
+    //
+    //     docs/evidence/m4-persist-settings/make-settings-control-pages.mjs
+    //
+    // and NOT by task 1's docs/evidence/m4-persist/make-control-pages.mjs,
+    // which writes an entirely different set (ungated, slowgate, slowungated,
+    // noautopersist) and knows nothing about this block. An earlier version of
+    // this comment cited the wrong one, which sent a reader trying to
+    // re-derive the claim into a directory with no such page -- in the comment
+    // whose whole job is to stop the backstop being promoted to a mechanism.
+    // The committed transcript is nobackstop-chrome-console.log, beside the
+    // tool that made the page.
+    //
+    // WHY beforeunload IS ONLY A BACKSTOP: THE PAYLOAD CLIFF. M4 recon
+    // measured what actually survives a save issued from beforeunload. 50 KB
+    // of changed data survives; 500 KB survives; 2 MB loses THE ENTIRE BATCH
+    // -- including small files written in the same handler, because
+    // libidbfs.js's queuePersist syncs the whole mount in one transaction and
+    // that one transaction is what does not complete. An explicit FS.syncfs
+    // does not rescue it. It is the size of the DELTA that matters, not the
+    // size of the mount, and user.cfg is ~22 KB today -- comfortably on the
+    // safe side, with no guarantee that a future /persist stays there.
+    //
+    // WHY pagehide IS REJECTED, EVEN THOUGH IT IS THE USUAL ADVICE. It is not
+    // safer here, it is strictly worse, and this was measured twice: the
+    // pagehide handler provably runs (proved with sessionStorage), the write
+    // reaches MEMFS -- and the data is LOST, because queuePersist's
+    // setTimeout(0) never gets serviced. beforeunload runs early enough that
+    // the page still has a task loop to run that timer on; pagehide does not.
+    // Do not "improve" this by switching to pagehide.
+    //
+    // WHY visibilitychange IS LISTED FIRST. hidden fires while the page is
+    // still fully alive and still has a normal event loop, so the
+    // setTimeout(0) that carries the write to IndexedDB has somewhere to run
+    // -- and it is the one hook that fires before a mobile tab is discarded
+    // without any unload event at all. That reasoning is REASONED, NOT
+    // MEASURED here; treat it as the weaker of the two claims on this page.
+    //
+    // THE GUARD IS NOT DEFENSIVENESS. Before the Play click, Module's export
+    // getters are makeInvalidEarlyAccess stubs whose body is an abort(), and
+    // `typeof` reports them as functions -- so a bare feature test would pass
+    // and then take the runtime down. And main() is what tells tDirectories
+    // where --userdatadir is, so a save before it would write to the wrong
+    // path.
+    let gameStarted = false;
+    const persistBackstop = (why) => {
+      if (!gameStarted) return;
+      // aa_web_save_config MUST NOT YIELD -- see the long warning on it in
+      // src/emscripten/eWebPersist.cpp. Calling into wasm from here is safe
+      // only because it does not; a sleep on that path would start a second
+      // Asyncify unwind on top of the live one this page is almost always
+      // parked in.
+      try {
+        Module._aa_web_save_config();
+        console.log('[PERSISTBACKSTOP] ' + why);
+      } catch (e) {
+        console.log('[PERSISTBACKSTOP] ' + why + ' FAILED: ' + e);
+      }
+    };
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') persistBackstop('visibilitychange-hidden');
+    });
+    window.addEventListener('beforeunload', () => persistBackstop('beforeunload'));
+
     startEl.addEventListener('click', () => {
       overlayEl.remove();
+      gameStarted = true;             // arms the backstop above
       Module.canvas.focus();          // so the menu receives key events
       // .slice() matters: callMain(args) unshifts argv[0] onto whatever
       // array it's given, mutating it in place, so passing Module.arguments

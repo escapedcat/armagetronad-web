@@ -84,7 +84,119 @@ static bool uses_sdl_mixer=false;
 #define SOUND_MONO 1
 #define SOUND_STEREO 2
 
-#ifdef WIN32
+// SOUND_BUFFER_SHIFT's COMPILED DEFAULT.
+//
+// WHERE THIS CAME FROM AND WHY IT IS HERE RATHER THAN IN A CONFIG FILE.
+// M3 shipped this as a `SOUND_BUFFER_SHIFT 1` line in
+// web/webdefaults/autoexec.cfg. That file loads LAST -- st_LoadConfig()
+// (src/tools/tConfiguration.cpp) does Load( var, "user.cfg" ) first and the
+// autoexec.cfg loads last -- so everything named in it is a HARD OVERRIDE, not
+// a default. That is right for a correctness setting (INFINITY_PLANE,
+// USE_DISPLAYLISTS are still there) and wrong for a player preference. This is
+// a player preference: se_SoundMenu offers it as bm_men further down this
+// file, and `bs` just below is a tConfItem, so the player's choice is written
+// to user.cfg -- and was then silently reverted to 1 on every single load.
+// Re-ordering could not fix it, because user.cfg's load is already the first
+// one in st_LoadConfig; a compiled default is what gives the wanted
+// precedence, since nothing loaded after user.cfg now mentions the item.
+// M4 task 3 moved it here. The reasoning below is M3's, carried across intact
+// -- it is the whole evidence base for the value and must travel with it.
+//
+// WHAT THE NUMBER DOES. It sizes the audio callback buffer: the loop in
+// se_SoundInit further down doubles desired.samples from 128 while it is
+// <= freq >> (6 - buffer_shift), so at this port's 22050 Hz device:
+//
+//     shift    -2     -1      0      1      2      3
+//     frames   128    256    512   1024   2048   4096
+//
+// THE MENU AND THE MEASURED TABLE ARE NOT THE SAME SET. se_SoundMenu's bm_men
+// offers FIVE entries, -2..2, so:
+//
+//   * shift 3 (4096) IS in the measured table below but CANNOT be chosen from
+//     the sound menu. It is reachable only from a config file.
+//   * shifts -2 and -1 (128, 256) CAN be chosen from the menu and were NEVER
+//     measured. They are half and a quarter of the smallest value tested, so a
+//     player who picks them is off the end of the evidence rather than near
+//     it, and the margin argument below says nothing about them.
+//
+// The client reports what it actually got, so a transcript settles this rather
+// than a comment: "[SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024
+// frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)".
+//
+// LATENCY AND STARVATION TOLERANCE ARE THE SAME NUMBER HERE, which is why this
+// is a real trade rather than a free choice. Emscripten's SDL keeps the Web
+// Audio queue topped up to bufferingDelay + bufferDuration x
+// numSimultaneouslyQueuedBuffers ahead of the clock (libsdl.js, 0.05 s and 5
+// respectively). That quantity is BOTH the delay between the game mixing a
+// sample and the device playing it, AND the length of main-thread stall the
+// device can survive before it runs dry. You cannot buy margin without buying
+// lag.
+//
+// MEASURED, M3 task 2, Chrome, three full rounds against three AIs each, the
+// same first-run flow the M2 gate drives, with real sound playing (which was
+// new -- M2's reconnaissance measured this with an audio callback that did
+// nothing but memset, so its numbers did not include any mixing work):
+//
+//   shift  frames  ms/callback  latency = tolerance  starvation warnings
+//     0      512       23.2          162 ms                  0
+//     1     1024       46.4          278 ms                  0
+//     2     2048       92.9          510 ms                  0
+//     3     4096      185.8          974 ms                  0
+//
+// ZERO STARVATION AT EVERY VALUE, so starvation alone does not choose. What
+// chooses is the margin. The worst main-thread stall in those runs is visible
+// as a gap between consecutive pushAudio calls: the largest gap minus one
+// buffer duration. Shift 0 and shift 1 both put it at 119 ms and they are the
+// two that sample the main thread often enough (every 23 and 46 ms) to resolve
+// a stall that long; a later run at shift 1 saw 142 ms. (Shift 2 and 3
+// "measure" 77 ms, but their callbacks are 93 and 186 ms apart, so they cannot
+// see a stall shorter than that. Their numbers are underestimates; the finer
+// sampling is the one to believe.)
+//
+//   shift 0: 162 ms tolerance against a 119-142 ms worst stall -- 1.1x to 1.4x.
+//   shift 1: 278 ms against the same -- 2.0x to 2.4x.
+//
+// Around 1x is not a margin at all, and it is a number measured on one fast
+// machine, in a headed browser with nothing else running, over about 70 s of a
+// tutorial-parameter match. The failure it buys is also the worse one: lag is
+// annoying, dropouts are broken.
+//
+// WHY NOT UPSTREAM'S OWN DEFAULT, WHICH IS THE 0 IN THE #else BELOW. Because
+// native SDL 1.2 runs fill_audio on its OWN AUDIO THREAD (SDL_RunAudio), where
+// a stalled main thread costs the device nothing. Emscripten has one thread:
+// SDL.audio.queueNewAudioData runs from Asyncify's sleep callbacks, from
+// setTimeout, and from the post-main-loop hook, so here every main-thread
+// stall IS an audio stall. Upstream's 0 was chosen for a threaded device and
+// does not transfer. That is also why the guard tests __EMSCRIPTEN__ rather
+// than folding into the WIN32 branch: it is a property of the platform's
+// threading, not of the value coinciding with Windows'.
+//
+// WHY NOT 3, WHICH IS WHAT PLAN.md RECOMMENDED AND M1/M2 SHIPPED. 974 ms is
+// most of a second of audio lag on a game about reflexes -- you would hear
+// your own explosion a second after the wall. It is 8x the worst stall
+// measured, i.e. it is paying for margin nobody has shown a need for.
+//
+// Revisit with evidence, not taste: if a starvation-free run at shift 0 can be
+// shown on slower hardware and in a backgrounded tab, 162 ms is better. The
+// transcript line to grep for is Emscripten's own, emitted under ASSERTIONS:
+// "warning: Audio callback had starved sending audio by N seconds".
+//
+// THE !defined( DEDICATED ) HALF OF THE GUARD IS NOT DECORATION. This
+// declaration is OUTSIDE the file's `#ifndef DEDICATED` region (that one
+// closed above, at the end of the SDL_AudioSpec block), so it compiles into
+// the M0 dedicated server, whose wasm must stay byte-identical at 2,488,298
+// bytes and md5 9718a2a6... em++ defines __EMSCRIPTEN__ for both wasm builds
+// this repo produces, so an __EMSCRIPTEN__-only guard would change the
+// server's data segment. Verified by compiling this object both ways with the
+// same flags and the same filename: with the DEDICATED half it is
+// md5-identical to base, without it it is not. Note the SIZE half of the
+// invariant would not have caught it -- 0 -> 1 rewrites an i32 initialiser
+// that is already there, and the relinked wasm comes out at exactly 2,488,298
+// bytes with a different md5. See
+// docs/evidence/m4-config-precedence/check-dedicated-byte-identity.mjs.
+#if !defined( DEDICATED ) && defined( __EMSCRIPTEN__ )
+static int buffer_shift=1;
+#elif defined( WIN32 )
 static int buffer_shift=1;
 #else
 static int buffer_shift=0;

@@ -837,11 +837,28 @@ int main(int argc,char **argv){
             //  - SDL_ACTIVEEVENT (alt-tab): already unreachable. The SDL 1.2
             //    constant is 0x7000 (SDL_compat.h:99), but Emscripten reports
             //    focus changes as SDL_WINDOWEVENT, 0x200 (libsdl.js:1376).
-            //  - SDL_QUIT: the one real loss. The st_SaveConfig() in filter()
-            //    above (:502) is what saves settings when the window closes;
-            //    in a browser they will not be saved on tab close. Recorded as
-            //    an explicit obligation for M4, which owns persistence -- do
-            //    not paper over it here.
+            //  - SDL_QUIT: a real loss, but a smaller one than this comment
+            //    used to claim. It said the st_SaveConfig() in filter() "is
+            //    what saves settings when the window closes", and M4's plan
+            //    and web/README.md both inherited that reading. It is wrong:
+            //    st_SaveConfig has a dozen call sites, and sr_InitDisplay and
+            //    lowlevel_sr_InitDisplay (rScreen.cpp) call it unconditionally
+            //    on EVERY boot -- a crash detector persisting FAILED_ATTEMPTS
+            //    -- plus on every resolution change. The one in filter() is a
+            //    single lost site, not the save.
+            //
+            //    M4 closed the actual gap, which was narrower and different:
+            //    nothing called st_SaveConfig after a settings-MENU change, so
+            //    an edit stayed volatile until some unrelated event flushed
+            //    it. See se_WebPersistSaveOnMenuLeave in
+            //    src/emscripten/eWebPersist.cpp. Tab close is now covered
+            //    best-effort by a visibilitychange/beforeunload backstop in
+            //    web/shell.html, which is deliberately NOT load-bearing --
+            //    beforeunload has a measured payload cliff.
+            //
+            //    (The original also cited "above (:502)", a bare line number,
+            //    which this port's own rule forbids: same-file references name
+            //    a symbol. The symbol is filter.)
             //
             // filter() itself is left intact and unused, ready to be called
             // from a poll loop by whichever milestone wires up input.

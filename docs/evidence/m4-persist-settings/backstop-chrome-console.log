@@ -1,0 +1,59 @@
+[   1090ms] [harness] chrome: Chrome/152.0.7977.65
+[   1090ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[      9ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     32ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     32ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     34ms] [page] load event fired
+[     41ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    105ms] [console.log] [PERSIST] populate ok in 35ms
+[    110ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    380ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1153ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1153ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1153ms] [console.error] 
+[   1155ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1155ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1155ms] [console.log] 
+[   1326ms] [console.log] [L] ENCODING latin1
+[   1339ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1341ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1365ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1369ms] [console.error] TODO: glShadeModel
+[   1373ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1426ms] [harness] click #start: clicked
+[   1427ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1428ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1428ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1428ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1428ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10509ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/backstop-chrome/01-language-menu.png
+[  10537ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10557ms] [harness] key Enter (1/1)
+[  10860ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10860ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13419ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/backstop-chrome/02-first-setup.png
+[  13452ms] [harness] key Down (1/1)
+[  14793ms] [harness] key B (1/1)
+[  15130ms] [harness] key K (1/1)
+[  15463ms] [harness] key W (1/1)
+[  17339ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/backstop-chrome/03-name-typed-menu-still-open.png
+[  17340ms] [console.log] [BACKSTOP] {"phase":"typed-menu-still-open","player_1":"web_user","bytes":21950}
+[  17341ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[BACKSTOP] '+JSON.stringify({phase:'typed-menu-still-open',player_1:pick(c,'PLAYER_1'),bytes:c?c.length:null}));return 'read'})() => "read"
+[  17341ms] [harness] === SYNTHETIC-VISIBILITYCHANGE-HIDDEN ===
+[  17346ms] [console.log] [PERSISTSAVE] js-backstop n=2
+[  17346ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  17347ms] [harness] eval (()=>{try{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'hidden'})}catch(e){return 'override failed: '+e}document.dispatchEvent(new Event('visibilitychange'));return 'visibilityState now '+document.visibilityState})() => "visibilityState now hidden"
+[  18850ms] [console.log] [BACKSTOP] {"phase":"after-synthetic-visibilitychange","player_1":"web_userbkw","bytes":21953}
+[  18850ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[BACKSTOP] '+JSON.stringify({phase:'after-synthetic-visibilitychange',player_1:pick(c,'PLAYER_1'),bytes:c?c.length:null}));return 'read'})() => "read"
+[  18884ms] [harness] key Down (1/1)
+[  20760ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/backstop-chrome/04-still-alive-after-reentry.png
+[  20793ms] [harness] key Up (1/1)
+[  22676ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/backstop-chrome/05-still-responding.png
+[  22677ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  22678ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 2948
+[  22678ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  22678ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  22679ms] [EXCEPTION] structured stack, 1 frames:
+[  22679ms]     <anonymous> @ :0:27
+[  24752ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/backstop-chrome/06-after-deliberate-uncaught-error.png
