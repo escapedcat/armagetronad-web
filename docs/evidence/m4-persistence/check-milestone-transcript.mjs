@@ -73,10 +73,10 @@
 //     web/tools/persistence-milestone-negative.steps is this same script with
 //     one executable line changed: IndexedDB is destroyed between boot 2 and
 //     boot 3. A real browser, the real page, no persistence.
-//   * TRANSCRIPT MUTATION, prove-milestone-checks-can-fail.mjs, for the checks
-//     the control cannot reach and for the ones it knocks out collaterally --
-//     a control that flips fourteen checks at once does not show that any ONE
-//     of them is wired to the field it names.
+//   * TRANSCRIPT MUTATION, prove-milestone-checks-can-fail.mjs, for the
+//     eighteen checks the control cannot reach and for the three it does --
+//     a control that flips three checks at once does not show that any ONE of
+//     them is wired to the field it names.
 //
 // Every one of M1..M21 is covered by the prover; it prints which, and which of
 // those ALSO have the control behind them.
@@ -108,7 +108,10 @@ const TIP_LEFT_FRESH  = '0 2 1 1 1';     // config/default.cfg's shipped values
 const TIP_RIGHT_FRESH = '0 3 1 1 1';
 const TIP_SPENT       = '0 0 1 1 1';
 const KEYS_NO_TEMPLATE = 59;             // default.cfg's KEYBOARD lines alone
-const KEYS_WITH_TEMPLATE = 79;           // ...plus keys_cursor.cfg's twenty
+// ...plus keys_cursor.cfg's 21, less the ONE keysym the two files share: 102
+// ('f') is TOGGLE_FULLSCREEN in default.cfg and CYCLE_TURN_RIGHT for player 2
+// in keys_cursor.cfg, so it is rebound rather than added. 59 + 21 - 1 = 79.
+const KEYS_WITH_TEMPLATE = 79;
 
 // Lines the harness itself wrote are never page output. Excluding them is not
 // tidiness: an `eval:` step is echoed in full, and the gate's probe installer

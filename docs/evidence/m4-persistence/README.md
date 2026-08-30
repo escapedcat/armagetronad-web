@@ -66,6 +66,11 @@ boot 1, after first setup:  59 KEYBOARD lines, left_binds [],              toolt
 boot 2, before play:        79 KEYBOARD lines, left_binds ["1104","117"],  right_binds ["1103","111"]
 ```
 
+59 → 79 is exact, not approximate: `default.cfg` has 59 `KEYBOARD` lines and
+`keys_cursor.cfg` has 21, and the two files share exactly one keysym — `102`
+(`f`), which is `TOGGLE_FULLSCREEN` in the first and `CYCLE_TURN_RIGHT` for
+player 2 in the second, so it is rebound rather than added. 59 + 21 − 1 = 79.
+
 ---
 
 ## How A3 is observed, and the two ways that did not work
