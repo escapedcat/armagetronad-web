@@ -11,7 +11,11 @@ the GL traps, and the camera. Each section is named so a comment can cite it.
 **If you are about to touch rendering, read §10 first.** "One `glBegin`/`glEnd`
 block, one vertex format" is the largest single class of defect this port has
 found. It has two shapes and **one of them is silent** — it draws wrong geometry
-without asserting. One instance is still unfixed (`rViewport.cpp:246`).
+without asserting. **As of M5 task 1 there is no known unfixed instance**: the
+last one, in `rViewportConfiguration::DemonstrateViewport`, was fixed after being
+carried as "still latent" by four consecutive milestones — it was in fact a live
+crash four keystrokes from the main menu. Read §10's "How this one got miscalled
+for four milestones" before writing "latent" about a site in this class again.
 
 **If you are about to add `-O` to the client link, read §10 as well, and then
 don't.** `ASSERTIONS` being on is the only reason the loud shape of that defect
@@ -926,10 +930,11 @@ The only functions that currently leak an open block are:
   identical format, or `RenderBegin`, whose `BeginLineStrip`/`BeginQuadStrip` are
   different primitives and so force a real `glEnd`. Fragile — do not add a
   differently-shaped `GL_QUADS` emitter after it.
-- `rViewportConfiguration::DemonstrateViewport` (`rViewport.cpp:240`) — see the
-  latent list.
 - `rRenderer::Line` (`rRender.cpp:67`) — dead; `glRenderer::Line` overrides it
   and does call `End()`.
+
+`rViewportConfiguration::DemonstrateViewport` used to be on this list and is no
+longer: M5 task 1 gave it its `RenderEnd()`.
 
 **(B) Intra-batch non-uniformity.** A block the code opened itself emits
 attributes at a rate other than one per vertex. No inherited batch is involved,
@@ -951,26 +956,49 @@ perfectly reasonable.
 - **`gSparks.cpp` (shape B)** — one colour per *line segment*: 9 slots per
   iteration against a 5-slot stride. With `SPARKS == 10` that is 90/20 = 18, an
   integer, so it never asserted — it drew garbage. Fixed the same way.
+- **`rViewport.cpp` (shape A+B), M5 task 1** —
+  `rViewportConfiguration::DemonstrateViewport`: `BeginLineLoop()`, four
+  `glVertex2f`, then `glColor3f(1,1,1)` **with the block still open**, then
+  `DisplayText()`, whose destructor's `RenderEnd()` is what reached `glEnd` with
+  the ragged batch. 16 + 1 = 17 slots against stride 20 → `4*17/20 = 3.4`.
+  Fixed with a `RenderEnd()` after the fourth `glVertex2f`, so the colour is
+  state again and `DisplayText` gets its own batch. Predicted arithmetic and
+  observed abort agreed exactly.
 
-### Still latent — one site, and it is reachable today
+### How this one got miscalled for four milestones
 
-- **`rViewport.cpp:246`** (shape A+B) — `BeginLineLoop()`, four `glVertex2f`,
-  then `glColor3f(1,1,1)` **with the block still open**, then `DisplayText()`
-  whose `RenderEnd(true)` flushes it: 17 slots against stride 20 → `3.4`. Would
-  abort.
+This entry read "still latent" from M2 through M4 and it was never latent. It is
+worth a paragraph because the mistake was not in the analysis — the arithmetic
+above was right the whole time — but in the word.
 
-  It compiles (`rViewportConfiguration::DemonstrateViewport`, called from
-  `gMenus.cpp:805` and `:857`) and it is **reachable in the shipped build right
-  now**, through the viewport-configuration screen in the settings menu. It does
-  not depend on any keycode work: menu navigation switches on raw `SDLK_UP` /
-  `SDLK_DOWN` / `SDLK_LEFT` / `SDLK_RIGHT` (`uMenu.cpp:419-448`), which the
-  `KEYBOARD`-line remapping in `config/default.cfg` does not touch. This is a
-  pre-existing hazard, not one a later task introduces.
+What the M2 note actually said was "reachable in the shipped build right now …
+It was left unfixed only because nothing in M2 opens that screen, so a fix could
+not be verified by the browser harness." That is a statement about the *test
+coverage*, not about the *defect*. Each subsequent milestone read the heading,
+saw "latent", and moved on. Filing it under a heading that contradicted its own
+body is what made it survivable for three milestones after the one that found it.
 
-  It was left unfixed only because nothing in M2 opens that screen, so a fix
-  could not be verified by the browser harness. Whoever next touches the
-  settings menus should fix it (a `RenderEnd(true)` before the `glColor3f`) and
-  verify it by actually opening the screen.
+Measured on 2026-08-31 against `8fc86835`: from a boot with a persisted
+`user.cfg` the route is **main menu → Down → "Player Setup" → Enter → Down ×4**,
+and the fourth Down aborts the tab ~10 ms after the keydown, with
+`Assertion failed: numVertices must be an integer.` thrown from
+`_emscripten_glEnd`. `uMenu::OnEnter` calls `RenderBackground()` on the
+**selected** item only, and `DemonstrateViewport` is called from
+`ArmageTron_viewport_menuitem::RenderBackground` (`gMenus.cpp`), so *highlighting*
+the item is the whole trigger — no Enter, no Left/Right. Menu navigation reads
+raw `SDLK_UP`/`SDLK_DOWN`/`SDLK_LEFT`/`SDLK_RIGHT` (`uMenu.cpp:419-448`), which
+`config/default.cfg`'s `KEYBOARD` remapping does not touch, so no keycode work
+was ever a precondition either.
+
+Two rules out of it:
+
+1. **"Latent" means an open batch cannot reach the site, or the code is not in
+   the build.** It does *not* mean "our harness does not currently drive it".
+   If the only reason a site is unfixed is that nothing tests it, it is live and
+   unverified, and those are different words.
+2. **Write the reachability claim as a route, not as an adjective.** "Player
+   Setup → Down ×4" is checkable in ninety seconds by anyone; "reachable through
+   the settings menu" sat unchecked for three milestones.
 
 ### Compiled out of this build entirely — NOT latent
 
@@ -1002,7 +1030,8 @@ each omission produced a wrong entry in this list.
 
 **1. Grep for the raw forms too.** `glColor*`/`glTexCoord*`/`glVertex*` are
 frequently called **raw**, not through `glRenderer::Color`/`TexCoord` —
-`gCycle.cpp:4621`, `gWinZone.cpp:474`, `rViewport.cpp:246` and both cycle-wall
+`gCycle.cpp:4621`, `gWinZone.cpp:474`,
+`rViewportConfiguration::DemonstrateViewport` and both cycle-wall
 renderers all bypass the renderer. A sweep that greps only for `Color(` and
 `TexCoord(` misses most of the codebase, and for the same reason a fix inside
 `glRenderer::Color()` would not catch them.
@@ -1026,19 +1055,29 @@ python3 web/tools/sweep-immediate-mode.py src
 
 **Every line it currently prints is accounted for below, and that is what makes
 running it useful: a hit that is not in this table is new.** As of this commit
-it prints 19. Match them on the file and function, not on the line number,
-which is the `Begin*()` and moves whenever anything above it does.
+it prints **18** — it printed 19 until M5 task 1. Match them on the file and
+function, not on the line number, which is the `Begin*()` and moves whenever
+anything above it does.
 
 | hit | why it is not a new bug |
 |---|---|
 | `eDebugLine.cpp:101`, `eDisplay.cpp:586` | compiled out of this build entirely — see above |
 | `rGLRender.cpp:163`–`:207` | the `Begin*()` wrapper definitions themselves. There is no block for them to close |
 | `rRender.cpp:67` | dead `rRenderer::Line`; see the leak list above |
-| `rViewport.cpp:240` | the one still-latent site; see above |
 | `gCycle.cpp:4468` | **fixed.** The repeated colours are behind an `AA_PYRAMID_COLOR` macro that the regex does not match, so it still counts 3 colours against 6 vertices. A block this script calls ragged can be one a human already made uniform |
 | `gHud.cpp:100`, `gWall.cpp:172` | blocks that sit inside `/* */` comments, which the line-comment filter does not catch |
 | `gWall.cpp:203` | `gWallRim_helper`, the known leaker; see the leak list above |
 | `gWall.cpp:1152`, `:1173`, `:1269` | the cycle-wall renderers, whose colour/vertex counts span two functions so the per-region count is meaningless. `:1173` is `RenderNormal`, the second known leaker |
+
+**Why the count went 19 → 18 and not 19 → 19-with-one-reclassified.** The script
+prints a region only if it is ragged *or* textually unclosed (see the `if flag ==
+'uniform' and closed: continue` at the bottom of `sweep-immediate-mode.py`).
+`RenderEnd()` after the fourth `glVertex2f` makes the `DemonstrateViewport` block
+both closed and uniform — 4 vertices, 0 colours, 0 texcoords inside it — so it
+drops out of the output entirely rather than changing category. **A fix in this
+class removes a line; it does not turn one into `uniform`.** Expect the same
+shape from any future fix here, and treat a `uniform` line that is still printed
+as an unclosed block, not a clean one.
 
 **3. Check reachability in both dimensions before writing anything down** — the
 `#ifdef` test first, because it is one command and it eliminates whole files,
