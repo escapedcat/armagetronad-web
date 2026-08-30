@@ -100,16 +100,40 @@
 #     if( ret && act && act->GetTooltip() && x > 0 )
 #         act->GetTooltip()->Count(ePlayer);
 #
-# So a decrement means a key press reached keymap[] , resolved to
-# CYCLE_TURN_LEFT for player 1, and was taken by a live cycle. It is written
-# back to user.cfg by uActionTooltip::WriteVal, so it is readable from
-# JavaScript. That makes A3 a comparison of two integers rather than a
-# judgement about a picture -- and it fails, rather than degrading, if the
-# binding did not survive: with no bind on 1104 there is no activation, no
-# decrement, and the counter is still 2.
+# So a decrement means a key press reached keymap[], resolved to
+# CYCLE_TURN_LEFT for player 1, and was accepted and executed by the player's
+# CYCLE OBJECT. It is written back to user.cfg by uActionTooltip::WriteVal, so
+# it is readable from JavaScript. That makes A3 a comparison of two integers
+# rather than a judgement about a picture -- and it fails, rather than
+# degrading, if the binding did not survive: with no bind on the arrow's keysym
+# there is no activation, no decrement, and the counter is still 2.
 #
-# THE COUNTER IS ALSO WHAT MAKES A2's STRONGEST CHECK POSSIBLE. default.cfg is
-# where "0 2 1 1 1" comes from, and it is loaded only under st_FirstUse. So a
+# IT DOES NOT MEAN THE CYCLE WAS ALIVE, and an earlier version of this comment
+# said it did. gCycle::Act has no aliveness guard on its turn arms -- its only
+# Alive() reference is server-only and does not return, and the next statement
+# turns and returns true -- and gCycle::Kill opens with "keep this cycle alive"
+# and never clears ePlayerNetID::object, so a press landing after the player
+# died still counts. Three things ARE established, and together they are the
+# whole of the round trip A3 exists to test: the press resolved through keymap[]
+# to the right action for the right player; the CAMERA did not take it, because
+# eCamera::Act sends both turn actions to its trailing `else return false;`, so
+# DoActivate's `ret` can only have come from the object arm of ePlayer::Act; and
+# the player had a cycle object in a running round whose gCycle::Act cleared the
+# premature-input guard and called Turn(). A press during the countdown returns
+# false at that guard, so a mistimed run FAILS this rather than passing weakly.
+#
+# ZERO HAS A SECOND PRODUCER, and the route below stays away from it.
+# uActionTooltip::Disable zeroes the counter for every bound action at once,
+# with no activation involved, and it is called from s_InputConfigGeneric --
+# that is, on opening ANY input-configuration menu. Nothing here enters Player
+# Setup. A future edit that walked through the bindings screen would satisfy
+# these checks with no steering at all.
+#
+# THE COUNTER IS ALSO WHAT MAKES A2's STRONGEST CHECK POSSIBLE, and the LOAD
+# ORDER is what makes that airtight rather than merely persuasive.
+# st_LoadConfig loads var/user.cfg FIRST and only then reaches
+# `if (st_FirstUse) Load( config, "default.cfg" )`, so a boot that re-ran first
+# use would have default.cfg OVERWRITE the spent values it had just read. So a
 # boot that has spent the counter down to 0, reloaded, and SAVES 0 again from
 # its own memory has demonstrated that default.cfg was not re-read -- i.e.
 # that the first-use path was skipped -- from inside the running program,

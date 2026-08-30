@@ -28,7 +28,7 @@ in three parts:
 |---|---|---|
 | **A1** | the game comes back at the resolution the player picked | `canvas.width` / `canvas.height` — **outside the wasm** |
 | **A2** | the boot after the first one skips the first-use path | a file **boot 3 itself wrote**, from its own memory |
-| **A3** | the game still steers | the game's own `uActionTooltip` counters |
+| **A3** | the game still steers | the game's own `uActionTooltip` counters — which register the arrow reaching the cycle and turning it, *not* that the cycle was alive |
 
 ### A2 is not redundant with `m4-persist`, and this is the reason
 
@@ -116,15 +116,66 @@ if( ret && act && act->GetTooltip() && x > 0 )
 ```
 
 `uActionTooltip::WriteVal` writes it into `user.cfg`, so it is readable from
-JavaScript. A decrement therefore means a key press reached `keymap[1104]`,
-resolved to `CYCLE_TURN_LEFT` for player 1, **and was taken by a live cycle**.
-A3 becomes a comparison of two integers rather than a judgement about a
-picture — and it fails, rather than degrading, if the binding did not survive:
-with no bind on 1104 there is no activation, no decrement, and the counter is
-still 2. It also registers the turn **itself**, whether or not the cycle then
-dies, which is what the two rejected candidates could not do.
+JavaScript. A decrement therefore means a key press reached `keymap[]`, resolved
+to `CYCLE_TURN_LEFT` for player 1, **and was accepted and executed by the
+player's cycle object**. A3 becomes a comparison of two integers rather than a
+judgement about a picture — and it fails, rather than degrading, if the binding
+did not survive: with no bind on the arrow's keysym there is no activation, no
+decrement, and the counter is still 2. It also registers the turn **itself**,
+whether or not the cycle then dies, which is what the two rejected candidates
+could not do.
 
 `0 2 1 1 1` / `0 3 1 1 1` → **`0 0 1 1 1` / `0 0 1 1 1`** in both browsers.
+
+#### Stated precisely, because the obvious phrasing is wrong
+
+An earlier version of this README said a decrement proved *"a live cycle took
+it"*. **It does not prove the cycle was alive**, and the code is unambiguous:
+`gCycle::Act`'s only `Alive()` reference is
+`if (!Alive() && sn_GetNetState()==nSERVER) RequestSync(false);` — server-only,
+and it does not return. The next statement turns and returns `true`. The object
+outlives the death too: `gCycle::Kill` opens with the comment *"keep this cycle
+alive"* and never clears `ePlayerNetID::object`. So a press landing after the
+player died still counts.
+
+What a decrement **does** establish is the whole of the round trip A3 exists to
+test:
+
+* the press was delivered and resolved through `keymap[]` to the right action
+  for the right player;
+* **the camera did not take it** — `eCamera::Act` sends both turn actions to its
+  trailing `else return false;`, so the `ret` that `DoActivate` tests can only
+  have come from the object arm of `ePlayer::Act`;
+* the player **had a cycle object**, a round was running (`se_GameTime() >= 0`),
+  and `gCycle::Act` cleared its premature-input guard and called `Turn()`.
+
+A press during the countdown returns `false` at that guard, so a mistimed run
+**fails** M12 rather than passing it weakly. The timing is not deterministic;
+the verdict is.
+
+**In these particular runs the cycle *was* alive, and the transcripts happen to
+show it** — as corroboration, not as a check. `DEATH_SUICIDE` was rejected as a
+*witness* above because it is not a signature of turning; it is still
+informative as an *outcome*. In round 1 of all three committed runs — Chrome,
+Firefox and the negative control, whose boot 2 is identical — the human dies
+`DEATH_SUICIDE` a few seconds after the steering keys run (Chrome: steering at
+63.1 s, `[L] DEATH_SUICIDE web_user` at 67.9 s). Across the five reconnaissance
+rounds in which no key landed while the cycle was alive, the human was fragged
+**5 out of 5** and never suicided. Nothing asserts this and nothing should — a
+rim collision would log the same event — but a player who turns five times into
+a small box and then dies with no enemy having influenced them is the expected
+shape, and it is not the shape the no-key rounds have.
+
+#### Zero has a second producer, and the route stays away from it
+
+`uActionTooltip::Disable` zeroes the counter for **every bound action at once**,
+with no activation involved, and it is called from `s_InputConfigGeneric` — that
+is, on opening *any* input-configuration menu. Nothing on this gate's route
+enters Player Setup, so it cannot fire here. But the forward direction ("spent
+means turns happened") is not exhaustive: a future edit that walked the script
+through the bindings screen would satisfy M12 and M16 with **no steering at
+all**. That route must stay off the script. The inverse direction — no bind, no
+decrement — is unaffected.
 
 **The game corroborates this on screen, in its own words.** The tooltip
 mechanism exists to *show* the player which key does what, and it names the key
@@ -138,12 +189,26 @@ depends on it. It is a second pair of eyes on the same fact.
 
 ### The counters are also what makes A2's strongest check possible
 
-`config/default.cfg` is the only source of the unspent `0 2 1 1 1`, and
-`st_LoadConfig` loads it **only** under `st_FirstUse`. So a boot that has spent
-the counters to 0, reloaded, and then **saved 0 again from its own memory** has
-demonstrated that `default.cfg` was not re-read — i.e. that the first-use path
-was skipped — from inside the running program, rather than by reading
-`FIRST_USE` out of a file the game might have ignored. That is **M16**.
+`config/default.cfg` carries the unspent `0 2 1 1 1`, and `st_LoadConfig` loads
+it **only** under `st_FirstUse`. So a boot that has spent the counters to 0,
+reloaded, and then **saved 0 again from its own memory** has demonstrated that
+`default.cfg` was not re-read — i.e. that the first-use path was skipped — from
+inside the running program, rather than by reading `FIRST_USE` out of a file the
+game might have ignored. That is **M16**.
+
+**What makes it airtight is the load order**, not merely which file carries the
+value. `st_LoadConfig` (`src/tools/tConfiguration.cpp`) loads `var/user.cfg`
+**first** and only then reaches `if (st_FirstUse) Load( config, "default.cfg" )`.
+So a boot that had re-run first use would have `default.cfg` *overwrite* the
+spent values it had just read — 2 in memory, and 2 in the file its own save then
+wrote. M16 cannot be satisfied by a first-use boot that happened to leave the
+bytes alone.
+
+(`default.cfg` is not the *only* possible source of a `2`: `uActionTooltip`'s
+constructor takes a `numHelp` argument. It is inert as the code stands — the
+body assigns `0` to every slot with `numHelp` commented out beside it — but
+"the only source" is the shape of sentence this milestone keeps having to
+correct, so it is not made.)
 
 ---
 
@@ -167,7 +232,7 @@ made of key presses. Firefox ran headless. ~113 s per browser.
 | boot | what happens | what it establishes |
 |---|---|---|
 | **1** | fresh profile, Play, language menu, Escape out of First Setup | the baseline: no `user.cfg` at all beforehand; afterwards `FIRST_USE 1`, 59 `KEYBOARD` lines, **no turn key bound yet**, counters unspent |
-| **2** | main menu → System Setup → Display Settings → Screen Mode → pick 320×200 → Escape ×3 → Play Game → Start New Game → three rounds, steering with the arrow keys → in-game menu in and out | `FIRST_USE 0` read back; the arrow binds are there in the SDL-2 encoding; the choice is written by the menu exit; the counters are spent by live turns; **the canvas never changes** |
+| **2** | main menu → System Setup → Display Settings → Screen Mode → pick 320×200 → Escape ×3 → Play Game → Start New Game → three rounds, steering with the arrow keys → in-game menu in and out | `FIRST_USE 0` read back; the arrow binds are there in the SDL-2 encoding; the choice is written by the menu exit; the counters are spent by turns the cycle executed; **the canvas never changes** |
 | **3** | Play, then Enter/Escape through the Play Game submenu to force a save | the canvas is **320×200**; the counters are still spent in a file boot 3 wrote |
 
 ### The choice is made by clamping, not by counting
@@ -353,11 +418,21 @@ unguarded change linked to exactly that size with a different md5.
 * **Nothing about IndexedDB quota.** `/persist` also collects
   `var/ladderlog.txt` and `var/scorelog.txt`, which grow without bound;
   `web/shell.html` records that as known and unsolved.
-* **A3 proves the arrow keys steer, not that every bound action works.** The
-  two keys pressed in game are the arrows and Escape. Escape reaching the
-  in-game menu (`chrome-18-boot2-ingame-menu.png`) is a second bind surviving
-  the round trip — `default.cfg` binds keysym 27 to `INGAME_MENU` and
-  `default.cfg` is not loaded on boot 2 — but no check asserts it.
+* **A3 proves the arrow keys reach the cycle, not that every bound action
+  works.** The two keys pressed in game are the arrows and Escape. Escape
+  reaching the in-game menu (`chrome-18-boot2-ingame-menu.png`) is a second bind
+  surviving the round trip — `default.cfg` binds keysym 27 to `INGAME_MENU` and
+  `default.cfg` is not loaded on boot 2 — but no check asserts it. And it does
+  **not** prove the cycle was alive when the press landed; see "Stated
+  precisely" above for what it does prove.
+* **Nothing about `sr_ReinitDisplay`, and M14 must not be cited for it.** This
+  gate never presses **"Apply Changes"**. The resolution it verifies is applied
+  by boot 3's *startup* `SDL_SetVideoMode`, which is a fresh context on a fresh
+  page. Tearing down a **live** WebGL context mid-run and rebuilding it —
+  `sr_ExitDisplay` followed by a second `SDL_SetVideoMode`, which is what "Apply
+  Changes" does — is completely untested in this port. That is the half of
+  PLAN.md's "hide/fix resolution menu if `SDL_SetVideoMode` resize misbehaves"
+  that is still open.
 
 ### One idea that looked good and is not here
 
@@ -371,6 +446,40 @@ It does not work, and the reason is worth recording so it is not re-attempted:
 `tConfItem<rSysDep::rSwapMode> swapModeCI("SWAP_MODE", ...)`). Boot 1 saves
 `glFinish` and boot 2 restores it, so the two boots are indistinguishable on
 that measure — for the same reason the milestone works at all.
+
+---
+
+## What review changed
+
+Review found the gate, the control, the prover and every re-derivable number
+sound, and one piece of **reasoning** wrong. It is recorded here because the
+corrected claim is narrower than the one this directory originally made.
+
+**A3's witness does not require a *live* cycle.** The first version of these
+files said a tooltip decrement proved "a live cycle took it". It does not:
+`gCycle::Act` has no aliveness guard on its turn arms, and `gCycle::Kill` keeps
+the object. What the decrement proves is the keycode round trip end to end —
+delivery, `keymap[]` resolution to the right action for the right player, the
+camera declining it, and the player's cycle object executing `Turn()` in a
+running round. That is what A3 was commissioned for; it is just not the
+sentence "the game steered". Narrowed in the checker, the steps file and this
+README; **no re-run was needed**, because the transcripts are unchanged and only
+prose and one check *message* moved. All four artefacts re-verify green.
+
+Review also closed two of the concerns this directory had left open, from the
+code rather than by agreement: `uActionTooltip::Count` clamps at zero, so
+over-pressing cannot overshoot; and a press during the countdown returns `false`
+at `gCycle::Act`'s premature-input guard, so a mistimed run **fails** M12 rather
+than passing it weakly. And it pointed out that M16's argument is stronger than
+was claimed — the `user.cfg`-before-`default.cfg` load order makes it airtight,
+not merely persuasive. Three smaller over-claims (`keymap[1104]` for
+`keymap[]`, "the only source" of the unspent counter, and the missing
+`sr_ReinitDisplay` bullet) were corrected in place.
+
+One provenance note, so the history is navigable: these corrections landed in
+commit `535162f7`, whose message describes unrelated `gArmagetron.cpp` and
+`web/README.md` work — a concurrent commit swept the then-uncommitted files in.
+The content is intact and verified; only the commit message is silent about it.
 
 ---
 

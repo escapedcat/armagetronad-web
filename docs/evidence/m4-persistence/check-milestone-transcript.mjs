@@ -19,7 +19,7 @@
 //
 //   A1  M9 M10 M11 M13 M14   the resolution round trip, measured on the CANVAS
 //   A2  M6 M8 M15 M16        the first-use path is skipped on later boots
-//   A3  M4 M5 M7 M12 M17     the keycode round trip and live steering
+//   A3  M4 M5 M7 M12 M17     the keycode round trip, and the cycle turning on it
 //
 // The remaining checks are structure (M1 M2 M3) and run hygiene
 // (M18 M19 M20 M21), plus MZ, which is a guard on this file rather than on the
@@ -37,20 +37,50 @@
 //   M12 is A3, and it is an integer comparison rather than a judgement about a
 //   screenshot. uActionTooltip (src/ui/uInput.h) is a tConfItemBase holding an
 //   activations-left count per player; uBindPlayer::DoActivate decrements it
-//   ONLY when uPlayerPrototype::Act accepted the action, i.e. when a live cycle
-//   took it; uActionTooltip::WriteVal writes it into user.cfg. So a counter
-//   that has gone from config/default.cfg's shipped 2 down to 0 says a real
-//   key press reached keymap[1104], resolved to CYCLE_TURN_LEFT for player 1,
-//   and was executed. With no bind on 1104 there is no activation, no
-//   decrement, and the counter is still 2.
+//   only when ePlayer::Act returned true; uActionTooltip::WriteVal writes it
+//   into user.cfg. So a counter that has gone from the shipped 2 down to 0 says
+//   a real key press reached keymap[], resolved to CYCLE_TURN_LEFT for player 1,
+//   and was accepted and executed by the player's cycle object. With no bind on
+//   the arrow's keysym there is no activation, no decrement, and the counter is
+//   still 2. THAT is the keycode round trip, end to end.
+//
+//   STATED PRECISELY, BECAUSE THE OBVIOUS PHRASING IS WRONG. A decrement does
+//   NOT prove the cycle was ALIVE, and this file used to say it did. gCycle::Act
+//   has no aliveness guard on its turn arms: its only Alive() reference is
+//   `if (!Alive() && sn_GetNetState()==nSERVER) RequestSync(false);`, which is
+//   server-only and does not return, and the very next statement turns and
+//   returns true. The cycle object also outlives the death -- gCycle::Kill opens
+//   with "keep this cycle alive" and never clears ePlayerNetID::object -- so a
+//   press landing after the player died still counts. What IS established, and
+//   it is what A3 was commissioned for:
+//     * the press was delivered and resolved through keymap[] to the right
+//       action for the right player;
+//     * it was not the camera that took it -- eCamera::Act sends the two turn
+//       actions to its trailing `else return false;`, so the `ret` that
+//       DoActivate tests can only have come from the object arm of ePlayer::Act;
+//     * the player HAD a cycle object, a round was running (se_GameTime()>=0),
+//       and gCycle::Act cleared its premature-input guard and called Turn().
+//   A press during the countdown returns false at that guard, so a mistimed run
+//   FAILS M12 rather than passing it weakly.
 //
 //   M16 is A2 in its strongest form. Everything else about "first use was
 //   skipped" is read out of a file, and a file can say FIRST_USE 0 to a program
 //   that ignored it. M16 reads a file that BOOT 3 ITSELF WROTE, from boot 3's
-//   own memory, and finds the tooltip counters still spent. config/default.cfg
-//   is where the unspent "0 2 1 1 1" comes from and st_LoadConfig loads it only
-//   under st_FirstUse -- so if boot 3 had re-run first use, the counters would
-//   have been refilled and its own save would have written them back.
+//   own memory, and finds the tooltip counters still spent.
+//
+//   WHAT MAKES IT AIRTIGHT IS THE LOAD ORDER, not merely the fact that
+//   config/default.cfg carries the unspent "0 2 1 1 1". st_LoadConfig
+//   (src/tools/tConfiguration.cpp) loads var/user.cfg FIRST and only then
+//   reaches `if (st_FirstUse) Load( config, "default.cfg" )`. So a boot that had
+//   re-run first use would have default.cfg OVERWRITE the spent values it had
+//   just read -- 2 in memory, and 2 in the file its own save then wrote. The
+//   check cannot be satisfied by a first-use boot that happened to leave the
+//   bytes alone.
+//
+//   (default.cfg is not the ONLY source of a "2": uActionTooltip's constructor
+//   takes a numHelp argument. It is inert here -- the body assigns 0 to every
+//   slot, with `numHelp` commented out beside it -- but "the only source" is the
+//   kind of sentence this milestone keeps having to correct, so it is not made.)
 //
 // WHAT IS NOT CLAIMED, AND IT MATTERS
 // ---------------------------------------------------------------------------
@@ -350,13 +380,24 @@ check(b2wrong.length === 0, 'M11',
 
 // -------------------------------------------------------------- boot 2: A3
 // THE STRONGEST CHECK IN THIS FILE FOR A3. The counters are decremented by
-// uBindPlayer::DoActivate and only when a live cycle accepted the action, so
-// this is not "a key was pressed" -- it is "the game steered". The only keys
-// this script sends in game are the two arrows and Escape.
+// uBindPlayer::DoActivate, and only when the press was taken by the player's
+// CYCLE OBJECT in a running round -- see the precise statement in the header,
+// including what this does NOT establish (that the cycle was alive). So it is
+// not "a key was pressed": it is "the bind resolved and the cycle turned".
+//
+// TWO THINGS KEEP THE FORWARD DIRECTION HONEST, and only the first is in the
+// transcript. (1) The only keys this script sends in game are the two arrows
+// and Escape, and neither arrow is bound to anything else in this
+// configuration. (2) uActionTooltip::Disable ALSO zeroes these counters, for
+// every bound action at once and with no activation involved, and it is called
+// from s_InputConfigGeneric -- i.e. on opening any input-configuration menu.
+// Nothing on this gate's route goes near one. A future edit that walked through
+// Player Setup's bindings screen would satisfy M12 and M16 with no steering at
+// all, so that route must stay off the script.
 const steered = P['boot2-after-steering'];
 check(!!steered && steered.o.tip_left === TIP_SPENT && steered.o.tip_right === TIP_SPENT
       && !!b1 && b1.o.tip_left === TIP_LEFT_FRESH && b1.o.tip_right === TIP_RIGHT_FRESH, 'M12',
-  'the arrow keys STEERED: both CYCLE_TURN tooltip counters were spent down to zero by live turns'
+  'the arrow keys reached the cycle and turned it: both CYCLE_TURN tooltip counters spent to zero'
   + (steered ? ` (left ${JSON.stringify(b1 ? b1.o.tip_left : '?')} -> ${JSON.stringify(steered.o.tip_left)},`
              + ` right ${JSON.stringify(b1 ? b1.o.tip_right : '?')} -> ${JSON.stringify(steered.o.tip_right)})` : ' (payload missing)'));
 
