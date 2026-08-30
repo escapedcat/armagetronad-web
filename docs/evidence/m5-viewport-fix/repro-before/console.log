@@ -1,0 +1,207 @@
+[   1327ms] [harness] chrome: Chrome/152.0.7977.65
+[   1327ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[      6ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     29ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     30ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     39ms] [page] load event fired
+[     45ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    125ms] [console.log] [PERSIST] populate ok in 55ms
+[    208ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    366ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1340ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1341ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1341ms] [console.error] 
+[   1342ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1342ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1342ms] [console.log] 
+[   1515ms] [console.log] [L] ENCODING latin1
+[   1582ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1584ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1614ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1617ms] [console.error] TODO: glShadeModel
+[   1621ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1760ms] [harness] click #start: clicked
+[   1763ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1763ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1763ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1764ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1764ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10825ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/01-boot1-language-menu.png
+[  10858ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10879ms] [harness] key Enter (1/1)
+[  14432ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/02-boot1-first-setup.png
+[  14455ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  14465ms] [harness] key Escape (1/1)
+[  14766ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14766ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17799ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/03-boot1-after-first-setup.png
+[  17799ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17804ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17804ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17804ms] [harness] eval location.reload() => undefined
+[  17805ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17821ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17821ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17824ms] [page] load event fired
+[  17837ms] [console.log] [PERSIST] populate ok in 5ms
+[  17864ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17905ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19914ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19914ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19915ms] [console.error] 
+[  19915ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19915ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19916ms] [console.log] 
+[  20080ms] [console.log] [L] ENCODING latin1
+[  20083ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  20099ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  20102ms] [console.error] TODO: glShadeModel
+[  20105ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  20111ms] [harness] click #start: clicked
+[  32160ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/04-boot2-main-menu.png
+[  32160ms] [harness] === DOWN-1-SHOULD-HIGHLIGHT-PLAYER-SETUP ===
+[  32194ms] [harness] key Down (1/1)
+[  34046ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/05-cursor-on-player-setup.png
+[  34079ms] [harness] key Enter (1/1)
+[  37439ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/06-player-menu-top-item.png
+[  37439ms] [harness] === NOW-FOUR-DOWNS-THE-FOURTH-HIGHLIGHTS-VIEWPORTS ===
+[  37472ms] [harness] key Down (1/1)
+[  39013ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/07-down-1.png
+[  39046ms] [harness] key Down (1/1)
+[  40609ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/08-down-2.png
+[  40642ms] [harness] key Down (1/1)
+[  42214ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/09-down-3.png
+[  42214ms] [harness] === THIS-DOWN-IS-THE-ONE ===
+[  42226ms] [console.error] Assertion failed: `numVertices` must be an integer.
+[  42226ms] [console.error] Aborted(Assertion failed: `numVertices` must be an integer.)
+[  42226ms] [console.error] RuntimeError: Aborted(Assertion failed: `numVertices` must be an integer.)
+[  42227ms] [EXCEPTION] RuntimeError: Aborted(Assertion failed: `numVertices` must be an integer.)
+    at abort (http://localhost:8000/armagetronad.js:775:11)
+    at assert (http://localhost:8000/armagetronad.js:444:5)
+    at Object.flush (http://localhost:8000/armagetronad.js:12718:9)
+    at _emscripten_glEnd (http://localhost:8000/armagetronad.js:14830:19)
+    at imports.<computed> (http://localhost:8000/armagetronad.js:15237:24)
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3114]:0x388f78
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3096]:0x38799c
+    at http://localhost:8000/armagetronad.wasm:wasm-function[7430]:0x81d442
+    at __asyncify_wrapper_7430 (http://localhost:8000/armagetronad.js:15266:20)
+    at http://localhost:8000/armagetronad.js:789:12
+    at invoke_iiii (http://localhost:8000/armagetronad.js:16851:12)
+    at imports.<computed> (http://localhost:8000/armagetronad.js:15237:24)
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3097]:0x38801c
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3297]:0x3b559b
+    at http://localhost:8000/armagetronad.wasm:wasm-function[7426]:0x81d072
+    at __asyncify_wrapper_7426 (http://localhost:8000/armagetronad.js:15266:20)
+    at http://localhost:8000/armagetronad.js:789:12
+    at invoke_vi (http://localhost:8000/armagetronad.js:16884:5)
+    at imports.<computed> (http://localhost:8000/armagetronad.js:15237:24)
+    at http://localhost:8000/armagetronad.wasm:wasm-function[4484]:0x576454
+    at http://localhost:8000/armagetronad.wasm:wasm-function[2454]:0x2ec7cf
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3390]:0x3cf474
+    at http://localhost:8000/armagetronad.wasm:wasm-function[7426]:0x81d072
+    at __asyncify_wrapper_7426 (http://localhost:8000/armagetronad.js:15266:20)
+    at http://localhost:8000/armagetronad.js:789:12
+    at invoke_vi (http://localhost:8000/armagetronad.js:16884:5)
+    at imports.<computed> (http://localhost:8000/armagetronad.js:15237:24)
+    at http://localhost:8000/armagetronad.wasm:wasm-function[4441]:0x56cb0c
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3432]:0x3e02d5
+    at http://localhost:8000/armagetronad.wasm:wasm-function[7426]:0x81d072
+    at __asyncify_wrapper_7426 (http://localhost:8000/armagetronad.js:15266:20)
+    at http://localhost:8000/armagetronad.js:789:12
+    at invoke_vi (http://localhost:8000/armagetronad.js:16884:5)
+    at imports.<computed> (http://localhost:8000/armagetronad.js:15237:24)
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3391]:0x3d2ea8
+    at http://localhost:8000/armagetronad.wasm:wasm-function[7425]:0x81cfab
+    at __asyncify_wrapper_7425 (http://localhost:8000/armagetronad.js:15266:20)
+    at http://localhost:8000/armagetronad.js:789:12
+    at invoke_vii (http://localhost:8000/armagetronad.js:16873:5)
+    at imports.<computed> (http://localhost:8000/armagetronad.js:15237:24)
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3390]:0x3ce50e
+    at http://localhost:8000/armagetronad.wasm:wasm-function[7426]:0x81d072
+    at __asyncify_wrapper_7426 (http://localhost:8000/armagetronad.js:15266:20)
+    at http://localhost:8000/armagetronad.js:789:12
+    at invoke_vi (http://localhost:8000/armagetronad.js:16884:5)
+    at imports.<computed> (http://localhost:8000/armagetronad.js:15237:24)
+    at http://localhost:8000/armagetronad.wasm:wasm-function[4102]:0x4edcac
+    at http://localhost:8000/armagetronad.wasm:wasm-function[7426]:0x81d072
+    at __asyncify_wrapper_7426 (http://localhost:8000/armagetronad.js:15266:20)
+    at http://localhost:8000/armagetronad.js:789:12
+    at invoke_vi (http://localhost:8000/armagetronad.js:16884:5)
+    at imports.<computed> (http://localhost:8000/armagetronad.js:15237:24)
+    at http://localhost:8000/armagetronad.wasm:wasm-function[3556]:0x42baf3
+    at __asyncify_wrapper_3556 (http://localhost:8000/armagetronad.js:15266:20)
+    at callUserCallback (http://localhost:8000/armagetronad.js:1011:16)
+    at Object.doRewind (http://localhost:8000/armagetronad.js:15380:16)
+    at http://localhost:8000/armagetronad.js:15415:47
+    at http://localhost:8000/armagetronad.js:15475:9
+[  42227ms] [EXCEPTION] structured stack, 58 frames:
+[  42227ms]     abort @ http://localhost:8000/armagetronad.js:774:10
+[  42227ms]     assert @ http://localhost:8000/armagetronad.js:443:4
+[  42227ms]     flush @ http://localhost:8000/armagetronad.js:12717:8
+[  42227ms]     _emscripten_glEnd @ http://localhost:8000/armagetronad.js:14829:18
+[  42227ms]     imports.<computed> @ http://localhost:8000/armagetronad.js:15236:23
+[  42227ms]     $func3114 @ http://localhost:8000/armagetronad.wasm:0:3706744
+[  42227ms]     $func3096 @ http://localhost:8000/armagetronad.wasm:0:3701148
+[  42228ms]     $dynCall_iiii @ http://localhost:8000/armagetronad.wasm:0:8508482
+[  42228ms]     __asyncify_wrapper_7430 @ http://localhost:8000/armagetronad.js:15265:19
+[  42228ms]     <anonymous> @ http://localhost:8000/armagetronad.js:788:11
+[  42228ms]     invoke_iiii @ http://localhost:8000/armagetronad.js:16850:11
+[  42228ms]     imports.<computed> @ http://localhost:8000/armagetronad.js:15236:23
+[  42228ms]     $func3097 @ http://localhost:8000/armagetronad.wasm:0:3702812
+[  42228ms]     $func3297 @ http://localhost:8000/armagetronad.wasm:0:3888539
+[  42228ms]     $dynCall_vi @ http://localhost:8000/armagetronad.wasm:0:8507506
+[  42228ms]     __asyncify_wrapper_7426 @ http://localhost:8000/armagetronad.js:15265:19
+[  42228ms]     <anonymous> @ http://localhost:8000/armagetronad.js:788:11
+[  42228ms]     invoke_vi @ http://localhost:8000/armagetronad.js:16883:4
+[  42228ms]     imports.<computed> @ http://localhost:8000/armagetronad.js:15236:23
+[  42228ms]     $func4484 @ http://localhost:8000/armagetronad.wasm:0:5727316
+[  42228ms]     $func2454 @ http://localhost:8000/armagetronad.wasm:0:3065807
+[  42228ms]     $func3390 @ http://localhost:8000/armagetronad.wasm:0:3994740
+[  42228ms]     $dynCall_vi @ http://localhost:8000/armagetronad.wasm:0:8507506
+[  42228ms]     __asyncify_wrapper_7426 @ http://localhost:8000/armagetronad.js:15265:19
+[  42228ms]     <anonymous> @ http://localhost:8000/armagetronad.js:788:11
+[  42228ms]     invoke_vi @ http://localhost:8000/armagetronad.js:16883:4
+[  42228ms]     imports.<computed> @ http://localhost:8000/armagetronad.js:15236:23
+[  42229ms]     $func4441 @ http://localhost:8000/armagetronad.wasm:0:5688076
+[  42229ms]     $func3432 @ http://localhost:8000/armagetronad.wasm:0:4063957
+[  42229ms]     $dynCall_vi @ http://localhost:8000/armagetronad.wasm:0:8507506
+[  42229ms]     __asyncify_wrapper_7426 @ http://localhost:8000/armagetronad.js:15265:19
+[  42229ms]     <anonymous> @ http://localhost:8000/armagetronad.js:788:11
+[  42229ms]     invoke_vi @ http://localhost:8000/armagetronad.js:16883:4
+[  42229ms]     imports.<computed> @ http://localhost:8000/armagetronad.js:15236:23
+[  42229ms]     $func3391 @ http://localhost:8000/armagetronad.wasm:0:4009640
+[  42229ms]     $dynCall_vii @ http://localhost:8000/armagetronad.wasm:0:8507307
+[  42229ms]     __asyncify_wrapper_7425 @ http://localhost:8000/armagetronad.js:15265:19
+[  42229ms]     <anonymous> @ http://localhost:8000/armagetronad.js:788:11
+[  42229ms]     invoke_vii @ http://localhost:8000/armagetronad.js:16872:4
+[  42229ms]     imports.<computed> @ http://localhost:8000/armagetronad.js:15236:23
+[  42229ms]     $func3390 @ http://localhost:8000/armagetronad.wasm:0:3990798
+[  42229ms]     $dynCall_vi @ http://localhost:8000/armagetronad.wasm:0:8507506
+[  42229ms]     __asyncify_wrapper_7426 @ http://localhost:8000/armagetronad.js:15265:19
+[  42229ms]     <anonymous> @ http://localhost:8000/armagetronad.js:788:11
+[  42229ms]     invoke_vi @ http://localhost:8000/armagetronad.js:16883:4
+[  42230ms]     imports.<computed> @ http://localhost:8000/armagetronad.js:15236:23
+[  42230ms]     $func4102 @ http://localhost:8000/armagetronad.wasm:0:5168300
+[  42230ms]     $dynCall_vi @ http://localhost:8000/armagetronad.wasm:0:8507506
+[  42230ms]     __asyncify_wrapper_7426 @ http://localhost:8000/armagetronad.js:15265:19
+[  42230ms]     <anonymous> @ http://localhost:8000/armagetronad.js:788:11
+[  42230ms]     invoke_vi @ http://localhost:8000/armagetronad.js:16883:4
+[  42230ms]     imports.<computed> @ http://localhost:8000/armagetronad.js:15236:23
+[  42230ms]     $__main_argc_argv @ http://localhost:8000/armagetronad.wasm:0:4373235
+[  42230ms]     __asyncify_wrapper_3556 @ http://localhost:8000/armagetronad.js:15265:19
+[  42230ms]     callUserCallback @ http://localhost:8000/armagetronad.js:1010:15
+[  42230ms]     doRewind @ http://localhost:8000/armagetronad.js:15379:15
+[  42230ms]     <anonymous> @ http://localhost:8000/armagetronad.js:15414:46
+[  42230ms]     <anonymous> @ http://localhost:8000/armagetronad.js:15474:8
+[  42248ms] [harness] key Down (1/1)
+[  42391ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  42438ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  42439ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  42439ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  42439ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  46664ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/10-down-4-viewports-highlighted.png
+[  46665ms] [harness] eval (()=>{try{return 'runtime alive? calledRun='+Module.calledRun+' ABORT='+(Module.ABORT===undefined?'undef':Module.ABORT)}catch(e){return 'probe threw: '+e}})() => "runtime alive? calledRun=undefined ABORT=undef"
+[  49712ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/11-five-seconds-later.png
+[  49712ms] [harness] === LEFT-RIGHT-ON-THE-VIEWPORT-ITEM ===
+[  49746ms] [harness] key Right (1/1)
+[  52074ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/repro-before/12-after-right.png
