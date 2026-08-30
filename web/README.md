@@ -521,9 +521,16 @@ defaults.
   during three real rounds: a per-whole-second median of 60 (Chrome) and 59
   (Firefox), a minimum of 53 and 56 — and a worst *single* frame of 43.8 ms and
   41.0 ms, which is below 30 fps instantaneous in both.
-- **The binding menu shows blank key names** for arrows, Escape, Enter, Tab and
+- ~~**The binding menu shows blank key names** for arrows, Escape, Enter, Tab and
   the F-keys. Emscripten's `SDL_GetKeyName` names only `a-z` and `0-9`
-  (`libsdl.js:1754-1764`). Rebinding works; it displays nothing. Deferred to M4.
+  (`libsdl.js:1754-1764`). Rebinding works; it displays nothing. Deferred to M4.~~
+  **This was never true.** `su_EmscriptenKeyName` in `uInput.cpp` supplies those
+  names and is wired into `keyname()` under the correct guard; it was committed
+  in M2 task 6 (`422dfb2b`, 19:46) and this line was written at 21:31 the same
+  day, in the commit that closed M2 — **1h45m after the fix landed in the same
+  tree.** Deleted as an item rather than fixed, because there was nothing to fix.
+  Struck through rather than removed: it seeded M4's plan and this recon's own
+  question list, so a reader who acted on it needs to find the retraction.
 - **`default.cfg`'s mouse-camera bindings are dead** (`LOOK_LEFT`, `LOOK_RIGHT`,
   `BANK_UP`, `BANK_DOWN`, `ZOOM_IN`, lines 31-35). Those keycodes, 324-336, are
   the program's own mouse pseudo-keys defined as `SDLK_LAST+1…+13`, and
