@@ -1,0 +1,19 @@
+url  = https://escapedcat.github.io/armagetronad-web
+dist = web/dist-m1
+date = 2026-08-31T11:17:55Z
+
+file                   identity       wire    ratio  content-type                           enc    matches local build
+index.html                 2353       1267    53.8%  text/html; charset=utf-8               gzip   yes
+armagetronad.html          3120       1507    48.3%  text/html; charset=utf-8               gzip   yes
+armagetronad.js          355549      87271    24.5%  application/javascript; charset=utf-8  gzip   yes
+armagetronad.wasm       4331548    1274294    29.4%  application/wasm                       gzip   yes
+armagetronad.data        687094     384664    56.0%  application/octet-stream               gzip   yes
+
+game set (4 files, no index.html): identity 5377311  wire 1747736  (1.667 MiB)
+all five, i.e. arriving via the bare Pages URL: identity 5379664  wire 1749003  (1.668 MiB)
+
+--- controls ---
+brotli only:            no content-encoding (identity)
+what a browser sends:   content-encoding: gzip
+site root:              HTTP/2 200  content-type: text/html; charset=utf-8 
+missing file (control):  HTTP/2 404  content-type: text/html; charset=utf-8 

@@ -1,0 +1,40 @@
+repo=/Users/user/data/src/armagetronad-web/.worktrees/m5-launch
+work=/private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/ghp-asrun
+gh-pages version: 6.3.0
+
+=== A: -f --nojekyll (branch absent) ===============================
+Published
+.clang-format
+.gitignore
+.nojekyll
+armagetronad.data
+armagetronad.js
+armagetronad.wasm
+conan/.gitignore
+language/.gitignore
+src/.clangd
+html files published: 0   <-- expect 0, the defect
+
+=== B1: -v "{**/*,**/.*}" (branch present, holding A's litter) ========
+Published
+.nojekyll
+armagetronad.data
+armagetronad.html
+armagetronad.js
+armagetronad.wasm
+index.html
+html files published: 2   <-- expect 2
+
+=== B2: -v "{**/*,**/.*}" (branch absent -- the orphan path) ==========
+Published
+.nojekyll
+armagetronad.data
+armagetronad.html
+armagetronad.js
+armagetronad.wasm
+index.html
+html files published: 2   <-- expect 2
+commit parents: []  <-- expect empty, -f is --no-history
+
+=== verdict ========================================================
+PASS: both fixed runs published exactly: .nojekyll armagetronad.data armagetronad.html armagetronad.js armagetronad.wasm index.html 

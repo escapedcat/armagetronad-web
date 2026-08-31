@@ -1,0 +1,37 @@
+# The first real deploy of this repository, captured before it was replaced.
+#
+# Command that produced it (web/package.json's deploy script as first written,
+# i.e. exactly the recipe M5's plan specifies):
+#   npx gh-pages@6 -d dist-m1 -f --nojekyll -m "Deploy 629f4c13"
+# It printed "Published" and exited 0.
+#
+# git ls-tree -r -l <that commit>  -- note: no armagetronad.html, no index.html.
+# Every stray path is dot-prefixed at some segment, which is the signature of
+# gh-pages' dot-blind remove step. See gh-pages-remove-pattern.sh.
+
+commit 5aeb97a10202a2a22e38abd7b6ee06927dab7d05
+author escapedcat <github@htmlcss.de>
+subject Deploy 629f4c13
+parents []
+
+100644 blob 9c38a5258d175bdc8276a73c05252003119f56ae    1283	.bzrignore
+100644 blob b2b839c7f646febfb7c947b064050e615ee43c7a    9138	.cdtproject
+100644 blob 5dd7678e1ea122e591a0dbe926486a51b51422f2    1573	.clang-format
+100644 blob 6801e045ae395fb85cec9e78b50b3dcd7a698813     177	.dockerignore
+100644 blob 985aafecc4fc4b40c0fcc2d7d05d702622819258     823	.editorconfig
+100644 blob 16eedc10bf1fbef736d632cf61cb938b370128a3    2819	.gitignore
+100644 blob 97180571dd7e751130fcfa826b881b8cf421bf28   16061	.gitlab-ci.yml
+100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391       0	.nojekyll
+100644 blob ddeebaaeb87e36c7e6cf490b3f9e8d32f9ccad50     508	.pre-commit-config.yaml
+100644 blob 4ca5a550ad4ac3723eccbd8ee36fdff340e064d5    3544	.project
+100644 blob 03681fb1f8d3b2eba5d9f6a3f1319471fa329efe  687094	armagetronad.data
+100644 blob 95915bf0e48377fd7ba3a4e946963cd026d74163  355549	armagetronad.js
+100644 blob 687a21b7d0e4b3d06910c233ad77125349c3e41b 4331548	armagetronad.wasm
+100644 blob 9d15b989f6b57ccfd0dd3608556d6fca8ca6331c      74	conan/.gitignore
+100644 blob 32253b0931e90f44d1ae81ada3d9c89054bc65a5      15	conan/prerequisites/sdl/.gitignore
+100644 blob 47a38a93f2dbdd6d944f9dddc3465e3fb65aec29      40	docker/.clang-format
+100644 blob 905cd147e7af57f519b39f148051e13030357cb6      10	language/.gitignore
+100644 blob 9035372ba4bbb2ab72fd346f985199a21199a1bb     375	src/.clangd
+
+entries: 18
+html files: 0
