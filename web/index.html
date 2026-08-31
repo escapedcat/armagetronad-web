@@ -1,0 +1,49 @@
+<!doctype html>
+<!--
+  Site-root redirect for the GitHub Pages deploy. NOT part of the wasm build.
+
+  WHY THIS FILE EXISTS. emcc names its page after the link target, so the
+  client is armagetronad.html (web/Makefile's `-o web/dist-m1/armagetronad.html`
+  rule) and there is no index.html in the build output at all. GitHub Pages
+  serves a directory URL from index.html and nothing else, so without this file
+  https://escapedcat.github.io/armagetronad-web/ answers with GitHub's own 404
+  page -- and that bare URL is the one a visitor gets handed, because it is the
+  repository's Pages root. The deep link works either way; this is about the
+  URL people actually paste.
+
+  WHY A REDIRECT RATHER THAN RENAMING THE BUILD OUTPUT. Renaming emcc's page to
+  index.html at deploy time would make the deployed entry point differ from the
+  artefact the Makefile produces and every gate, README and evidence transcript
+  names. The wasm client is 5,377,311 bytes of generated output across four
+  files; this page is a handful of hand-written lines. Keep the generated set
+  byte-identical to what `make -f web/Makefile client` emits, and add a file
+  beside it rather than renaming one of them.
+
+  The redirect is a <meta refresh> and not JavaScript so it works with scripting
+  disabled, and the anchor below is a fallback for the case where a browser or
+  an extension suppresses the refresh -- a 0-second meta refresh is honoured by
+  every current browser, but a visible link costs one line and never fails.
+
+  Copied into the publish directory by web/package.json's `deploy` script; it is
+  not produced by the Makefile, so `make -f web/Makefile clean` does not remove
+  it and a fresh dist-m1 does not contain it until the deploy runs.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="0; url=armagetronad.html">
+<title>Armagetron Advanced</title>
+<link rel="canonical" href="armagetronad.html">
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-content: center;
+         gap: 1rem; text-align: center; background: #111; color: #eee;
+         font: 16px/1.5 system-ui, sans-serif; }
+  a { color: #7cf; }
+</style>
+</head>
+<body>
+<h1>Armagetron Advanced</h1>
+<p><a href="armagetronad.html">Play &rarr;</a></p>
+</body>
+</html>
