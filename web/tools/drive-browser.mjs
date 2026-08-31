@@ -144,6 +144,15 @@ const KEYS = {
   Space:  { keyCode: 32, code: 'Space',      key: ' ',      text: ' ' },
   Tab:    { keyCode:  9, code: 'Tab',        key: 'Tab' },
 };
+// The plain letters, so a step can press a letter-bound action. drive-firefox
+// has had these since M3 (its own KEYS table loops over the alphabet); Chrome
+// needed the three DOM fields spelled out. `text` is what makes it a character
+// keypress rather than a bare rawKeyDown -- without it Emscripten's SDL shim
+// gets a keydown with no character and the game sees nothing.
+for (const c of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+  KEYS[c] = { keyCode: c.charCodeAt(0), code: `Key${c}`,
+              key: c.toLowerCase(), text: c.toLowerCase() };
+}
 for (const c of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
   KEYS[c] = { keyCode: c.charCodeAt(0), code: `Key${c}`, key: c.toLowerCase(), text: c.toLowerCase() };
 }

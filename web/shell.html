@@ -30,49 +30,74 @@
   <title>Armagetron Advanced</title>
   <style>
     html, body { height:100%; }
-    /* Centred with flexbox, and the page never scrolls: the canvas is sized
-       from the display now (see the sizing block in the script below), so on a
-       screen taller or wider than the browser window the default static layout
-       would put the play area half off-screen behind a scrollbar. */
+    /* Centred with flexbox, and the page never scrolls. The canvas is sized to
+       the viewport, so a stray scrollbar would shrink the viewport, which would
+       have made the very number the sizing block reads depend on the layout it
+       produces. */
     body { margin:0; height:100%; overflow:hidden; background:#111; color:#eee;
            display:flex; align-items:center; justify-content:center;
            font:14px/1.4 system-ui, sans-serif; }
-    /* max-width/max-height AND NOT width/height, AND NOT object-fit -- this is
-       load-bearing for the mouse. A replaced element under both max-* rules is
-       scaled down preserving its intrinsic ratio (the canvas's width/height
-       attributes), so the element's border box ends up exactly equal to the
-       drawn image. Emscripten's Browser.calculateMouseCoords scales a pointer
-       event by canvas.width / getBoundingClientRect().width, so an element box
-       that matches the image gives correct in-game coordinates. Sizing the
-       element to 100%/100% and letterboxing with object-fit would look
-       identical and put every mouse coordinate out by the size of the bars.
-       These are stylesheet rules rather than an inline style attribute on
-       purpose too: Browser.updateCanvasDimensions() calls
+    /* THE GAME FILLS THE WINDOW. Before M5 this was `margin:0 auto` on a fixed
+       1024x768 canvas, which on any large display drew the game as a small
+       rectangle in a sea of black.
+
+       DISPLAY SIZE AND BACKING-STORE SIZE ARE INDEPENDENT AND ONLY ONE COSTS
+       FRAME RATE. This rule is pure CSS: it decides how many screen pixels the
+       finished frame is stretched over, which the compositor does for free. The
+       number of pixels the GAME renders is canvas.width/height, set from the
+       viewport by the script below, and that is the one that costs anything.
+       Capping the backing store would not and must not disable this rule.
+
+       AT LOAD THIS IS EXACTLY 1:1 AND SCALES NOTHING. The backing store is the
+       viewport, so min() picks 100vw and height comes out at 100vh. The formula
+       only starts doing work once the window is resized afterwards -- see the
+       resize paragraph in the sizing block below for why that is the intended
+       behaviour rather than a bug.
+
+       WHY min()/calc() AND NOT max-width/max-height, AND NOT object-fit. Three
+       obvious spellings are wrong, and this was measured in Chrome rather than
+       reasoned (docs/evidence/m5-startup/README.md has the table):
+
+         max-width:100%; max-height:100%   only ever SHRINKS. Enlarge the window
+                                           or press F11 and the game stays the
+                                           size it loaded at.
+         width:100%; height:auto; max-*    STRETCHES. CSS's replaced-element
+                                           constraint table does not adjust a
+                                           width that was specified, so a window
+                                           wider than the canvas produced a
+                                           2000x500 box at ratio 4.00.
+         width/height:100%; object-fit     looks right and breaks the mouse: the
+                                           element box becomes the whole window
+                                           while the image is inset, and
+                                           Browser.calculateMouseCoords scales a
+                                           pointer event by canvas.width divided
+                                           by getBoundingClientRect().width.
+
+       min(100vw, 100vh * aspect) with height:auto is a contain-fit that grows
+       AND shrinks AND keeps the element's border box exactly equal to the drawn
+       image, so the mouse mapping stays exact at every window size.
+
+       --aa-aspect is set on <html> by the script below. It lives there rather
+       than on the canvas because Browser.updateCanvasDimensions() calls
        canvas.style.removeProperty('width'/'height') on every SDL_SetVideoMode,
-       which clears inline style and cannot touch a rule. */
-    #canvas { display:block; max-width:100%; max-height:100%; background:#000; }
+       and that cannot reach a custom property on another element. The 1.3333
+       fallback is the ratio of the 1024x768 attributes on the element itself,
+       i.e. what a browser that never ran the sizing block gets. */
+    #canvas { display:block; flex:0 0 auto; background:#000;
+              width: min(100vw, calc(100vh * var(--aa-aspect, 1.3333)));
+              height: auto; }
     /* The canvas takes focus so it can receive keys, and the browser then draws
        its focus ring around the entire play area. Removing a focus indicator is
        normally an accessibility regression, and it is not one here: the canvas
        is tabindex="-1", so it is NOT in the tab order -- it is focused
-       programmatically. The one other focusable thing on the page, the
-       fullscreen button, keeps its own ring and is reachable with Tab, so the
-       page does have something to tab between and this ring still conveys no
-       navigational information; it just frames the game. Do not "restore" it
-       without a reason that survives that sentence. */
+       programmatically, and nothing else on the page is focusable during play.
+       The ring therefore conveys no navigational information; it just frames
+       the game. Do not "restore" this without also giving the page something
+       to tab between. */
     #canvas:focus, #canvas:focus-visible { outline: none; }
     #overlay { position:fixed; inset:0; display:grid; place-content:center;
                gap:1rem; text-align:center; background:#111; }
     #status.error { color:#f77; max-width:32rem; }
-    /* Deliberately faint until pointed at: it sits over the top-right corner of
-       the play area for the whole session, because the player may want
-       fullscreen at any point and not only before the game starts. */
-    #fullscreen { position:fixed; top:.5rem; right:.5rem; z-index:10;
-                  opacity:.3; transition:opacity .15s;
-                  font:inherit; padding:.25rem .6rem; border-radius:.25rem;
-                  border:1px solid #555; background:#222; color:#eee;
-                  cursor:pointer; }
-    #fullscreen:hover, #fullscreen:focus-visible { opacity:1; }
   </style>
 </head>
 <body>
@@ -109,17 +134,10 @@
   <canvas id="canvas" width="1024" height="768"
           tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
 
-  <!--
-    The fullscreen control. type="button" matters: this element is not in a
-    form, but a bare <button> defaults to type="submit" and a future wrapper
-    would then reload the page on every click.
-  -->
-  <button id="fullscreen" type="button" aria-label="Toggle fullscreen">Fullscreen</button>
 
   <script>
     const statusEl  = document.getElementById('status');
     const overlayEl = document.getElementById('overlay');
-    const fullEl    = document.getElementById('fullscreen');
 
     // Both the .wasm and the .data package are fetched from inside
     // armagetronad.js with plain fetch()/XHR calls that are never awaited
@@ -199,45 +217,85 @@
       );
     })();
 
-    // ---- M5: the canvas is sized from the DISPLAY, before the game boots --
+    // ---- M5: the canvas is sized from the VIEWPORT, before the game boots -
     //
     // WHY THIS IS THE WHOLE FIX. The comment on the <canvas> above spells out
     // the mechanism: the game's default video mode is ArmageTron_Desktop, so
     // it asks SDL for the desktop size, and Emscripten answers that question
-    // with canvas.width/canvas.height. Setting those here -- before
+    // with canvas.width/canvas.height. Setting them here -- before
     // armagetronad.js is even fetched, and therefore long before main() calls
     // SDL_SetVideoMode -- makes the game INITIALISE at this resolution. There
     // is no resize, no second SDL_SetVideoMode and no sr_ReinitDisplay
-    // involved, which is deliberate: the in-game resolution menu is a
-    // separate, diagnosed problem (docs/evidence/m5-defect-a-resolution) and
-    // this path does not touch it.
+    // involved, which is deliberate: that path is a separate, diagnosed
+    // problem (docs/evidence/m5-defect-a-resolution) and this does not touch
+    // it.
     //
-    // WHY window.screen AND NOT window.innerWidth/innerHeight. innerWidth is
-    // the browser window, which the player is about to make fullscreen; sizing
-    // to it would mean the backing store is smaller than the screen exactly
-    // when it matters most, and the picture would be upscaled in fullscreen.
-    // screen.width/height is the display, so the fullscreen case is native and
-    // the windowed case is a clean downscale of a buffer that is at least as
-    // large as the window.
+    // WHY window.innerWidth/innerHeight AND NOT window.screen. The thing the
+    // player is looking at is the browser window, not the display: screen
+    // includes the OS menu bar, the browser's own toolbars and, on a
+    // multi-monitor desktop, a geometry that has nothing to do with where this
+    // window is. Sizing from the viewport also makes the load-time state
+    // exactly 1:1 -- backing store, CSS size and screen pixels are all the same
+    // number, so nothing is scaled and there is no aspect ratio to choose: the
+    // aspect IS whatever shape the window is. F11 before loading the page
+    // therefore gives a genuinely native-resolution fullscreen game with no
+    // Fullscreen API code on this page at all, which is the right way round --
+    // forcing a browser into fullscreen belongs to the visitor, not to us.
     //
-    // WHY devicePixelRatio IS DELIBERATELY NOT APPLIED. It is the obvious
-    // thing to reach for and it is wrong here, for a measured reason. This
-    // machine's display is 3360x1890 CSS px at dpr 2, i.e. 6720x3780 device
-    // px: 25.4 megapixels against the 0.79 the port used to run at, a 32x
-    // increase in fill. The port is fill-bound, not geometry-bound, and it is
-    // capped at MAX_FPS 60 with a measured minimum of 52 fps at 1024x768 --
-    // there is nowhere near 32x of headroom in that. CSS pixels are the
-    // resolution a display "is" for layout purposes and the canvas is scaled
-    // to fit anyway, so nothing about the picture requires a 1:1 map to
-    // physical pixels. If a future device profile makes dpr worth spending,
-    // measure it the way MAX_CANVAS_PIXELS below was measured; do not assume.
+    // THE SIZE IS TAKEN ONCE, AT LOAD, AND A LATER WINDOW RESIZE DOES NOT MOVE
+    // IT. That is deliberate and it is the whole reason this approach is safe;
+    // do not "fix" it with a resize listener without reading this paragraph.
+    // Writing canvas.width later WOULD resize the drawing buffer, but the
+    // game's viewport, projection and HUD layout were all computed from what
+    // it read at boot (sr_screenWidth/sr_screenHeight), so the picture would be
+    // rendered for the old shape into the new buffer. Making it follow
+    // properly means calling SDL_SetVideoMode again, i.e. sr_ReinitDisplay --
+    // the path this task exists to avoid. So the CSS rule on #canvas scales the
+    // existing buffer instead: grow the window and the picture goes slightly
+    // soft, shrink it and it downsamples cleanly, press F11 and it scales up.
+    // Reload and it is crisp again at the new size. A resize listener that
+    // resized the buffer AND re-inited is worth TRYING one day -- 4c measured
+    // sr_ReinitDisplay as working, with textures surviving and no context loss
+    // -- but it is a live re-init on every drag of a window edge, and it is not
+    // being built here.
     //
-    // THE CAP IS MEASURED, NOT GUESSED. See docs/evidence/m5-startup/ for the
-    // frame-rate sweep that chose it and the numbers at each step. It is
-    // applied by AREA with the display's aspect ratio preserved, because the
-    // aspect ratio is what the game builds its projection from -- clamping
-    // width and height independently would distort it on a display whose
-    // shape is not the cap's.
+    // devicePixelRatio IS APPLIED, and the reason is a measurement that
+    // falsified the obvious prediction. The prediction was that dpr would be
+    // unaffordable: this machine's display is 3360x1890 CSS px at dpr 2, so a
+    // maximised window is ~24 megapixels against the 0.79 this port used to run
+    // at. docs/evidence/m5-startup swept nine backing-store sizes through the
+    // M2 frame sampler and the frame-time distribution DID NOT MOVE: 60 fps
+    // median at 0.79 Mpx and 60 fps median at 33.2 Mpx (7680x4320), with p50
+    // frame time pinned at 16.7 ms -- the MAX_FPS 60 cap -- the whole way, and
+    // p90/p99 flat within noise. This port is not fill-bound. Its per-frame
+    // cost is the CPU side of -sLEGACY_GL_EMULATION's immediate-mode
+    // translation, which does not depend on the resolution at all. Applying dpr
+    // is what makes the canvas 1:1 with the PHYSICAL pixels of a HiDPI panel
+    // rather than with its CSS pixels; on a dpr-1 display the two are the same
+    // number and this multiplication does nothing.
+    //
+    // THE CAP IS THEREFORE NOT A FRAME-RATE CAP, and saying so is the point.
+    // Nothing measured here asks for one. It is an allocation bound for GPUs
+    // this sweep could not run on: the drawing buffer is colour + depth +
+    // stencil with preserveDrawingBuffer, ~8 bytes per pixel, so an uncapped
+    // 8K panel would ask a driver for a quarter of a gigabyte before the game
+    // draws anything.
+    //
+    // WHY 3840x2160 AND NOT SOMETHING SMALLER. Because a dpr-1 4K window
+    // reaches exactly that area on its own, so this cap is the worst case
+    // WHETHER OR NOT dpr is applied -- applying dpr adds no new worst case, it
+    // only raises the resolution on a HiDPI panel up to the same bound.
+    // Measured directly at 3840x2160: 60 fps median, 58 fps worst whole second,
+    // p50 16.7 ms. PLAN.md's Demo bar is 30.
+    //
+    // The cap is applied by AREA with the window's aspect ratio preserved,
+    // because the aspect ratio is what the game builds its projection from:
+    // rViewport::Perspective derives `aspectratio` from sr_screenWidth /
+    // sr_screenHeight and feeds it to glFrustum, widening the horizontal fov
+    // for anything past 1.5 rather than stretching the image (and
+    // rViewport::GetSubBox clamps the HUD with sr_HUDMaxWidth for the same
+    // reason). Clamping width and height independently would hand it a shape
+    // the window does not have.
     //
     // window.AA_CANVAS_SIZE IS A MEASUREMENT HOOK AND NOTHING ELSE. Nothing in
     // the shipped page defines it. docs/evidence/m5-startup's generator writes
@@ -245,25 +303,32 @@
     // <body>, which is how the sweep holds everything except the resolution
     // constant. Keep it: without it a resolution measurement has to be a
     // rebuild, and a rebuild is not the same binary.
-    const MAX_CANVAS_PIXELS = 1920 * 1080;
+    const MAX_CANVAS_PIXELS = 3840 * 2160;
     (() => {
       const canvas = document.getElementById('canvas');
+      // Told to the stylesheet rather than derived by it, because CSS has no
+      // way to read a canvas's width/height attributes. See the #canvas rule.
+      const publishAspect = () => document.documentElement.style
+        .setProperty('--aa-aspect', String(canvas.width / canvas.height));
       try {
         const forced = window.AA_CANVAS_SIZE;
         if (Array.isArray(forced) && forced.length === 2 &&
             forced[0] > 0 && forced[1] > 0) {
           canvas.width  = Math.round(forced[0]);
           canvas.height = Math.round(forced[1]);
+          publishAspect();
           console.log('[DISPLAY] AA_CANVAS_SIZE override -> canvas ' +
                       canvas.width + 'x' + canvas.height);
           return;
         }
-        const scr = window.screen;
-        let w = Math.floor((scr && scr.width)  || 0);
-        let h = Math.floor((scr && scr.height) || 0);
+        const dpr = window.devicePixelRatio || 1;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        let w = Math.floor(vw * dpr);
+        let h = Math.floor(vh * dpr);
         if (!(w > 0 && h > 0)) {
-          console.log('[DISPLAY] no usable window.screen, keeping canvas ' +
+          console.log('[DISPLAY] no usable viewport, keeping canvas ' +
                       canvas.width + 'x' + canvas.height);
+          publishAspect();
           return;
         }
         const px = w * h;
@@ -276,8 +341,8 @@
         }
         canvas.width  = w;
         canvas.height = h;
-        console.log('[DISPLAY] screen ' + scr.width + 'x' + scr.height +
-                    ' dpr ' + (window.devicePixelRatio || 1) +
+        publishAspect();
+        console.log('[DISPLAY] viewport ' + vw + 'x' + vh + ' dpr ' + dpr +
                     ' -> canvas ' + w + 'x' + h +
                     (capped ? ' (capped at ' + MAX_CANVAS_PIXELS + ' px)' : ''));
       } catch (e) {
@@ -572,47 +637,6 @@
     });
     window.addEventListener('beforeunload', () => persistBackstop('beforeunload'));
 
-    // ---- M5: the fullscreen control --------------------------------------
-    //
-    // WHY document.documentElement AND NOT THE CANVAS, AND NOT
-    // Module.requestFullscreen. Emscripten's own Browser.requestFullscreen
-    // wraps the canvas in a freshly created <div> and makes THAT the
-    // fullscreen root -- and Browser.updateCanvasDimensions then has a branch,
-    // `getFullscreenElement() === canvas.parentNode`, that rewrites
-    // canvas.style width/height with !important on every subsequent
-    // SDL_SetVideoMode. Going fullscreen on the root element leaves the
-    // canvas's parent alone, so that branch never fires, the stylesheet rules
-    // above stay in charge of the presentation, and the element box keeps
-    // matching the drawn image (which is what keeps the mouse coordinates
-    // right -- see the #canvas rule).
-    //
-    // The backing store is NOT changed by going fullscreen. It was already
-    // sized from the display at boot, so fullscreen is the case it was sized
-    // FOR: the picture is 1:1 with the screen there, and merely downscaled in
-    // a window. If MAX_CANVAS_PIXELS capped it, that cap applies in both.
-    //
-    // REFOCUSING THE CANVAS IS NOT COSMETIC. A <button> keeps keyboard focus
-    // after it is clicked, and this one is the only focusable element on the
-    // page besides the canvas; without the refocus, every subsequent keystroke
-    // goes to the button (and Space or Enter re-triggers it) instead of
-    // steering the cycle.
-    const syncFullscreenLabel = () => {
-      fullEl.textContent = document.fullscreenElement ? 'Exit fullscreen'
-                                                      : 'Fullscreen';
-    };
-    document.addEventListener('fullscreenchange', syncFullscreenLabel);
-    fullEl.addEventListener('click', () => {
-      try {
-        if (document.fullscreenElement) document.exitFullscreen();
-        else document.documentElement.requestFullscreen();
-      } catch (e) {
-        // requestFullscreen rejects on a page that is not allowed it (an
-        // iframe without allowfullscreen, a browser that refuses); a failed
-        // fullscreen must not become a red banner over a running game.
-        console.log('[DISPLAY] fullscreen request failed: ' + e);
-      }
-      if (gameStarted) Module.canvas.focus();
-    });
   </script>
 
   {{{ SCRIPT }}}

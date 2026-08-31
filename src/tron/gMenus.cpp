@@ -1226,6 +1226,54 @@ static bool con_func(REAL x){
 static bool toggle_fullscreen_func( REAL x )
 {
 #ifndef DEDICATED
+#if defined(__EMSCRIPTEN__) && !defined(AA_WEB_KEEP_FULLSCREEN_TOGGLE)
+    // THE BROWSER CLIENT HAS NO FULLSCREEN OF ITS OWN, ON PURPOSE.
+    //
+    // config/default.cfg binds this action to keycodes 319, 110 ('n') and 102
+    // ('f'). Those are two ordinary letters a player hits by accident, and
+    // default.cfg's binds persist into user.cfg on first use, so they are live
+    // for every real visitor from their second boot onwards.
+    //
+    // What the body below does is worse than a stray re-init. It flips
+    // currentScreensetting.fullscreen and calls sr_ReinitDisplay(), and that
+    // flag is what selects WHICH resolution setting the game reads:
+    // lowlevel_sr_InitDisplay uses currentScreensetting.res when fullscreen is
+    // set and windowSize when it is not (this is the same asymmetry that makes
+    // "Window Size" the dead row in the resolution menu -- see
+    // docs/evidence/m5-defect-a-resolution). So one keystroke re-inits the
+    // display AND switches it to a stored size nobody chose for a browser,
+    // throwing away the canvas size web/shell.html established from the
+    // viewport before boot.
+    //
+    // Emscripten ignores the SDL_FULLSCREEN bit entirely, so nothing is gained
+    // in exchange. Browser fullscreen belongs to the visitor -- F11, their
+    // decision, their chrome -- and web/shell.html deliberately ships no
+    // Fullscreen API code for the same reason.
+    //
+    // WHY HERE AND NOT AS A KEYBOARD LINE IN web/webdefaults/autoexec.cfg.
+    // An unbind IS expressible there, but only by abusing an error path:
+    // tConfItem_key::ReadVal (uInput.cpp) clears keymap[keysym] and then
+    // assigns uBindPlayer::NewBind, and only an action name that FAILS to
+    // resolve leaves act==NULL and so leaves the key clear. That spells
+    // "unbind" as "name something that does not exist", logs a config error on
+    // every load, and -- because autoexec.cfg loads after user.cfg -- would
+    // make 'f' and 'n' permanently unbindable to anything else. Killing the
+    // ACTION instead leaves both keys free, covers keycode 319 and any bind a
+    // player adds later, and cannot be undone by a stale user.cfg.
+    //
+    // The guard is __EMSCRIPTEN__ inside the existing #ifndef DEDICATED, so
+    // the dedicated server's preprocessed output is unchanged -- verified by
+    // md5, not argued.
+    //
+    // AA_WEB_KEEP_FULLSCREEN_TOGGLE IS A CONTROL-BUILD SWITCH AND NOTHING
+    // ELSE, same shape as AA_WEB_YIELD_AFTER_PERFRAME in rSysdep.cpp. It is
+    // never defined by the `client` target; web/Makefile's
+    // `client-fullscreentoggle` target defines it to link a second page in
+    // which this early return is absent. Without that page, "pressing f does
+    // nothing" is an absence rather than a measurement -- it cannot tell a
+    // disabled action apart from a key that never reached the game at all.
+    return true;
+#endif
 #ifdef DEBUG
     // don't toggle fullscreen while playing back in debug mode, that's annoying
     if ( tRecorder::IsPlayingBack() )

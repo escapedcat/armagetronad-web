@@ -544,6 +544,47 @@ web/dist-m1/armagetronad-yieldfix.html: $(YIELDPROBE_OBJS) $(LIBXML2)/lib/libxml
 .PHONY: client-yieldprobe
 client-yieldprobe: data web/dist-m1/armagetronad-yieldfix.html
 
+# ---- M5 Task 5: the CONTROL client that still has the fullscreen key -------
+#
+#   source deps/emsdk/emsdk_env.sh
+#   make -f web/Makefile client client-fullscreentoggle -j8
+#
+# Same shape and same reason as client-control and client-yieldprobe above: a
+# second complete page, armagetronad-fstoggle.html, differing from the shipped
+# client in exactly one preprocessor symbol. AA_WEB_KEEP_FULLSCREEN_TOGGLE
+# removes the early return M5 task 5 added to gMenus.cpp's
+# toggle_fullscreen_func, so on this page the 'f' and 'n' keys still flip
+# currentScreensetting.fullscreen and call sr_ReinitDisplay().
+#
+# IT IS THE POSITIVE CONTROL FOR A NEGATIVE CLAIM, which is the only reason it
+# exists. The shipped claim is "pressing f during play does nothing and the
+# canvas keeps the size the page gave it". Run against the shipped page alone
+# that is indistinguishable from a key event that never reached the game --
+# from a driver that types into the wrong element, from an SDL keysym that does
+# not match the bind, from a canvas that never had focus. On this page the SAME
+# keystroke through the SAME script must visibly re-init the display. If it
+# does not, the shipped result means nothing and the run is void.
+#
+# NOT part of `client` and not a default goal: it doubles the link time and
+# writes ~5 MB of artefacts that only the evidence run wants.
+FSTOGGLE_OBJS := $(filter-out $(CLIENT_OBJDIR)/tron/gMenus.o,$(CLIENT_OBJS)) \
+                 $(CLIENT_OBJDIR)/tron/gMenus-fstoggle.o
+
+# Its own object path, for the reason spelled out above eWebPersist-nomenusave.o.
+$(CLIENT_OBJDIR)/tron/gMenus-fstoggle.o: src/tron/gMenus.cpp web/Makefile
+	@mkdir -p $(dir $@)
+	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_KEEP_FULLSCREEN_TOGGLE -c $< -o $@
+
+web/dist-m1/armagetronad-fstoggle.html: $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a \
+                                web/shell.html web/webdefaults/autoexec.cfg \
+                                language/languages.txt config/aiplayers.cfg \
+                                resource/included/.mapversion
+	@mkdir -p web/dist-m1
+	$(EMXX) $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+
+.PHONY: client-fullscreentoggle
+client-fullscreentoggle: data web/dist-m1/armagetronad-fstoggle.html
+
 # ---- M4 Task 3: the CONTROL client that still overrides the player ---------
 #
 #   source deps/emsdk/emsdk_env.sh

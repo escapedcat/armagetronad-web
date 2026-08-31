@@ -1,0 +1,62 @@
+# M5 task 5: the in-game fullscreen key is dead in the browser build.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/fskey-shipped \
+#        --script-file web/tools/fullscreen-key-gate.steps
+#   node web/tools/drive-browser.mjs --headed --out /tmp/fskey-control \
+#        --url http://localhost:8000/armagetronad-fstoggle.html \
+#        --script-file web/tools/fullscreen-key-gate.steps
+#   node web/tools/drive-firefox.mjs --out /tmp/fskey-firefox \
+#        --script-file web/tools/fullscreen-key-gate.steps
+#   kill %1
+#
+# --headed is REQUIRED for Chrome; see the header of drive-browser.mjs.
+#
+# WHAT IT GUARDS. config/default.cfg binds TOGGLE_FULLSCREEN to keycodes 319,
+# 110 ('n') and 102 ('f'), and those binds persist into user.cfg on first use,
+# so they are live for every visitor from their second boot on.
+# gMenus.cpp's toggle_fullscreen_func used to flip
+# currentScreensetting.fullscreen and call sr_ReinitDisplay() -- which does not
+# only re-init the display, it switches WHICH resolution setting the game reads
+# (lowlevel_sr_InitDisplay takes currentScreensetting.res when the flag is set
+# and windowSize when it is not), discarding the canvas size web/shell.html
+# established from the viewport before boot. M5 task 5 made the function return
+# immediately under __EMSCRIPTEN__.
+#
+# THIS SCRIPT IS USELESS WITHOUT ITS CONTROL, which is the whole reason the
+# control build exists. "I pressed f and nothing happened" is equally
+# consistent with a key that never reached the game -- wrong element focused,
+# wrong SDL keysym, driver typing into the void. Run it against
+# armagetronad-fstoggle.html (make -f web/Makefile client-fullscreentoggle) and
+# the SAME keystroke must visibly re-init the display. If the control does not
+# move, the shipped result means nothing.
+#
+# PASS on the shipped page: both "after f" and "after n" report the same canvas
+# size as "before", isContextLost() false, and no "Aborted(" / [EXCEPTION] in
+# the transcript. PASS on the control: at least one of the two moves.
+until:1:90000:[BOOT] autostart
+wait:9000
+eval:(()=>{const c=document.getElementById('canvas');return '[FSKEY] before: canvas '+c.width+'x'+c.height})()
+key:Enter
+wait:3000
+key:Escape
+wait:5000
+key:Enter
+until:1:60000:[L] NEW_ROUND
+wait:7000
+shot:01-round1-before-the-key
+mark:PRESS-f-TOGGLE_FULLSCREEN
+key:F
+wait:3000
+eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return '[FSKEY] after f: canvas '+c.width+'x'+c.height+' contextLost='+g.isContextLost()})()
+shot:02-after-f
+mark:PRESS-n-TOGGLE_FULLSCREEN
+key:N
+wait:3000
+eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return '[FSKEY] after n: canvas '+c.width+'x'+c.height+' contextLost='+g.isContextLost()})()
+shot:03-after-n
+# The game must still be playable afterwards on both pages -- a control that
+# takes the tab down is not a control, it is a different bug.
+key:Left
+wait:2000
+shot:04-still-driving
