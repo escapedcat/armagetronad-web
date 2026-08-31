@@ -1,0 +1,82 @@
+== docs/evidence/m5-o2-assertions/gates/m3-audio-firefox/console.log
+   100 run lines, 8 positive-control lines
+
+probe: installed at 8367ms after 131 polls; spec {"freq":22050,"samples":1024,"channels":2,"format":32784,"bytesPerSample":2,"bufferSize":4096,"bufferDurationSecs":0.046439909297052155,"bufferingDelay":0.05,"queued":5,"ctxSampleRate":48000}
+PASS  A1  the probe wrapped SDL.audio.pushAudio (installed at 8367ms, spec read) and reported no error (probe_error: null)
+
+device: C++ says 22050 Hz, 2 ch, 16-bit, 1024 frames/callback, SOUND_BUFFER_SHIFT 1; JS says 22050 Hz, 2 ch, 16-bit, 1024 frames
+PASS  A2  the C++ device line and the JS probe describe the same 16-bit device (1 device line(s))
+note      the AudioContext runs at 48000 Hz while the device is 22050 Hz, so Web Audio resamples every buffer. Nothing here depends on it.
+
+window start: page saw a TRUSTED keydown at 14393ms (page clock); the driver stamped that line 14396ms and its own first key: step 14398ms, drift 2ms
+note      [AUDIOPROBE] first TRUSTED keydown at 14393ms, AudioContext state suspended
+PASS  A3  the measurement window starts at a REAL user gesture: the dump's window start is the trusted keydown the page saw (14393 == 14393), and that is the driver's own key press to within 2ms (bar: 1000ms)
+
+window: 14393..61453ms = 47.06s, covering rounds 22032..61453
+PASS  A4  the window spans the whole match: 47.06s (bar: 20s), starting no later than round 1 and ending no earlier than round 3
+rounds span: page clock 39.42s vs driver wall clock 39.42s, drift 0.001s
+PASS  A4b  the page-side clock the windows are cut with agrees with the driver's independent wall clock to 0.001s (bar: 0.5s)
+
+PCM in the window: 849/1013 unpaused pushAudio calls carried a non-zero sample (0.838), peak 4923/32768 = 15.0% of full scale; per-buffer peak p10/p50/p90 = 0/955/2147
+  over the WHOLE run, for comparison with task 2's unwindowed figures: 1022/1191 non-zero, peak 4923
+PASS  A5  most buffers carry sound: non-zero fraction 0.838 (bar: 0.5)
+PASS  A5b  the TYPICAL buffer carries real amplitude, not dither: median per-buffer peak 955 (bar: 300)
+PASS  A6  the loudest buffer is well clear of dither: 4923/32768 (bar: 1000)
+
+round 1: 10.12s, 218/218 buffers non-zero (1), peak 4923, worst push gap 71ms
+round 2: 10.07s, 216/216 buffers non-zero (1), peak 4518, worst push gap 66ms
+round 3: 11.12s, 239/239 buffers non-zero (1), peak 4385, worst push gap 83ms
+PASS  A7  EVERY round carried non-zero PCM in EVERY buffer: fractions 1, 1, 1 (bar: exactly 1 each), peaks 4923, 4518, 4385 (bar: 500 each)
+quietest whole second of each round: r1 1094 (9s), r2 1299 (9s), r3 985 (11s)
+PASS  A7b  no round has a quiet second in it: quietest whole-second peak per round 1094, 1299, 985 (bar: 300 each, over 9/9/11 whole seconds)
+before round 1: 7 whole seconds of window, peaks [0,0,0,0,0,0,0]
+PASS  A7c  the menus are EXACTLY silent -- the same instrument that reports the sound reads 0 in all 7 whole seconds before round 1 (0 non-zero). This is the only check here that fails when there is too MUCH signal, and the only one that can see uninitialised heap being played
+
+push gaps in the window: p50 48ms, p99 56ms, max 83ms   |   over the WHOLE run, including the pre-gesture region: max 6057ms
+note      scheduling lead: p50 278ms, max 282ms. Emscripten keeps bufferingDelay + queued x bufferDuration = 282ms of audio ahead of the clock, which is both the latency and the stall the device can survive.
+PASS  A8  buffers arrive continuously through the match: worst gap between consecutive unpaused pushAudio calls 83ms (bar: 1000ms)
+note      the UNWINDOWED worst gap is 6057ms. That is the suspended AudioContext before the first trusted key press, not a defect, and it is exactly why A8 is measured over the window. This same check applied to the whole run would fail here.
+
+AudioContext state at each in-window push: {"running":1013}
+PASS  A9  every buffer in the window was handed to a RUNNING AudioContext (states seen: running). This transcript recorded 5 push(es) while the context was parked, so the check discriminates here.
+note      whole run, including before the gesture: {"suspended":5,"running":1186}
+note      BEFORE the gesture: 5 calls, 0 non-zero, peak 0, worst gap 0ms, states {"suspended":5}. Reported, never asserted on: this region is the harness's own synthetic click, not the game.
+
+PASS  A10  the Web Audio queue never ran dry (no "Audio callback had starved", 0 hits)
+PASS  A11  pushAudio never threw internally (no "Web Audio API error playing back audio", 0 hits)
+PASS  A11b  the console.error channel that A10 and A11 are absence claims over is LIVE in this transcript (7 [console.error] lines in the run half), so their silence is an observation rather than a dead subscription
+        [    129ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+        [    129ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+
+rounds started 3, rounds COMPLETED 3, payload says started 3 / won 3
+PASS  A12  three rounds completed, agreed by the transcript (3) and the payload (3)
+
+[WAV] lines: 5 loaded, 0 rejected, 0 load failed
+        [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+        [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+PASS  A13  both shipped WAVs decoded and nothing failed to load (cyclrun true, expl true, 0 rejected, 0 failed)
+
+  [WAV] loaded                 5 lines (se_wavSuccessBudget)
+  [WAV] rejected               0 lines (se_wavFailureBudget, shared total 0)
+  [WAV] load failed            0 lines (se_wavFailureBudget, shared total 0)
+  [WAV] retiring a voice       1 lines (se_wavRetireBudget)
+  [SND] live voices peaked     1 lines (se_peakBudget)
+  [SND] voice limiter          0 lines (se_limiterBudget)
+PASS  A14  no diagnostic budget is spent, so the [WAV]/[SND] counts above are complete rather than a lower bound (all under 16)
+
+PASS  A15  the run half of the transcript is free of crash/exception hazards ("Stack overflow", "[EXCEPTION]", "SDL event queue full", "Assertion", "targetCrashed", "renderer crashed"; 0 hits)
+PASS  A16  every BROWSER-REPORTED 404 is /favicon.ico (1 total, 0 other)
+PASS  A17  no "until TIMED OUT" anywhere in the file (0 hits)
+
+        [AUDIOCONTROL] all-zero=>[0,0] three-non-zero=>[32767,3]
+PASS  A18  the probe's own classifier answers correctly on known input (expected "all-zero=>[0,0] three-non-zero=>[32767,3]")
+
+PASS  A19  browser-reported uncaught JS errors ARE visible in this transcript, so A15's "no [EXCEPTION]" is an observation rather than a silence
+        [  69992ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+
+PASS  AZ  all 24 declared checks were reached (24 emitted before this one)
+
+ALL CHECKS PASSED
+Passing means: non-zero PCM reached SDL.audio.pushAudio. It does NOT mean the
+buffers were rendered to a device (pushAudio is upstream of the Web Audio graph),
+and it does NOT mean the mix is correct. Nobody has heard this.

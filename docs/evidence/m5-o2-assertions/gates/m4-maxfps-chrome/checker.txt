@@ -1,0 +1,62 @@
+==============================================================================
+M4 TASK 3 GATE, PART 2: DOES A PLAYER-CHOSEN MAX_FPS SURVIVE A RELOAD
+==============================================================================
+transcript     docs/evidence/m5-o2-assertions/gates/m4-maxfps-chrome/console.log
+               18287 bytes, modified 2026-08-31T07:57:46.495Z
+browser        chrome: Chrome/152.0.7977.65
+page           http://localhost:8000/armagetronad.html
+repo HEAD      73b3001bf8036f69fc9e29c035059e507ef0f87a
+probes         7 [MAXFPS] records, phases: boot1-nothing-chosen-yet, boot2-main-menu, before-change, changed-menu-still-open, after-menu-leave, boot3-before-play, boot3-in-menu
+
+THIS IS A REAL TRANSCRIPT, and here is why:
+  the game read an autoexec.cfg (12376 bytes) that sets NEITHER
+  MAX_FPS nor SOUND_BUFFER_SHIFT. Nothing loaded after user.cfg names
+  either item, so the player's choice is expected to survive.
+  --expect real was passed; classification agrees.
+
+partition      mark "positive-control-deliberate-uncaught-error-follows"
+               148 transcript lines before it (the evidence),
+               9 after (the harness testing itself).
+
+------------------------------------------------------------------------------
+CHECKS
+------------------------------------------------------------------------------
+  [PASS] the transcript is classified consistently throughout
+         7/7 probes; every probe agrees the page does not override MAX_FPS.
+         A transcript where some probes see an override and some do not would be two
+         runs concatenated, and nothing below it could be trusted.
+  [PASS] transcript is the real page, as asserted with --expect
+         classified from the transcript as: real
+  [PASS] all three boots populated /persist from IndexedDB
+         saw 3x "[PERSIST] populate ok" in console output (harness echoes excluded)
+  [PASS] the run is clean up to the positive control
+         no [EXCEPTION] lines before the mark
+  [PASS] the exception detector is not blind -- the deliberate error registered
+         2 [EXCEPTION] line(s) after the mark, as designed
+  [PASS] the audio device opened at SOUND_BUFFER_SHIFT 1 on every boot
+         1024 frames/callback, 46.4 ms, SOUND_BUFFER_SHIFT 1
+         1024 frames/callback, 46.4 ms, SOUND_BUFFER_SHIFT 1
+         1024 frames/callback, 46.4 ms, SOUND_BUFFER_SHIFT 1
+  [PASS] and on the real page nothing but the binary could have supplied that 1
+         autoexec.cfg names no SOUND_BUFFER_SHIFT in any probe, and config/ names none
+         either. The compiled default in eSound.cpp is the only remaining source.
+  [PASS] boot1-nothing-chosen-yet: max_fps is 60 -- the default applies before the player chooses anything
+         max_fps="60"  (autoexec max_fps=null)
+  [PASS] before-change: max_fps is 60 -- still the default when the player arrives at the menu row
+         max_fps="60"  (autoexec max_fps=null)
+  [PASS] changed-menu-still-open: max_fps is 60 -- the change is in memory only while the menu is open
+         max_fps="60"  (autoexec max_fps=null)
+  [PASS] after-menu-leave: max_fps is 30 -- leaving the menu writes the choice (M4 task 2's mechanism)
+         max_fps="30"  (autoexec max_fps=null)
+  [PASS] boot3-before-play: max_fps is 30 -- the choice survived the IndexedDB round trip
+         max_fps="30"  (autoexec max_fps=null)
+
+  ---- the check the whole task exists for --------------------------------
+  [PASS] boot3-in-menu: max_fps is 30 -- the player's choice survives the game's own config load
+         max_fps="30"  (autoexec max_fps=null)
+
+==============================================================================
+13/13 checks passed on the REAL transcript
+VERDICT: PASS -- a player-chosen MAX_FPS survived two page reloads, and
+         SOUND_BUFFER_SHIFT 1 came from the binary rather than a config file.
+==============================================================================

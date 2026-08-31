@@ -1,0 +1,154 @@
+[   1455ms] [harness] firefox: 154.0.1 (headless=true)
+[   1455ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     52ms] [page] load event fired
+[    123ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    137ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    137ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    141ms] [page] load event fired
+[    142ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[    171ms] [console.log] [PERSIST] populate ok in 6ms
+[    242ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    288ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1248ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1248ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1248ms] [console.error] 
+[   1248ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1249ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1249ms] [console.log] 
+[   1347ms] [console.log] [L] ENCODING latin1
+[   1350ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1444ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1470ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1473ms] [console.error] TODO: glShadeModel
+[   1483ms] [harness] click #start: clicked
+[  10507ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/01-boot1-language-menu.png
+[  10509ms] [console.log] [MAXFPS] {"phase":"boot1-nothing-chosen-yet","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":21646,"autoexec_bytes":12376}
+[  10510ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot1-nothing-chosen-yet',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  10521ms] [harness] key Enter (1/1)
+[  10545ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10821ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10822ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13342ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/02-boot1-first-setup.png
+[  13345ms] [harness] key Escape (1/1)
+[  13366ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13647ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13648ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16165ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/03-boot1-welcome.png
+[  16166ms] [harness] === RELOAD-REQUESTED ===
+[  16170ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16170ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16170ms] [harness] eval location.reload() => undefined
+[  16170ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16178ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  16179ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  16187ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  16201ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16201ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16202ms] [page] load event fired
+[  16234ms] [console.log] [PERSIST] populate ok in 4ms
+[  16255ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  16272ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  16272ms] [harness] === BOOT-2-POPULATED ===
+[  17778ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17780ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17782ms] [console.error] 
+[  17782ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17782ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17783ms] [console.log] 
+[  17899ms] [console.log] [L] ENCODING latin1
+[  17900ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17916ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17919ms] [console.error] TODO: glShadeModel
+[  17926ms] [harness] click #start: clicked
+[  26958ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/04-boot2-main-menu.png
+[  26961ms] [console.log] [MAXFPS] {"phase":"boot2-main-menu","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12376}
+[  26961ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot2-main-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  26963ms] [harness] key Down (1/2)
+[  27275ms] [harness] key Down (2/2)
+[  28506ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/05-boot2-cursor-on-system-setup.png
+[  28508ms] [harness] key Enter (1/1)
+[  30622ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/06-boot2-system-setup.png
+[  30624ms] [harness] key Enter (1/1)
+[  32738ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/07-boot2-display-settings.png
+[  32740ms] [harness] key Enter (1/1)
+[  35565ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/08-boot2-screen-mode.png
+[  35568ms] [harness] key Down (1/7)
+[  35874ms] [harness] key Down (2/7)
+[  36180ms] [harness] key Down (3/7)
+[  36490ms] [harness] key Down (4/7)
+[  36796ms] [harness] key Down (5/7)
+[  37109ms] [harness] key Down (6/7)
+[  37418ms] [harness] key Down (7/7)
+[  38960ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/09-boot2-cursor-on-max-fps.png
+[  38962ms] [console.log] [MAXFPS] {"phase":"before-change","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12376}
+[  38962ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'before-change',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  38962ms] [harness] === THE-PLAYER-LOWERS-MAX-FPS-TO-30 ===
+[  38963ms] [harness] key Left (1/2)
+[  39271ms] [harness] key Left (2/2)
+[  41092ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/10-boot2-max-fps-now-30.png
+[  41094ms] [console.log] [MAXFPS] {"phase":"changed-menu-still-open","max_fps":"60","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12376}
+[  41094ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'changed-menu-still-open',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  41094ms] [harness] === ESCAPE-LEAVES-SCREEN-MODE ===
+[  41095ms] [harness] key Escape (1/1)
+[  41144ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  41397ms] [harness] until 3x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 3)
+[  41398ms] [harness] until SATISFIED: saw 3x <<[PERSISTSAVE] menu-leave>>
+[  42928ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/11-boot2-back-in-display-settings.png
+[  42930ms] [console.log] [MAXFPS] {"phase":"after-menu-leave","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12376}
+[  42930ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'after-menu-leave',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  42930ms] [harness] === ESCAPE-LEAVES-DISPLAY-SETTINGS ===
+[  42932ms] [harness] key Escape (1/1)
+[  42982ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  43232ms] [harness] until 4x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 4)
+[  43233ms] [harness] until SATISFIED: saw 4x <<[PERSISTSAVE] menu-leave>>
+[  44462ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/12-boot2-back-in-system-setup.png
+[  44462ms] [harness] === SECOND-RELOAD-REQUESTED ===
+[  44466ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  44467ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  44467ms] [harness] eval location.reload() => undefined
+[  44467ms] [harness] until 3x <<[PERSIST] populate ok>> (timeout 90000ms, have 2)
+[  44476ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  44476ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  44487ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  44499ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  44499ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  44499ms] [page] load event fired
+[  44532ms] [console.log] [PERSIST] populate ok in 4ms
+[  44553ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  44568ms] [harness] until SATISFIED: saw 3x <<[PERSIST] populate ok>>
+[  44568ms] [harness] === BOOT-3-POPULATED ===
+[  46075ms] [console.log] [MAXFPS] {"phase":"boot3-before-play","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12376}
+[  46076ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot3-before-play',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  46081ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  46085ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  46089ms] [console.error] 
+[  46090ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  46090ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  46092ms] [console.log] 
+[  46199ms] [console.log] [L] ENCODING latin1
+[  46200ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  46215ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  46217ms] [console.error] TODO: glShadeModel
+[  46225ms] [harness] click #start: clicked
+[  55229ms] [harness] key Down (1/2)
+[  55531ms] [harness] key Down (2/2)
+[  56745ms] [harness] key Enter (1/1)
+[  58851ms] [harness] key Enter (1/1)
+[  60961ms] [harness] key Enter (1/1)
+[  63768ms] [harness] key Down (1/7)
+[  64072ms] [harness] key Down (2/7)
+[  64378ms] [harness] key Down (3/7)
+[  64683ms] [harness] key Down (4/7)
+[  64989ms] [harness] key Down (5/7)
+[  65298ms] [harness] key Down (6/7)
+[  65609ms] [harness] key Down (7/7)
+[  67140ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/13-boot3-max-fps-still-30.png
+[  67143ms] [console.log] [MAXFPS] {"phase":"boot3-in-menu","max_fps":"30","sound_buffer_shift":"1","autoexec_max_fps":null,"autoexec_sound_buffer_shift":null,"user_cfg_bytes":22454,"autoexec_bytes":12376}
+[  67144ms] [harness] eval (()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot3-in-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})() => read
+[  67144ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  67145ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1659
+[  67145ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[  67146ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+    <anonymous> @ http://localhost:8000/armagetronad.html:0
+    <anonymous> @ http://localhost:8000/armagetronad.html:0
+[  69187ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-maxfps-firefox/14-after-deliberate-uncaught-error.png

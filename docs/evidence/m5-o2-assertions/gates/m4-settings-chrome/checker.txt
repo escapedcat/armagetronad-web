@@ -1,0 +1,29 @@
+transcript: docs/evidence/m5-o2-assertions/gates/m4-settings-chrome/console.log
+lines: 131   run region: 0..122   reload mark at line 74
+page: armagetronad.html
+
+PASS  S1  two real page loads, partitioned by the RELOAD-REQUESTED mark (populates at 7,84, reload mark at 74)
+PASS  S2  all eight [SETFS] phases and the one [SETIDB] phase are present exactly once
+PASS  S3  fresh browser profile: /persist/var/user.cfg does not exist before the game runs (present=false)
+PASS  S4  baseline: the file exists and PLAYER_1 is still the default "web_user" ("web_user", 21950 bytes)
+PASS  S5  after typing and BEFORE leaving the menu, the file is unchanged -- the edit is memory-only (hash 12176ddd -> 12176ddd, PLAYER_1 "web_user")
+PASS  S6  exactly one menu-leave save fired between the Escape mark and the MENU-LEFT mark (saw 1; marks at 59/66)
+      ..    menu-leave save at line 39: menu-leave n=1
+      ..    menu-leave save at line 60: menu-leave n=2
+      ..    menu-leave save at line 111: menu-leave n=1
+PASS  S7  leaving the menu wrote the player's change: PLAYER_1 is "web_userqzxjv" ("web_userqzxjv", 21955 bytes, hash d708b292)
+PASS  S8  IndexedDB itself holds the changed value, read directly and BEFORE any unload event ("web_userqzxjv", 21955 bytes, 4 keys, line 72 < 74)
+PASS  S9  no backstop save before the reload, on either witness: nothing above came from beforeunload/visibilitychange (page log 0, wasm log 0)
+      ..    backstop line 76: beforeunload
+      ..    backstop save (from wasm) 75: js-backstop n=3
+PASS  S10  after a real reload, a page that has written nothing reads the changed value back ("web_userqzxjv", 22763 bytes)
+PASS  S11  the clobber really happened: user.cfg is replaced by non-config text with no PLAYER_1 line (22 bytes, clobbered=true)
+PASS  S12  exactly one menu-leave save fired in boot 2, between the clobber and the mark after it (saw 1; marks at 107/117)
+PASS  S13  boot 2 rewrote the clobbered file FROM ITS OWN MEMORY with the restored value intact ("web_userqzxjv", 22763 bytes)
+PASS  S14  no exception, abort, stack overflow or SDL queue overflow in the run (saw 0)
+PASS  S15  the deliberate uncaught error at the end WAS seen, so S14 is an observation and not a silence (control mark at 122)
+PASS  S16  every until: step was satisfied rather than timing out (saw 0 timeouts)
+PASS  S17  every failed resource load in the run is the browser's own /favicon.ico probe (other failures: 0)
+PASS  SZ  all 17 declared checks produced a verdict
+
+PASS  18/18 checks

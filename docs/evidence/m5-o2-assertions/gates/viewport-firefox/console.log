@@ -1,0 +1,105 @@
+[   1424ms] [harness] firefox: 154.0.1 (headless=true)
+[   1425ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     28ms] [page] load event fired
+[    132ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    135ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    135ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    138ms] [page] load event fired
+[    139ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[    172ms] [console.log] [PERSIST] populate ok in 6ms
+[    240ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    289ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1250ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1250ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1250ms] [console.error] 
+[   1250ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1250ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1250ms] [console.log] 
+[   1348ms] [console.log] [L] ENCODING latin1
+[   1351ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1460ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1500ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1500ms] [console.error] TODO: glShadeModel
+[   1503ms] [harness] click #start: clicked
+[  10534ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/01-boot1-language-menu.png
+[  10545ms] [harness] key Enter (1/1)
+[  10573ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  13880ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/02-boot1-first-setup.png
+[  13883ms] [harness] key Escape (1/1)
+[  13913ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  14185ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14185ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17206ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/03-boot1-after-first-setup.png
+[  17206ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17210ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17210ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17210ms] [harness] eval location.reload() => undefined
+[  17211ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17219ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  17219ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  17227ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  17238ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17238ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17239ms] [page] load event fired
+[  17272ms] [console.log] [PERSIST] populate ok in 5ms
+[  17292ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17313ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19321ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19322ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19326ms] [console.error] 
+[  19326ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19327ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19327ms] [console.log] 
+[  19436ms] [console.log] [L] ENCODING latin1
+[  19437ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  19452ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  19455ms] [console.error] TODO: glShadeModel
+[  19463ms] [harness] click #start: clicked
+[  31487ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/04-boot2-main-menu.png
+[  31487ms] [harness] === DOWN-1-SHOULD-HIGHLIGHT-PLAYER-SETUP ===
+[  31490ms] [harness] key Down (1/1)
+[  33321ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/05-cursor-on-player-setup.png
+[  33323ms] [harness] key Enter (1/1)
+[  36648ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/06-player-menu-top-item.png
+[  36648ms] [harness] === FOUR-DOWNS-THE-FOURTH-USED-TO-KILL-THE-TAB ===
+[  36650ms] [harness] key Down (1/1)
+[  37963ms] [harness] key Down (1/1)
+[  39277ms] [harness] key Down (1/1)
+[  40607ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/07-cursor-on-player-4.png
+[  40609ms] [harness] key Down (1/1)
+[  44943ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/08-VIEWPORTS-HIGHLIGHTED-THIS-IS-THE-CRASH-POINT.png
+[  44945ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => alive, gl err=0x0
+[  44945ms] [harness] === CYCLE-ALL-SIX-VIEWPORT-CONFIGURATIONS ===
+[  44947ms] [harness] key Right (1/1)
+[  47075ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/09-config-2.png
+[  47077ms] [harness] key Right (1/1)
+[  49196ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/10-config-3.png
+[  49199ms] [harness] key Right (1/1)
+[  51327ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/11-config-4.png
+[  51329ms] [harness] key Right (1/1)
+[  53450ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/12-config-5.png
+[  53454ms] [harness] key Right (1/1)
+[  55591ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/13-config-6.png
+[  55593ms] [harness] key Right (1/1)
+[  57716ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/14-config-clamped-at-6.png
+[  57716ms] [harness] === BACK-TO-SINGLE-PLAYER ===
+[  57718ms] [harness] key Left (1/5)
+[  58027ms] [harness] key Left (2/5)
+[  58331ms] [harness] key Left (3/5)
+[  58636ms] [harness] key Left (4/5)
+[  58945ms] [harness] key Left (5/5)
+[  61769ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/15-back-to-single-player.png
+[  61769ms] [harness] === THE-OTHER-DemonstrateViewport-CALLER ===
+[  61771ms] [harness] key Down (1/1)
+[  63606ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/16-cursor-on-assign-viewports.png
+[  63608ms] [harness] key Enter (1/1)
+[  67430ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/17-assign-viewports-to-players.png
+[  67432ms] [harness] key Right (1/1)
+[  69567ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/18-assign-after-right.png
+[  69569ms] [harness] key Escape (1/1)
+[  69608ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  72392ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/19-back-in-player-setup.png
+[  72395ms] [harness] key Escape (1/1)
+[  72431ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  75209ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/viewport-firefox/20-back-in-main-menu.png
+[  75210ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'still alive, canvas '+c.width+'x'+c.height})() => still alive, canvas 1024x768
