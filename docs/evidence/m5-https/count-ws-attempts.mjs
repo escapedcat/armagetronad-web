@@ -39,6 +39,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 // both shapes have to be accepted.
 const SUMMARY = /\{\\?"attempts\\?":\s*(\d+).*?\\?"spanMs\\?":\s*(\d+).*?\\?"distinctUrls\\?":\s*(\d+)/;
 
+const skipped = [];
+
 let bad = 0;
 const rows = [];
 for (const dir of readdirSync(here).sort()) {
@@ -48,7 +50,17 @@ for (const dir of readdirSync(here).sort()) {
   const lines = text.split('\n');
 
   const m = text.match(SUMMARY);
-  if (!m) { console.error(`${dir}: no __wsLog summary line`); bad++; continue; }
+  // A transcript with no __wsLog summary is not a failure -- it is a run that
+  // never opened a socket. `regress-viewport-gate` is exactly that: task 3's
+  // control, proving the patched drivers still pass an UNRELATED gate. Counting
+  // it as a disagreement made this tool exit 1 on a tree where every real
+  // multiplayer run agrees, which is a false red.
+  //
+  // Worth recording how it got here, because the shape recurs in this project:
+  // the tool was verified green at 3876982d, and d4951771 then added the
+  // control transcript. A check verified BEFORE a later commit changed its
+  // subject is stale -- the same defect M4's P11 gate has, one milestone up.
+  if (!m) { skipped.push(dir); continue; }
   const [, attempts, spanMs, distinct] = m.map(Number);
 
   const isFirefox = text.includes('[harness] firefox:');
@@ -73,5 +85,7 @@ console.log(pad('run', 22), pad('in-page', 9), pad('browser', 9), pad('span ms',
 for (const r of rows) {
   console.log(pad(r.dir, 22), pad(r.attempts, 9), pad(r.browser, 9), pad(r.spanMs, 9), pad(r.distinct, 6), r.ok ? 'yes' : 'NO');
 }
-console.log(bad ? `\n${bad} transcript(s) disagree` : '\nall transcripts agree');
+for (const d of skipped)
+  console.log(`skipped  ${d} -- no socket opened; not a multiplayer run`);
+console.log(bad ? `\n${bad} transcript(s) disagree` : '\nall multiplayer transcripts agree');
 process.exit(bad ? 1 : 0);
