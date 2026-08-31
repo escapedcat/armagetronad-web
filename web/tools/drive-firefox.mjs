@@ -24,7 +24,8 @@
 //
 // Options and steps are the same as drive-browser.mjs (--url, --out, --script,
 // --script-file, --headed, --port, --width, --height, --firefox, --keep-open,
-// plus --accept-insecure-certs for the https rig;
+// plus --accept-insecure-certs for the https rig and repeatable --pref
+// name=value for anything else the throwaway profile needs;
 // steps wait/shot/click/key/eval/mark/until). Unlike Chrome, key events work in
 // headless mode here, so --headed is only needed to watch it happen.
 //
@@ -68,6 +69,7 @@ function parseArgs(argv) {
     firefox: '/Applications/Firefox.app/Contents/MacOS/firefox',
     keepOpen: false,
     acceptInsecureCerts: false,
+    prefs: [],
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -91,6 +93,17 @@ function parseArgs(argv) {
     // measure key off the document's https: scheme. Say so in any evidence
     // that uses it rather than implying a clean cert.
     else if (a === '--accept-insecure-certs') opt.acceptInsecureCerts = true;
+    // Repeatable `--pref name=value`, written verbatim into the throwaway
+    // profile's user.js. The value is Firefox pref syntax, NOT shell syntax:
+    // numbers and true/false are bare, strings need their own quotes, which
+    // means a shell quote around the whole argument --
+    //     --pref 'network.proxy.ssl="127.0.0.1"'
+    // Added by M5 task 4, which needed to point Firefox at a local proxy: on
+    // that machine Firefox could not open a connection to *.github.io at all,
+    // including to GitHub's own pages.github.io, while curl and Chrome could.
+    // See docs/evidence/m5-deploy/tunnel-proxy.mjs for the measurements and
+    // for why the workaround is a tunnel rather than a change to the page.
+    else if (a === '--pref') opt.prefs.push(next());
     else throw new Error(`unknown option: ${a}`);
   }
   return opt;
@@ -170,8 +183,14 @@ async function main() {
   // it. See the WEBGL WARNINGS note in this file's header for why the cap
   // matters: left at its default of 32 the browser falls silent partway
   // through a run and the transcript stops being evidence.
+  // --pref values come after the built-in one so a caller can override it.
   writeFileSync(join(profileDir, 'user.js'),
-    'user_pref("webgl.max-warnings-per-context", 100000);\n');
+    'user_pref("webgl.max-warnings-per-context", 100000);\n'
+    + opt.prefs.map((p) => {
+        const eq = p.indexOf('=');
+        if (eq < 1) throw new Error(`--pref needs name=value, got: ${p}`);
+        return `user_pref("${p.slice(0, eq)}", ${p.slice(eq + 1)});\n`;
+      }).join(''));
   const args = [
     '--remote-debugging-port', String(opt.port),
     '--profile', profileDir,

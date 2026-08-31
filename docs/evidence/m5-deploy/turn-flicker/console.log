@@ -1,0 +1,79 @@
+[    648ms] [harness] chrome: Chrome/152.0.7977.65
+[    648ms] [harness] navigating to https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[    585ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    585ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    586ms] [page] load event fired
+[    761ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 ()   <- https://escapedcat.github.io/favicon.ico
+[   1346ms] [console.log] [PERSIST] populate ok in 45ms
+[   1418ms] [harness] eval (()=>{const S={t:new Float64Array(200000),n:0,glerr:[],turns:[],polls:0};window.__turn=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){const now=performance.now();if(S.n<S.t.length)S.t[S.n++]=now;S.polls++;const e=this.getError();if(e)S.glerr.push([S.n,now,e]);return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);window.addEventListener('keydown',(ev)=>{if(ev.key==='ArrowLeft'||ev.key==='ArrowRight')S.turns.push([performance.now(),ev.key]);},true);return 'turn probe armed: per-frame glGetError, keydown-timestamped turns'})() => "turn probe armed: per-frame glGetError, keydown-timestamped turns"
+[   1523ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   8431ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   8433ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   8433ms] [console.error] 
+[   8433ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   8434ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   8434ms] [console.log] 
+[   8570ms] [console.log] [L] ENCODING latin1
+[   8578ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   8579ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   8599ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   8602ms] [console.error] TODO: glShadeModel
+[   8606ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- https://escapedcat.github.io/armagetronad-web/armagetronad.js
+[   8644ms] [harness] click #start: clicked
+[   8646ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://escapedcat.github.io/armagetronad-web/armagetronad.js
+[   8646ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://escapedcat.github.io/armagetronad-web/armagetronad.js
+[   8646ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://escapedcat.github.io/armagetronad-web/armagetronad.js
+[   8646ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://escapedcat.github.io/armagetronad-web/armagetronad.js
+[   8646ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://escapedcat.github.io/armagetronad-web/armagetronad.js
+[  14677ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  14679ms] [harness] key Enter (1/1)
+[  18011ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  18013ms] [harness] key Escape (1/1)
+[  22327ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  22329ms] [console.log] [L] TEAM_CREATED web_user
+[  22329ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  22332ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  22334ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  22335ms] [console.log] [L] NEW_ROUND 2026-08-31 13:28:33 UTC+0200
+[  22355ms] [console.log] [L] TEAM_CREATED ai_team
+[  22355ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  22355ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  22355ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  22356ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  22373ms] [harness] key Enter (1/1)
+[  22377ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  22377ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  22377ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  22675ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  22675ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  22825ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 ()   <- https://escapedcat.github.io/favicon.ico
+[  27676ms] [harness] === BURST-ACROSS-ONE-LEFT-TURN ===
+[  27801ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/20-before-turn.png
+[  27815ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  27833ms] [harness] key Left (1/1)
+[  28259ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/21-turn+0.png
+[  28397ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/22-turn+1.png
+[  28527ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/23-turn+2.png
+[  28659ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/24-turn+3.png
+[  28789ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/25-turn+4.png
+[  29390ms] [harness] === BURST-ACROSS-ONE-RIGHT-TURN ===
+[  29522ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/26-before-turn.png
+[  29555ms] [harness] key Right (1/1)
+[  30005ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/27-turn+0.png
+[  30150ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/28-turn+1.png
+[  30261ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/29-turn+2.png
+[  30393ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/30-turn+3.png
+[  30782ms] [console.log] [L] DEATH_FRAG web_user word
+[  30783ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  31227ms] [harness] key Left (1/1)
+[  32517ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  32967ms] [harness] key Right (1/1)
+[  34704ms] [harness] key Left (1/1)
+[  36439ms] [harness] key Right (1/1)
+[  36586ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  36589ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  36589ms] [console.log] [L] NEW_ROUND 2026-08-31 13:28:48 UTC+0200
+[  36590ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  36590ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  38747ms] [harness] eval (()=>{const S=window.__turn;if(!S)return 'no probe';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const d=[];for(let i=1;i<all.length;i++)d.push([all[i],all[i]-all[i-1]]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.round(p*(s.length-1)))]};const r2=(x)=>x==null?null:Math.round(x*100)/100;const deltas=d.map(x=>x[1]);const base={frames:all.length,p50:r2(q(deltas,0.5)),p99:r2(q(deltas,0.99)),max:r2(q(deltas,1))};const perTurn=S.turns.map(([t,k])=>{const w=d.filter(x=>x[0]>=t-200&&x[0]<=t+700);const wd=w.map(x=>x[1]);return{key:k,at:r2(t),frames:w.length,max_ms:r2(q(wd,1)),over25ms:wd.filter(x=>x>25).length,over40ms:wd.filter(x=>x>40).length}});const away=d.filter(x=>!S.turns.some(([t])=>x[0]>=t-200&&x[0]<=t+700)).map(x=>x[1]);const off={frames:away.length,p99:r2(q(away,0.99)),max:r2(q(away,1)),over25ms:away.filter(x=>x>25).length,over40ms:away.filter(x=>x>40).length};return JSON.stringify({overall:base,glGetError_polls:S.polls,glGetError_nonzero:S.glerr.length,glGetError_first:S.glerr.slice(0,5),turns:perTurn,away_from_turns:off})})() => "{\"overall\":{\"frames\":1791,\"p50\":16.7,\"p99\":20.2,\"max\":208.7},\"glGetError_polls\":1791,\"glGetError_nonzero\":0,\"glGetError_first\":[],\"turns\":[{\"key\":\"ArrowLeft\",\"at\":27801.5,\"frames\":54,\"max_ms\":19.6,\"over25ms\":0,\"over40ms\":0},{\"key\":\"ArrowRight\",\"at\":29522.7,\"frames\":55,\"max_ms\":22.7,\"over25ms\":0,\"over40ms\":0},{\"key\":\"ArrowLeft\",\"at\":31194.3,\"frames\":54,\"max_ms\":22.2,\"over25ms\":0,\"over40ms\":0},{\"key\":\"ArrowRight\",\"at\":32933.8,\"frames\":54,\"max_ms\":19.1,\"over25ms\":0,\"over40ms\":0},{\"key\":\"ArrowLeft\",\"at\":34671.7,\"frames\":53,\"max_ms\":24.1,\"over25ms\":0,\"over40ms\":0},{\"key\":\"ArrowRight\",\"at\":36406.8,\"frames\":54,\"max_ms\":25.2,\"over25ms\":1,\"over40ms\":0}],\"away_from_turns\":{\"frames\":1466,\"p99\":19.9,\"max\":208.7,\"over25ms\":4,\"over40ms\":3}}"
+[  38860ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/flicker-chrome/31-after-turns.png
