@@ -14,7 +14,7 @@
 //             invoked. The steps file wraps `window.WebSocket` before
 //             callMain, so this is the count of connection attempts the wasm
 //             module MADE, whatever the browser then decided to do about them.
-//   browser   the number of browser-log lines naming a ws:// URL. In Chrome
+//   browser   the number of browser-log lines naming a ws:// or wss:// URL. In Chrome
 //             that is one `Mixed Content ... has been blocked` line per
 //             attempt over https and one `WebSocket connection to ... failed`
 //             line per attempt over http. In Firefox it is one or two
@@ -56,8 +56,11 @@ for (const dir of readdirSync(here).sort()) {
   // expression, so they have to be excluded from any count of browser output.
   const browserLines = lines.filter((l) => !l.includes('] [harness] '));
   const mixed   = browserLines.filter((l) => l.includes('Mixed Content')).length;
-  const wsFail  = browserLines.filter((l) => /WebSocket connection to 'ws:/.test(l)).length;
-  const ffFail  = browserLines.filter((l) => /can.t establish a connection to the server at ws:/.test(l)).length;
+  // `wss?:` and not `ws:` -- mp-wss is the probe that rewrites the scheme, and
+  // an anchored `ws:` would score it 0 and report a disagreement that is the
+  // checker's own.
+  const wsFail  = browserLines.filter((l) => /WebSocket connection to 'wss?:/.test(l)).length;
+  const ffFail  = browserLines.filter((l) => /can.t establish a connection to the server at wss?:/.test(l)).length;
 
   const browser = isFirefox ? ffFail : (mixed || wsFail);
   const ok = browser === attempts;

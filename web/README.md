@@ -451,6 +451,27 @@ defaults.
   and work, and the only three with no live binding are `BANK_UP`, `BANK_DOWN`
   and `ZOOM_IN`. Enabling the mouse ones needs pointer-lock behaviour verified
   first. § 11, "M5 TASK 2B DECISION".
+- **Multiplayer does not work and cannot, and over `https:` it says so ~98
+  times in the console.** Play Game → Multiplayer → Online Multiplayer queries
+  the four masters in `config/master.srv` over UDP, which Emscripten maps onto
+  `ws://master*:4533`. A page served over HTTPS — the only scheme GitHub Pages
+  offers — has every one of those blocked as mixed content, and because
+  `libsockfs.js` re-creates a dead dgram peer on the next `sendto`, the game's
+  0.25 s login resend turns four attempts into **~98 in 20 seconds**. **Nothing
+  a visitor sees changes**: black screen for ~20 s, then "Master servers do not
+  answer", then "Sorry, no server found :-(" — pixel-for-pixel the same
+  sequence at the same times as over `http:`, in both browsers, because the
+  wall clock is set by the game's own 5-second-per-master timeout and not by
+  how the socket fails. **Examined and deliberately left alone at M5**,
+  including one alternative (`wss://` rewrite) that was measured working and
+  declined: `docs/porting/browser-runtime-notes.md` § 12,
+  `docs/evidence/m5-https/`. Multiplayer itself needs the Phase 2 bridge.
+- **For the ~20 seconds of that master query the canvas is solid black**, on
+  both schemes and in both browsers, even though `BrowseSpecialMaster` turns
+  the fullscreen console on to show "Connecting to Master Server N...".
+  Measured at +2 s, +5 s, +10 s and +15.5 s. **Not diagnosed** — M5 task 3
+  recorded it because "what does the visitor see" was its question, and it is
+  not an HTTPS problem.
 - **The cockpit HUD's first draw within a round is erratic**, and nobody has
   explained what it waits on. Screenshotting 5.5 s into a round finds the
   instrument panel present in anywhere from one round of three to three of

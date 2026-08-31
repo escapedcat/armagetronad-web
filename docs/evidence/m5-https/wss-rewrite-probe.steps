@@ -1,0 +1,85 @@
+# M5 task 3, step 2 PROBE -- NOT A GATE.
+#
+# Measures the one alternative fix worth measuring: what happens if the client
+# asks for `wss://` instead of `ws://` when the page is served over https.
+#
+# It is a copy of web/tools/https-multiplayer.steps with ONE character-level
+# change: the WebSocket wrapper rewrites the scheme before delegating. That is
+# exactly the URL string `Module.websocket = { url: 'wss://' }` would produce
+# -- libsockfs.js's createPeer builds `<prefix><addr>:<port>/` from whichever
+# prefix it was given -- so this measures the proposed fix without making the
+# source change it would require. It cannot be done by setting Module.websocket
+# from a step: SOCKFS.websocketArgs is captured at mount(), which runs during
+# initRuntime, before any step can execute.
+#
+#   node web/tools/drive-browser.mjs --headed --out /tmp/mp-wss \
+#        --url https://localhost:8443/armagetronad.html \
+#        --chrome-flag "--ignore-certificate-errors-spki-list=$(cat /tmp/rig/spki.txt)" \
+#        --script-file docs/evidence/m5-https/wss-rewrite-probe.steps
+#
+# Read the result against mp-https (98 attempts) and mp-http (19). See the
+# README beside this file for what was concluded and why the change was still
+# declined.
+
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+shot:01-boot1-language-menu
+key:Enter
+wait:3000
+shot:02-boot1-first-setup
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+shot:03-boot1-after-first-setup
+mark:RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+wait:2000
+eval:(()=>{const R=window.WebSocket;if(R.__wrapped)return 'already';const L=[];function W(u,p){u=String(u).replace(/^ws:/,'wss:');L.push([Math.round(performance.now()),String(u)]);return p===undefined?new R(u):new R(u,p);}W.prototype=R.prototype;W.CONNECTING=R.CONNECTING;W.OPEN=R.OPEN;W.CLOSING=R.CLOSING;W.CLOSED=R.CLOSED;W.__wrapped=true;window.__wsLog=L;window.WebSocket=W;return 'WebSocket counter installed; page origin is '+location.protocol})()
+click:#start
+wait:12000
+shot:04-boot2-main-menu
+mark:ENTER-1-PLAY-GAME-SUBMENU
+key:Enter
+wait:2500
+shot:05-play-game-menu-opens-on-multiplayer
+mark:ENTER-2-MULTIPLAYER-SUBMENU
+key:Enter
+wait:2500
+shot:06-network-menu-opens-on-online-multiplayer
+eval:(()=>{return 'ws attempts before the master query: '+window.__wsLog.length})()
+mark:ENTER-3-ONLINE-MULTIPLAYER-STARTS-THE-MASTER-QUERY
+key:Enter
+wait:2000
+shot:07-master-query-t02s
+wait:3000
+shot:08-master-query-t05s
+wait:5000
+shot:09-master-query-t10s
+wait:5000
+shot:10-master-query-t15s
+wait:5000
+shot:11-master-query-t20s
+wait:5000
+shot:12-master-query-t25s
+wait:5000
+shot:13-master-query-t30s
+wait:10000
+shot:14-master-query-t40s
+wait:10000
+shot:15-master-query-t50s
+wait:10000
+shot:16-master-query-t60s
+eval:(()=>{const L=window.__wsLog;const t=L.map(e=>e[0]);return JSON.stringify({attempts:L.length,firstMs:t[0]??null,lastMs:t[t.length-1]??null,spanMs:t.length?t[t.length-1]-t[0]:0,distinctUrls:[...new Set(L.map(e=>e[1]))].length})})()
+eval:(()=>{const c={};for(const e of window.__wsLog)c[e[1]]=(c[e[1]]||0)+1;return JSON.stringify(c)})()
+mark:DISMISS-WHATEVER-IS-ON-SCREEN-AND-SEE-WHERE-WE-LAND
+key:Enter
+wait:4000
+shot:17-after-first-dismiss
+key:Enter
+wait:4000
+shot:18-after-second-dismiss
+eval:(()=>{return 'ws attempts total: '+window.__wsLog.length})()
+eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})()

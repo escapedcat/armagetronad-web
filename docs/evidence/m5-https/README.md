@@ -3,7 +3,9 @@
 **Conclusion: leave the behaviour alone, and this directory is why.** Over
 HTTPS the wasm client makes ~5x as many blocked WebSocket attempts as it does
 over HTTP, and **nothing a visitor can see changes** — same screens, same
-order, same ~20 seconds. The extra attempts exist only in devtools.
+order, same ~20 seconds. The extra attempts exist only in devtools. The one
+alternative fix that would have removed them was measured working and declined
+on other grounds; see "The one alternative that works" below.
 
 Everything below was measured on this branch's client build
 (`web/dist-m1/armagetronad.wasm`, the `-O2 -sASSERTIONS=1` link from task 2).
@@ -12,7 +14,7 @@ Everything below was measured on this branch's client build
 
     node docs/evidence/m5-https/count-ws-attempts.mjs
 
-Reads the six committed transcripts and counts each run twice — once from the
+Reads the seven committed transcripts and counts each run twice — once from the
 page's own wrapped `WebSocket` constructor, once from the browser's log lines.
 Exits non-zero if any run's two counts disagree. They all agree.
 
@@ -41,7 +43,7 @@ Enters and no Downs.
 **Connection attempts** = invocations of the page's `WebSocket` constructor,
 which the steps file wraps before `callMain`. That is the count of attempts the
 **wasm module made**, independent of what the browser logged. The browser's own
-log lines are counted separately and agree with it in all six runs.
+log lines are counted separately and agree with it in all seven runs.
 
 **Span** = first to last attempt, from `performance.now()` inside the page.
 
@@ -53,10 +55,12 @@ log lines are counted separately and agree with it in all six runs.
 | `mp-https-certerr`   | `https://localhost:8443`  | Chrome 152  | blanket ignore (**error state**) | **100** | 20.0 s | 4 |
 | `mp-https-demohost`  | `https://demo.example:8444` | Chrome 152 | SPKI-list, `--host-resolver-rules=MAP` | **100** | 20.0 s | 4 |
 | `mp-https-ff`        | `https://localhost:8443`  | Firefox     | `acceptInsecureCerts` (**override**) |  **97** | 20.0 s | 4 |
+| `mp-wss`             | `https://localhost:8443`  | Chrome 152  | SPKI-list, **scheme rewritten to `wss://`** | **19** | 17.9 s | 4 |
 
-The four distinct URLs are the four masters in `config/master.srv`. The spread
-between 97, 98, 100 and 100 is run-to-run jitter in a 0.25 s resend loop, not a
-difference of kind.
+The four distinct URLs are the four masters in `config/master.srv` (as
+`wss://` in `mp-wss`). Among the four unmodified https runs the spread — 97,
+98, 100, 100 — is run-to-run jitter in a 0.25 s resend loop, not a difference
+of kind. `mp-wss` is a deliberate intervention and is not part of that group.
 
 ## Two dispatch claims this corrects
 
@@ -73,7 +77,7 @@ difference of kind.
 
 ## What the visitor actually sees — the same thing on both schemes
 
-In **all six runs**, after Enter on "Online Multiplayer":
+In **all seven runs**, after Enter on "Online Multiplayer":
 
 1. **A black screen**, sampled black at +2 s, +5 s, +10 s and +15.5 s.
 2. **"Master servers do not answer"**, a fullscreen message, present in the
@@ -148,6 +152,31 @@ mechanism by which it could — but that is reasoning, not a measurement, and
 task 5's live gate should run `https-multiplayer.steps` against the real URL
 and confirm the count lands in the 97-100 band. **No number in this directory
 came from a real deployment.**
+
+## The one alternative that works, and was still declined
+
+`mp-wss` is the probe. `docs/evidence/m5-https/wss-rewrite-probe.steps` is
+`web/tools/https-multiplayer.steps` with one change — the WebSocket wrapper
+rewrites `ws:` to `wss:` before delegating, which is exactly the URL string
+`Module.websocket = { url: 'wss://' }` would produce, since `createPeer` builds
+`<prefix><addr>:<port>/` from whichever prefix it is handed. (It cannot be done
+by setting `Module.websocket` from a step: `SOCKFS.websocketArgs` is captured at
+`mount()`, during `initRuntime`, before any step runs.)
+
+**It works.** Chrome drops from **98 attempts to 19** — exactly the `http:`
+figure — with **zero** mixed-content lines, and shots 06/10/11/17 are the same
+four screens in the same order at the same times.
+
+It is declined anyway, and the reasons are in
+`docs/porting/browser-runtime-notes.md` § 12. The short form: it does not make
+the console clean, it trades 98 security errors for 19 network errors, and the
+ones it removes are the informative ones — "this endpoint must be available
+over WSS" is the complete explanation of why browser multiplayer cannot work,
+and "connection refused" is not. It would also apply to every socket the client
+opens, send TLS handshakes to third-party ports measured refused, make the page
+behave differently depending on how it is served, and pre-empt Phase 2, whose
+design routes sockets through a bridge host rather than through a scheme
+rewrite.
 
 ## For task 5: this route trips two existing pass criteria
 

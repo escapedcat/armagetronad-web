@@ -1,0 +1,109 @@
+[    581ms] [harness] chrome: Chrome/152.0.7977.65
+[    581ms] [harness] navigating to https://localhost:8443/armagetronad.html
+[      8ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     37ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     38ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     39ms] [page] load event fired
+[     45ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (Not Found)   <- https://localhost:8443/favicon.ico
+[    106ms] [console.log] [PERSIST] populate ok in 36ms
+[    109ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    326ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1117ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1118ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1118ms] [console.error] 
+[   1118ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1119ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1119ms] [console.log] 
+[   1256ms] [console.log] [L] ENCODING latin1
+[   1263ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1265ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1286ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1289ms] [console.error] TODO: glShadeModel
+[   1292ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- https://localhost:8443/armagetronad.js
+[   1333ms] [harness] click #start: clicked
+[   1334ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://localhost:8443/armagetronad.js
+[   1335ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://localhost:8443/armagetronad.js
+[   1335ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://localhost:8443/armagetronad.js
+[   1335ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://localhost:8443/armagetronad.js
+[   1335ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- https://localhost:8443/armagetronad.js
+[  10401ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/01-boot1-language-menu.png
+[  10438ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10439ms] [harness] key Enter (1/1)
+[  13807ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/02-boot1-first-setup.png
+[  13838ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13839ms] [harness] key Escape (1/1)
+[  14140ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14140ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17208ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/03-boot1-after-first-setup.png
+[  17208ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17213ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17213ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17214ms] [harness] eval location.reload() => undefined
+[  17214ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17236ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17236ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17237ms] [page] load event fired
+[  17257ms] [console.log] [PERSIST] populate ok in 4ms
+[  17279ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17316ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19317ms] [harness] eval (()=>{const R=window.WebSocket;if(R.__wrapped)return 'already';const L=[];function W(u,p){u=String(u).replace(/^ws:/,'wss:');L.push([Math.round(performance.now()),String(u)]);return p===undefined?new R(u):new R(u,p);}W.prototype=R.prototype;W.CONNECTING=R.CONNECTING;W.OPEN=R.OPEN;W.CLOSING=R.CLOSING;W.CLOSED=R.CLOSED;W.__wrapped=true;window.__wsLog=L;window.WebSocket=W;return 'WebSocket counter installed; page origin is '+location.protocol})() => "WebSocket counter installed; page origin is https:"
+[  19319ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19319ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19319ms] [console.error] 
+[  19319ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19320ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19320ms] [console.log] 
+[  19443ms] [console.log] [L] ENCODING latin1
+[  19447ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  19462ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  19465ms] [console.error] TODO: glShadeModel
+[  19468ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- https://localhost:8443/armagetronad.js
+[  19473ms] [harness] click #start: clicked
+[  31539ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/04-boot2-main-menu.png
+[  31539ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  31572ms] [harness] key Enter (1/1)
+[  34437ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/05-play-game-menu-opens-on-multiplayer.png
+[  34437ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  34470ms] [harness] key Enter (1/1)
+[  37342ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/06-network-menu-opens-on-online-multiplayer.png
+[  37342ms] [harness] eval (()=>{return 'ws attempts before the master query: '+window.__wsLog.length})() => "ws attempts before the master query: 0"
+[  37343ms] [harness] === ENTER-3-ONLINE-MULTIPLAYER-STARTS-THE-MASTER-QUERY ===
+[  37375ms] [harness] key Enter (1/1)
+[  37565ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  37758ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  38017ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  38265ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  38518ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  38772ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  39033ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  39733ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/07-master-query-t02s.png
+[  40292ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  40583ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  41886ms] [browser.error/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  42413ms] [browser.warning/network] WebSocket connection to 'wss://master1.armagetronad.org:4533/' failed: WebSocket is closed before the connection is established.   <- https://localhost:8443/armagetronad.js
+[  42761ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/08-master-query-t05s.png
+[  42885ms] [browser.error/network] WebSocket connection to 'wss://master4.armagetronad.net:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  44301ms] [browser.error/network] WebSocket connection to 'wss://master4.armagetronad.net:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  45437ms] [browser.error/network] WebSocket connection to 'wss://master4.armagetronad.net:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  47413ms] [browser.warning/network] WebSocket connection to 'wss://master4.armagetronad.net:4533/' failed: WebSocket is closed before the connection is established.   <- https://localhost:8443/armagetronad.js
+[  47814ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/09-master-query-t10s.png
+[  51339ms] [browser.error/network] WebSocket connection to 'wss://master2.armagetronad.org:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  52421ms] [browser.warning/network] WebSocket connection to 'wss://master2.armagetronad.org:4533/' failed: WebSocket is closed before the connection is established.   <- https://localhost:8443/armagetronad.js
+[  52862ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/10-master-query-t15s.png
+[  55270ms] [browser.error/network] WebSocket connection to 'wss://master3.armagetronad.net:4533/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
+[  57418ms] [browser.warning/network] WebSocket connection to 'wss://master3.armagetronad.net:4533/' failed: WebSocket is closed before the connection is established.   <- https://localhost:8443/armagetronad.js
+[  57944ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/11-master-query-t20s.png
+[  63002ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/12-master-query-t25s.png
+[  68093ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/13-master-query-t30s.png
+[  78171ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/14-master-query-t40s.png
+[  88255ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/15-master-query-t50s.png
+[  98347ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/16-master-query-t60s.png
+[  98348ms] [harness] eval (()=>{const L=window.__wsLog;const t=L.map(e=>e[0]);return JSON.stringify({attempts:L.length,firstMs:t[0]??null,lastMs:t[t.length-1]??null,spanMs:t.length?t[t.length-1]-t[0]:0,distinctUrls:[...new Set(L.map(e=>e[1]))].length})})() => "{\"attempts\":19,\"firstMs\":20200,\"lastMs\":38082,\"spanMs\":17882,\"distinctUrls\":4}"
+[  98349ms] [harness] eval (()=>{const c={};for(const e of window.__wsLog)c[e[1]]=(c[e[1]]||0)+1;return JSON.stringify(c)})() => "{\"wss://master1.armagetronad.org:4533/\":11,\"wss://master4.armagetronad.net:4533/\":4,\"wss://master2.armagetronad.org:4533/\":2,\"wss://master3.armagetronad.net:4533/\":2}"
+[  98350ms] [harness] === DISMISS-WHATEVER-IS-ON-SCREEN-AND-SEE-WHERE-WE-LAND ===
+[  98382ms] [harness] key Enter (1/1)
+[ 102740ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/17-after-first-dismiss.png
+[ 102773ms] [harness] key Enter (1/1)
+[ 107149ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-wss/18-after-second-dismiss.png
+[ 107150ms] [harness] eval (()=>{return 'ws attempts total: '+window.__wsLog.length})() => "ws attempts total: 19"
+[ 107151ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => "alive, gl err=0x0"
