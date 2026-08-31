@@ -1,4 +1,5 @@
-# M5 task 5: the in-game fullscreen key is dead in the browser build.
+# M5 task 5: TOGGLE_FULLSCREEN asks the BROWSER for fullscreen, and the user
+# gesture survives Asyncify.
 #
 #   python3 -m http.server 8000 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --out /tmp/fskey-shipped \
@@ -13,28 +14,53 @@
 # --headed is REQUIRED for Chrome; see the header of drive-browser.mjs.
 #
 # WHAT IT GUARDS. config/default.cfg binds TOGGLE_FULLSCREEN to keycodes 319,
-# 110 ('n') and 102 ('f'), and those binds persist into user.cfg on first use,
-# so they are live for every visitor from their second boot on.
-# gMenus.cpp's toggle_fullscreen_func used to flip
-# currentScreensetting.fullscreen and call sr_ReinitDisplay() -- which does not
-# only re-init the display, it switches WHICH resolution setting the game reads
-# (lowlevel_sr_InitDisplay takes currentScreensetting.res when the flag is set
-# and windowSize when it is not), discarding the canvas size web/shell.html
-# established from the viewport before boot. M5 task 5 made the function return
-# immediately under __EMSCRIPTEN__.
+# 110 ('n') and 102 ('f'); those binds persist into user.cfg on first use, so
+# they are live for every visitor from their second boot on. The action used to
+# flip currentScreensetting.fullscreen and call sr_ReinitDisplay(). Emscripten
+# ignores the SDL_FULLSCREEN bit, so no window ever became fullscreen -- but the
+# flag selects WHICH resolution the game reads (lowlevel_sr_InitDisplay takes
+# currentScreensetting.res when it is set and windowSize when it is not), so the
+# key re-initialised the display into a stored size nobody chose, discarding the
+# canvas size web/shell.html set from the viewport before boot. It now asks the
+# browser for fullscreen instead, and leaves the backing store alone.
 #
-# THIS SCRIPT IS USELESS WITHOUT ITS CONTROL, which is the whole reason the
-# control build exists. "I pressed f and nothing happened" is equally
-# consistent with a key that never reached the game -- wrong element focused,
-# wrong SDL keysym, driver typing into the void. Run it against
-# armagetronad-fstoggle.html (make -f web/Makefile client-fullscreentoggle) and
-# the SAME keystroke must visibly re-init the display. If the control does not
-# move, the shipped result means nothing.
+# THE CLAIM THAT NEEDED MEASURING, and the reason this file exists rather than a
+# comment: requestFullscreen() needs transient user activation, and this game
+# does not handle keys inside the browser's event handler -- SDL queues the
+# event and the game reads it out of its own loop one or more Asyncify yields
+# later. Whether the activation survives that is a fact about the browser.
+# MEASURED IN CHROME: DOM keydown -> action is 7-16 ms, the promise RESOLVES
+# ~130 ms later, and a second press exits. It survives with three orders of
+# magnitude of margin against Chrome's five-second window.
 #
-# PASS on the shipped page: both "after f" and "after n" report the same canvas
-# size as "before", isContextLost() false, and no "Aborted(" / [EXCEPTION] in
-# the transcript. PASS on the control: at least one of the two moves.
+# THIS SCRIPT IS USELESS WITHOUT ITS CONTROL. "The canvas did not resize" is
+# equally consistent with a key that never reached the game -- wrong element
+# focused, wrong SDL keysym, driver typing into the void. Run it against
+# armagetronad-fstoggle.html (make -f web/Makefile client-fullscreentoggle),
+# which still runs the sr_ReinitDisplay body, and the SAME keystroke must move
+# the canvas to 640x480. If the control does not move, the shipped result means
+# nothing.
+#
+# PASS on the shipped page:
+#   * one "[FSKEY] TOGGLE_FULLSCREEN: action fired" and one
+#     "requestFullscreen RESOLVED" after the first 'n';
+#   * "[FSKEY] after n" reports fullscreenElement=HTML;
+#   * one "exitFullscreen requested" after the second 'n', and
+#     "[FSKEY] after second n" reports fullscreenElement=null;
+#   * the canvas is the SAME size in all four reports -- browser fullscreen is
+#     presentation only and must not move the backing store;
+#   * no "Aborted(", no [EXCEPTION].
+# PASS on the control: the canvas MOVES (measured: 1024x768 -> 640x480).
+#
+# 'f' IS PRESSED FIRST AND IS EXPECTED TO DO NOTHING, WHICH IS A KNOWN DEFECT
+# AND NOT THIS CHANGE'S. Measured: DOM keyCode 70 arrives, Emscripten's SDL maps
+# it to keysym 102, the persisted user.cfg contains
+# `KEYBOARD 102 PLAYER_BIND TOGGLE_FULLSCREEN 0`, and toggle_fullscreen_func is
+# never entered -- not even with x <= 0. The control build behaves the same way,
+# so it predates M5 task 5. It is kept in this script precisely so the day
+# somebody fixes keysym 102 this file notices.
 until:1:90000:[BOOT] autostart
+eval:(()=>{addEventListener('keydown',(e)=>console.log('[FSKEY] DOM keydown key='+e.key+' keyCode='+e.keyCode+' trusted='+e.isTrusted),true);return 'dom key logger armed'})()
 wait:9000
 eval:(()=>{const c=document.getElementById('canvas');return '[FSKEY] before: canvas '+c.width+'x'+c.height})()
 key:Enter
@@ -45,18 +71,23 @@ key:Enter
 until:1:60000:[L] NEW_ROUND
 wait:7000
 shot:01-round1-before-the-key
-mark:PRESS-f-TOGGLE_FULLSCREEN
+mark:PRESS-f-KNOWN-DEAD-SEE-HEADER
 key:F
-wait:3000
-eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return '[FSKEY] after f: canvas '+c.width+'x'+c.height+' contextLost='+g.isContextLost()})()
+wait:5000
+eval:(()=>{const c=document.getElementById('canvas');return '[FSKEY] after f: canvas '+c.width+'x'+c.height+' fullscreenElement='+(document.fullscreenElement?document.fullscreenElement.tagName:'null')})()
 shot:02-after-f
-mark:PRESS-n-TOGGLE_FULLSCREEN
+mark:PRESS-n-SHOULD-ENTER-BROWSER-FULLSCREEN
 key:N
-wait:3000
-eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return '[FSKEY] after n: canvas '+c.width+'x'+c.height+' contextLost='+g.isContextLost()})()
+wait:6000
+eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return '[FSKEY] after n: canvas '+c.width+'x'+c.height+' contextLost='+g.isContextLost()+' fullscreenElement='+(document.fullscreenElement?document.fullscreenElement.tagName:'null')})()
 shot:03-after-n
+mark:PRESS-n-AGAIN-SHOULD-LEAVE-FULLSCREEN
+key:N
+wait:6000
+eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return '[FSKEY] after second n: canvas '+c.width+'x'+c.height+' contextLost='+g.isContextLost()+' fullscreenElement='+(document.fullscreenElement?document.fullscreenElement.tagName:'null')})()
+shot:04-after-second-n
 # The game must still be playable afterwards on both pages -- a control that
 # takes the tab down is not a control, it is a different bug.
 key:Left
 wait:2000
-shot:04-still-driving
+shot:05-still-driving
