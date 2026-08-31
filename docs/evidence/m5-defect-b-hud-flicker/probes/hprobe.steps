@@ -1,0 +1,57 @@
+# DEFECT B probe v7: the HUD bar and the FPS box, NATIVE resolution, every
+# frame, with a one-frame "sandwich" detector that fires on ANY single-frame
+# difference -- a dropout, a shift, a colour change or garbage geometry.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+key:Enter
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2500
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+wait:3000
+mark:RELOAD-1
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+wait:1500
+click:#start
+wait:11000
+key:Enter
+wait:2000
+key:Down
+wait:1200
+key:Enter
+until:2:120000:[L] NEW_ROUND
+wait:9000
+shot:01-hud-up
+mark:ARM-NATIVE-RES-PROBE
+eval:(()=>{const cv=document.getElementById('canvas');const R=[{n:'hudbar',x:0,y:660,w:1024,h:108},{n:'fps',x:840,y:44,w:140,h:40}];const off=document.createElement('canvas');const c2=off.getContext('2d',{willReadFrequently:true});const S={n:0,glerr:0,regions:R.map(r=>({name:r.n,rect:r,N:r.w*r.h,ring:[new Uint8Array(r.w*r.h),new Uint8Array(r.w*r.h),new Uint8Array(r.w*r.h)],tot:[],blip:[],d1:[],top:[]})),t:[],mark:0};window.__H=S;off.width=1024;off.height=768;const grab=(R0,buf)=>{const r=R0.rect;c2.clearRect(0,0,r.w,r.h);c2.drawImage(cv,r.x,r.y,r.w,r.h,0,0,r.w,r.h);const d=c2.getImageData(0,0,r.w,r.h).data;let tot=0;for(let i=0,o=0;i<R0.N;i++,o+=4){const l=(d[o]*77+d[o+1]*151+d[o+2]*28)>>8;buf[i]=l;if(l>170)tot++;}return tot;};const mad=(a,b,N)=>{let s=0;for(let i=0;i<N;i++)s+=Math.abs(a[i]-b[i]);return s/N;};const sample=()=>{S.t.push(performance.now());for(const R0 of S.regions){R0.tot.push(grab(R0,R0.ring[S.n%3]));}S.n++;if(S.n>=3){for(const R0 of S.regions){const a=R0.ring[(S.n-3)%3],b=R0.ring[(S.n-2)%3],c=R0.ring[(S.n-1)%3];const d1=mad(a,b,R0.N),d2=mad(b,c,R0.N),d0=mad(a,c,R0.N);const bl=(d1+d2)/2-d0;R0.d1.push(d1);R0.blip.push(bl);const worst=R0.top.length>=4?R0.top[3].blip:-1e9;if(bl>worst){R0.top.push({i:S.n-2,t:Math.round(S.t[S.n-2]),blip:Math.round(bl*1000)/1000,d1:Math.round(d1*1000)/1000,d0:Math.round(d0*1000)/1000,ta:R0.tot[S.n-3],tb:R0.tot[S.n-2],tc:R0.tot[S.n-1],a:a.slice(),b:b.slice(),c:c.slice()});R0.top.sort((x,y)=>y.blip-x.blip);if(R0.top.length>4)R0.top.length=4;}}}};const patch=(C)=>{if(!C||!C.prototype||!C.prototype.finish)return;const o=C.prototype.finish;C.prototype.finish=function(){const e=this.getError();if(e)S.glerr++;sample();return o.apply(this,arguments);};};patch(window.WebGLRenderingContext);patch(window.WebGL2RenderingContext);return 'H probe armed regions='+R.map(r=>r.n).join(',')})()
+wait:12000
+mark:TEN-TURNS
+key:Left
+wait:1100
+key:Right
+wait:1100
+key:Left
+wait:1100
+key:Right
+wait:1100
+key:Left
+wait:1100
+key:Right
+wait:1100
+key:Left
+wait:1100
+key:Right
+wait:1100
+key:Left
+wait:1100
+key:Right
+wait:1100
+wait:12000
+shot:02-late
+eval:(()=>{const S=window.__H;const q=(a,p)=>{const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.round(p*(s.length-1)))]};const r3=(x)=>Math.round(x*1000)/1000;const out={frames:S.n-S.mark,glerr:S.glerr,regions:[]};for(const R of S.regions){const b=R.blip.slice(S.mark),d=R.d1.slice(S.mark),t=R.tot.slice(S.mark);const n=b.length;if(n<20)continue;let drop=0;const dex=[];for(let i=1;i<n-1;i++){const nb=Math.min(t[i-1],t[i+1]);if(nb>=40&&t[i]<=0.75*nb){drop++;if(dex.length<6)dex.push([i,t[i-1],t[i],t[i+1]]);}}out.regions.push({name:R.name,rect:R.rect,frames:n,bright_med:q(t,0.5),bright_min:q(t,0),bright_p05:q(t,0.05),bright_p95:q(t,0.95),oneframe_bright_dropouts:drop,dropout_ex:dex,framediff_p50:r3(q(d,0.5)),framediff_p95:r3(q(d,0.95)),framediff_max:r3(q(d,1)),blip_p50:r3(q(b,0.5)),blip_p95:r3(q(b,0.95)),blip_p99:r3(q(b,0.99)),blip_max:r3(q(b,1)),blip_over_1:b.filter(x=>x>1).length,blip_over_3:b.filter(x=>x>3).length,blip_over_10:b.filter(x=>x>10).length,worst:R.top.map(e=>({i:e.i,t:e.t,blip:e.blip,d1:e.d1,d0:e.d0,bright:[e.ta,e.tb,e.tc]}))});}return JSON.stringify(out)})()
+eval:(()=>{const S=window.__H;const old=document.getElementById('__ov');if(old)old.remove();const div=document.createElement('div');div.id='__ov';div.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;background:#101010;z-index:999999;color:#eee;font:11px monospace;padding:2px;overflow:hidden';const R=S.regions[0];const strip=(buf,label,bd,amp)=>{const c=document.createElement('canvas');c.width=R.rect.w;c.height=R.rect.h;c.style.cssText='display:block;width:1008px;height:53px;image-rendering:pixelated;border:1px solid '+bd;const x=c.getContext('2d');const im=x.createImageData(R.rect.w,R.rect.h);for(let i=0,o=0;i<R.N;i++,o+=4){const v=amp?Math.min(255,buf[i]*4):buf[i];im.data[o]=v;im.data[o+1]=amp?v>>2:v;im.data[o+2]=amp?v>>2:v;im.data[o+3]=255;}x.putImageData(im,0,0);const t=document.createElement('div');t.textContent=label;div.appendChild(t);div.appendChild(c);};const k=Math.min(2,R.top.length);for(let j=0;j<k;j++){const e=R.top[j];const d=new Uint8Array(R.N);for(let i=0;i<R.N;i++)d[i]=Math.abs(e.b[i]-e.a[i]);strip(e.a,'WORST BLIP #'+j+' (blip='+e.blip+', d1='+e.d1+', d0='+e.d0+', t='+e.t+'ms) -- frame '+(e.i-1)+' BEFORE, bright='+e.ta,'#444',false);strip(e.b,'frame '+e.i+' THE CANDIDATE, bright='+e.tb,'#4a4',false);strip(e.c,'frame '+(e.i+1)+' AFTER, bright='+e.tc,'#444',false);strip(d,'|before - candidate| x4','#a44',true);}document.body.appendChild(div);return 'overlay rows='+k})()
+wait:800
+shot:03-worst-blip-frames

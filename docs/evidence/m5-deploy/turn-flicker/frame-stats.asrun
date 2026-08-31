@@ -1,0 +1,7 @@
+file                            mean  top20% mean  diff vs prev
+20-before-turn.png             12.36        29.82           nan
+21-turn+0.png                  16.47        30.70         12.50
+22-turn+1.png                  17.32        31.69         10.54
+23-turn+2.png                  17.97        33.49         10.92
+24-turn+3.png                  18.32        32.20          8.85
+25-turn+4.png                  18.68        31.45          8.38

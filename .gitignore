@@ -142,3 +142,9 @@ web/node_modules
 # generated docs under src/doc/ (html.m4 -> *.html), but it also matches this
 # hand-written shell page, which --shell-file needs as source, not output.
 !web/shell.html
+# And the site-root redirect the Pages deploy copies into the publish
+# directory (web/package.json's `deploy` script). Same line-63 `*.html`
+# problem as web/shell.html above: it is hand-written source, not generated
+# output, and it is the only reason https://escapedcat.github.io/armagetronad-web/
+# is not a 404 -- emcc names its page armagetronad.html.
+!web/index.html

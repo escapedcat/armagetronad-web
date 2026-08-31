@@ -684,7 +684,16 @@ void sr_LimitFPS()
 }
 
 void rSysDep::SwapGL(){
-#ifdef __EMSCRIPTEN__
+// AA_WEB_YIELD_AFTER_PERFRAME IS A CONTROL-BUILD SWITCH AND NOTHING ELSE. It is
+// never defined by the `client` target; web/Makefile's `client-yieldprobe`
+// target defines it to link a second page, armagetronad-yieldfix.html, that is
+// identical in every other respect and in which this yield is moved to AFTER
+// rPerFrameTask::DoPerFrameTasks(). That page is what makes the claim in
+// docs/evidence/m5-defect-b-hud-flicker/README.md falsifiable by a real browser
+// -- the HUD-missing composite rate must collapse on it and only on it.
+// With the macro undefined the preprocessed output of this file is unchanged,
+// which is what keeps the shipped client and the dedicated wasm byte-identical.
+#if defined(__EMSCRIPTEN__) && !defined(AA_WEB_YIELD_AFTER_PERFRAME)
     // THE browser yield point, and the reason the whole client is built with
     // Asyncify. The game has no frame callback: every one of its loops --
     // uMenu::Enter, gGame's round loop, the connection and download waits --
@@ -794,11 +803,25 @@ void rSysDep::SwapGL(){
         if ( tRecorder::IsRunning() )
             rPerFrameTask::DoPerFrameTasks();
 
+#if defined(__EMSCRIPTEN__) && defined(AA_WEB_YIELD_AFTER_PERFRAME)
+        // Control build only: the early return skips everything below, so this
+        // path needs its own yield to keep "once per call, every path" true.
+        emscripten_sleep( 0 );
+#endif
         return;
     }
 
 
     rPerFrameTask::DoPerFrameTasks();
+
+#if defined(__EMSCRIPTEN__) && defined(AA_WEB_YIELD_AFTER_PERFRAME)
+    // Control build only. The overlay layer -- the HUD, the FPS counter and the
+    // graphical console -- is drawn by DoPerFrameTasks() just above, so a yield
+    // placed HERE hands the browser a frame that has both the world and the
+    // overlay in it. The shipped placement at the top of this function hands it
+    // one that has the world and not the overlay.
+    emscripten_sleep( 0 );
+#endif
 
     // unlock the mutex while waiting for the swap operation to finish
     SDL_mutexV(  sr_netLock );

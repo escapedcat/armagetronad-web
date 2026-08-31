@@ -1,0 +1,147 @@
+[    774ms] [harness] chrome: Chrome/152.0.7977.65
+[    775ms] [harness] navigating to http://localhost:8123/armagetronad.html
+[     12ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     45ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     46ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     47ms] [page] load event fired
+[     50ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8123/favicon.ico
+[    102ms] [console.log] [PERSIST] populate ok in 36ms
+[    113ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    305ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1117ms] [harness] eval (()=>{const cv=document.getElementById('canvas');const S={last:cv.width+'x'+cv.height,events:[],changes:[]};window.__A=S;for(const e of ['webglcontextlost','webglcontextrestored','webglcontextcreationerror']){cv.addEventListener(e,(ev)=>{S.events.push([e,performance.now()]);console.log('[RES] EVENT '+e);},false);}setInterval(()=>{const s=cv.width+'x'+cv.height;if(s!==S.last){console.log('[RES] canvas-changed '+S.last+' -> '+s);S.changes.push([S.last,s,performance.now()]);S.last=s;}},40);S.dump=(p)=>{const g=cv.getContext('webgl')||cv.getContext('webgl2')||cv.getContext('experimental-webgl');let info={};try{info={lost:g?g.isContextLost():'nogl',vp:g?Array.from(g.getParameter(g.VIEWPORT)):null,dbw:g?g.drawingBufferWidth:null,dbh:g?g.drawingBufferHeight:null};}catch(e){info={err:String(e)};}console.log('[RES] '+JSON.stringify(Object.assign({phase:p,w:cv.width,h:cv.height,cw:cv.clientWidth,ch:cv.clientHeight,styleW:cv.style.width,styleH:cv.style.height,changes:S.changes.length,events:S.events.length},info)));return p};return 'probe armed'})() => "probe armed"
+[   1124ms] [console.log] [RES] {"phase":"boot1-before-play","w":1024,"h":768,"cw":1024,"ch":768,"styleW":"","styleH":"","changes":0,"events":0,"lost":false,"vp":[0,0,1024,768],"dbw":1024,"dbh":768}
+[   1125ms] [harness] eval window.__A.dump('boot1-before-play') => "boot1-before-play"
+[   1130ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1130ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1130ms] [console.error] 
+[   1131ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1131ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1131ms] [console.log] 
+[   1266ms] [console.log] [L] ENCODING latin1
+[   1274ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1275ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1292ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1295ms] [console.error] TODO: glShadeModel
+[   1298ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad.js
+[   1339ms] [harness] click #start: clicked
+[   1341ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1342ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1342ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1342ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1342ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[  10628ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/00-boot1-language-menu.png
+[  10654ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10661ms] [harness] key Enter (1/1)
+[  10962ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10962ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13546ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/01-boot1-first-setup.png
+[  13572ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13578ms] [harness] key Escape (1/1)
+[  13879ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13880ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16962ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/02-boot1-after-first-setup.png
+[  16962ms] [harness] === RELOAD-1 ===
+[  16966ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16967ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16967ms] [harness] eval location.reload() => undefined
+[  16967ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16985ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16986ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16989ms] [page] load event fired
+[  16999ms] [console.log] [PERSIST] populate ok in 4ms
+[  17024ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17067ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  18569ms] [harness] eval (()=>{const cv=document.getElementById('canvas');const S={last:cv.width+'x'+cv.height,events:[],changes:[]};window.__A=S;for(const e of ['webglcontextlost','webglcontextrestored','webglcontextcreationerror']){cv.addEventListener(e,(ev)=>{S.events.push([e,performance.now()]);console.log('[RES] EVENT '+e);},false);}setInterval(()=>{const s=cv.width+'x'+cv.height;if(s!==S.last){console.log('[RES] canvas-changed '+S.last+' -> '+s);S.changes.push([S.last,s,performance.now()]);S.last=s;}},40);S.dump=(p)=>{const g=cv.getContext('webgl')||cv.getContext('webgl2')||cv.getContext('experimental-webgl');let info={};try{info={lost:g?g.isContextLost():'nogl',vp:g?Array.from(g.getParameter(g.VIEWPORT)):null,dbw:g?g.drawingBufferWidth:null,dbh:g?g.drawingBufferHeight:null};}catch(e){info={err:String(e)};}console.log('[RES] '+JSON.stringify(Object.assign({phase:p,w:cv.width,h:cv.height,cw:cv.clientWidth,ch:cv.clientHeight,styleW:cv.style.width,styleH:cv.style.height,changes:S.changes.length,events:S.events.length},info)));return p};return 'probe armed'})() => "probe armed"
+[  18574ms] [console.log] [RES] {"phase":"boot2-before-play","w":1024,"h":768,"cw":1024,"ch":768,"styleW":"","styleH":"","changes":0,"events":0,"lost":false,"vp":[0,0,1024,768],"dbw":1024,"dbh":768}
+[  18575ms] [harness] eval window.__A.dump('boot2-before-play') => "boot2-before-play"
+[  18576ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  18577ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  18577ms] [console.error] 
+[  18577ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  18577ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  18578ms] [console.log] 
+[  18698ms] [console.log] [L] ENCODING latin1
+[  18701ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18735ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18736ms] [console.error] TODO: glShadeModel
+[  18736ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad.js
+[  18736ms] [harness] click #start: clicked
+[  28797ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/03-boot2-main-menu.png
+[  28798ms] [console.log] [RES] {"phase":"boot2-main-menu","w":1024,"h":768,"cw":1024,"ch":768,"styleW":"","styleH":"","changes":0,"events":0,"lost":false,"vp":[0,0,1023,1023],"dbw":1024,"dbh":768}
+[  28799ms] [harness] eval window.__A.dump('boot2-main-menu') => "boot2-main-menu"
+[  28832ms] [harness] key Down (1/2)
+[  29167ms] [harness] key Down (2/2)
+[  30433ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/04-cursor-system-setup.png
+[  30466ms] [harness] key Enter (1/1)
+[  32629ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/05-system-setup.png
+[  32662ms] [harness] key Enter (1/1)
+[  34834ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/06-display-settings.png
+[  34867ms] [harness] key Enter (1/1)
+[  37744ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/07-screen-mode.png
+[  37777ms] [harness] key Down (1/1)
+[  39356ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/08-cursor-on-screen-resolution.png
+[  39356ms] [harness] === PICK-640x480 ===
+[  39389ms] [harness] key Left (1/20)
+[  39728ms] [harness] key Left (2/20)
+[  40068ms] [harness] key Left (3/20)
+[  40402ms] [harness] key Left (4/20)
+[  40736ms] [harness] key Left (5/20)
+[  41073ms] [harness] key Left (6/20)
+[  41406ms] [harness] key Left (7/20)
+[  41743ms] [harness] key Left (8/20)
+[  42080ms] [harness] key Left (9/20)
+[  42414ms] [harness] key Left (10/20)
+[  42752ms] [harness] key Left (11/20)
+[  43091ms] [harness] key Left (12/20)
+[  43425ms] [harness] key Left (13/20)
+[  43761ms] [harness] key Left (14/20)
+[  44095ms] [harness] key Left (15/20)
+[  44429ms] [harness] key Left (16/20)
+[  44764ms] [harness] key Left (17/20)
+[  45103ms] [harness] key Left (18/20)
+[  45437ms] [harness] key Left (19/20)
+[  45771ms] [harness] key Left (20/20)
+[  47656ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/09-clamped-to-320x200.png
+[  47689ms] [harness] key Right (1/4)
+[  48023ms] [harness] key Right (2/4)
+[  48357ms] [harness] key Right (3/4)
+[  48691ms] [harness] key Right (4/4)
+[  50565ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/10-now-640x480.png
+[  50566ms] [console.log] [RES] {"phase":"chosen-640x480-menu-open","w":1024,"h":768,"cw":1024,"ch":768,"styleW":"","styleH":"","changes":0,"events":0,"lost":false,"vp":[0,0,1024,768],"dbw":1024,"dbh":768}
+[  50566ms] [harness] eval window.__A.dump('chosen-640x480-menu-open') => "chosen-640x480-menu-open"
+[  50566ms] [harness] === UP-x3-TO-APPLY-CHANGES ===
+[  50598ms] [harness] key Up (1/3)
+[  50932ms] [harness] key Up (2/3)
+[  51267ms] [harness] key Up (3/3)
+[  53141ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/11-cursor-on-apply-changes.png
+[  53142ms] [console.log] [RES] {"phase":"cursor-on-apply","w":1024,"h":768,"cw":1024,"ch":768,"styleW":"","styleH":"","changes":0,"events":0,"lost":false,"vp":[0,0,1023,1023],"dbw":1024,"dbh":768}
+[  53142ms] [harness] eval window.__A.dump('cursor-on-apply') => "cursor-on-apply"
+[  53142ms] [harness] === PRESS-ENTER-ON-APPLY-CHANGES ===
+[  53163ms] [console.log] [RES] canvas-changed 1024x768 -> 640x480
+[  53174ms] [harness] key Enter (1/1)
+[  53724ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/12-apply+0.png
+[  53780ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/13-apply+1.png
+[  53848ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/14-apply+2.png
+[  54914ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/15-apply-after-1s.png
+[  54915ms] [console.log] [RES] {"phase":"after-apply-1s","w":640,"h":480,"cw":640,"ch":480,"styleW":"","styleH":"","changes":1,"events":0,"lost":false,"vp":[0,0,639,639],"dbw":640,"dbh":480}
+[  54915ms] [harness] eval window.__A.dump('after-apply-1s') => "after-apply-1s"
+[  57980ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/16-apply-after-4s.png
+[  57981ms] [console.log] [RES] {"phase":"after-apply-4s","w":640,"h":480,"cw":640,"ch":480,"styleW":"","styleH":"","changes":1,"events":0,"lost":false,"vp":[0,0,639,639],"dbw":640,"dbh":480}
+[  57981ms] [harness] eval window.__A.dump('after-apply-4s') => "after-apply-4s"
+[  57981ms] [harness] === BACK-OUT-AND-PLAY ===
+[  58005ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  58014ms] [harness] key Escape (1/1)
+[  59875ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/17-after-escape.png
+[  59904ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  59907ms] [harness] key Escape (1/1)
+[  61740ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  61746ms] [harness] key Escape (1/1)
+[  64094ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/18-main-menu-after-reinit.png
+[  64095ms] [console.log] [RES] {"phase":"main-menu-after-reinit","w":640,"h":480,"cw":640,"ch":480,"styleW":"","styleH":"","changes":1,"events":0,"lost":false,"vp":[0,0,639,639],"dbw":640,"dbh":480}
+[  64095ms] [harness] eval window.__A.dump('main-menu-after-reinit') => "main-menu-after-reinit"
+[  64128ms] [harness] key Enter (1/1)
+[  64430ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 0)
+[ 124461ms] [harness] until TIMED OUT after 60000ms: saw 0x <<[L] NEW_ROUND>>, wanted 1
+[ 128523ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitA/19-playing-after-reinit.png
+[ 128523ms] [console.log] [RES] {"phase":"playing-after-reinit","w":640,"h":480,"cw":640,"ch":480,"styleW":"","styleH":"","changes":1,"events":0,"lost":false,"vp":[0,0,639,639],"dbw":640,"dbh":480}
+[ 128524ms] [harness] eval window.__A.dump('playing-after-reinit') => "playing-after-reinit"

@@ -1,0 +1,112 @@
+# M5 task 3: what the Multiplayer menu does when the page is served over
+# https:, which is the only scheme GitHub Pages offers.
+#
+#   # control (this is what every gate M1..M5 ran):
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/mp-http \
+#        --script-file web/tools/https-multiplayer.steps
+#
+#   # the real thing:
+#   node web/tools/make-rig-cert.mjs /tmp/rig
+#   node web/tools/serve-https.mjs --dir web/dist-m1 --port 8443 \
+#        --cert /tmp/rig/cert.pem --key /tmp/rig/key.pem &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/mp-https \
+#        --url https://localhost:8443/armagetronad.html \
+#        --chrome-flag "--ignore-certificate-errors-spki-list=$(cat /tmp/rig/spki.txt)" \
+#        --script-file web/tools/https-multiplayer.steps
+#
+# The two runs differ in the URL and nothing else, which is the point: any
+# difference in the transcript is attributable to the scheme.
+#
+# WHY THE ROUTE IS THREE ENTERS AND NO DOWNS. Read off the menu constructors,
+# not off the pixels. uMenu clamps its initial `selected` to items.Len()-1, and
+# items render with the highest index at the top, so every one of these menus
+# opens on its LAST-CONSTRUCTED item:
+#   MainMenu (gGame.cpp, ingame=false) constructs exx, abb, subm_settings,
+#       se_PlayerMenu, gamemenuitem -- so it opens on the Play Game submenu.
+#       (This is the same fact viewport-menu-gate.steps relies on when it says
+#       one Down lands on Player Setup.)
+#   game_menu (same function) is `uMenu game_menu(gametitle)` with the default
+#       exit item, then settings1, start, connect -- so it opens on connect,
+#       "$network_menu_text" = "Multiplayer".
+#   net_menu (net_game(), gGame.cpp) is cust, mas, fav, bud, opt, lan, inter
+#       after the implicit exit item -- so it opens on inter,
+#       "$network_menu_internet_text" = "Online Multiplayer", whose function is
+#       gServerBrowser::BrowseMaster.
+# If an item is ever added to any of those three, this script walks somewhere
+# else and cannot tell -- read the shots, do not trust the Enter count.
+#
+# WHY THE RELOAD. Same reason as viewport-menu-gate.steps: a fresh profile has
+# an empty IndexedDB, so boot 1 is the first-use flow and only boot 2 reaches
+# the real main menu.
+#
+# WHAT THE WebSocket COUNTER IS FOR. The mixed-content block is reported by the
+# browser as a Log entry, and counting log lines is exactly the kind of
+# counting this milestone keeps getting wrong. The counter wraps the page's
+# WebSocket constructor instead, so the number is the number of connection
+# ATTEMPTS the wasm module actually made, timestamped, whether or not the
+# browser chose to log each one. It delegates to the real constructor and is
+# installed before callMain, so the game sees no difference.
+
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+shot:01-boot1-language-menu
+key:Enter
+wait:3000
+shot:02-boot1-first-setup
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+shot:03-boot1-after-first-setup
+mark:RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+wait:2000
+eval:(()=>{const R=window.WebSocket;if(R.__wrapped)return 'already';const L=[];function W(u,p){L.push([Math.round(performance.now()),String(u)]);return p===undefined?new R(u):new R(u,p);}W.prototype=R.prototype;W.CONNECTING=R.CONNECTING;W.OPEN=R.OPEN;W.CLOSING=R.CLOSING;W.CLOSED=R.CLOSED;W.__wrapped=true;window.__wsLog=L;window.WebSocket=W;return 'WebSocket counter installed; page origin is '+location.protocol})()
+click:#start
+wait:12000
+shot:04-boot2-main-menu
+mark:ENTER-1-PLAY-GAME-SUBMENU
+key:Enter
+wait:2500
+shot:05-play-game-menu-opens-on-multiplayer
+mark:ENTER-2-MULTIPLAYER-SUBMENU
+key:Enter
+wait:2500
+shot:06-network-menu-opens-on-online-multiplayer
+eval:(()=>{return 'ws attempts before the master query: '+window.__wsLog.length})()
+mark:ENTER-3-ONLINE-MULTIPLAYER-STARTS-THE-MASTER-QUERY
+key:Enter
+wait:2000
+shot:07-master-query-t02s
+wait:3000
+shot:08-master-query-t05s
+wait:5000
+shot:09-master-query-t10s
+wait:5000
+shot:10-master-query-t15s
+wait:5000
+shot:11-master-query-t20s
+wait:5000
+shot:12-master-query-t25s
+wait:5000
+shot:13-master-query-t30s
+wait:10000
+shot:14-master-query-t40s
+wait:10000
+shot:15-master-query-t50s
+wait:10000
+shot:16-master-query-t60s
+eval:(()=>{const L=window.__wsLog;const t=L.map(e=>e[0]);return JSON.stringify({attempts:L.length,firstMs:t[0]??null,lastMs:t[t.length-1]??null,spanMs:t.length?t[t.length-1]-t[0]:0,distinctUrls:[...new Set(L.map(e=>e[1]))].length})})()
+eval:(()=>{const c={};for(const e of window.__wsLog)c[e[1]]=(c[e[1]]||0)+1;return JSON.stringify(c)})()
+mark:DISMISS-WHATEVER-IS-ON-SCREEN-AND-SEE-WHERE-WE-LAND
+key:Enter
+wait:4000
+shot:17-after-first-dismiss
+key:Enter
+wait:4000
+shot:18-after-second-dismiss
+eval:(()=>{return 'ws attempts total: '+window.__wsLog.length})()
+eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})()

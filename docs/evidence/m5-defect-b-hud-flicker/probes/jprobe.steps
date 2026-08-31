@@ -1,0 +1,61 @@
+# DEFECT B probe v9: the SAME strip sampled twice per frame -- once at the
+# game's swap (WebGL finish) and once on the compositor path (rAF) -- so the two
+# can be compared pair by pair inside one run.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+key:Enter
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2500
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+wait:3000
+mark:RELOAD-1
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+wait:1500
+click:#start
+wait:11000
+key:Enter
+wait:2000
+key:Down
+wait:1200
+key:Enter
+until:2:120000:[L] NEW_ROUND
+wait:9000
+shot:01-hud-up
+mark:ARM-PAIRED-SAMPLER
+eval:(()=>{const cv=document.getElementById('canvas');const R={x:0,y:684,w:1024,h:84},N=R.w*R.h;const off=document.createElement('canvas');off.width=R.w;off.height=R.h;const c2=off.getContext('2d',{willReadFrequently:true});const S={ev:[],glerr:0,run:true,fin:0,mark:0,R:R,N:N,pairs:[],worst:[]};window.__J=S;const buf=new Uint8Array(N);const meas=()=>{c2.drawImage(cv,R.x,R.y,R.w,R.h,0,0,R.w,R.h);const d=c2.getImageData(0,0,R.w,R.h).data;let b=0;for(let i=0,o=0;i<N;i++,o+=4){const l=(d[o]*77+d[o+1]*151+d[o+2]*28)>>8;buf[i]=l;if(l>170)b++;}return b;};const patch=(C)=>{if(!C||!C.prototype||!C.prototype.finish)return;const o=C.prototype.finish;C.prototype.finish=function(){const e=this.getError();if(e)S.glerr++;S.fin++;S.ev.push([performance.now(),meas(),0]);return o.apply(this,arguments);};};patch(window.WebGLRenderingContext);patch(window.WebGL2RenderingContext);const loop=(ts)=>{if(!S.run)return;const f=S.fin;S.fin=0;const b=meas();S.ev.push([performance.now(),b,1,f]);const L=S.ev.length;let prev=-1;for(let i=L-2;i>=0&&i>L-12;i--){if(S.ev[i][2]===0){prev=S.ev[i][1];break;}}if(prev>=0){S.pairs.push([Math.round(ts),prev,b,f]);if(prev>=150&&b<=0.5*prev&&S.worst.length<4)S.worst.push({t:Math.round(ts),swap:prev,composite:b,fin:f,img:buf.slice()});}requestAnimationFrame(loop);};requestAnimationFrame(loop);return 'J probe armed: swap-time AND composite-time sampling of the same strip'})()
+wait:12000
+mark:TWELVE-TURNS
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+wait:12000
+shot:02-late
+eval:(()=>{const S=window.__J;const q=(a,p)=>{const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.round(p*(s.length-1)))]};const ev=S.ev;const fs=ev.filter(e=>e[2]===0).map(e=>e[1]);const rs=ev.filter(e=>e[2]===1).map(e=>e[1]);const P=S.pairs.filter(p=>p[1]>=150);const rel=P.map(p=>p[2]/p[1]);const worse=P.filter(p=>p[2]<=0.5*p[1]);const same=P.filter(p=>p[2]===p[1]);const r3=(x)=>Math.round(x*1000)/1000;return JSON.stringify({swap_samples:fs.length,composite_samples:rs.length,glerr:S.glerr,swap_bright:{med:q(fs,0.5),p05:q(fs,0.05),p50:q(fs,0.5),p95:q(fs,0.95),min:q(fs,0)},composite_bright:{med:q(rs,0.5),p05:q(rs,0.05),p50:q(rs,0.5),p95:q(rs,0.95),min:q(rs,0)},paired_when_hud_up:P.length,ratio_composite_over_swap:{p01:r3(q(rel,0.01)),p05:r3(q(rel,0.05)),p50:r3(q(rel,0.5)),p95:r3(q(rel,0.95)),min:r3(q(rel,0))},composite_le_half_of_swap:worse.length,identical:same.length,worst_pairs:P.slice().sort((a,b)=>(a[2]/a[1])-(b[2]/b[1])).slice(0,8).map(p=>({t:p[0],swap:p[1],composite:p[2],swaps_since_tick:p[3]})),saved:S.worst.length})})()
+eval:(()=>{const S=window.__J;const R=S.R;const old=document.getElementById('__ov');if(old)old.remove();const div=document.createElement('div');div.id='__ov';div.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;background:#101010;z-index:999999;color:#eee;font:12px monospace;padding:4px;overflow:hidden';if(!S.worst.length){div.textContent='PAIRED SAMPLER: no compositor tick showed the HUD at half or less of what the game had drawn at swap time.';document.body.appendChild(div);return 'overlay empty';}for(const e of S.worst){const t=document.createElement('div');t.textContent='t='+e.t+'ms  bright at SWAP='+e.swap+'  bright at COMPOSITE='+e.composite+'  swaps_since_tick='+e.fin;div.appendChild(t);const c=document.createElement('canvas');c.width=R.w;c.height=R.h;c.style.cssText='display:block;width:1008px;height:83px;image-rendering:pixelated;border:1px solid #4a4';const x=c.getContext('2d');const im=x.createImageData(R.w,R.h);for(let i=0,o=0;i<S.N;i++,o+=4){const v=e.img[i];im.data[o]=v;im.data[o+1]=v;im.data[o+2]=v;im.data[o+3]=255;}x.putImageData(im,0,0);div.appendChild(c);}document.body.appendChild(div);return 'overlay rows='+S.worst.length})()
+wait:800
+shot:03-paired

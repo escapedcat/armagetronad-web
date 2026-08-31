@@ -1,0 +1,61 @@
+# DEFECT A, the real one: "Window Size" is the item the cursor LANDS ON, and it
+# is inert in this port because FULLSCREEN is On, so lowlevel_sr_InitDisplay
+# reads currentScreensetting.res and never windowSize.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+key:Enter
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2500
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+wait:3000
+mark:RELOAD-1
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+wait:1500
+eval:(()=>{const cv=document.getElementById('canvas');const S={last:cv.width+'x'+cv.height,changes:[]};window.__A=S;setInterval(()=>{const s=cv.width+'x'+cv.height;if(s!==S.last){console.log('[RES] canvas-changed '+S.last+' -> '+s);S.changes.push([S.last,s]);S.last=s;}},40);S.dump=(p)=>{const rd=(x)=>{try{return Module.FS.readFile(x,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const pick=(k)=>{if(c===null)return null;const m=c.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim():null};console.log('[RES] '+JSON.stringify({phase:p,w:cv.width,h:cv.height,changes:S.changes.length,FULLSCREEN:pick('FULLSCREEN'),SCREENMODE:pick('ARMAGETRON_SCREENMODE'),WINSIZE_W:pick('ARMAGETRON_WINDOWSIZE_W'),WINSIZE_H:pick('ARMAGETRON_WINDOWSIZE_H')}));return p};return 'probe armed'})()
+click:#start
+wait:10000
+key:Down:2
+wait:900
+key:Enter
+wait:1800
+key:Enter
+wait:1800
+key:Enter
+wait:2500
+shot:01-screen-mode-cursor-is-on-WINDOW-SIZE
+eval:window.__A.dump('screen-mode-open')
+mark:THE-CURSOR-IS-ALREADY-ON-WINDOW-SIZE-CHANGE-IT-TO-320x200
+key:Left:20
+wait:1500
+shot:02-window-size-now-320x200
+eval:window.__A.dump('window-size-chosen')
+mark:UP-x2-TO-APPLY-CHANGES
+key:Up:2
+wait:1500
+shot:03-cursor-on-apply
+mark:PRESS-ENTER-ON-APPLY-CHANGES
+key:Enter
+shot:04-apply+0
+wait:2000
+shot:05-apply-after-2s
+eval:window.__A.dump('after-apply-windowsize')
+wait:2500
+eval:window.__A.dump('after-apply-windowsize-4s')
+mark:LEAVE-THE-MENU-SO-IT-IS-SAVED
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2000
+eval:window.__A.dump('after-menu-leave')
+mark:RELOAD-2-DOES-THE-NEXT-PAGE-LOAD-HONOUR-IT
+eval:location.reload()
+until:3:90000:[PERSIST] populate ok
+wait:1500
+eval:(()=>{const cv=document.getElementById('canvas');const S={last:cv.width+'x'+cv.height,changes:[]};window.__A=S;setInterval(()=>{const s=cv.width+'x'+cv.height;if(s!==S.last){console.log('[RES] canvas-changed '+S.last+' -> '+s);S.changes.push([S.last,s]);S.last=s;}},40);S.dump=(p)=>{const rd=(x)=>{try{return Module.FS.readFile(x,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const pick=(k)=>{if(c===null)return null;const m=c.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim():null};console.log('[RES] '+JSON.stringify({phase:p,w:cv.width,h:cv.height,changes:S.changes.length,FULLSCREEN:pick('FULLSCREEN'),SCREENMODE:pick('ARMAGETRON_SCREENMODE'),WINSIZE_W:pick('ARMAGETRON_WINDOWSIZE_W'),WINSIZE_H:pick('ARMAGETRON_WINDOWSIZE_H')}));return p};return 'probe armed'})()
+click:#start
+wait:11000
+shot:06-boot3-main-menu-still-1024x768
+eval:window.__A.dump('boot3-after-boot')

@@ -1,0 +1,26 @@
+[
+ {
+  "seconds": 40.5,
+  "raf_ticks": 2429,
+  "raf_hz": 60,
+  "game_swaps": 2427,
+  "game_fps": 60,
+  "swaps_per_tick_p50": 1,
+  "swaps_per_tick_zero": 250,
+  "world_med": 1367,
+  "ticks_world_up": 1838,
+  "hud_med": 883,
+  "hud_p01": 0,
+  "hud_p05": 0,
+  "hud_p10": 0,
+  "hud_p25": 841,
+  "HUD_GONE_ticks": 271,
+  "HUD_GONE_pct": 14.7,
+  "HUD_HALF_OR_LESS_ticks": 271,
+  "HUD_HALF_pct": 14.7,
+  "gone_runs": 3,
+  "gone_run_len_max": 91,
+  "gone_run_len_p50": 90,
+  "saved": 0
+ }
+]

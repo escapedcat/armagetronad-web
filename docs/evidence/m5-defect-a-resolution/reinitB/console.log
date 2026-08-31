@@ -1,0 +1,168 @@
+[    697ms] [harness] chrome: Chrome/152.0.7977.65
+[    697ms] [harness] navigating to http://localhost:8123/armagetronad.html
+[      5ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     48ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     54ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     55ms] [page] load event fired
+[     56ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8123/favicon.ico
+[    107ms] [console.log] [PERSIST] populate ok in 38ms
+[    207ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    312ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1218ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1218ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1218ms] [console.error] 
+[   1219ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1219ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1219ms] [console.log] 
+[   1359ms] [console.log] [L] ENCODING latin1
+[   1368ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1369ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1390ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1394ms] [console.error] TODO: glShadeModel
+[   1397ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad.js
+[   1437ms] [harness] click #start: clicked
+[   1439ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1439ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1440ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1440ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1440ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[  10478ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10479ms] [harness] key Enter (1/1)
+[  10781ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10781ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13310ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13315ms] [harness] key Escape (1/1)
+[  13617ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13617ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16618ms] [harness] === RELOAD-1 ===
+[  16623ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16624ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16624ms] [harness] eval location.reload() => undefined
+[  16624ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16644ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16644ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16648ms] [page] load event fired
+[  16658ms] [console.log] [PERSIST] populate ok in 4ms
+[  16683ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  16726ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  18229ms] [harness] eval (()=>{const cv=document.getElementById('canvas');const S={last:cv.width+'x'+cv.height,changes:[]};window.__A=S;setInterval(()=>{const s=cv.width+'x'+cv.height;if(s!==S.last){console.log('[RES] canvas-changed '+S.last+' -> '+s);S.changes.push([S.last,s,performance.now()]);S.last=s;}},40);S.dump=(p)=>{const g=cv.getContext('webgl')||cv.getContext('webgl2');console.log('[RES] '+JSON.stringify({phase:p,w:cv.width,h:cv.height,cw:cv.clientWidth,ch:cv.clientHeight,changes:S.changes.length,lost:g?g.isContextLost():'nogl'}));return p};return 'probe armed'})() => "probe armed"
+[  18232ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  18232ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  18232ms] [console.error] 
+[  18232ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  18233ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  18233ms] [console.log] 
+[  18361ms] [console.log] [L] ENCODING latin1
+[  18365ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18380ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18383ms] [console.error] TODO: glShadeModel
+[  18386ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad.js
+[  18392ms] [harness] click #start: clicked
+[  28426ms] [harness] key Down (1/2)
+[  28762ms] [harness] key Down (2/2)
+[  30012ms] [harness] key Enter (1/1)
+[  32148ms] [harness] key Enter (1/1)
+[  34286ms] [harness] key Enter (1/1)
+[  37176ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/07-screen-mode.png
+[  37208ms] [harness] key Down (1/1)
+[  38712ms] [harness] === PICK-1024x768-THE-SIZE-IT-ALREADY-IS ===
+[  38746ms] [harness] key Left (1/20)
+[  39081ms] [harness] key Left (2/20)
+[  39420ms] [harness] key Left (3/20)
+[  39754ms] [harness] key Left (4/20)
+[  40089ms] [harness] key Left (5/20)
+[  40429ms] [harness] key Left (6/20)
+[  40769ms] [harness] key Left (7/20)
+[  41107ms] [harness] key Left (8/20)
+[  41441ms] [harness] key Left (9/20)
+[  41779ms] [harness] key Left (10/20)
+[  42114ms] [harness] key Left (11/20)
+[  42448ms] [harness] key Left (12/20)
+[  42787ms] [harness] key Left (13/20)
+[  43123ms] [harness] key Left (14/20)
+[  43458ms] [harness] key Left (15/20)
+[  43797ms] [harness] key Left (16/20)
+[  44133ms] [harness] key Left (17/20)
+[  44472ms] [harness] key Left (18/20)
+[  44810ms] [harness] key Left (19/20)
+[  45148ms] [harness] key Left (20/20)
+[  46988ms] [harness] key Right (1/6)
+[  47322ms] [harness] key Right (2/6)
+[  47659ms] [harness] key Right (3/6)
+[  47999ms] [harness] key Right (4/6)
+[  48334ms] [harness] key Right (5/6)
+[  48675ms] [harness] key Right (6/6)
+[  50552ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/10-now-1024x768.png
+[  50553ms] [console.log] [RES] {"phase":"chosen-1024x768-menu-open","w":1024,"h":768,"cw":1024,"ch":768,"changes":0,"lost":false}
+[  50553ms] [harness] eval window.__A.dump('chosen-1024x768-menu-open') => "chosen-1024x768-menu-open"
+[  50586ms] [harness] key Up (1/3)
+[  50920ms] [harness] key Up (2/3)
+[  51255ms] [harness] key Up (3/3)
+[  53137ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/11-cursor-on-apply-changes.png
+[  53138ms] [harness] === PRESS-ENTER-ON-APPLY-CHANGES ===
+[  53171ms] [harness] key Enter (1/1)
+[  53551ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/12-apply+0.png
+[  53849ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/13-apply+1.png
+[  55399ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/15-apply-after-1.5s.png
+[  55401ms] [console.log] [RES] {"phase":"after-apply-1024x768","w":1024,"h":768,"cw":1024,"ch":768,"changes":0,"lost":false}
+[  55401ms] [harness] eval window.__A.dump('after-apply-1024x768') => "after-apply-1024x768"
+[  57978ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/16-apply-after-4s.png
+[  57979ms] [console.log] [RES] {"phase":"after-apply-1024x768-4s","w":1024,"h":768,"cw":1024,"ch":768,"changes":0,"lost":false}
+[  57979ms] [harness] eval window.__A.dump('after-apply-1024x768-4s') => "after-apply-1024x768-4s"
+[  57979ms] [harness] === NOW-PICK-800x600-IN-THE-SAME-SESSION ===
+[  58011ms] [harness] key Down (1/3)
+[  58345ms] [harness] key Down (2/3)
+[  58688ms] [harness] key Down (3/3)
+[  60284ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/17-cursor-back-on-resolution.png
+[  60317ms] [harness] key Left (1/20)
+[  60653ms] [harness] key Left (2/20)
+[  60990ms] [harness] key Left (3/20)
+[  61325ms] [harness] key Left (4/20)
+[  61659ms] [harness] key Left (5/20)
+[  61998ms] [harness] key Left (6/20)
+[  62333ms] [harness] key Left (7/20)
+[  62667ms] [harness] key Left (8/20)
+[  63004ms] [harness] key Left (9/20)
+[  63338ms] [harness] key Left (10/20)
+[  63676ms] [harness] key Left (11/20)
+[  64010ms] [harness] key Left (12/20)
+[  64345ms] [harness] key Left (13/20)
+[  64683ms] [harness] key Left (14/20)
+[  65020ms] [harness] key Left (15/20)
+[  65353ms] [harness] key Left (16/20)
+[  65693ms] [harness] key Left (17/20)
+[  66027ms] [harness] key Left (18/20)
+[  66361ms] [harness] key Left (19/20)
+[  66696ms] [harness] key Left (20/20)
+[  68533ms] [harness] key Right (1/5)
+[  68867ms] [harness] key Right (2/5)
+[  69202ms] [harness] key Right (3/5)
+[  69537ms] [harness] key Right (4/5)
+[  69871ms] [harness] key Right (5/5)
+[  71760ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/18-now-800x600.png
+[  71793ms] [harness] key Up (1/3)
+[  72127ms] [harness] key Up (2/3)
+[  72464ms] [harness] key Up (3/3)
+[  74362ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/19-cursor-on-apply-again.png
+[  74394ms] [console.log] [RES] canvas-changed 1024x768 -> 800x600
+[  74395ms] [harness] key Enter (1/1)
+[  74777ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/20-apply2+0.png
+[  76363ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/21-apply2-after-1.5s.png
+[  76364ms] [console.log] [RES] {"phase":"after-apply-800x600","w":800,"h":600,"cw":800,"ch":600,"changes":1,"lost":false}
+[  76364ms] [harness] eval window.__A.dump('after-apply-800x600') => "after-apply-800x600"
+[  76365ms] [harness] === BACK-TO-MAIN-MENU-AND-PLAY ===
+[  76398ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  76398ms] [harness] key Escape (1/1)
+[  78233ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  78234ms] [harness] key Escape (1/1)
+[  80066ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  80066ms] [harness] key Escape (1/1)
+[  82403ms] [harness] key Up (1/2)
+[  82742ms] [harness] key Up (2/2)
+[  84325ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/22-cursor-on-play-game.png
+[  84357ms] [harness] key Enter (1/1)
+[  84659ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 0)
+[ 174700ms] [harness] until TIMED OUT after 90000ms: saw 0x <<[L] NEW_ROUND>>, wanted 1
+[ 180764ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/reinitB/23-playing-at-800x600.png
+[ 180766ms] [console.log] [RES] {"phase":"playing-at-800x600","w":800,"h":600,"cw":800,"ch":600,"changes":1,"lost":false}
+[ 180766ms] [harness] eval window.__A.dump('playing-at-800x600') => "playing-at-800x600"

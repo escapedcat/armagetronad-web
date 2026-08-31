@@ -1,0 +1,82 @@
+[
+ {
+  "swap_samples": 2335,
+  "composite_samples": 4668,
+  "glerr": 0,
+  "swap_bright": {
+   "med": 926,
+   "p05": 0,
+   "p50": 926,
+   "p95": 1300,
+   "min": 0
+  },
+  "composite_bright": {
+   "med": 901,
+   "p05": 0,
+   "p50": 901,
+   "p95": 1197,
+   "min": 0
+  },
+  "paired_when_hud_up": 3941,
+  "ratio_composite_over_swap": {
+   "p01": 0,
+   "p05": 0,
+   "p50": 1,
+   "p95": 1,
+   "min": 0
+  },
+  "composite_le_half_of_swap": 927,
+  "identical": 3002,
+  "worst_pairs": [
+   {
+    "t": 41051,
+    "swap": 1263,
+    "composite": 0,
+    "swaps_since_tick": 0
+   },
+   {
+    "t": 43135,
+    "swap": 900,
+    "composite": 0,
+    "swaps_since_tick": 0
+   },
+   {
+    "t": 43560,
+    "swap": 900,
+    "composite": 0,
+    "swaps_since_tick": 0
+   },
+   {
+    "t": 43593,
+    "swap": 900,
+    "composite": 0,
+    "swaps_since_tick": 0
+   },
+   {
+    "t": 43760,
+    "swap": 900,
+    "composite": 0,
+    "swaps_since_tick": 0
+   },
+   {
+    "t": 44393,
+    "swap": 900,
+    "composite": 0,
+    "swaps_since_tick": 0
+   },
+   {
+    "t": 44793,
+    "swap": 900,
+    "composite": 0,
+    "swaps_since_tick": 0
+   },
+   {
+    "t": 45293,
+    "swap": 901,
+    "composite": 0,
+    "swaps_since_tick": 0
+   }
+  ],
+  "saved": 4
+ }
+]

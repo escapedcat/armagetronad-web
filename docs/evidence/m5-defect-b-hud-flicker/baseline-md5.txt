@@ -1,0 +1,7 @@
+MD5 (web/dist-m1/armagetronad.data) = 59d5aeadf06cc5ca956551250bd740c3
+MD5 (web/dist-m1/armagetronad.html) = e8fa56d0d76ced5ca141e10a7f9a5973
+MD5 (web/dist-m1/armagetronad.js) = 89bc886c1a74bfe5199c07d0b332bfdf
+MD5 (web/dist-m1/armagetronad.wasm) = 5f57136cd055635e9201e1887cb9f2e4
+MD5 (web/dist-m1/index.html) = 17e8535ca4170b561d2ba7813ef3ada8
+MD5 (web/dist-m0/armagetronad-dedicated.js) = 6dd7f84eae1de362e4faf847a5d1b194
+MD5 (web/dist-m0/armagetronad-dedicated.wasm) = 9718a2a64978cb6e9b95ea2f0454cca5

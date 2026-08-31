@@ -1,0 +1,49 @@
+# Targeted probe for a report that "every time the bike turns the screen
+# flickers a bit". NOT a gate -- it answers one question and stops.
+#
+# It samples three things the one-shot-per-step gate cannot:
+#   1. per-frame glGetError, not every 30th frame, so a GL error raised by a
+#      single turn's geometry cannot fall between polls;
+#   2. the frame-time series with the TURNS timestamped in the same clock, by
+#      listening for keydown in the page, so "did a frame stall when the bike
+#      turned" is a comparison rather than an impression;
+#   3. consecutive screenshots across one turn instead of one per step.
+wait:1000
+eval:(()=>{const S={t:new Float64Array(200000),n:0,glerr:[],turns:[],polls:0};window.__turn=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){const now=performance.now();if(S.n<S.t.length)S.t[S.n++]=now;S.polls++;const e=this.getError();if(e)S.glerr.push([S.n,now,e]);return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);window.addEventListener('keydown',(ev)=>{if(ev.key==='ArrowLeft'||ev.key==='ArrowRight')S.turns.push([performance.now(),ev.key]);},true);return 'turn probe armed: per-frame glGetError, keydown-timestamped turns'})()
+wait:7000
+click:#start
+wait:6000
+key:Enter
+wait:3000
+key:Escape
+wait:4000
+key:Enter
+until:1:60000:[L] NEW_ROUND
+wait:5000
+mark:BURST-ACROSS-ONE-LEFT-TURN
+shot:20-before-turn
+key:Left
+shot:21-turn+0
+shot:22-turn+1
+shot:23-turn+2
+shot:24-turn+3
+shot:25-turn+4
+wait:600
+mark:BURST-ACROSS-ONE-RIGHT-TURN
+shot:26-before-turn
+key:Right
+shot:27-turn+0
+shot:28-turn+1
+shot:29-turn+2
+shot:30-turn+3
+wait:800
+key:Left
+wait:1400
+key:Right
+wait:1400
+key:Left
+wait:1400
+key:Right
+wait:2000
+eval:(()=>{const S=window.__turn;if(!S)return 'no probe';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const d=[];for(let i=1;i<all.length;i++)d.push([all[i],all[i]-all[i-1]]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.round(p*(s.length-1)))]};const r2=(x)=>x==null?null:Math.round(x*100)/100;const deltas=d.map(x=>x[1]);const base={frames:all.length,p50:r2(q(deltas,0.5)),p99:r2(q(deltas,0.99)),max:r2(q(deltas,1))};const perTurn=S.turns.map(([t,k])=>{const w=d.filter(x=>x[0]>=t-200&&x[0]<=t+700);const wd=w.map(x=>x[1]);return{key:k,at:r2(t),frames:w.length,max_ms:r2(q(wd,1)),over25ms:wd.filter(x=>x>25).length,over40ms:wd.filter(x=>x>40).length}});const away=d.filter(x=>!S.turns.some(([t])=>x[0]>=t-200&&x[0]<=t+700)).map(x=>x[1]);const off={frames:away.length,p99:r2(q(away,0.99)),max:r2(q(away,1)),over25ms:away.filter(x=>x>25).length,over40ms:away.filter(x=>x>40).length};return JSON.stringify({overall:base,glGetError_polls:S.polls,glGetError_nonzero:S.glerr.length,glGetError_first:S.glerr.slice(0,5),turns:perTurn,away_from_turns:off})})()
+shot:31-after-turns

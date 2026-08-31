@@ -6,7 +6,9 @@ the whole argument; this is the file to read before undoing one of them.
 
 Scope: the Asyncify yield, the two `usleep` replacements, the rule about which
 sleep primitives are safe at all (§8 — read that one before adding any sleep),
-the GL traps, and the camera. Each section is named so a comment can cite it.
+the GL traps, the camera, and (§12) what the Multiplayer menu does when the
+page is served over `https:`, which is the only scheme the deployed Demo gets.
+Each section is named so a comment can cite it.
 
 **If you are about to touch rendering, read §10 first.** "One `glBegin`/`glEnd`
 block, one vertex format" is the largest single class of defect this port has
@@ -310,6 +312,52 @@ timeouts to about 4ms. Therefore:
   `:2255`) and the server browser (`gServerBrowser.cpp:216`, `:261`). A burst of
   output there becomes seconds of wall clock. **If the page looks hung during
   boot or while connecting, check this before suspecting Asyncify itself.**
+
+### The third consequence, missed until M5 task 4c: the yield is ABOVE the overlay
+
+This is the HUD flicker the maintainer reported off the live Demo, and it is a
+direct consequence of the placement argued for above. Read `SwapGL()` in order:
+
+    emscripten_sleep( 0 );                 <-- the yield. Buffer = world, NO overlay.
+    ... playback/timing, the !sr_glOut early return ...
+    rPerFrameTask::DoPerFrameTasks();      <-- the overlay is drawn HERE
+    glFlush()/glFinish(); SDL_GL_SwapBuffers();
+
+`DoPerFrameTasks()` **is** the overlay layer and nothing else is:
+`display_hud_subby_all` (`gHud.cpp` — scores, the Rubber/Speed/Brakes meters,
+Fastest, Enemies/Friends/Ping, and `display_fps_subby`'s "FPS: n"),
+`sr_ConsolePerFrame` (`rConsoleGraph.cpp`), and `scores` (`ePlayer.cpp`). So
+every frame parks the tab in `setTimeout` for ~4 ms with the world drawn and the
+HUD not drawn, and whether the compositor takes that opportunity depends on its
+60 Hz phase against a `setTimeout`-paced loop. Measured in Chrome at a true
+60 fps: **38 HUD-gone runs in 40.5 s, median length 2 compositor ticks** — a
+~33 ms blink slightly under once per second, intermittent, with no GL error and
+no assertion. `docs/evidence/m5-defect-b-hud-flicker/`.
+
+Two rules out of it, and the second is the expensive one:
+
+1. **The yield must land on a COMPLETE frame.** "Once per call on every path" was
+   the right requirement and it is not sufficient — *where in the frame* matters
+   as much as *which callers reach it*. Any future yield point has to be checked
+   against what is already in the drawing buffer at that instant, and the answer
+   for a placement above `DoPerFrameTasks()` is "everything except the HUD".
+2. **A sampler that runs at the game's swap cannot see a compositing artifact,
+   by construction.** Three separate probes — per-frame `glGetError`, per-frame
+   draw calls bucketed by bound texture, and native-resolution per-frame imaging
+   of the HUD strip — all returned clean negatives, because the overlay is drawn
+   *before* the swap and the frame is always complete by the time the swap
+   happens. The instrument that sees what the player sees is
+   `requestAnimationFrame`, which runs on the compositor's clock. The clean
+   negatives are kept in `negative-swap-time-only/` so the next reader does not
+   repeat them.
+
+`web/Makefile`'s `client-yieldprobe` target builds `armagetronad-yieldfix.html`,
+identical but for `-DAA_WEB_YIELD_AFTER_PERFRAME`, which moves the yield below
+`DoPerFrameTasks()` and adds one in the `!sr_glOut` early-return branch so rule
+(1) of § 2 still holds. On it the short dropouts go to zero. **That is a control,
+not yet a shipping decision**: it also moves the yield across
+`SDL_mutexV(sr_netLock)`/`sr_LockSDL()`, and a real fix should probably sit
+after the swap block and be gated on M2's gameplay gate in both engines.
 
 ---
 
@@ -1292,3 +1340,125 @@ The change stays available and stays safe: `SDLK_NEWLAST` is 1550 in this build
 unreachable indices today rather than aliases of anything — Emscripten's DOM map
 emits either an ASCII value under 128 or a `|1<<10` value at 1024 or above, so
 nothing can ever land on them.
+
+---
+
+## 12. `ws://` from an `https:` page: the Multiplayer menu over HTTPS
+
+**Decision: this behaviour ships unchanged.** It was examined, four candidate
+fixes were considered, one of them was actually measured working, and it was
+still declined. This section is the argument, so that "nobody looked" is not
+available as a later reading.
+
+**The route is Play Game → Multiplayer → Online Multiplayer**, three Enters
+from the main menu and no Downs — `uMenu` clamps its initial `selected` to
+`items.Len()-1` and renders the highest index at the top, so `MainMenu`,
+`game_menu` and `net_menu` (all in `gGame.cpp`) each open on their
+last-constructed item. It is **not** on the main menu.
+
+### What happens
+
+`gServerBrowser::BrowseMaster` → `nServerInfo::GetFromMaster` picks a master
+from `config/master.srv` and calls `sn_Connect` (`nNetwork.cpp`), which resends
+a login packet every `resend = .25` seconds until `tSysTimeFloat()+5` expires,
+then deletes that master and recurses onto the next. Four masters, so **20
+seconds**, then `tConsole::Message` puts up a fullscreen "Master servers do not
+answer" — with a **3600-second** timeout, so it blocks until a key is pressed.
+Then the Server Browser, showing "Sorry, no server found :-(".
+
+Under Emscripten each `sendto` goes to `SOCKFS.websocket_sock_ops.sendmsg`
+(`deps/emsdk/upstream/emscripten/src/lib/libsockfs.js`, grep `createPeer`),
+which **re-creates the peer's WebSocket whenever its `readyState` is `CLOSING`
+or `CLOSED`**. That is where the two schemes diverge:
+
+- Over **`http:`** the socket sits in `CONNECTING` while the TCP connect is in
+  flight, so most resends reuse it. All four masters eventually answer
+  `net::ERR_CONNECTION_REFUSED` — **TCP 4533 is refused on all four**, measured.
+- Over **`https:`** the mixed-content check fails the socket immediately, so it
+  is `CLOSED` by the next resend and every resend builds a new one.
+
+Measured, by wrapping the page's `WebSocket` constructor (so the number is
+attempts the **wasm module made**, not log lines) and cross-checked against the
+browser's own log lines, which agree exactly in every run:
+
+| origin | browser | attempts | first→last |
+|---|---|---|---|
+| `http://localhost`            | Chrome 152 |  **19** | 16.4 s |
+| `http://localhost`            | Firefox    |  **27** | 18.7 s |
+| `https://localhost`           | Chrome 152 |  **98** | 20.0 s |
+| `https://localhost` (cert-error state) | Chrome 152 | **100** | 20.0 s |
+| `https://demo.example`        | Chrome 152 | **100** | 20.0 s |
+| `https://localhost`           | Firefox    |  **97** | 20.0 s |
+
+**And the visitor sees the same thing in all six.** Black screen for ~20 s,
+then the fullscreen message, then "Sorry, no server found :-(", client alive
+with `glGetError` 0x0. **The wall clock is set by the game's 5-second
+per-master timeout, not by how the socket fails** — which is the whole reason
+5× the attempts costs the visitor nothing. `docs/evidence/m5-https/`.
+
+**It is the scheme, not the certificate and not the hostname.** Both were
+controlled: a run with the certificate considered *valid*
+(`--ignore-certificate-errors-spki-list`, no certificate diagnostic in the
+transcript at all) and a run in a certificate-*error* state (blanket
+`--ignore-certificate-errors`) give the same answer; and since `localhost` is a
+potentially trustworthy origin in its own right, a third run served
+`https://demo.example` through `--host-resolver-rules=MAP` with a matching
+cert — same answer. In the other direction `http://localhost`, equally
+trustworthy, is **not** blocked.
+
+**Firefox prints no mixed-content message.** It says "Firefox can't establish a
+connection to the server at ws://..." — the same text it uses for an ordinary
+failure — so a check that greps for "Mixed Content" reads Firefox as not
+blocking. It blocks: 27 attempts over `http:`, 97 over `https:`, same build,
+same script.
+
+### Why it is not fixed
+
+The candidates, and what is wrong with each:
+
+- **Rewrite the scheme to `wss://` when `location.protocol === 'https:'`
+  (`Module.websocket = { url: 'wss://' }`).** This one was **measured, and it
+  works**: `docs/evidence/m5-https/wss-rewrite-probe.steps` drops Chrome from
+  **98 attempts to 19**, exactly the `http:` figure, with zero mixed-content
+  lines and a pixel-identical sequence of screens. It is declined anyway. It
+  does not make the console clean — it trades 98 security errors for 19
+  network errors — and the errors it removes are the *informative* ones:
+  "this endpoint must be available over WSS" is the complete and correct
+  explanation of why browser multiplayer cannot work today, and the replacement
+  says only "connection refused". It makes the page behave differently
+  depending on how it is served, applies to every socket the client opens (LAN
+  browse, Custom Connect), and sends TLS handshakes to third-party ports that
+  are measured refused. It also pre-empts Phase 2, whose design (`PLAN.md`)
+  routes sockets through a **bridge host**, not through a scheme rewrite.
+- **Stub the WebSocket so `ws://` never leaves the page.** Mechanically
+  possible — `poll` reports connection-less sockets always writable, so the
+  game loop would not notice — but it silences the browser's own diagnosis,
+  and `sendmsg` would push into `msg_send_queue` on a socket that never opens.
+- **Bound the retries in C++.** The 98 comes from a 0.25 s resend against a
+  5 s timeout in `sn_Connect`, which is shared with real gameplay and with the
+  dedicated build. Changing it for a console-only symptom is the wrong trade,
+  and it would need a `#if !defined(DEDICATED) && defined(__EMSCRIPTEN__)`
+  guard on the one file this project holds byte-identical.
+- **Remove the network menu entries under `__EMSCRIPTEN__`.** `PLAN.md` asks
+  M5 to *confirm the network menus fail gracefully*, not to delete them.
+
+What is actually wrong with leaving it is one thing and it is small: **a
+visitor who opens devtools sees ~98 red lines.** Against that: nothing visible
+changes, the noise is **bounded** (it stops when the fourth master times out
+and does not resume unless the menu is re-entered), and it does not accumulate
+— `addPeer` keys `sock.peers` by `addr + ':' + port`, so each re-created peer
+*replaces* its predecessor and the map holds at most four.
+
+**This is also what the desktop game does** when UDP 4533 is blocked, which is
+the behaviour this port has preserved everywhere else it could.
+
+### The black screen is a separate, scheme-independent finding
+
+For the ~20 seconds of the master query the canvas is **solid black** —
+sampled black at +2 s, +5 s, +10 s and +15.5 s — on **both** schemes and in
+both browsers. `BrowseSpecialMaster` sets `sr_con.fullscreen = true` and
+`sr_textOut = true` expressly so the "Connecting to Master Server N..." lines
+are shown, and they are not on the canvas. **Nothing here diagnoses that**; it
+is recorded because "what does the visitor see" was the question and the answer
+is "nothing, for twenty seconds". It is not caused by HTTPS and is not fixed by
+anything in this section.

@@ -1,0 +1,55 @@
+# DEFECT B probe v10: light rAF-only sampler -- what the COMPOSITOR sees.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+key:Enter
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2500
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+wait:3000
+mark:RELOAD-1
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+wait:1500
+click:#start
+wait:11000
+key:Enter
+wait:2000
+key:Down
+wait:1200
+key:Enter
+until:2:120000:[L] NEW_ROUND
+wait:9000
+shot:01-hud-up
+mark:ARM-LIGHT-RAF-SAMPLER
+eval:(()=>{const cv=document.getElementById('canvas');const HR={x:0,y:700,w:1024,h:68},WR={x:380,y:130,w:300,h:60};const oh=document.createElement('canvas');oh.width=HR.w;oh.height=HR.h;const ch=oh.getContext('2d',{willReadFrequently:true});const ow=document.createElement('canvas');ow.width=WR.w;ow.height=WR.h;const cw=ow.getContext('2d',{willReadFrequently:true});const S={ticks:[],fin:0,finTotal:0,glerr:0,run:true,t0:performance.now(),HR:HR,shots:[]};window.__K=S;const buf=new Uint8Array(HR.w*HR.h);const patch=(C)=>{if(!C||!C.prototype||!C.prototype.finish)return;const o=C.prototype.finish;C.prototype.finish=function(){S.fin++;S.finTotal++;return o.apply(this,arguments);};};patch(window.WebGLRenderingContext);patch(window.WebGL2RenderingContext);const loop=(ts)=>{if(!S.run)return;const f=S.fin;S.fin=0;ch.drawImage(cv,HR.x,HR.y,HR.w,HR.h,0,0,HR.w,HR.h);const d=ch.getImageData(0,0,HR.w,HR.h).data;let h=0;for(let i=0,o=0;i<HR.w*HR.h;i++,o+=4){const l=(d[o]*77+d[o+1]*151+d[o+2]*28)>>8;buf[i]=l;if(l>170)h++;}cw.drawImage(cv,WR.x,WR.y,WR.w,WR.h,0,0,WR.w,WR.h);const e=cw.getImageData(0,0,WR.w,WR.h).data;let w=0;for(let o=0;o<WR.w*WR.h*4;o+=4){if(((e[o]*77+e[o+1]*151+e[o+2]*28)>>8)>60)w++;}S.ticks.push([Math.round(ts),h,w,f]);if(S.ticks.length>200){const r=S.ticks.slice(-400).map(x=>x[1]).sort((a,b)=>a-b);const med=r[r.length>>1];if(med>=120&&h<=0.15*med&&w>=1500&&S.shots.length<3)S.shots.push({t:Math.round(ts),hud:h,world:w,fin:f,med:med,img:buf.slice()});}requestAnimationFrame(loop);};requestAnimationFrame(loop);return 'K probe armed (rAF only, light)'})()
+wait:14000
+mark:TEN-TURNS
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+key:Left
+wait:900
+key:Right
+wait:900
+wait:14000
+shot:02-late
+eval:(()=>{const S=window.__K;const T=S.ticks;const n=T.length;if(n<50)return 'few '+n;const q=(a,p)=>{const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.round(p*(s.length-1)))]};const dur=(T[n-1][0]-T[0][0])/1000;const hud=T.map(x=>x[1]),wo=T.map(x=>x[2]),fin=T.map(x=>x[3]);const wmed=q(wo,0.5);const live=T.filter(x=>x[2]>=0.7*wmed);const lh=live.map(x=>x[1]);const lmed=q(lh,0.5);const gone=live.filter(x=>x[1]<=0.15*lmed);const part=live.filter(x=>x[1]<=0.5*lmed);let runs=0,inrun=false;const runlens=[];let cur=0;for(const t of live){const g=t[1]<=0.15*lmed;if(g){cur++;inrun=true;}else{if(inrun){runs++;runlens.push(cur);cur=0;inrun=false;}}}if(inrun){runs++;runlens.push(cur);}return JSON.stringify({seconds:Math.round(dur*10)/10,raf_ticks:n,raf_hz:Math.round(n/dur*10)/10,game_swaps:S.finTotal,game_fps:Math.round(S.finTotal/dur*10)/10,swaps_per_tick_p50:q(fin,0.5),swaps_per_tick_zero:fin.filter(x=>x===0).length,world_med:wmed,ticks_world_up:live.length,hud_med:lmed,hud_p01:q(lh,0.01),hud_p05:q(lh,0.05),hud_p10:q(lh,0.1),hud_p25:q(lh,0.25),HUD_GONE_ticks:gone.length,HUD_GONE_pct:Math.round(gone.length/live.length*1000)/10,HUD_HALF_OR_LESS_ticks:part.length,HUD_HALF_pct:Math.round(part.length/live.length*1000)/10,gone_runs:runs,gone_run_len_max:runlens.length?Math.max.apply(null,runlens):0,gone_run_len_p50:runlens.length?q(runlens,0.5):0,saved:S.shots.length})})()
+eval:(()=>{const S=window.__K;const R=S.HR;const old=document.getElementById('__ov');if(old)old.remove();const div=document.createElement('div');div.id='__ov';div.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;background:#101010;z-index:999999;color:#eee;font:12px monospace;padding:4px;overflow:hidden';if(!S.shots.length){div.textContent='rAF SAMPLER: no compositor tick showed the world drawn with the HUD gone.';document.body.appendChild(div);return 'overlay empty';}for(const e of S.shots){const t=document.createElement('div');t.textContent='COMPOSITE t='+e.t+'ms  hud_bright='+e.hud+' (running median '+e.med+')  world_bright='+e.world+'  game_swaps_since_previous_tick='+e.fin;div.appendChild(t);const c=document.createElement('canvas');c.width=R.w;c.height=R.h;c.style.cssText='display:block;width:1008px;height:67px;image-rendering:pixelated;border:1px solid #4a4;margin-bottom:6px';const x=c.getContext('2d');const im=x.createImageData(R.w,R.h);for(let i=0,o=0;i<R.w*R.h;i++,o+=4){const v=e.img[i];im.data[o]=v;im.data[o+1]=v;im.data[o+2]=v;im.data[o+3]=255;}x.putImageData(im,0,0);div.appendChild(c);}document.body.appendChild(div);return 'overlay rows='+S.shots.length})()
+wait:800
+shot:03-composites-without-hud

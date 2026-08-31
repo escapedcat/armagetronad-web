@@ -1,0 +1,36 @@
+# Why the Firefox evidence in this directory went through a local proxy.
+#
+# Firefox 154.0.1, fresh throwaway profile, this repo's own drive-firefox.mjs,
+# four navigations, run back to back on the machine M5 was verified on.
+# Chrome and curl reached the deployed site from the same machine at the same
+# time; Chrome played three full rounds off it.
+#
+# Re-run: node web/tools/drive-firefox.mjs --out DIR --url URL --script 'wait:1500,eval:document.title'
+
+=== https://example.com
+[   1442ms] [harness] firefox: 154.0.1 (headless=true)
+[   1442ms] [harness] navigating to https://example.com
+[   1928ms] [harness] eval document.title => Example Domain
+
+=== https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[   1387ms] [harness] firefox: 154.0.1 (headless=true)
+[   1387ms] [harness] navigating to https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[     14ms] [browser.error/network] fetch failed (NS_ERROR_FAILURE) <- https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[     18ms] [harness] FAILED: Error: browsingContext.navigate: unknown error: Error: NS_ERROR_FAILURE
+
+=== https://pages.github.io/
+[   1487ms] [harness] firefox: 154.0.1 (headless=true)
+[   1488ms] [harness] navigating to https://pages.github.io/
+[     18ms] [browser.error/network] fetch failed (NS_ERROR_FAILURE) <- https://pages.github.io/
+[     22ms] [harness] FAILED: Error: browsingContext.navigate: unknown error: Error: NS_ERROR_FAILURE
+
+=== http://escapedcat.github.io/armagetronad-web/
+[   1348ms] [harness] firefox: 154.0.1 (headless=true)
+[   1348ms] [harness] navigating to http://escapedcat.github.io/armagetronad-web/
+[     16ms] [browser.error/network] fetch failed (NS_ERROR_FAILURE) <- http://escapedcat.github.io/armagetronad-web/
+[     20ms] [harness] FAILED: Error: browsingContext.navigate: unknown error: Error: NS_ERROR_FAILURE
+
+=== the same deep link, with --pref pointing at docs/evidence/m5-deploy/tunnel-proxy.mjs on 127.0.0.1:8890
+[   1326ms] [harness] navigating to https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[   3070ms] [harness] eval document.title => Armagetron Advanced
+[   3076ms] [harness] eval location.href => https://escapedcat.github.io/armagetronad-web/armagetronad.html

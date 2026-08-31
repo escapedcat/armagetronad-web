@@ -6,6 +6,26 @@ This is a fork of [Armagetron Advanced](https://www.armagetronad.org/) — the c
 Not a rewrite, not a look-alike: the original C++ engine, physics, AI and network
 protocol, compiled to WebAssembly with [Emscripten](https://emscripten.org/).
 
+## ▶ Play it
+
+**<https://escapedcat.github.io/armagetronad-web/>**
+
+Desktop Chrome or Firefox, keyboard required. Click **Play**, then arrow keys to
+steer. A first visit downloads **~1.67 MiB** (the edge serves the 4.33 MB wasm
+gzipped to 1.27 MB); after that it is cached, and your settings and key bindings
+persist in IndexedDB.
+
+Single-player against AI is the committed scope. The multiplayer menu is present
+but reaches no servers — it fails to the game's own "Sorry, no server found",
+taking about 20 seconds of black canvas to get there. Safari is not a target.
+
+**Two known defects, both diagnosed, neither fixed yet:** the HUD and FPS counter
+blink roughly once a second (the frame yield sits above the overlay draw, so a
+frame is composited with the world present and the HUD not yet drawn); and in the
+video menu the top row, *Window Size*, does nothing — this build runs fullscreen,
+where that setting is never read. The row below it, *Screen Resolution*, is the
+live one.
+
 ## Why
 
 Armagetron's famously precise feel lives in ~114k lines of battle-tested C++

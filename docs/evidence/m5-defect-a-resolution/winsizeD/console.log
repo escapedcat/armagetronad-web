@@ -1,0 +1,138 @@
+[    885ms] [harness] chrome: Chrome/152.0.7977.65
+[    887ms] [harness] navigating to http://localhost:8123/armagetronad.html
+[     20ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     52ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     55ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     57ms] [page] load event fired
+[     60ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8123/favicon.ico
+[    129ms] [console.log] [PERSIST] populate ok in 38ms
+[    225ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    391ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1233ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1233ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1234ms] [console.error] 
+[   1234ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1234ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1235ms] [console.log] 
+[   1365ms] [console.log] [L] ENCODING latin1
+[   1372ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1374ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1399ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1403ms] [console.error] TODO: glShadeModel
+[   1407ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad.js
+[   1452ms] [harness] click #start: clicked
+[   1454ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1454ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1454ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1454ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[   1455ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad.js
+[  10486ms] [harness] key Enter (1/1)
+[  10491ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10787ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10792ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13330ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13331ms] [harness] key Escape (1/1)
+[  13632ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13632ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16633ms] [harness] === RELOAD-1 ===
+[  16647ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16647ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16649ms] [harness] eval location.reload() => undefined
+[  16650ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16673ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16673ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16677ms] [page] load event fired
+[  16688ms] [console.log] [PERSIST] populate ok in 4ms
+[  16715ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  16751ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  18253ms] [harness] eval (()=>{const cv=document.getElementById('canvas');const S={last:cv.width+'x'+cv.height,changes:[]};window.__A=S;setInterval(()=>{const s=cv.width+'x'+cv.height;if(s!==S.last){console.log('[RES] canvas-changed '+S.last+' -> '+s);S.changes.push([S.last,s]);S.last=s;}},40);S.dump=(p)=>{const rd=(x)=>{try{return Module.FS.readFile(x,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const pick=(k)=>{if(c===null)return null;const m=c.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim():null};console.log('[RES] '+JSON.stringify({phase:p,w:cv.width,h:cv.height,changes:S.changes.length,FULLSCREEN:pick('FULLSCREEN'),SCREENMODE:pick('ARMAGETRON_SCREENMODE'),WINSIZE_W:pick('ARMAGETRON_WINDOWSIZE_W'),WINSIZE_H:pick('ARMAGETRON_WINDOWSIZE_H')}));return p};return 'probe armed'})() => "probe armed"
+[  18254ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  18255ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  18255ms] [console.error] 
+[  18255ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  18256ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  18256ms] [console.log] 
+[  18380ms] [console.log] [L] ENCODING latin1
+[  18383ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18399ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18402ms] [console.error] TODO: glShadeModel
+[  18405ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad.js
+[  18411ms] [harness] click #start: clicked
+[  28450ms] [harness] key Down (1/2)
+[  28787ms] [harness] key Down (2/2)
+[  30024ms] [harness] key Enter (1/1)
+[  32159ms] [harness] key Enter (1/1)
+[  34299ms] [harness] key Enter (1/1)
+[  37185ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/winsizeD/01-screen-mode-cursor-is-on-WINDOW-SIZE.png
+[  37186ms] [console.log] [RES] {"phase":"screen-mode-open","w":1024,"h":768,"changes":0,"FULLSCREEN":"1","SCREENMODE":"0","WINSIZE_W":"640","WINSIZE_H":"480"}
+[  37187ms] [harness] eval window.__A.dump('screen-mode-open') => "screen-mode-open"
+[  37187ms] [harness] === THE-CURSOR-IS-ALREADY-ON-WINDOW-SIZE-CHANGE-IT-TO-320x200 ===
+[  37220ms] [harness] key Left (1/20)
+[  37554ms] [harness] key Left (2/20)
+[  37888ms] [harness] key Left (3/20)
+[  38226ms] [harness] key Left (4/20)
+[  38563ms] [harness] key Left (5/20)
+[  38899ms] [harness] key Left (6/20)
+[  39234ms] [harness] key Left (7/20)
+[  39571ms] [harness] key Left (8/20)
+[  39909ms] [harness] key Left (9/20)
+[  40245ms] [harness] key Left (10/20)
+[  40582ms] [harness] key Left (11/20)
+[  40925ms] [harness] key Left (12/20)
+[  41285ms] [harness] key Left (13/20)
+[  41619ms] [harness] key Left (14/20)
+[  41955ms] [harness] key Left (15/20)
+[  42292ms] [harness] key Left (16/20)
+[  42626ms] [harness] key Left (17/20)
+[  42959ms] [harness] key Left (18/20)
+[  43296ms] [harness] key Left (19/20)
+[  43631ms] [harness] key Left (20/20)
+[  45516ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/winsizeD/02-window-size-now-320x200.png
+[  45518ms] [console.log] [RES] {"phase":"window-size-chosen","w":1024,"h":768,"changes":0,"FULLSCREEN":"1","SCREENMODE":"0","WINSIZE_W":"640","WINSIZE_H":"480"}
+[  45518ms] [harness] eval window.__A.dump('window-size-chosen') => "window-size-chosen"
+[  45518ms] [harness] === UP-x2-TO-APPLY-CHANGES ===
+[  45551ms] [harness] key Up (1/2)
+[  45887ms] [harness] key Up (2/2)
+[  47763ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/winsizeD/03-cursor-on-apply.png
+[  47763ms] [harness] === PRESS-ENTER-ON-APPLY-CHANGES ===
+[  47796ms] [harness] key Enter (1/1)
+[  48176ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/winsizeD/04-apply+0.png
+[  50247ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/winsizeD/05-apply-after-2s.png
+[  50249ms] [console.log] [RES] {"phase":"after-apply-windowsize","w":1024,"h":768,"changes":0,"FULLSCREEN":"1","SCREENMODE":"0","WINSIZE_W":"320","WINSIZE_H":"200"}
+[  50249ms] [harness] eval window.__A.dump('after-apply-windowsize') => "after-apply-windowsize"
+[  52752ms] [console.log] [RES] {"phase":"after-apply-windowsize-4s","w":1024,"h":768,"changes":0,"FULLSCREEN":"1","SCREENMODE":"0","WINSIZE_W":"320","WINSIZE_H":"200"}
+[  52752ms] [harness] eval window.__A.dump('after-apply-windowsize-4s') => "after-apply-windowsize-4s"
+[  52753ms] [harness] === LEAVE-THE-MENU-SO-IT-IS-SAVED ===
+[  52800ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  52801ms] [harness] key Escape (1/1)
+[  53102ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 3)
+[  53102ms] [harness] until SATISFIED: saw 3x <<[PERSISTSAVE] menu-leave>>
+[  55105ms] [console.log] [RES] {"phase":"after-menu-leave","w":1024,"h":768,"changes":0,"FULLSCREEN":"1","SCREENMODE":"0","WINSIZE_W":"320","WINSIZE_H":"200"}
+[  55105ms] [harness] eval window.__A.dump('after-menu-leave') => "after-menu-leave"
+[  55106ms] [harness] === RELOAD-2-DOES-THE-NEXT-PAGE-LOAD-HONOUR-IT ===
+[  55109ms] [console.log] [PERSISTSAVE] js-backstop n=2
+[  55110ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  55110ms] [harness] eval location.reload() => undefined
+[  55110ms] [harness] until 3x <<[PERSIST] populate ok>> (timeout 90000ms, have 2)
+[  55126ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  55126ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  55128ms] [page] load event fired
+[  55139ms] [console.log] [PERSIST] populate ok in 4ms
+[  55161ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  55211ms] [harness] until SATISFIED: saw 3x <<[PERSIST] populate ok>>
+[  56713ms] [harness] eval (()=>{const cv=document.getElementById('canvas');const S={last:cv.width+'x'+cv.height,changes:[]};window.__A=S;setInterval(()=>{const s=cv.width+'x'+cv.height;if(s!==S.last){console.log('[RES] canvas-changed '+S.last+' -> '+s);S.changes.push([S.last,s]);S.last=s;}},40);S.dump=(p)=>{const rd=(x)=>{try{return Module.FS.readFile(x,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const pick=(k)=>{if(c===null)return null;const m=c.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim():null};console.log('[RES] '+JSON.stringify({phase:p,w:cv.width,h:cv.height,changes:S.changes.length,FULLSCREEN:pick('FULLSCREEN'),SCREENMODE:pick('ARMAGETRON_SCREENMODE'),WINSIZE_W:pick('ARMAGETRON_WINDOWSIZE_W'),WINSIZE_H:pick('ARMAGETRON_WINDOWSIZE_H')}));return p};return 'probe armed'})() => "probe armed"
+[  56717ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  56717ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  56717ms] [console.error] 
+[  56717ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  56718ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  56718ms] [console.log] 
+[  56844ms] [console.log] [L] ENCODING latin1
+[  56848ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  56862ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  56865ms] [console.error] TODO: glShadeModel
+[  56868ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad.js
+[  56874ms] [harness] click #start: clicked
+[  67941ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/winsizeD/06-boot3-main-menu-still-1024x768.png
+[  67942ms] [console.log] [RES] {"phase":"boot3-after-boot","w":1024,"h":768,"changes":0,"FULLSCREEN":"1","SCREENMODE":"0","WINSIZE_W":"320","WINSIZE_H":"200"}
+[  67943ms] [harness] eval window.__A.dump('boot3-after-boot') => "boot3-after-boot"

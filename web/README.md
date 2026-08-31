@@ -34,6 +34,11 @@ python3 -m http.server 8000 --directory web/dist-m1
 node web/dist-m0/armagetronad-dedicated.js --doc | head -20
 node web/dist-m0/armagetronad-dedicated.js \
     --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
+
+# 6. Publish what step 4 built. See "Deploying to GitHub Pages" below --
+#    it publishes, it does not build.
+(cd web && npm run deploy)
+#     -> https://escapedcat.github.io/armagetronad-web/
 ```
 
 Day to day you only need steps 2, 4 and 5 — and step 2 only in a new terminal.
@@ -451,6 +456,27 @@ defaults.
   and work, and the only three with no live binding are `BANK_UP`, `BANK_DOWN`
   and `ZOOM_IN`. Enabling the mouse ones needs pointer-lock behaviour verified
   first. § 11, "M5 TASK 2B DECISION".
+- **Multiplayer does not work and cannot, and over `https:` it says so ~98
+  times in the console.** Play Game → Multiplayer → Online Multiplayer queries
+  the four masters in `config/master.srv` over UDP, which Emscripten maps onto
+  `ws://master*:4533`. A page served over HTTPS — the only scheme GitHub Pages
+  offers — has every one of those blocked as mixed content, and because
+  `libsockfs.js` re-creates a dead dgram peer on the next `sendto`, the game's
+  0.25 s login resend turns four attempts into **~98 in 20 seconds**. **Nothing
+  a visitor sees changes**: black screen for ~20 s, then "Master servers do not
+  answer", then "Sorry, no server found :-(" — pixel-for-pixel the same
+  sequence at the same times as over `http:`, in both browsers, because the
+  wall clock is set by the game's own 5-second-per-master timeout and not by
+  how the socket fails. **Examined and deliberately left alone at M5**,
+  including one alternative (`wss://` rewrite) that was measured working and
+  declined: `docs/porting/browser-runtime-notes.md` § 12,
+  `docs/evidence/m5-https/`. Multiplayer itself needs the Phase 2 bridge.
+- **For the ~20 seconds of that master query the canvas is solid black**, on
+  both schemes and in both browsers, even though `BrowseSpecialMaster` turns
+  the fullscreen console on to show "Connecting to Master Server N...".
+  Measured at +2 s, +5 s, +10 s and +15.5 s. **Not diagnosed** — M5 task 3
+  recorded it because "what does the visitor see" was its question, and it is
+  not an HTTPS problem.
 - **The cockpit HUD's first draw within a round is erratic**, and nobody has
   explained what it waits on. Screenshotting 5.5 s into a round finds the
   instrument panel present in anywhere from one round of three to three of
@@ -548,10 +574,15 @@ defaults.
   `SDLK_LAST` was 323 in SDL 1.2 but is 1536 here. Fixing it needs the browser's
   pointer-lock behaviour verified first, so it was left rather than enabled
   blind. Same section, § 11.
-- **One known abort is latent and reachable**: `rViewport.cpp:246`, via the
-  viewport-configuration screen in the settings menu. It is an instance of the
-  § 10 defect class and it was left unfixed only because nothing in the M2 gate
-  opens that screen, so a fix could not be verified in a browser.
+- ~~**One known abort is latent and reachable**: `rViewport.cpp:246`, via the
+  viewport-configuration screen in the settings menu.~~ **Wrong twice, corrected
+  at M5.** It was never *latent*: M5's recon reached it in four keystrokes from
+  the main menu (Player Setup, Down x4) and the tab died — *highlighting* the
+  row was enough, because the offending batch is in `RenderBackground()`. M5
+  task 1 closed it by adding the missing `RenderEnd()`, and
+  `web/tools/viewport-menu-gate.steps` now drives that screen, so "nothing in
+  the gate opens it" is no longer true either. Kept struck through rather than
+  deleted: four milestones repeated the word "latent" about a live crash.
 - **It has never been played by a person.** Every run has been driven by
   `web/tools/`, which presses Left and Right on a timer. Nothing here says the
   game *feels* right.
@@ -568,8 +599,72 @@ defaults.
   attribute calls in the same order. Break it and you get either an abort or —
   if the slot count happens to divide evenly — silently wrong geometry. This is
   the largest single class of defect the port has found, and it is also why
-  **`ASSERTIONS` must stay on**: do not add `-O` to `CLIENT_LDFLAGS` without
-  reading that section first.
+  **`ASSERTIONS` must stay on**. **Updated at M5:** `CLIENT_LDFLAGS` now carries
+  `-O2 -sASSERTIONS=1`. M2's ban on `-O` was really a ban on losing
+  `ASSERTIONS`, and M5 recon proved the two separable by *firing* the assert on
+  each build rather than by reading flags: it aborts identically without `-O`
+  and with `-O2 -sASSERTIONS=1`, and on **bare `-O2` it silently renders wrong
+  geometry instead**. So the rule is not "no `-O`" — it is **never drop
+  `-sASSERTIONS=1`**.
+
+## Deploying to GitHub Pages
+
+**Live at <https://escapedcat.github.io/armagetronad-web/>.**
+
+```sh
+source deps/emsdk/emsdk_env.sh
+make -f web/Makefile client -j8      # from the repo root; the deploy does NOT build
+cd web && npm run deploy
+```
+
+`npm run deploy` copies `web/index.html` into `web/dist-m1/` and publishes that
+directory. It builds nothing: publish a stale `dist-m1` and you publish stale
+artefacts, which is a failure this port has already had once in another form
+(M4's leftover `dist-m0` had the right size and the wrong md5).
+
+**What it does to the repository.** It force-pushes the branch `gh-pages` as a
+single **parentless** commit containing only the six published files — the
+branch has no shared history with `main` and is replaced, not appended to, on
+every deploy. GitHub enables Pages by itself on the first push to a branch of
+that name; the site is served from `gh-pages` at `/`, `https_enforced`, and the
+Pages build takes about 20 s after the push. Nothing on `main` is touched.
+
+**The entry point is `armagetronad.html`**, because emcc names its page after
+the link target. `web/index.html` is a hand-written `<meta refresh>` that exists
+so the bare Pages URL — the one a visitor is actually handed — is not GitHub's
+404 page. It is not part of the wasm build and the Makefile does not produce it.
+
+**Two flags and one bug fix in that script:**
+
+- `-f` is gh-pages' `--no-history`. Without it every deploy appends a commit
+  still carrying the previous 5 MB of binaries.
+- `--nojekyll` writes `.nojekyll`. Nothing in the artefact set is
+  underscore-prefixed today, so it is insurance, not a fix for an observed
+  failure.
+- `-v "{**/*,**/.*}"` **is not optional and is not in any plan.** gh-pages
+  clears the branch by globbing its own checkout and `git rm`-ing the result,
+  with globby's `dot: false`, so **no dotfile is ever removed** — including the
+  root `.gitignore` that `git checkout --orphan` brings along on the first
+  deploy. `git add .` then honours it, and its line 63 is a bare `*.html`. The
+  first real deploy of this repository therefore published the `.wasm`, the
+  `.js` and the `.data` **with no page at all**, printed `Published`, and exited
+  0. `docs/evidence/m5-deploy/` has the broken commit verbatim and an A/B script
+  that reproduces it on a local rig.
+
+**What a visitor downloads**, measured on the deployed site with real GETs
+(`docs/evidence/m5-deploy/measure-wire.sh`), not from `curl -I`:
+
+| file | identity | on the wire | content-type |
+|---|---|---|---|
+| `armagetronad.html` | 3,120 | 1,507 | `text/html; charset=utf-8` |
+| `armagetronad.js` | 355,549 | 87,271 | `application/javascript; charset=utf-8` |
+| `armagetronad.wasm` | 4,331,548 | 1,274,294 | `application/wasm` |
+| `armagetronad.data` | 687,094 | 384,664 | `application/octet-stream` |
+
+**5,377,311 B becomes 1,747,736 B (1.667 MiB) on the wire.** The Pages edge does
+gzip a 4.33 MB `.wasm` — that was M5's one unmeasured Pages fact, and it is
+settled. It serves gzip only: `Accept-Encoding: br` alone returns identity.
+Re-measure rather than copying these numbers; they move with every link.
 
 ## Building the M0 dedicated server
 

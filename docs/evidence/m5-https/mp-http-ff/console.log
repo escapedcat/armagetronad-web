@@ -1,0 +1,172 @@
+[   1373ms] [harness] firefox: 154.0.1 (headless=true)
+[   1373ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     56ms] [page] load event fired
+[    121ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    135ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    135ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    139ms] [page] load event fired
+[    141ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[    170ms] [console.log] [PERSIST] populate ok in 6ms
+[    243ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    284ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1251ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1251ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1252ms] [console.error] 
+[   1252ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1252ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1252ms] [console.log] 
+[   1345ms] [console.log] [L] ENCODING latin1
+[   1348ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1442ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1469ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1471ms] [console.error] TODO: glShadeModel
+[   1482ms] [harness] click #start: clicked
+[  10519ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/01-boot1-language-menu.png
+[  10530ms] [harness] key Enter (1/1)
+[  10557ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  13858ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/02-boot1-first-setup.png
+[  13869ms] [harness] key Escape (1/1)
+[  13895ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  14171ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14171ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17185ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/03-boot1-after-first-setup.png
+[  17185ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17189ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17189ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17189ms] [harness] eval location.reload() => undefined
+[  17189ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17197ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  17197ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  17206ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  17217ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17217ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17219ms] [page] load event fired
+[  17250ms] [console.log] [PERSIST] populate ok in 4ms
+[  17270ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17289ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19294ms] [harness] eval (()=>{const R=window.WebSocket;if(R.__wrapped)return 'already';const L=[];function W(u,p){L.push([Math.round(performance.now()),String(u)]);return p===undefined?new R(u):new R(u,p);}W.prototype=R.prototype;W.CONNECTING=R.CONNECTING;W.OPEN=R.OPEN;W.CLOSING=R.CLOSING;W.CLOSED=R.CLOSED;W.__wrapped=true;window.__wsLog=L;window.WebSocket=W;return 'WebSocket counter installed; page origin is '+location.protocol})() => WebSocket counter installed; page origin is http:
+[  19308ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19308ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19309ms] [console.error] 
+[  19309ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19309ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19309ms] [console.log] 
+[  19422ms] [console.log] [L] ENCODING latin1
+[  19424ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  19438ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  19441ms] [console.error] TODO: glShadeModel
+[  19450ms] [harness] click #start: clicked
+[  31463ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/04-boot2-main-menu.png
+[  31463ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  31466ms] [harness] key Enter (1/1)
+[  34292ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/05-play-game-menu-opens-on-multiplayer.png
+[  34292ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  34294ms] [harness] key Enter (1/1)
+[  37119ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/06-network-menu-opens-on-online-multiplayer.png
+[  37120ms] [harness] eval (()=>{return 'ws attempts before the master query: '+window.__wsLog.length})() => ws attempts before the master query: 0
+[  37120ms] [harness] === ENTER-3-ONLINE-MULTIPLAYER-STARTS-THE-MASTER-QUERY ===
+[  37122ms] [harness] key Enter (1/1)
+[  37426ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master4.armagetronad.net:4533/
+[  37427ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  37801ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master4.armagetronad.net:4533/
+[  37803ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  38322ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master4.armagetronad.net:4533/
+[  38323ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  39074ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master4.armagetronad.net:4533/
+[  39076ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  39449ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/07-master-query-t02s.png
+[  40165ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master4.armagetronad.net:4533/
+[  40165ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  41757ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master4.armagetronad.net:4533/
+[  41759ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42213ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42213ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42475ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/08-master-query-t05s.png
+[  42499ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master3.armagetronad.net:4533/
+[  42500ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  42871ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master3.armagetronad.net:4533/
+[  42873ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  43394ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master3.armagetronad.net:4533/
+[  43395ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  44154ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master3.armagetronad.net:4533/
+[  44155ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  45253ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master3.armagetronad.net:4533/
+[  45256ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  46875ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master3.armagetronad.net:4533/
+[  46876ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47219ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47219ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47389ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master2.armagetronad.org:4533/
+[  47390ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  47501ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/09-master-query-t10s.png
+[  47669ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master2.armagetronad.org:4533/
+[  47670ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  48066ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master2.armagetronad.org:4533/
+[  48067ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  48625ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master2.armagetronad.org:4533/
+[  48626ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  49424ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master2.armagetronad.org:4533/
+[  49425ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  50634ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master2.armagetronad.org:4533/
+[  50641ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  52221ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  52222ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52399ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master1.armagetronad.org:4533/
+[  52402ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  52529ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/10-master-query-t15s.png
+[  52828ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master1.armagetronad.org:4533/
+[  52829ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  53436ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master1.armagetronad.org:4533/
+[  53437ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  54341ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master1.armagetronad.org:4533/
+[  54343ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  55700ms] [browser.error/network] fetch failed (NS_ERROR_CONNECTION_REFUSED) <- http://master1.armagetronad.org:4533/
+[  55701ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57219ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57220ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  57558ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/11-master-query-t20s.png
+[  62579ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/12-master-query-t25s.png
+[  67613ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/13-master-query-t30s.png
+[  77634ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/14-master-query-t40s.png
+[  87654ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/15-master-query-t50s.png
+[  97676ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/16-master-query-t60s.png
+[  97677ms] [harness] eval (()=>{const L=window.__wsLog;const t=L.map(e=>e[0]);return JSON.stringify({attempts:L.length,firstMs:t[0]??null,lastMs:t[t.length-1]??null,spanMs:t.length?t[t.length-1]-t[0]:0,distinctUrls:[...new Set(L.map(e=>e[1]))].length})})() => {"attempts":27,"firstMs":20000,"lastMs":38700,"spanMs":18700,"distinctUrls":4}
+[  97678ms] [harness] eval (()=>{const c={};for(const e of window.__wsLog)c[e[1]]=(c[e[1]]||0)+1;return JSON.stringify(c)})() => {"ws://master4.armagetronad.net:4533/":7,"ws://master3.armagetronad.net:4533/":7,"ws://master2.armagetronad.org:4533/":7,"ws://master1.armagetronad.org:4533/":6}
+[  97679ms] [harness] === DISMISS-WHATEVER-IS-ON-SCREEN-AND-SEE-WHERE-WE-LAND ===
+[  97681ms] [harness] key Enter (1/1)
+[ 102008ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/17-after-first-dismiss.png
+[ 102010ms] [harness] key Enter (1/1)
+[ 106335ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/mp-http-ff/18-after-second-dismiss.png
+[ 106337ms] [harness] eval (()=>{return 'ws attempts total: '+window.__wsLog.length})() => ws attempts total: 27
+[ 106338ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => alive, gl err=0x0
