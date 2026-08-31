@@ -25,6 +25,13 @@ The four generated files are byte-identical to what `make -f web/Makefile
 client` emitted — checked per file with `git hash-object` against the blobs on
 the branch, not by size.
 
+The published commit's message names the source commit it was deployed from
+(`Deploy 2e5f76c9`). Commits after it on this branch are documentation and
+evidence only and change no artefact, so a `gh-pages` tip that names an
+earlier commit than `HEAD` is expected — re-run `measure-wire.sh`, which
+compares the served bytes against `web/dist-m1`, rather than reading the two
+SHAs against each other.
+
 **Counted on this basis:** the four-file figure is `git ls-tree -r
 origin/gh-pages` minus `.nojekyll` and `index.html`; the totals below are the
 sum of those four, from `stat`.
