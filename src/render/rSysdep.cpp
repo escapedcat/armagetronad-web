@@ -684,53 +684,66 @@ void sr_LimitFPS()
 }
 
 void rSysDep::SwapGL(){
-// AA_WEB_YIELD_AFTER_PERFRAME IS A CONTROL-BUILD SWITCH AND NOTHING ELSE. It is
-// never defined by the `client` target; web/Makefile's `client-yieldprobe`
-// target defines it to link a second page, armagetronad-yieldfix.html, that is
-// identical in every other respect and in which this yield is moved to AFTER
-// rPerFrameTask::DoPerFrameTasks(). That page is what makes the claim in
-// docs/evidence/m5-defect-b-hud-flicker/README.md falsifiable by a real browser
-// -- the HUD-missing composite rate must collapse on it and only on it.
-// With the macro undefined the preprocessed output of this file is unchanged,
-// which is what keeps the shipped client and the dedicated wasm byte-identical.
-#if defined(__EMSCRIPTEN__) && !defined(AA_WEB_YIELD_AFTER_PERFRAME)
-    // THE browser yield point, and the reason the whole client is built with
-    // Asyncify. The game has no frame callback: every one of its loops --
-    // uMenu::Enter, gGame's round loop, the connection and download waits --
-    // is a plain while() that only returns when the activity it drives is
-    // over. In a browser that never gives the event loop a turn, so the tab
-    // freezes: no input, no repaint, eventually a "page unresponsive" prompt.
-    // emscripten_sleep() unwinds the C++ stack back to the JS caller, lets the
-    // browser run, and resumes this call where it left off.
-    //
-    // It has to be HERE, at the top, unconditionally, not at the end of the
-    // function. SwapGL() returns early from the `if (!sr_glOut)` block roughly
-    // sixty lines down, and that return skips the entire rest of the function
-    // -- the buffer swap, the breakpoint, and sr_LimitFPS(). !sr_glOut is not
-    // an edge case: the console turns rendering off while it auto-scrolls, and
-    // the recorder's frame-skip and fast-forward paths both drive it. A yield
-    // placed after that block would be silently skipped for exactly the loops
-    // that spin fastest. Placed here it is provably once per call, for every
-    // caller and every path. uMenu::Enter (uMenu.cpp) calls SwapGL()
-    // unconditionally at the bottom of its loop body, so both of the menu's
-    // paths -- rendering and the tDelay()-throttled idle one -- are covered.
-    //
-    // Deliberately NOT done in sr_LimitFPS() instead: that runs after the early
-    // return, so it would miss exactly those callers. sr_LimitFPS() does yield
-    // as well when a frame finishes early, which is a second yield inside this
-    // same call -- harmless, and measured to be harmless; see the comment above
-    // sr_LimitFPS() for what actually is not.
-    //
-    // Two consequences that will look like bugs; both are explained in
-    // docs/porting/browser-runtime-notes.md section 2. emscripten_sleep is
-    // setTimeout, which browsers clamp to ~4ms once timeouts nest, so frames
-    // are neither rAF-aligned nor faster than ~250 FPS. And because
-    // rConsole::DisplayAtNewline() calls this function
-    // (rConsoleGraph.cpp:67), a burst of console output during loading costs
-    // one event-loop round trip per line -- check that before blaming Asyncify
-    // for a boot that looks hung.
+// AA_WEB_YIELD_BEFORE_PERFRAME IS A CONTROL-BUILD SWITCH AND NOTHING ELSE, and
+// it is the INVERSE of the one M5 task 4c used. 4c shipped the yield at the top
+// of this function and built a control with it moved down; task 5 made the
+// moved-down placement the shipped one, so the control now has to be the OLD
+// placement. web/Makefile's `client-oldyield` target defines this macro to link
+// armagetronad-oldyield.html -- identical in every other respect, with the
+// yield back above rPerFrameTask::DoPerFrameTasks(). That page is what keeps
+// the claim in docs/evidence/m5-defect-b-hud-flicker/README.md falsifiable by a
+// real browser: the HUD-missing composite rate must be HIGH on it and low on
+// the shipped page. With the macro undefined the preprocessed output of this
+// file is unchanged, which is what keeps the dedicated wasm byte-identical.
+#if !defined(DEDICATED) && defined(__EMSCRIPTEN__) && defined(AA_WEB_YIELD_BEFORE_PERFRAME)
+    // Control build only: the pre-task-5 placement, above the overlay layer.
     emscripten_sleep( 0 );
 #endif
+// THE BROWSER YIELD USED TO BE HERE, AT THE TOP, AND THAT WAS THE HUD FLICKER.
+//
+// Why the yield exists at all, unchanged: the game has no frame callback.
+// Every one of its loops -- uMenu::Enter, gGame's round loop, the connection
+// and download waits -- is a plain while() that only returns when the activity
+// it drives is over. In a browser that never gives the event loop a turn, so
+// the tab freezes: no input, no repaint, eventually a "page unresponsive"
+// prompt. emscripten_sleep() unwinds the C++ stack back to the JS caller, lets
+// the browser run, and resumes this call where it left off.
+//
+// WHY IT MOVED (M5 task 5; diagnosed in M5 task 4c). A yield is a point at
+// which the browser may COMPOSITE, and what it composites is whatever is in
+// the drawing buffer at that instant. At the top of this function the buffer
+// holds the world and NOT the overlay, because rPerFrameTask::DoPerFrameTasks()
+// -- which IS the overlay and nothing else: the HUD, the score table, the
+// Rubber/Speed/Brakes meters, the FPS counter and the graphical console -- has
+// not run yet. So every frame handed the compositor a ~4 ms window on a picture
+// with the world drawn and the HUD missing. Measured over 40.5 s at a true
+// 60 fps on the compositor's own clock: 38 separate HUD-gone runs against 3 in
+// a control build with the yield moved. That is what the maintainer saw as the
+// HUD, the scores and the FPS counter blinking about once a second.
+//
+// The two yields are now below: one after the swap block on the drawing path,
+// and one on the !sr_glOut early-return path. See both for why those places and
+// not others. What has NOT changed is the invariant the old placement was
+// chosen for -- exactly one yield per call, on every path, for every caller.
+// SwapGL() returns early from the `if (!sr_glOut)` block roughly sixty lines
+// down, and !sr_glOut is not an edge case: the console turns rendering off
+// while it auto-scrolls, and the recorder's frame-skip and fast-forward paths
+// both drive it. A single yield after the swap block would be silently skipped
+// for exactly the loops that spin fastest, so that path carries its own.
+//
+// Deliberately NOT done in sr_LimitFPS() instead: that also runs after the
+// early return, so it would miss the same callers. sr_LimitFPS() does yield as
+// well when a frame finishes early, which is a second yield inside this same
+// call -- harmless, and measured to be harmless; see the comment above
+// sr_LimitFPS() for what actually is not.
+//
+// Two consequences that will look like bugs; both are explained in
+// docs/porting/browser-runtime-notes.md section 2. emscripten_sleep is
+// setTimeout, which browsers clamp to ~4ms once timeouts nest, so frames are
+// neither rAF-aligned nor faster than ~250 FPS. And because
+// rConsole::DisplayAtNewline() calls this function (rConsoleGraph.cpp:67), a
+// burst of console output during loading costs one event-loop round trip per
+// line -- check that before blaming Asyncify for a boot that looks hung.
 
     if ( s_benchmark )
     {
@@ -803,9 +816,11 @@ void rSysDep::SwapGL(){
         if ( tRecorder::IsRunning() )
             rPerFrameTask::DoPerFrameTasks();
 
-#if defined(__EMSCRIPTEN__) && defined(AA_WEB_YIELD_AFTER_PERFRAME)
-        // Control build only: the early return skips everything below, so this
-        // path needs its own yield to keep "once per call, every path" true.
+#if !defined(DEDICATED) && defined(__EMSCRIPTEN__) && !defined(AA_WEB_YIELD_BEFORE_PERFRAME)
+        // The early return skips everything below, so this path needs its own
+        // yield to keep "exactly one per call, on every path" true. There is
+        // no flicker hazard here: rendering is OFF on this path, so nothing
+        // has drawn a partial frame for a composite to catch.
         emscripten_sleep( 0 );
 #endif
         return;
@@ -813,15 +828,6 @@ void rSysDep::SwapGL(){
 
 
     rPerFrameTask::DoPerFrameTasks();
-
-#if defined(__EMSCRIPTEN__) && defined(AA_WEB_YIELD_AFTER_PERFRAME)
-    // Control build only. The overlay layer -- the HUD, the FPS counter and the
-    // graphical console -- is drawn by DoPerFrameTasks() just above, so a yield
-    // placed HERE hands the browser a frame that has both the world and the
-    // overlay in it. The shipped placement at the top of this function hands it
-    // one that has the world and not the overlay.
-    emscripten_sleep( 0 );
-#endif
 
     // unlock the mutex while waiting for the swap operation to finish
     SDL_mutexV(  sr_netLock );
@@ -864,6 +870,39 @@ void rSysDep::SwapGL(){
     sr_UnlockSDL();
     // lock mutex again
     SDL_mutexP(  sr_netLock );
+
+#if !defined(DEDICATED) && defined(__EMSCRIPTEN__) && !defined(AA_WEB_YIELD_BEFORE_PERFRAME)
+    // THE BROWSER YIELD, on the drawing path. See the long comment at the top
+    // of this function for what it is for and why it is no longer up there.
+    //
+    // WHY HERE AND NOT DIRECTLY AFTER DoPerFrameTasks(), which is where task
+    // 4c's control build (AA_WEB_YIELD_AFTER_PERFRAME) put it. Both places have
+    // the complete frame -- world plus overlay -- in the drawing buffer, so
+    // both fix the flicker. This one is additionally after the swap block, and
+    // the swap block contains glFlush(): rSysDep::swapMode_ defaults to
+    // rSwap_glFlush, so by the time control reaches this line every draw call
+    // for this frame, the overlay's included, has been submitted AND flushed.
+    // A yield above the flush hands the browser a frame whose last commands may
+    // still be sitting in the WebGL command queue. It is also after
+    // make_screenshot()'s glReadPixels, so a planned screenshot is never taken
+    // across an event-loop turn.
+    //
+    // THE MUTEX ARGUMENT FOR MOVING IT HERE DOES NOT HOLD, and it is worth
+    // saying so rather than repeating it. Task 4c's report worried that the
+    // control placement "moves the yield across SDL_mutexV(sr_netLock)". It
+    // does not: the control yields immediately BEFORE that unlock, exactly as
+    // the old top-of-function placement did. And there is no mutex here to
+    // cross in any case -- rSysDep::StartNetSyncThread() returns before it
+    // reaches SDL_CreateMutex(), so sr_netLock is always NULL; Emscripten's
+    // SDL_mutexP/SDL_mutexV are `(mutex) => 0` (libsdl.js); and sr_LockSDL()/
+    // sr_UnlockSDL() have had their bodies commented out upstream for years.
+    // What IS true, and is the reason this line sits after SDL_mutexP rather
+    // than between the V and the P, is that the unlocked span is the window a
+    // net-sync thread would run in if one were ever started again. Yielding
+    // outside it keeps "the browser never gets control while that window is
+    // open" true for free.
+    emscripten_sleep( 0 );
+#endif
 
 
     // disable output in fast forward mode
