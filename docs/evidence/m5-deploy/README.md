@@ -82,8 +82,9 @@ which is why a wire check must assert on `Content-Type` and not on status.
 ## THE FIRST DEPLOY PUBLISHED NO ENTRY POINT
 
 `first-deploy-broken.txt` is that commit, verbatim: 18 entries, **0 html
-files**, `.wasm`/`.js`/`.data` present, thirteen stray dotfiles from the source
-tree. `gh-pages` printed `Published` and exited 0. The only symptom was a 404 on
+files**, `.wasm`/`.js`/`.data` present, **fourteen** stray dotfiles from the source
+tree — counted as the published paths that are dot-prefixed at any segment,
+minus `.nojekyll`, which gh-pages wrote itself. `gh-pages` printed `Published` and exited 0. The only symptom was a 404 on
 the page.
 
 `gh-pages-remove-pattern.sh` (+ `.asrun`) reproduces it on a local rig and

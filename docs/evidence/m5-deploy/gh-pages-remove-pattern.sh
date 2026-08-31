@@ -27,7 +27,7 @@
 #     when it skips an ignored path, so the deploy reports success.
 #
 # This is not a hypothetical: the first real deploy of this repo published
-# .wasm + .js + .data, thirteen stray dotfiles, and no page, and the only
+# .wasm + .js + .data, fourteen stray dotfiles, and no page, and the only
 # symptom was a 404. See docs/evidence/m5-deploy/README.md.
 #
 # WHAT THIS SCRIPT PROVES. Same rig, same publish set, one flag different:

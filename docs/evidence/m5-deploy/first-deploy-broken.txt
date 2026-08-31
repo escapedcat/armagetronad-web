@@ -35,3 +35,6 @@ parents []
 
 entries: 18
 html files: 0
+stray dotfiles: 14   (published paths dot-prefixed at any segment, minus
+                      .nojekyll, which gh-pages wrote itself:
+                      cut -f2 this file's ls-tree block | grep -E '(^|/)\.' | grep -v '^\.nojekyll$')
