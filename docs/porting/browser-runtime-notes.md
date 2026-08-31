@@ -313,6 +313,52 @@ timeouts to about 4ms. Therefore:
   output there becomes seconds of wall clock. **If the page looks hung during
   boot or while connecting, check this before suspecting Asyncify itself.**
 
+### The third consequence, missed until M5 task 4c: the yield is ABOVE the overlay
+
+This is the HUD flicker the maintainer reported off the live Demo, and it is a
+direct consequence of the placement argued for above. Read `SwapGL()` in order:
+
+    emscripten_sleep( 0 );                 <-- the yield. Buffer = world, NO overlay.
+    ... playback/timing, the !sr_glOut early return ...
+    rPerFrameTask::DoPerFrameTasks();      <-- the overlay is drawn HERE
+    glFlush()/glFinish(); SDL_GL_SwapBuffers();
+
+`DoPerFrameTasks()` **is** the overlay layer and nothing else is:
+`display_hud_subby_all` (`gHud.cpp` — scores, the Rubber/Speed/Brakes meters,
+Fastest, Enemies/Friends/Ping, and `display_fps_subby`'s "FPS: n"),
+`sr_ConsolePerFrame` (`rConsoleGraph.cpp`), and `scores` (`ePlayer.cpp`). So
+every frame parks the tab in `setTimeout` for ~4 ms with the world drawn and the
+HUD not drawn, and whether the compositor takes that opportunity depends on its
+60 Hz phase against a `setTimeout`-paced loop. Measured in Chrome at a true
+60 fps: **38 HUD-gone runs in 40.5 s, median length 2 compositor ticks** — a
+~33 ms blink slightly under once per second, intermittent, with no GL error and
+no assertion. `docs/evidence/m5-defect-b-hud-flicker/`.
+
+Two rules out of it, and the second is the expensive one:
+
+1. **The yield must land on a COMPLETE frame.** "Once per call on every path" was
+   the right requirement and it is not sufficient — *where in the frame* matters
+   as much as *which callers reach it*. Any future yield point has to be checked
+   against what is already in the drawing buffer at that instant, and the answer
+   for a placement above `DoPerFrameTasks()` is "everything except the HUD".
+2. **A sampler that runs at the game's swap cannot see a compositing artifact,
+   by construction.** Three separate probes — per-frame `glGetError`, per-frame
+   draw calls bucketed by bound texture, and native-resolution per-frame imaging
+   of the HUD strip — all returned clean negatives, because the overlay is drawn
+   *before* the swap and the frame is always complete by the time the swap
+   happens. The instrument that sees what the player sees is
+   `requestAnimationFrame`, which runs on the compositor's clock. The clean
+   negatives are kept in `negative-swap-time-only/` so the next reader does not
+   repeat them.
+
+`web/Makefile`'s `client-yieldprobe` target builds `armagetronad-yieldfix.html`,
+identical but for `-DAA_WEB_YIELD_AFTER_PERFRAME`, which moves the yield below
+`DoPerFrameTasks()` and adds one in the `!sr_glOut` early-return branch so rule
+(1) of § 2 still holds. On it the short dropouts go to zero. **That is a control,
+not yet a shipping decision**: it also moves the yield across
+`SDL_mutexV(sr_netLock)`/`sr_LockSDL()`, and a real fix should probably sit
+after the swap block and be gated on M2's gameplay gate in both engines.
+
 ---
 
 ## 3. `tDelay` / `tDelayForce` — patch inside the recorder guards
