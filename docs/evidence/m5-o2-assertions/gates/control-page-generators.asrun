@@ -1,0 +1,4 @@
+$ node docs/evidence/m4-persist/make-control-pages.mjs
+make-control-pages.mjs: expected exactly 1 occurrence of the addRunDependency call in web/dist-m1/armagetronad.html, found 0.
+The shell page has changed shape; update this tool rather than loosening the match.
+exit 2

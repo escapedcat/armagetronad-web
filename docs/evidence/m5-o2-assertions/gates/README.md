@@ -152,3 +152,35 @@ duplicated here: it is `../cell-fix-assert-SHIPPED/`, the shipped cell of the
 Firefox on the viewport route: 20 shots, **20 distinct**, 0 `Aborted(`, 0
 `numVertices`, 0 `[EXCEPTION]`, `glGetError` `0x0`, `still alive, canvas
 1024x768`.
+
+---
+
+## `-O2` breaks the two M4 control-page generators — loudly, which is the good case
+
+`-O2` minifies the `--shell-file` as well as the glue, so the generated
+`armagetronad.html` goes from 22,475 to 3,120 bytes. Two committed tools patch
+that generated page by matching **literal `web/shell.html` source lines**, and
+those lines no longer exist in it:
+
+- `docs/evidence/m4-persist/make-control-pages.mjs`
+- `docs/evidence/m4-persist-settings/make-settings-control-pages.mjs`
+
+Measured, not predicted (`control-page-generators.asrun`):
+
+```
+$ node docs/evidence/m4-persist/make-control-pages.mjs
+make-control-pages.mjs: expected exactly 1 occurrence of the addRunDependency call
+  in web/dist-m1/armagetronad.html, found 0.
+The shell page has changed shape; update this tool rather than loosening the match.
+exit 2
+```
+
+**This is the behaviour those tools were designed to have.** Their own comment
+says a regex "would keep working after a rename and silently produce a page
+identical to the real one — which would make the control PASS and be read as
+'the check is bogus'. A literal match breaks loudly instead." It broke loudly.
+
+None of the seven gates above needs these tools — they build *controls*, not the
+gates — so nothing here is blocked. But a later task that wants the M4 control
+matrix must either teach them to match the minified page or generate their
+controls from `web/shell.html` before minification. Do not loosen the match.
