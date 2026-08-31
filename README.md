@@ -163,10 +163,14 @@ the section to read before touching the renderer.
   played this. Every run of it has been scripted, and a script that presses Left
   and Right on a timer cannot tell a good game from a bad one. Cycle feel,
   rubber, camera behaviour, AI difficulty — all unassessed.
-- **The camera is permanently top-down.** Emscripten's `gluLookAt` is a complete
-  no-op (it passes gl-matrix's destination argument as `eye`, so the matrix is
-  read and never written), so no screenshot of this port has ever shown a correct
-  3D view. Unfixed.
+- ~~**The camera is permanently top-down.**~~ Emscripten's `gluLookAt` was a
+  complete no-op (it passes gl-matrix's destination argument as `eye`, so the
+  matrix was read and never written), so no screenshot of this port taken before
+  M5 has ever shown a correct 3D view — **including every screenshot in the M2,
+  M3 and M4 sections above.** **Closed by M5**: `gluLookAt` is implemented in
+  `src/emscripten/eCompat.cpp` against the GLU specification, and the floor grid
+  now converges, the horizon exists, and the player's own cycle is in frame at
+  the default camera. Before/after numbers: `docs/evidence/m5-camera/`.
 - **One machine, one GPU, two browsers.** macOS 26.5, Apple M1 Max, Chrome 152
   and Firefox 154. No Windows, no Linux, no Intel or AMD GPU, no Safari, no
   mobile. A ≥30 fps result on an M1 Max is not a ≥30 fps result anywhere else.

@@ -1,0 +1,12 @@
+Consecutive-frame difference, fraction of the 1024x768 frame whose pixels
+changed by more than 24/255 in any channel.
+
+  01-A-countdown-baseline.png        -> 02-B-drift-control-no-input.png       3.18%
+  02-B-drift-control-no-input.png    -> 03-C-after-numpad6-LOOK_RIGHT.png     6.97%
+  03-C-after-numpad6-LOOK_RIGHT.png  -> 04-D-after-numpad4-LOOK_LEFT.png     14.97%
+  04-D-after-numpad4-LOOK_LEFT.png   -> 05-E-CONTROL-after-synthetic-v.png   17.22%
+
+The first row is the DRIFT CONTROL: 900 ms of countdown with no input at all.
+3.18% is the countdown digit changing and the world-space name labels fading;
+the framing is identical. The rows after it are the same length of time with a
+numpad camera key held, and the view swings.

@@ -86,6 +86,58 @@ Frame rate is not measurably worse for drawing a real 3D scene instead of a
 flat one: worst whole second 53 fps in Chrome, 56 in Firefox, medians 60 and
 58.
 
+## The camera is controllable, and the mouse binds are not — measured
+
+`camera-control/`, driven by `camera-control-probe.steps`. This is the evidence
+behind § 11's second half and M5's decision to **defer** the dead mouse binds.
+
+**The keymap readout is the decisive part.** Leaving First Setup makes M4
+persist `/persist/var/user.cfg`, and `tConfItem_key::WriteVal` dumps the LIVE
+keymap by index — i.e. after `su_TranslateSDL12Keysym`. Read back through
+`Module.FS` in Chrome, both encodings appear side by side in one file:
+
+    KEYBOARD 1118 PLAYER_BIND LOOK_RIGHT 1     numpad 6, SDLK_KP_6.  LIVE
+    KEYBOARD 1116 PLAYER_BIND LOOK_LEFT  1     numpad 4, SDLK_KP_4.  LIVE
+    KEYBOARD  332 PLAYER_BIND ZOOM_IN    1     mouse button 3.       DEAD
+    KEYBOARD  327 PLAYER_BIND BANK_DOWN  1     mouse Y-.             DEAD
+    KEYBOARD  326 PLAYER_BIND BANK_UP    1     mouse Y+.             DEAD
+    KEYBOARD  325 PLAYER_BIND LOOK_LEFT  1     mouse X-.             DEAD
+    KEYBOARD  324 PLAYER_BIND LOOK_RIGHT 1     mouse X+.             DEAD
+
+**And the live ones visibly turn the camera**, with a drift control —
+`pixel-diff.txt`, shots `01`-`05`:
+
+    900 ms, NO INPUT                     3.18%   (the countdown digit; framing unchanged)
+    900 ms, numpad 6 held (LOOK_RIGHT)   6.97%   (the arena rim swings diagonal)
+    1800 ms, numpad 4 held (LOOK_LEFT)  14.97%   (and swings back past centre)
+
+Three things about how this was run, because two earlier attempts were worthless
+and the reasons are reusable:
+
+- **It runs inside the round countdown.** That is the only window where the view
+  is live, in 3D, and cannot change by itself. Both earlier attempts probed
+  during play; `web_user` drives straight and dies within a couple of seconds,
+  and every shot after that is a spectator view of an AI with the camera moving
+  on its own. Nothing is attributable to a keypress in that.
+- **The drift control is not optional.** An interval of the same length with no
+  input, shot at both ends, is what separates "the key did something" from "the
+  scene moved".
+- **Synthetic events, with their own control.** Neither driver's `KEYS` table has
+  numpad entries. `libsdl.js` reads `event.keyCode` in `lookupKeyCodeForEvent`,
+  so a `KeyboardEvent` with `keyCode` forced by `defineProperty` (the
+  constructor's init dict does not accept it) takes the same path a real press
+  does. Shot `05` fires a synthetic `v` — ASCII, never translated, known-live,
+  bound to `CAMERA_MODE` — so a null result on the numpad could not have been
+  blamed on the event path.
+
+**Conclusion, and the decision it supports:** the cost of leaving the mouse binds
+dead is exactly three actions — `BANK_UP`, `BANK_DOWN`, `ZOOM_IN` — because
+`LOOK_*`, `GLANCE_*` and all six `MOVE_*` survive on the numpad. Turning the
+mouse ones on means raw mouse motion driving the camera with no pointer lock
+(`SDL_WM_GrabInput` appears nowhere in `src/`) and `ZOOM_IN` on the browser's
+middle click. Not at the deployment milestone. Full reasoning: § 11,
+"M5 TASK 2B DECISION".
+
 ## Task 1's viewport-menu gate
 
 `viewport-{chrome,firefox}/` — re-run in full on this build in both browsers.

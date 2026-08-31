@@ -1089,10 +1089,20 @@ whoever reads this next after code that does not exist.
 
 ## 11. The camera never turns: `gluLookAt` is a no-op
 
-`src/engine/eCamera.cpp`, `config/default.cfg`. **Nothing in this port fixes
-either half of this section.** Both are recorded here because they are cheap to
-rediscover expensively: the first makes every screenshot of this port misleading,
-and the second makes a set of shipped bindings look broken for no visible reason.
+`src/engine/eCamera.cpp`, `config/default.cfg`.
+
+**FIXED IN M5 TASK 2B — the first half. `gluLookAt` is now implemented in
+`src/emscripten/eCompat.cpp` and the browser client renders a real 3D view.**
+The diagnosis below is kept in full because it is the reason that shim exists
+and is the thing to re-read if the camera ever goes flat again; read it as
+history, not as a live defect. The second half — the dead mouse binds — was
+**deliberately deferred by the same task**, with the cost measured rather than
+guessed; see the end of this section.
+
+It was recorded here from M2 and carried as a footnote through four milestones
+before anyone fixed it, which was a mistake worth naming: "every screenshot of
+this port is misleading" is not a footnote in a project whose pitch is "play
+Armagetron in your browser". §10 records the analogous miscall for a crash.
 
 ### The no-op
 
@@ -1140,16 +1150,70 @@ M2 gate frames:
   cycle just outside the frame — half the visible ground width is ~13.3 units.
   Moving the camera to 3 units back makes it appear.
 
+### What the fix had to be, and the second bug that only shows up when you write it
+
+**Correcting the argument order is not the fix**, and anyone who patches a local
+emsdk to "fix Emscripten's typo" will get a still-wrong picture and conclude the
+diagnosis was wrong. `mat4.lookAt` **overwrites** its destination — it never
+reads it; the degenerate path is `return mat4.identity(dest)` and the general
+path is sixteen plain `dest[i] = ...` assignments. GL specifies `gluLookAt` as a
+**post-multiply** of the current matrix, and at this game's call site
+`rViewport::Perspective` has just loaded a `glFrustum` into `GL_PROJECTION` (the
+`#if 1` arm; the `gluPerspective` in the `#if 0` arm below it is dead code and is
+not what runs). An overwriting `gluLookAt` would therefore throw the frustum away
+and leave the scene with no perspective divide at all.
+
+So the shim is written against the **GLU 1.3 specification** (the SGI reference
+implementation as carried by Mesa's `src/glu/sgi/libutil/project.c`), not against
+Emscripten's version with the mistakes taken out: build the rotation from
+`f`, `s = f × up`, `u = s × f`, fold `T(-eye)` into the same matrix, and issue
+one `glMultMatrixf`. It never touches `glMatrixMode`, so it is correct on
+whichever matrix is current and composes with `eCamera::Render` instead of
+assuming it. Full reasoning lives on the function in `eCompat.cpp`.
+
+**It overrides a symbol that was DEFINED, not undefined**, which makes it the
+only entry in `eCompat.cpp` of its kind. A broken-but-present JS library function
+never appears in an undefined-symbol list, so the linker-derived list that file
+is built around is a floor on what belongs there, not a ceiling. Defining
+`gluLookAt` natively removes Emscripten's version from the output entirely
+(`grep -c gluLookAt web/dist-m1/armagetronad.js` → 0, against a `T gluLookAt` in
+`eCompat.o`).
+
 Consequences to carry:
 
-- **No screenshot of this port has ever shown a correct 3D view**, and none will
-  until this is fixed. Do not write a gate that depends on one; the M2 gate
-  deliberately does not.
-- `CAMERA_IN` is not a workaround: `eCamera.cpp:1429-1433` removes the centred
-  object from the render list when the camera is within 1 unit of it.
-- The fix is small — implement `gluLookAt` correctly in `eCompat.cpp`, the way it
-  already shims `glRectf` — but it is **new behaviour rather than a bug-for-bug
-  port**, so it belongs to a task that owns it and can verify the result visually.
+- Screenshots of this port taken **before M5 task 2b** do not show a correct 3D
+  view and never could. That includes every frame in `docs/evidence/` up to and
+  including `m5-o2-assertions/`. They are still valid evidence for what they were
+  taken to show; they are not evidence about the camera.
+- The M2 gate deliberately does not depend on the view being correct, and should
+  stay that way — it is a gameplay gate, and `docs/evidence/m5-camera/` is where
+  the view itself is measured.
+- `CAMERA_IN` is not a workaround and was not used: `eCamera.cpp:1429-1433`
+  removes the centred object from the render list when the camera is within 1
+  unit of it.
+
+### How the fix was verified, and the signature that does NOT flip
+
+`docs/evidence/m5-camera/`. `measure-camera.py` turns the three signatures above
+into numbers, run against the frames M5 task 2 had already committed from the
+same gate script at the same step:
+
+| | Chrome before | after | Firefox before | after |
+|---|---|---|---|---|
+| columns holding a ≥300-row vertical ridge | 34 | **0** | 31 | **0** |
+| mean luma, rows 100..250 | 7.07 | **64.99** | 6.58 | **65.28** |
+
+Thirty-odd exactly-vertical grid lines became none — the grid converges — and
+the top of the frame became sky and arena rim instead of more floor.
+
+**The one-pixel line at x=511 is the weakest of the three and does not flip
+cleanly.** Two things a re-check should know before treating it as a criterion:
+it is frame-dependent (it measures a wall that happens to pass under the camera,
+and the Firefox before-frame has none — 46 rows, not 476), and it does **not**
+go to zero afterwards, because with the camera behind the cycle the player's own
+wall is still seen nearly edge-on near the centre column. What changes is its
+extent: rows 95..570 before, rows 582..697 after — it now stops at the cycle
+instead of running off the top of the frame.
 
 ### The other half: `SDLK_LAST` moved, so the mouse-camera binds are dead
 
@@ -1168,6 +1232,63 @@ disjoint, same as the rest of the table), but enabling mouse camera control in a
 browser needs pointer-lock behaviour verified first, and turning on bindings that
 have never been exercised is not a thing to do blind.
 
-Whoever fixes the camera should fix this at the same time — they are the same
-feature from a player's point of view, and a correct `gluLookAt` with no way to
-turn the camera is only half a result.
+#### M5 TASK 2B DECISION: DEFERRED, and here is the cost, measured
+
+The earlier version of this paragraph said "whoever fixes the camera should fix
+this at the same time — a correct `gluLookAt` with no way to turn the camera is
+only half a result." **That premise is wrong, and the measurement that shows it
+is why M5 deferred rather than shipped.** There is a way to turn the camera. It
+is the numpad, it is in the same block of `default.cfg`, and it works.
+
+`default.cfg:29-45` binds the camera to **both** the numpad and the mouse. The
+numpad half is 256-262, 266, 269, 270 — squarely inside `su_TranslateSDL12Keysym`'s
+256-272 range, so it is translated and live. **This is a readout of the running
+game's own keymap, not an inference from the source**: leaving the First Setup
+menu makes M4 persist `/persist/var/user.cfg`, and `tConfItem_key::WriteVal`
+dumps the live keymap by index, i.e. after translation. Read back through
+`Module.FS` in Chrome (`docs/evidence/m5-camera/camera-control/`):
+
+    KEYBOARD 1118 PLAYER_BIND LOOK_RIGHT 1     <- numpad 6, SDLK_KP_6.  LIVE
+    KEYBOARD 1116 PLAYER_BIND LOOK_LEFT  1     <- numpad 4, SDLK_KP_4.  LIVE
+    KEYBOARD  332 PLAYER_BIND ZOOM_IN    1     <- mouse button 3.       DEAD
+    KEYBOARD  327 PLAYER_BIND BANK_DOWN  1     <- mouse Y-.             DEAD
+    KEYBOARD  326 PLAYER_BIND BANK_UP    1     <- mouse Y+.             DEAD
+    KEYBOARD  325 PLAYER_BIND LOOK_LEFT  1     <- mouse X-.             DEAD
+    KEYBOARD  324 PLAYER_BIND LOOK_RIGHT 1     <- mouse X+.             DEAD
+
+Both encodings in one file, side by side, from the program itself. And the keys
+do what the table says: driven inside the round countdown — the one window where
+the view is live, in 3D, and cannot change by itself — with a **drift control**,
+an interval of exactly the same length and no input at all, shot at both ends:
+
+    900 ms, NO INPUT                    3.18% of the frame changed (countdown digit)
+    900 ms, numpad 6 held (LOOK_RIGHT)  6.97%   — the arena rim swings diagonal
+    1800 ms, numpad 4 held (LOOK_LEFT) 14.97%   — and swings back past centre
+
+**So the exact cost of deferring is three actions**, not the whole feature:
+`BANK_UP`, `BANK_DOWN` and `ZOOM_IN` are the only ones with no live binding
+anywhere, because 326/327/332 are their only binds. `LOOK_LEFT`, `LOOK_RIGHT`,
+`GLANCE_LEFT`, `GLANCE_RIGHT` and all six `MOVE_*` survive on the numpad.
+
+Why M5 still did not turn them on, given that the table change itself is five
+lines:
+
+- **It is not a table change in isolation.** It converts raw mouse motion into
+  camera rotation with no pointer lock. `SDL_WM_GrabInput` is called nowhere in
+  this tree (`grep -rn SDL_WM_GrabInput src/` — no hits), so nothing in the
+  program would hold the pointer; without it the cursor leaves the canvas
+  mid-swing and the rest of the gesture goes to the browser. With it, release is
+  Escape, which is also this game's menu key.
+- **`ZOOM_IN` lands on mouse button 3**, i.e. the browser's middle click —
+  autoscroll on Windows, X11 primary-selection paste — a default-prevented
+  gesture nobody here has tested.
+- **M5 is the deployment milestone.** Enabling an input path that has never been
+  exercised, on the milestone that puts this in front of strangers, is the wrong
+  trade, and the three affected actions are not ones a first-time visitor needs.
+
+The change stays available and stays safe: `SDLK_NEWLAST` is 1550 in this build
+(measured alongside `SDLK_LAST` 1536), so 1537-1549 fit under
+`tConfItem_key::ReadVal`'s `tASSERT(keysym < SDLK_NEWLAST)`, and 324-332 are
+unreachable indices today rather than aliases of anything — Emscripten's DOM map
+emits either an ASCII value under 128 or a `|1<<10` value at 1024 or above, so
+nothing can ever land on them.

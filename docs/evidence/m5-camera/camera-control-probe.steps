@@ -1,0 +1,92 @@
+# M5 task 2b, step 4: does the camera actually TURN, and are the numpad camera
+# binds live in this build?
+#
+#   node web/tools/drive-browser.mjs --headed --out /tmp/probe-chrome \
+#        --script-file docs/evidence/m5-camera/camera-control-probe.steps
+#
+# WHY THIS EXISTS. Section 11 has a second half: config/default.cfg binds
+# LOOK_LEFT/LOOK_RIGHT/BANK_UP/BANK_DOWN/ZOOM_IN to 324-332, which are this
+# program's own mouse pseudo-keys SDLK_LAST+1.. -- dead, because SDL 1.2's
+# SDLK_LAST was 323 and here it is 1536. Task 2b has to decide whether M5 fixes
+# that or defers it, and the decision turns on a question of fact: are those
+# five ACTIONS reachable at all without the mouse? default.cfg binds every one
+# of them to a numpad key as well, in the same block, and 256-272 IS in
+# su_TranslateSDL12Keysym's table. This script checks that on the running game
+# instead of arguing it from the source.
+#
+# WHY SYNTHETIC EVENTS RATHER THAN key: STEPS. Neither driver's KEYS table has
+# numpad entries, and adding them to the shipped drivers for a one-off probe is
+# a worse trade than dispatching the events here. libsdl.js reads event.keyCode
+# (lookupKeyCodeForEvent) off a listener on Browser.keyboardListeningElement,
+# so a KeyboardEvent with keyCode forced by defineProperty -- the constructor's
+# init dict does not accept keyCode -- goes down exactly the same path a real
+# press does.
+#
+# THE POSITIVE CONTROL IS THE POINT OF THE SCRIPT. A synthetic-event probe that
+# produces no visible change proves nothing on its own: it cannot tell "the
+# bind is dead" from "the events never arrived". So it fires a synthetic 'v'
+# first -- an ASCII keysym, never translated, bound to CAMERA_MODE in
+# default.cfg and visibly changing the view. If 'v' moves the picture and
+# numpad 4 does not, THAT is a statement about the bind.
+wait:1000
+eval:(()=>{const mk=(type,kc,code,key)=>{const e=new KeyboardEvent(type,{bubbles:true,cancelable:true,key:key,code:code});Object.defineProperty(e,'keyCode',{get:()=>kc});Object.defineProperty(e,'which',{get:()=>kc});return e;};window.__k=(kc,code,key,ms)=>{const t=(window.Browser&&Browser.keyboardListeningElement)||document;t.dispatchEvent(mk('keydown',kc,code,key));setTimeout(()=>t.dispatchEvent(mk('keyup',kc,code,key)),ms);return 'sent '+code+' keyCode='+kc+' for '+ms+'ms to '+(t===document?'document':(t.id||t.tagName));};return 'synthetic key sender installed'})()
+wait:7000
+click:#start
+wait:6000
+key:Enter
+wait:3000
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2000
+
+# ---------------------------------------------------------------------------
+# THE KEYMAP READOUT, and it is the part of this script that settles the
+# question. tConfItem_key::WriteVal dumps the LIVE keymap by index, so the
+# user.cfg M4 just persisted is the game's own report of what every camera bind
+# parsed to -- after su_TranslateSDL12Keysym, not before.
+#
+# Expected, if the reasoning holds: the numpad binds come back as SDL 2
+# keysyms in the 1110-1118 range, and the mouse binds come back as the literal
+# 324-332 they were written as -- indices that no event in this program can
+# ever activate, because uInput.cpp's SDL_MOUSEMOTION handler activates
+# keymap[SDLK_MOUSE_X_PLUS] and SDLK_MOUSE_X_PLUS is SDLK_LAST+1 = 1537 here.
+mark:KEYMAP-READOUT-what-the-camera-binds-actually-parsed-to
+eval:(()=>{try{const s=Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'});const want=/(LOOK_LEFT|LOOK_RIGHT|BANK_UP|BANK_DOWN|ZOOM_IN)/;const out=s.split('\n').filter(l=>l.indexOf('KEYBOARD')===0&&want.test(l)).map(l=>l.replace(/\s+/g,' ').trim());return JSON.stringify(out)}catch(e){return 'ERR '+e}})()
+
+wait:2000
+key:Enter
+until:1:60000:[L] NEW_ROUND
+
+# ---------------------------------------------------------------------------
+# THE VISUAL HALF, RUN INSIDE THE ROUND COUNTDOWN. Two earlier attempts put the
+# camera probes into live play and both were worthless: web_user drives
+# straight, hits something within a couple of seconds, and every later shot is
+# a spectator view of an AI with the camera moving on its own. There is no
+# attributing anything to a keypress in that.
+#
+# The ~5 s of countdown after NEW_ROUND is the one window in this game where
+# the view is live, in 3D, and CANNOT change by itself: the cycles have not
+# started moving. So it gets a DRIFT CONTROL -- an interval of exactly the same
+# length with no input at all, shot at both ends. If the no-input pair is the
+# same picture and the LOOK_RIGHT pair is not, the difference is the keypress.
+wait:1200
+mark:A-countdown-baseline
+shot:01-A-countdown-baseline
+mark:B-DRIFT-CONTROL-900ms-with-NO-input
+wait:900
+shot:02-B-drift-control-no-input
+mark:C-NUMPAD-6-LOOK_RIGHT-held-900ms
+eval:window.__k(102,'Numpad6','6',900)
+wait:1100
+shot:03-C-after-numpad6-LOOK_RIGHT
+mark:D-NUMPAD-4-LOOK_LEFT-held-1800ms
+eval:window.__k(100,'Numpad4','4',1800)
+wait:2000
+shot:04-D-after-numpad4-LOOK_LEFT
+# The control for the synthetic-event path itself: 'v' is ASCII, never
+# translated, bound to CAMERA_MODE, and known-live.
+mark:E-CONTROL-synthetic-v-CAMERA_MODE
+eval:window.__k(86,'KeyV','v',80)
+wait:1500
+shot:05-E-CONTROL-after-synthetic-v
+eval:(()=>{const c=document.getElementById('canvas');return 'alive '+c.width+'x'+c.height})()
