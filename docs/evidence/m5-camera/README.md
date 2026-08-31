@@ -86,6 +86,20 @@ Frame rate is not measurably worse for drawing a real 3D scene instead of a
 flat one: worst whole second 53 fps in Chrome, 56 in Firefox, medians 60 and
 58.
 
+## Task 1's viewport-menu gate
+
+`viewport-{chrome,firefox}/` — re-run in full on this build in both browsers.
+Twenty screenshots, all twenty distinct by md5, canvas alive at the end, the
+mid-run `glGetError` probe reads `0x0`, no `Aborted(`, no `numVertices`, no
+`[EXCEPTION]`, and no 404 other than `/favicon.ico`. Each browser's
+`summary.txt` has those five numbers; `driver.txt` is the whole run.
+
+That gate's own header warns not to trust the step count alone, so:
+`08-VIEWPORTS-HIGHLIGHTED-THIS-IS-THE-CRASH-POINT.png` shows
+**"Viewports: Single Player"** highlighted in red with the demonstration panel
+and its `GL_LINE_LOOP` border drawn — task 1's fix, still there, on a build
+whose every rendered frame this task changed.
+
 ## The dedicated build
 
 `invariant/` — the dedicated wasm is unchanged, plus the control that shows

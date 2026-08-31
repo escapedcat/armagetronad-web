@@ -1,0 +1,5 @@
+20 screenshots taken, 20 files, 20 distinct by md5
+Aborted( / numVertices / [EXCEPTION] / TIMED OUT hits: 0
+non-favicon 404s: 0
+[  45273ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => "alive, gl err=0x0"
+[  76505ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'still alive, canvas '+c.width+'x'+c.height})() => "still alive, canvas 1024x768"

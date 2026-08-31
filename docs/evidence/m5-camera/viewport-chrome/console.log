@@ -1,0 +1,108 @@
+[    728ms] [harness] chrome: Chrome/152.0.7977.65
+[    728ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[      8ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     37ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     38ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     40ms] [page] load event fired
+[     41ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    104ms] [console.log] [PERSIST] populate ok in 44ms
+[    109ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    574ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1119ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1119ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1120ms] [console.error] 
+[   1120ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1120ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1120ms] [console.log] 
+[   1245ms] [console.log] [L] ENCODING latin1
+[   1253ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1254ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1276ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1279ms] [console.error] TODO: glShadeModel
+[   1283ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1325ms] [harness] click #start: clicked
+[   1327ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1327ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1328ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1328ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1328ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10401ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/01-boot1-language-menu.png
+[  10431ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10432ms] [harness] key Enter (1/1)
+[  13787ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/02-boot1-first-setup.png
+[  13813ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13819ms] [harness] key Escape (1/1)
+[  14120ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14120ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17183ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/03-boot1-after-first-setup.png
+[  17183ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17187ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17187ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17187ms] [harness] eval location.reload() => undefined
+[  17188ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17203ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17203ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17206ms] [page] load event fired
+[  17217ms] [console.log] [PERSIST] populate ok in 5ms
+[  17244ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17289ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19291ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19292ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19293ms] [console.error] 
+[  19293ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19294ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19294ms] [console.log] 
+[  19413ms] [console.log] [L] ENCODING latin1
+[  19418ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  19436ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  19438ms] [console.error] TODO: glShadeModel
+[  19441ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  19448ms] [harness] click #start: clicked
+[  31520ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/04-boot2-main-menu.png
+[  31520ms] [harness] === DOWN-1-SHOULD-HIGHLIGHT-PLAYER-SETUP ===
+[  31553ms] [harness] key Down (1/1)
+[  33401ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/05-cursor-on-player-setup.png
+[  33434ms] [harness] key Enter (1/1)
+[  36808ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/06-player-menu-top-item.png
+[  36808ms] [harness] === FOUR-DOWNS-THE-FOURTH-USED-TO-KILL-THE-TAB ===
+[  36841ms] [harness] key Down (1/1)
+[  38182ms] [harness] key Down (1/1)
+[  39520ms] [harness] key Down (1/1)
+[  40891ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/07-cursor-on-player-4.png
+[  40922ms] [harness] key Down (1/1)
+[  45272ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/08-VIEWPORTS-HIGHLIGHTED-THIS-IS-THE-CRASH-POINT.png
+[  45273ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => "alive, gl err=0x0"
+[  45273ms] [harness] === CYCLE-ALL-SIX-VIEWPORT-CONFIGURATIONS ===
+[  45306ms] [harness] key Right (1/1)
+[  47472ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/09-config-2.png
+[  47505ms] [harness] key Right (1/1)
+[  49674ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/10-config-3.png
+[  49707ms] [harness] key Right (1/1)
+[  51872ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/11-config-4.png
+[  51904ms] [harness] key Right (1/1)
+[  54056ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/12-config-5.png
+[  54089ms] [harness] key Right (1/1)
+[  56259ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/13-config-6.png
+[  56292ms] [harness] key Right (1/1)
+[  58459ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/14-config-clamped-at-6.png
+[  58459ms] [harness] === BACK-TO-SINGLE-PLAYER ===
+[  58492ms] [harness] key Left (1/5)
+[  58825ms] [harness] key Left (2/5)
+[  59160ms] [harness] key Left (3/5)
+[  59495ms] [harness] key Left (4/5)
+[  59832ms] [harness] key Left (5/5)
+[  62707ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/15-back-to-single-player.png
+[  62708ms] [harness] === THE-OTHER-DemonstrateViewport-CALLER ===
+[  62741ms] [harness] key Down (1/1)
+[  64608ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/16-cursor-on-assign-viewports.png
+[  64641ms] [harness] key Enter (1/1)
+[  68487ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/17-assign-viewports-to-players.png
+[  68519ms] [harness] key Right (1/1)
+[  70670ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/18-assign-after-right.png
+[  70706ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  70706ms] [harness] key Escape (1/1)
+[  73589ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/19-back-in-player-setup.png
+[  73624ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  73624ms] [harness] key Escape (1/1)
+[  76504ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-chrome/20-back-in-main-menu.png
+[  76505ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'still alive, canvas '+c.width+'x'+c.height})() => "still alive, canvas 1024x768"

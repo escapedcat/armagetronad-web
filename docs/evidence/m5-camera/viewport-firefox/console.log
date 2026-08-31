@@ -1,0 +1,105 @@
+[   1521ms] [harness] firefox: 154.0.1 (headless=true)
+[   1521ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     43ms] [page] load event fired
+[    124ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    143ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    143ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    145ms] [page] load event fired
+[    145ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[    180ms] [console.log] [PERSIST] populate ok in 5ms
+[    246ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    299ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1252ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1252ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1252ms] [console.error] 
+[   1252ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1253ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1253ms] [console.log] 
+[   1350ms] [console.log] [L] ENCODING latin1
+[   1353ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1457ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1490ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1492ms] [console.error] TODO: glShadeModel
+[   1502ms] [harness] click #start: clicked
+[  10517ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/01-boot1-language-menu.png
+[  10528ms] [harness] key Enter (1/1)
+[  10548ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  13853ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/02-boot1-first-setup.png
+[  13856ms] [harness] key Escape (1/1)
+[  13882ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  14159ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14159ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17194ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/03-boot1-after-first-setup.png
+[  17194ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17198ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17198ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17198ms] [harness] eval location.reload() => undefined
+[  17199ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17208ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  17208ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  17216ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  17229ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17229ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17230ms] [page] load event fired
+[  17263ms] [console.log] [PERSIST] populate ok in 4ms
+[  17286ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17298ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19313ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19314ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19321ms] [console.error] 
+[  19322ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19322ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19322ms] [console.log] 
+[  19430ms] [console.log] [L] ENCODING latin1
+[  19432ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  19447ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  19451ms] [console.error] TODO: glShadeModel
+[  19458ms] [harness] click #start: clicked
+[  31475ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/04-boot2-main-menu.png
+[  31475ms] [harness] === DOWN-1-SHOULD-HIGHLIGHT-PLAYER-SETUP ===
+[  31478ms] [harness] key Down (1/1)
+[  33305ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/05-cursor-on-player-setup.png
+[  33308ms] [harness] key Enter (1/1)
+[  36640ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/06-player-menu-top-item.png
+[  36640ms] [harness] === FOUR-DOWNS-THE-FOURTH-USED-TO-KILL-THE-TAB ===
+[  36642ms] [harness] key Down (1/1)
+[  37950ms] [harness] key Down (1/1)
+[  39266ms] [harness] key Down (1/1)
+[  40589ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/07-cursor-on-player-4.png
+[  40591ms] [harness] key Down (1/1)
+[  44910ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/08-VIEWPORTS-HIGHLIGHTED-THIS-IS-THE-CRASH-POINT.png
+[  44912ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => alive, gl err=0x0
+[  44912ms] [harness] === CYCLE-ALL-SIX-VIEWPORT-CONFIGURATIONS ===
+[  44914ms] [harness] key Right (1/1)
+[  47028ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/09-config-2.png
+[  47039ms] [harness] key Right (1/1)
+[  49160ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/10-config-3.png
+[  49162ms] [harness] key Right (1/1)
+[  51294ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/11-config-4.png
+[  51296ms] [harness] key Right (1/1)
+[  53422ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/12-config-5.png
+[  53424ms] [harness] key Right (1/1)
+[  55550ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/13-config-6.png
+[  55552ms] [harness] key Right (1/1)
+[  57679ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/14-config-clamped-at-6.png
+[  57680ms] [harness] === BACK-TO-SINGLE-PLAYER ===
+[  57681ms] [harness] key Left (1/5)
+[  57994ms] [harness] key Left (2/5)
+[  58301ms] [harness] key Left (3/5)
+[  58611ms] [harness] key Left (4/5)
+[  58921ms] [harness] key Left (5/5)
+[  61749ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/15-back-to-single-player.png
+[  61749ms] [harness] === THE-OTHER-DemonstrateViewport-CALLER ===
+[  61753ms] [harness] key Down (1/1)
+[  63568ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/16-cursor-on-assign-viewports.png
+[  63570ms] [harness] key Enter (1/1)
+[  67402ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/17-assign-viewports-to-players.png
+[  67404ms] [harness] key Right (1/1)
+[  69525ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/18-assign-after-right.png
+[  69527ms] [harness] key Escape (1/1)
+[  69569ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  72342ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/19-back-in-player-setup.png
+[  72344ms] [harness] key Escape (1/1)
+[  72393ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  75158ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/vp-firefox/20-back-in-main-menu.png
+[  75159ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'still alive, canvas '+c.width+'x'+c.height})() => still alive, canvas 1024x768
