@@ -1,0 +1,28 @@
+$ python3 docs/evidence/m5-camera/measure-camera.py \
+      docs/evidence/m5-o2-assertions/gates/m2-gameplay-{chrome,firefox}/05-round1-after-LEFT.png \
+      docs/evidence/m5-camera/gameplay-{chrome,firefox}/05-round1-after-LEFT.png
+
+# The first two are the BEFORE frames: the -O2 build task 2 shipped, driven
+# through the same gate script at the same step, committed before this task
+# touched anything. The second two are the same step after the gluLookAt shim.
+
+--- docs/evidence/m5-o2-assertions/gates/m2-gameplay-chrome/05-round1-after-LEFT.png  (1024x768)
+    vertical_ridges_long (columns with a >= 300-row vertical ridge) : 34
+    columns                                                             : [11, 59, 107, 108, 122, 123, 203, 204, 251, 252, 299, 300, 347, 348, 395, 396, 443, 444, 491, 492, 508, 539, 540, 587, 588, 636, 684, 732, 780, 828, 876, 924, 972, 1020]
+    centre_column_run (longest ridge in x=505..517)                     : 476 rows at x=508, rows 95..570
+    sky_band_luma (mean luma, rows 100..250)                            : 7.07
+--- docs/evidence/m5-o2-assertions/gates/m2-gameplay-firefox/05-round1-after-LEFT.png  (1024x768)
+    vertical_ridges_long (columns with a >= 300-row vertical ridge) : 31
+    columns                                                             : [35, 59, 145, 146, 193, 194, 242, 290, 338, 386, 434, 435, 482, 483, 530, 531, 578, 579, 627, 675, 723, 771, 819, 867, 868, 915, 916, 963, 964, 1011, 1012]
+    centre_column_run (longest ridge in x=505..517)                     : 46 rows at x=507, rows 140..185
+    sky_band_luma (mean luma, rows 100..250)                            : 6.58
+--- docs/evidence/m5-camera/gameplay-chrome/05-round1-after-LEFT.png  (1024x768)
+    vertical_ridges_long (columns with a >= 300-row vertical ridge) : 0
+    columns                                                             : []
+    centre_column_run (longest ridge in x=505..517)                     : 116 rows at x=513, rows 582..697
+    sky_band_luma (mean luma, rows 100..250)                            : 64.99
+--- docs/evidence/m5-camera/gameplay-firefox/05-round1-after-LEFT.png  (1024x768)
+    vertical_ridges_long (columns with a >= 300-row vertical ridge) : 0
+    columns                                                             : []
+    centre_column_run (longest ridge in x=505..517)                     : 95 rows at x=514, rows 624..718
+    sky_band_luma (mean luma, rows 100..250)                            : 65.28
