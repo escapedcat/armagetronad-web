@@ -1,0 +1,44 @@
+
+A. section-10 bug + -O2 -sASSERTIONS=1  -- MUST abort
+  PASS A1     transcript carries the assert message
+  PASS A2     transcript carries Aborted(
+  PASS A3     stack is abort <- assert <- flush <- _emscripten_glEnd: ['abort', 'assert', 'flush', '_emscripten_glEnd']
+  PASS A4     13 shots from the crash point collapse to 2 distinct images
+
+B. the SAME bug + bare -O2 -- MUST NOT abort, and MUST render wrong
+  PASS B1     no Aborted( anywhere in the transcript
+  PASS B2     no assert message anywhere in the transcript
+  PASS B3     no uncaught exception
+  PASS B4     20 shots, 20 distinct -- the tab kept running to the end
+
+   the line loop itself, counted rather than eyeballed:
+     cell-fix-assert-SHIPPED     716 px  [('V', 971, 423, 729, 307), ('H', 423, 563, 971, 409)]
+     cell-bug-assert               0 px  []
+     cell-bug-noassert             0 px  []
+     cell-fix-noassert           716 px  [('V', 971, 423, 729, 307), ('H', 423, 563, 971, 409)]
+  PASS B5     SHIPPED build draws the loop (716 px in 2 axis-aligned segments)
+  PASS B6     bug + bare -O2 draws NO line loop at all -- silent wrong geometry, exactly failure mode 2
+
+C. the control that makes B6 attributable to the DEFECT
+  PASS C1     fixed objects at bare -O2 draw the SAME loop, pixel for pixel -- so dropping ASSERTIONS does not by itself change rendering
+  PASS C2     and it does not abort either
+
+D. the SHIPPED build (fix + -O2 -sASSERTIONS=1) on task 1's gate
+  PASS D1     20 shots, all distinct
+  PASS D2     no abort, no assert, no exception
+  PASS D3     glGetError at the crash point reads 0x0
+  PASS D4     still running at the end of the route
+  PASS D5     no non-favicon 404 (0 found)
+
+E. static: the assert is present/absent in the glue exactly as claimed
+  PASS E-armagetronad assert message present, ASSERTIONS=1
+  PASS E-armagetronad-bug-ass assert message present, ASSERTIONS=1
+  PASS E-armagetronad-bug-noa assert message absent, ASSERTIONS=0
+  PASS E-armagetronad-fix-noa assert message absent, ASSERTIONS=0
+
+Z. self-guard
+  PASS Z1     all 17 browser-evidence checks actually ran
+  PASS Z2     no static check was skipped
+
+23/23 passed
+exit 0

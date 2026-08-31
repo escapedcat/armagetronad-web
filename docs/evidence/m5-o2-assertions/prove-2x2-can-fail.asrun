@@ -1,0 +1,23 @@
+  PASS  0. control -- nothing changed
+  PASS  1. drop the assert message from the aborting transcript
+  PASS  2. drop "Aborted(" from the aborting transcript
+  PASS  3. drop the flush frame, so the stack no longer implicates glEnd
+  PASS  4. make the post-crash shots all different (tab NOT dead)
+  PASS  5. inject an abort into the silent run
+  PASS  6. inject the assert message into the silent run
+  PASS  7. inject an uncaught exception into the silent run
+  PASS  8. duplicate a shot so the silent run stops being 20 distinct
+  PASS  9. give the SHIPPED build the borderless frame
+  PASS 10. give the buggy bare--O2 run a correct frame
+  PASS 11. make the fix-at-bare--O2 control render wrong too
+  PASS 12. abort the fix-at-bare--O2 control
+  PASS 13. delete a shot from the shipped run
+  PASS 14. abort the shipped run
+  PASS 15. lose the glGetError probe
+  PASS 16. lose the end-of-route liveness probe
+  PASS 17. a real 404
+  PASS 18. leave the assert message in a build that must not have it
+  PASS 19. remove a loader so a static check silently skips
+
+20/20 mutations flipped exactly the checks they declare
+exit 0
