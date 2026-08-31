@@ -1,0 +1,126 @@
+[   1466ms] [harness] firefox: 154.0.1 (headless=true)
+[   1467ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     46ms] [page] load event fired
+[    120ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    141ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    141ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    143ms] [page] load event fired
+[    143ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[    176ms] [console.log] [PERSIST] populate ok in 6ms
+[    244ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    244ms] [harness] === BOOT-1-POPULATED ===
+[    295ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1266ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/00-boot1-ready.png
+[   1270ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};S.pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};S.fs=(phase)=>{const c=S.rd('/persist/var/user.cfg');console.log('[SETFS] '+JSON.stringify({phase:phase,present:c!==null,bytes:c===null?null:c.length,hash:S.h(c),player_1:S.pick(c,'PLAYER_1'),first_use:S.pick(c,'FIRST_USE'),clobbered:c!==null&&c.indexOf('CLOBBERED-BY-THE-GATE')>=0}));return phase};window.__set=S;return 'helpers installed'})() => helpers installed
+[   1271ms] [console.log] [SETFS] {"phase":"boot1-before-play","present":false,"bytes":null,"hash":null,"player_1":null,"first_use":null,"clobbered":false}
+[   1271ms] [harness] eval window.__set.fs('boot1-before-play') => boot1-before-play
+[   1272ms] [harness] eval (()=>{const W={n:0,tag:''};window.__pw=W;Module.IDBFS.onAutoPersistStateChanged=(a)=>{if(a){W.n++;console.log('[PERSISTSYNC] start '+W.n)}else{console.log('[PERSISTSYNC] idle after '+W.n+(W.tag?' '+W.tag:''))}};return 'watcher armed'})() => watcher armed
+[   1274ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1274ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1274ms] [console.error] 
+[   1275ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1275ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1275ms] [console.log] 
+[   1372ms] [console.log] [L] ENCODING latin1
+[   1375ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1476ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1525ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1525ms] [console.error] TODO: glShadeModel
+[   1525ms] [console.log] [PERSISTSYNC] start 1
+[   1525ms] [console.log] [PERSISTSYNC] idle after 1
+[   1525ms] [harness] click #start: clicked
+[  10545ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/01-boot1-language-menu.png
+[  10557ms] [harness] key Enter (1/1)
+[  10570ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10573ms] [console.log] [PERSISTSYNC] start 2
+[  10575ms] [console.log] [PERSISTSYNC] idle after 2
+[  10858ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10858ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13372ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/02-boot1-first-setup.png
+[  13375ms] [console.log] [SETFS] {"phase":"boot1-first-setup-open","present":true,"bytes":21646,"hash":"561a09c2","player_1":"web_user","first_use":"1","clobbered":false}
+[  13375ms] [harness] eval window.__set.fs('boot1-first-setup-open') => boot1-first-setup-open
+[  13378ms] [harness] key Down (1/1)
+[  14709ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/03-boot1-cursor-on-name.png
+[  14711ms] [harness] key Q (1/1)
+[  15025ms] [harness] key Z (1/1)
+[  15328ms] [harness] key X (1/1)
+[  15641ms] [harness] key J (1/1)
+[  15944ms] [harness] key V (1/1)
+[  17758ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/04-boot1-name-typed.png
+[  17759ms] [console.log] [SETFS] {"phase":"boot1-typed-not-yet-left","present":true,"bytes":21646,"hash":"561a09c2","player_1":"web_user","first_use":"1","clobbered":false}
+[  17760ms] [harness] eval window.__set.fs('boot1-typed-not-yet-left') => boot1-typed-not-yet-left
+[  17761ms] [harness] eval (()=>{window.__pw.tag='DRAINED-AFTER-MENU-LEAVE';return 'tag armed'})() => tag armed
+[  17761ms] [harness] === ESCAPE-LEAVES-THE-SETTINGS-MENU ===
+[  17763ms] [harness] key Escape (1/1)
+[  17790ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  17795ms] [console.log] [PERSISTSYNC] start 3
+[  17797ms] [console.log] [PERSISTSYNC] idle after 3 DRAINED-AFTER-MENU-LEAVE
+[  18063ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  18063ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  18063ms] [harness] === MENU-LEFT ===
+[  19576ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/05-boot1-after-escape.png
+[  19578ms] [console.log] [SETFS] {"phase":"boot1-after-menu-leave","present":true,"bytes":21651,"hash":"e0744c6d","player_1":"web_userqzxjv","first_use":"1","clobbered":false}
+[  19578ms] [harness] eval window.__set.fs('boot1-after-menu-leave') => boot1-after-menu-leave
+[  19578ms] [harness] until 1x <<DRAINED-AFTER-MENU-LEAVE>> (timeout 30000ms, have 1)
+[  19578ms] [harness] until SATISFIED: saw 1x <<DRAINED-AFTER-MENU-LEAVE>>
+[  19582ms] [console.log] [SETIDB] {"phase":"boot1-idb","absent":false,"open_error":null,"stores":["FILE_DATA"],"key_count":4,"user_cfg_present":true,"bytes":21651,"player_1":"web_userqzxjv","first_use":"1"}
+[  19582ms] [harness] eval (async()=>{const P='boot1-idb';const R=await new Promise((res)=>{const r=indexedDB.open('/persist',21);r.onupgradeneeded=(e)=>{try{e.target.transaction.abort()}catch(_){}res({db:null,absent:true})};r.onsuccess=()=>res({db:r.result,absent:false});r.onerror=()=>res({db:null,absent:true,err:String(r.error)});r.onblocked=()=>res({db:null,absent:false,err:'blocked'})});let txt=null,keyCount=null,stores=null;if(R.db){stores=[...R.db.objectStoreNames];if(stores.includes('FILE_DATA')){const o=R.db.transaction(['FILE_DATA'],'readonly').objectStore('FILE_DATA');keyCount=await new Promise((s,j)=>{const q=o.getAllKeys();q.onsuccess=()=>s(q.result.length);q.onerror=()=>j(q.error)});const rec=await new Promise((s,j)=>{const q=o.get('/persist/var/user.cfg');q.onsuccess=()=>s(q.result);q.onerror=()=>j(q.error)});if(rec&&rec.contents)txt=new TextDecoder().decode(rec.contents)}R.db.close()}const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[SETIDB] '+JSON.stringify({phase:P,absent:!!R.absent,open_error:R.err||null,stores:stores,key_count:keyCount,user_cfg_present:txt!==null,bytes:txt===null?null:txt.length,player_1:pick(txt,'PLAYER_1'),first_use:pick(txt,'FIRST_USE')}));return 'idb read'})() => idb read
+[  19582ms] [harness] === RELOAD-REQUESTED ===
+[  19586ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  19586ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  19586ms] [console.log] [PERSISTSYNC] start 4
+[  19586ms] [harness] eval location.reload() => undefined
+[  19586ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  19589ms] [console.log] [PERSISTSYNC] idle after 4 DRAINED-AFTER-MENU-LEAVE
+[  19594ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  19595ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  19605ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  19618ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  19618ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  19619ms] [page] load event fired
+[  19650ms] [console.log] [PERSIST] populate ok in 3ms
+[  19670ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  19688ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19688ms] [harness] === BOOT-2-POPULATED ===
+[  21205ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/06-boot2-ready.png
+[  21206ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};S.pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};S.fs=(phase)=>{const c=S.rd('/persist/var/user.cfg');console.log('[SETFS] '+JSON.stringify({phase:phase,present:c!==null,bytes:c===null?null:c.length,hash:S.h(c),player_1:S.pick(c,'PLAYER_1'),first_use:S.pick(c,'FIRST_USE'),clobbered:c!==null&&c.indexOf('CLOBBERED-BY-THE-GATE')>=0}));return phase};window.__set=S;return 'helpers installed'})() => helpers installed
+[  21208ms] [console.log] [SETFS] {"phase":"boot2-before-play","present":true,"bytes":22459,"hash":"d65222c8","player_1":"web_userqzxjv","first_use":"0","clobbered":false}
+[  21208ms] [harness] eval window.__set.fs('boot2-before-play') => boot2-before-play
+[  21211ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  21211ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  21211ms] [console.error] 
+[  21211ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  21211ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  21211ms] [console.log] 
+[  21316ms] [console.log] [L] ENCODING latin1
+[  21317ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  21332ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  21335ms] [console.error] TODO: glShadeModel
+[  21343ms] [harness] click #start: clicked
+[  30355ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/07-boot2-first-screen.png
+[  30358ms] [console.log] [SETFS] {"phase":"boot2-after-boot","present":true,"bytes":22459,"hash":"d65222c8","player_1":"web_userqzxjv","first_use":"0","clobbered":false}
+[  30358ms] [harness] eval window.__set.fs('boot2-after-boot') => boot2-after-boot
+[  30358ms] [harness] === USER-CFG-CLOBBERED-FROM-JS ===
+[  30359ms] [harness] eval (()=>{Module.FS.writeFile('/persist/var/user.cfg','CLOBBERED-BY-THE-GATE\n');return 'clobbered'})() => clobbered
+[  30360ms] [console.log] [SETFS] {"phase":"boot2-clobbered","present":true,"bytes":22,"hash":"b12c6861","player_1":null,"first_use":null,"clobbered":true}
+[  30360ms] [harness] eval window.__set.fs('boot2-clobbered') => boot2-clobbered
+[  30363ms] [harness] key Escape (1/1)
+[  30384ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  30385ms] [console.log] SDL_QuitSubSystem called (and ignored)
+[  30386ms] [console.log] SDL_Quit called (and ignored)
+[  30664ms] [harness] until 3x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 3)
+[  30664ms] [harness] until SATISFIED: saw 3x <<[PERSISTSAVE] menu-leave>>
+[  30664ms] [harness] === BOOT-2-REWROTE-IT-FROM-MEMORY ===
+[  32176ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/08-boot2-after-escape.png
+[  32178ms] [console.log] [SETFS] {"phase":"boot2-after-menu-leave","present":true,"bytes":22459,"hash":"d65222c8","player_1":"web_userqzxjv","first_use":"0","clobbered":false}
+[  32178ms] [harness] eval window.__set.fs('boot2-after-menu-leave') => boot2-after-menu-leave
+[  32187ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/09-boot2-final-frame.png
+[  32187ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  32189ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1253
+[  32189ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[  32189ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+    <anonymous> @ http://localhost:8000/armagetronad.html:0
+    <anonymous> @ http://localhost:8000/armagetronad.html:0
+[  34204ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/10-after-deliberate-uncaught-error.png
+
+Transcript: docs/evidence/m5-o2-assertions/gates/m4-settings-firefox/console.log

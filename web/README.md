@@ -429,17 +429,28 @@ overflows SDL's event queue and loses the keystroke. Firefox headless is fine.
 Pass `--chrome PATH` / `--firefox PATH` if your browsers are not at the macOS
 defaults.
 
-### Known limitations of the client at M3
+### Known limitations of the client at M3 (camera row updated at M5)
 
-- **The camera is permanently top-down, and no screenshot of this port has ever
-  shown a correct 3D view.** Emscripten's `gluLookAt` (`libglemu.js:3888`) is a
-  complete no-op — it passes the current matrix where the bundled gl-matrix
-  expects `eye` and writes the result into a throwaway array — and
-  `eCamera::Render` sets the whole view orientation with one call to it. So the
-  view is always straight down −Z. Unfixed, and it is the thing most likely to
-  mislead someone reading a screenshot of this port. Mechanism, the three
-  measurements that confirm it, and why `CAMERA_IN` is not a workaround:
-  `docs/porting/browser-runtime-notes.md` § 11.
+- ~~**The camera is permanently top-down**~~ — **fixed in M5.** Emscripten's
+  `gluLookAt` (`libglemu.js:3888`) is a complete no-op: it passes the current
+  matrix where the bundled gl-matrix expects `eye` and writes the result into a
+  throwaway array, and `eCamera::Render` sets the whole view orientation with
+  one call to it, so the view was always straight down −Z. `eCompat.cpp` now
+  defines `gluLookAt` itself, against the GLU 1.3 specification and as a
+  post-multiply (correcting the argument order alone is **not** the fix — see
+  § 11). **No screenshot of this port taken before M5 shows a correct 3D view**,
+  so read older evidence frames accordingly. Mechanism, the second bug
+  underneath the first, and the before/after measurements:
+  `docs/porting/browser-runtime-notes.md` § 11 and
+  `docs/evidence/m5-camera/`.
+- **The mouse camera binds are still dead, deliberately.** `default.cfg` binds
+  `LOOK_LEFT`/`LOOK_RIGHT`/`BANK_UP`/`BANK_DOWN`/`ZOOM_IN` to 324-332, which are
+  this program's own mouse pseudo-keys `SDLK_LAST+1…`, and `SDLK_LAST` was 323
+  in SDL 1.2 but is 1536 here. M5 measured the cost and deferred: the same
+  actions are bound to the **numpad** in the same file, those binds translate
+  and work, and the only three with no live binding are `BANK_UP`, `BANK_DOWN`
+  and `ZOOM_IN`. Enabling the mouse ones needs pointer-lock behaviour verified
+  first. § 11, "M5 TASK 2B DECISION".
 - **The cockpit HUD's first draw within a round is erratic**, and nobody has
   explained what it waits on. Screenshotting 5.5 s into a round finds the
   instrument panel present in anywhere from one round of three to three of

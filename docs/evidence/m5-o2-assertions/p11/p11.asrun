@@ -1,0 +1,45 @@
+#### noO-control  10:03:38
+     driver exit 0
+     CHECKER exit 1
+       PASS  P10  boot 2 read user.cfg back at the SAME byte count (21950 -> 21950)
+       FAIL  P11  boot 2 read user.cfg back with the SAME content hash (1ca4a3fe -> d890f09d)
+       RESULT: FAIL (1 check)
+       [   9979ms] [console.log] [CFGDIFF] lines 527/527 differing 3
+       [   9979ms] [console.log] [CFGDIFF] 184: B1<<                FLOOR_DETAIL 2>> B2<<                FLOOR_DETAIL 3>>
+       [   9979ms] [console.log] [CFGDIFF] 489: B1<<                   SWAP_MODE 1>> B2<<                   SWAP_MODE 2>>
+       [   9979ms] [console.log] [CFGDIFF] 503: B1<<                    TEXT_OUT 0>> B2<<                    TEXT_OUT 1>>
+       [   9979ms] [harness] eval (()=>{const a=(localStorage.getItem('b1cfg')||'').split('\n'),b=Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'}).split('\n');const d=[];for(let i=0;i<Math.max(a.length,b.length);i++)if(a[i]!==b[i])d.push(i+': B1<<'+a[i]+'>> B2<<'+b[i]+'>>');console.log('[CFGDIFF] lines '+a.length+'/'+b.length+' differing '+d.length);for(const l of d.slice(0,40))console.log('[CFGDIFF] '+l);return 'diffed '+d.length})() => "diffed 3"
+#### O2-shipped  10:04:00
+     driver exit 0
+     CHECKER exit 1
+       PASS  P10  boot 2 read user.cfg back at the SAME byte count (21950 -> 21950)
+       FAIL  P11  boot 2 read user.cfg back with the SAME content hash (f7340c1e -> d7fcf4bd)
+       RESULT: FAIL (1 check)
+       [   9800ms] [console.log] [CFGDIFF] lines 527/527 differing 3
+       [   9800ms] [console.log] [CFGDIFF] 184: B1<<                FLOOR_DETAIL 2>> B2<<                FLOOR_DETAIL 3>>
+       [   9800ms] [console.log] [CFGDIFF] 489: B1<<                   SWAP_MODE 1>> B2<<                   SWAP_MODE 2>>
+       [   9801ms] [console.log] [CFGDIFF] 503: B1<<                    TEXT_OUT 0>> B2<<                    TEXT_OUT 1>>
+       [   9801ms] [harness] eval (()=>{const a=(localStorage.getItem('b1cfg')||'').split('\n'),b=Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'}).split('\n');const d=[];for(let i=0;i<Math.max(a.length,b.length);i++)if(a[i]!==b[i])d.push(i+': B1<<'+a[i]+'>> B2<<'+b[i]+'>>');console.log('[CFGDIFF] lines '+a.length+'/'+b.length+' differing '+d.length);for(const l of d.slice(0,40))console.log('[CFGDIFF] '+l);return 'diffed '+d.length})() => "diffed 3"
+#### noO-control-2  10:04:21
+     driver exit 0
+     CHECKER exit 1
+       PASS  P10  boot 2 read user.cfg back at the SAME byte count (21950 -> 21950)
+       FAIL  P11  boot 2 read user.cfg back with the SAME content hash (1ca4a3fe -> d890f09d)
+       RESULT: FAIL (1 check)
+       [   9910ms] [console.log] [CFGDIFF] lines 527/527 differing 3
+       [   9910ms] [console.log] [CFGDIFF] 184: B1<<                FLOOR_DETAIL 2>> B2<<                FLOOR_DETAIL 3>>
+       [   9910ms] [console.log] [CFGDIFF] 489: B1<<                   SWAP_MODE 1>> B2<<                   SWAP_MODE 2>>
+       [   9910ms] [console.log] [CFGDIFF] 503: B1<<                    TEXT_OUT 0>> B2<<                    TEXT_OUT 1>>
+       [   9910ms] [harness] eval (()=>{const a=(localStorage.getItem('b1cfg')||'').split('\n'),b=Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'}).split('\n');const d=[];for(let i=0;i<Math.max(a.length,b.length);i++)if(a[i]!==b[i])d.push(i+': B1<<'+a[i]+'>> B2<<'+b[i]+'>>');console.log('[CFGDIFF] lines '+a.length+'/'+b.length+' differing '+d.length);for(const l of d.slice(0,40))console.log('[CFGDIFF] '+l);return 'diffed '+d.length})() => "diffed 3"
+#### O2-shipped-2  10:04:42
+     driver exit 0
+     CHECKER exit 1
+       PASS  P10  boot 2 read user.cfg back at the SAME byte count (21950 -> 21950)
+       FAIL  P11  boot 2 read user.cfg back with the SAME content hash (a579ed3e -> 12176ddd)
+       RESULT: FAIL (1 check)
+       [   9834ms] [console.log] [CFGDIFF] lines 527/527 differing 3
+       [   9834ms] [console.log] [CFGDIFF] 184: B1<<                FLOOR_DETAIL 2>> B2<<                FLOOR_DETAIL 3>>
+       [   9834ms] [console.log] [CFGDIFF] 489: B1<<                   SWAP_MODE 1>> B2<<                   SWAP_MODE 2>>
+       [   9834ms] [console.log] [CFGDIFF] 503: B1<<                    TEXT_OUT 0>> B2<<                    TEXT_OUT 1>>
+       [   9834ms] [harness] eval (()=>{const a=(localStorage.getItem('b1cfg')||'').split('\n'),b=Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'}).split('\n');const d=[];for(let i=0;i<Math.max(a.length,b.length);i++)if(a[i]!==b[i])d.push(i+': B1<<'+a[i]+'>> B2<<'+b[i]+'>>');console.log('[CFGDIFF] lines '+a.length+'/'+b.length+' differing '+d.length);for(const l of d.slice(0,40))console.log('[CFGDIFF] '+l);return 'diffed '+d.length})() => "diffed 3"
+#### P11 DONE 10:05:04

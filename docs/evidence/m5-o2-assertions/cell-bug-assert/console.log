@@ -1,0 +1,230 @@
+[    625ms] [harness] chrome: Chrome/152.0.7977.65
+[    626ms] [harness] navigating to http://localhost:8000/armagetronad-bug-assert.html
+[      7ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     35ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     37ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     37ms] [page] load event fired
+[     46ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    113ms] [console.log] [PERSIST] populate ok in 45ms
+[    211ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    309ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1219ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1219ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1219ms] [console.error] 
+[   1220ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1220ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1220ms] [console.log] 
+[   1345ms] [console.log] [L] ENCODING latin1
+[   1353ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1354ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1374ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1377ms] [console.error] TODO: glShadeModel
+[   1380ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad-bug-assert.js
+[   1419ms] [harness] click #start: clicked
+[   1421ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-bug-assert.js
+[   1421ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-bug-assert.js
+[   1421ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-bug-assert.js
+[   1421ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-bug-assert.js
+[   1421ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-bug-assert.js
+[  10487ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/01-boot1-language-menu.png
+[  10526ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10528ms] [harness] key Enter (1/1)
+[  13890ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/02-boot1-first-setup.png
+[  13926ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13927ms] [harness] key Escape (1/1)
+[  14228ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14229ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17305ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/03-boot1-after-first-setup.png
+[  17306ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17312ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17313ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17313ms] [harness] eval location.reload() => undefined
+[  17314ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17329ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17329ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17334ms] [page] load event fired
+[  17342ms] [console.log] [PERSIST] populate ok in 4ms
+[  17365ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17415ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19425ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19426ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19426ms] [console.error] 
+[  19426ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19427ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19428ms] [console.log] 
+[  19559ms] [console.log] [L] ENCODING latin1
+[  19562ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  19578ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  19580ms] [console.error] TODO: glShadeModel
+[  19583ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad-bug-assert.js
+[  19589ms] [harness] click #start: clicked
+[  31651ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/04-boot2-main-menu.png
+[  31652ms] [harness] === DOWN-1-SHOULD-HIGHLIGHT-PLAYER-SETUP ===
+[  31684ms] [harness] key Down (1/1)
+[  33555ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/05-cursor-on-player-setup.png
+[  33587ms] [harness] key Enter (1/1)
+[  36980ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/06-player-menu-top-item.png
+[  36980ms] [harness] === FOUR-DOWNS-THE-FOURTH-USED-TO-KILL-THE-TAB ===
+[  37012ms] [harness] key Down (1/1)
+[  38351ms] [harness] key Down (1/1)
+[  39687ms] [harness] key Down (1/1)
+[  41075ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/07-cursor-on-player-4.png
+[  41094ms] [console.error] Assertion failed: `numVertices` must be an integer.
+[  41095ms] [console.error] Aborted(Assertion failed: `numVertices` must be an integer.)
+[  41095ms] [console.error] RuntimeError: Aborted(Assertion failed: `numVertices` must be an integer.)
+[  41096ms] [EXCEPTION] RuntimeError: Aborted(Assertion failed: `numVertices` must be an integer.)
+    at abort (http://localhost:8000/armagetronad-bug-assert.js:1:22220)
+    at assert (http://localhost:8000/armagetronad-bug-assert.js:1:16649)
+    at Object.flush (http://localhost:8000/armagetronad-bug-assert.js:1:247559)
+    at _emscripten_glEnd (http://localhost:8000/armagetronad-bug-assert.js:1:273186)
+    at imports.<computed> (http://localhost:8000/armagetronad-bug-assert.js:1:285275)
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2386]:0x1baa23
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2370]:0x1ba250
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[5309]:0x3c9b4b
+    at __asyncify_wrapper_5309 (http://localhost:8000/armagetronad-bug-assert.js:1:285739)
+    at http://localhost:8000/armagetronad-bug-assert.js:1:22551
+    at invoke_iiii (http://localhost:8000/armagetronad-bug-assert.js:1:339524)
+    at imports.<computed> (http://localhost:8000/armagetronad-bug-assert.js:1:285275)
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2371]:0x1ba53e
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2506]:0x1ca310
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[5305]:0x3c983b
+    at __asyncify_wrapper_5305 (http://localhost:8000/armagetronad-bug-assert.js:1:285739)
+    at http://localhost:8000/armagetronad-bug-assert.js:1:22551
+    at invoke_vi (http://localhost:8000/armagetronad-bug-assert.js:1:340020)
+    at imports.<computed> (http://localhost:8000/armagetronad-bug-assert.js:1:285275)
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[3464]:0x28e91b
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2578]:0x1d68d5
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[5305]:0x3c983b
+    at __asyncify_wrapper_5305 (http://localhost:8000/armagetronad-bug-assert.js:1:285739)
+    at http://localhost:8000/armagetronad-bug-assert.js:1:22551
+    at invoke_vi (http://localhost:8000/armagetronad-bug-assert.js:1:340020)
+    at imports.<computed> (http://localhost:8000/armagetronad-bug-assert.js:1:285275)
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[3439]:0x28b480
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2615]:0x1de83b
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[5305]:0x3c983b
+    at __asyncify_wrapper_5305 (http://localhost:8000/armagetronad-bug-assert.js:1:285739)
+    at http://localhost:8000/armagetronad-bug-assert.js:1:22551
+    at invoke_vi (http://localhost:8000/armagetronad-bug-assert.js:1:340020)
+    at imports.<computed> (http://localhost:8000/armagetronad-bug-assert.js:1:285275)
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2579]:0x1d80fb
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[5304]:0x3c9790
+    at __asyncify_wrapper_5304 (http://localhost:8000/armagetronad-bug-assert.js:1:285739)
+    at http://localhost:8000/armagetronad-bug-assert.js:1:22551
+    at invoke_vii (http://localhost:8000/armagetronad-bug-assert.js:1:339861)
+    at imports.<computed> (http://localhost:8000/armagetronad-bug-assert.js:1:285275)
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2578]:0x1d6339
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[5305]:0x3c983b
+    at __asyncify_wrapper_5305 (http://localhost:8000/armagetronad-bug-assert.js:1:285739)
+    at http://localhost:8000/armagetronad-bug-assert.js:1:22551
+    at invoke_vi (http://localhost:8000/armagetronad-bug-assert.js:1:340020)
+    at imports.<computed> (http://localhost:8000/armagetronad-bug-assert.js:1:285275)
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[3165]:0x2522db
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[5305]:0x3c983b
+    at __asyncify_wrapper_5305 (http://localhost:8000/armagetronad-bug-assert.js:1:285739)
+    at http://localhost:8000/armagetronad-bug-assert.js:1:22551
+    at invoke_vi (http://localhost:8000/armagetronad-bug-assert.js:1:340020)
+    at imports.<computed> (http://localhost:8000/armagetronad-bug-assert.js:1:285275)
+    at http://localhost:8000/armagetronad-bug-assert.wasm:wasm-function[2699]:0x201fc3
+    at __asyncify_wrapper_2699 (http://localhost:8000/armagetronad-bug-assert.js:1:285739)
+    at callUserCallback (http://localhost:8000/armagetronad-bug-assert.js:1:26356)
+    at Object.doRewind (http://localhost:8000/armagetronad-bug-assert.js:1:288009)
+    at http://localhost:8000/armagetronad-bug-assert.js:1:288981
+    at http://localhost:8000/armagetronad-bug-assert.js:1:290005
+[  41096ms] [EXCEPTION] structured stack, 57 frames:
+[  41096ms]     abort @ http://localhost:8000/armagetronad-bug-assert.js:0:22219
+[  41096ms]     assert @ http://localhost:8000/armagetronad-bug-assert.js:0:16648
+[  41096ms]     flush @ http://localhost:8000/armagetronad-bug-assert.js:0:247558
+[  41096ms]     _emscripten_glEnd @ http://localhost:8000/armagetronad-bug-assert.js:0:273185
+[  41096ms]     imports.<computed> @ http://localhost:8000/armagetronad-bug-assert.js:0:285274
+[  41096ms]     $func2386 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:1813027
+[  41096ms]     $func2370 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:1811024
+[  41096ms]     $dynCall_iiii @ http://localhost:8000/armagetronad-bug-assert.wasm:0:3971915
+[  41097ms]     __asyncify_wrapper_5309 @ http://localhost:8000/armagetronad-bug-assert.js:0:285738
+[  41097ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:22550
+[  41097ms]     invoke_iiii @ http://localhost:8000/armagetronad-bug-assert.js:0:339523
+[  41097ms]     imports.<computed> @ http://localhost:8000/armagetronad-bug-assert.js:0:285274
+[  41097ms]     $func2371 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:1811774
+[  41097ms]     $func2506 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:1876752
+[  41097ms]     $dynCall_vi @ http://localhost:8000/armagetronad-bug-assert.wasm:0:3971131
+[  41097ms]     __asyncify_wrapper_5305 @ http://localhost:8000/armagetronad-bug-assert.js:0:285738
+[  41097ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:22550
+[  41097ms]     invoke_vi @ http://localhost:8000/armagetronad-bug-assert.js:0:340019
+[  41097ms]     imports.<computed> @ http://localhost:8000/armagetronad-bug-assert.js:0:285274
+[  41097ms]     $func3464 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:2681115
+[  41097ms]     $func2578 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:1927381
+[  41097ms]     $dynCall_vi @ http://localhost:8000/armagetronad-bug-assert.wasm:0:3971131
+[  41097ms]     __asyncify_wrapper_5305 @ http://localhost:8000/armagetronad-bug-assert.js:0:285738
+[  41097ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:22550
+[  41097ms]     invoke_vi @ http://localhost:8000/armagetronad-bug-assert.js:0:340019
+[  41097ms]     imports.<computed> @ http://localhost:8000/armagetronad-bug-assert.js:0:285274
+[  41097ms]     $func3439 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:2667648
+[  41097ms]     $func2615 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:1959995
+[  41097ms]     $dynCall_vi @ http://localhost:8000/armagetronad-bug-assert.wasm:0:3971131
+[  41098ms]     __asyncify_wrapper_5305 @ http://localhost:8000/armagetronad-bug-assert.js:0:285738
+[  41098ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:22550
+[  41098ms]     invoke_vi @ http://localhost:8000/armagetronad-bug-assert.js:0:340019
+[  41098ms]     imports.<computed> @ http://localhost:8000/armagetronad-bug-assert.js:0:285274
+[  41098ms]     $func2579 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:1933563
+[  41098ms]     $dynCall_vii @ http://localhost:8000/armagetronad-bug-assert.wasm:0:3970960
+[  41098ms]     __asyncify_wrapper_5304 @ http://localhost:8000/armagetronad-bug-assert.js:0:285738
+[  41098ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:22550
+[  41098ms]     invoke_vii @ http://localhost:8000/armagetronad-bug-assert.js:0:339860
+[  41098ms]     imports.<computed> @ http://localhost:8000/armagetronad-bug-assert.js:0:285274
+[  41098ms]     $func2578 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:1925945
+[  41098ms]     $dynCall_vi @ http://localhost:8000/armagetronad-bug-assert.wasm:0:3971131
+[  41098ms]     __asyncify_wrapper_5305 @ http://localhost:8000/armagetronad-bug-assert.js:0:285738
+[  41098ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:22550
+[  41098ms]     invoke_vi @ http://localhost:8000/armagetronad-bug-assert.js:0:340019
+[  41098ms]     imports.<computed> @ http://localhost:8000/armagetronad-bug-assert.js:0:285274
+[  41098ms]     $func3165 @ http://localhost:8000/armagetronad-bug-assert.wasm:0:2433755
+[  41098ms]     $dynCall_vi @ http://localhost:8000/armagetronad-bug-assert.wasm:0:3971131
+[  41099ms]     __asyncify_wrapper_5305 @ http://localhost:8000/armagetronad-bug-assert.js:0:285738
+[  41099ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:22550
+[  41099ms]     invoke_vi @ http://localhost:8000/armagetronad-bug-assert.js:0:340019
+[  41099ms]     imports.<computed> @ http://localhost:8000/armagetronad-bug-assert.js:0:285274
+[  41099ms]     $__main_argc_argv @ http://localhost:8000/armagetronad-bug-assert.wasm:0:2105283
+[  41099ms]     __asyncify_wrapper_2699 @ http://localhost:8000/armagetronad-bug-assert.js:0:285738
+[  41099ms]     callUserCallback @ http://localhost:8000/armagetronad-bug-assert.js:0:26355
+[  41099ms]     doRewind @ http://localhost:8000/armagetronad-bug-assert.js:0:288008
+[  41099ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:288980
+[  41099ms]     <anonymous> @ http://localhost:8000/armagetronad-bug-assert.js:0:290004
+[  41108ms] [harness] key Down (1/1)
+[  41356ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  41357ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  41357ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  41357ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  41357ms] [console.error] user callback triggered after runtime exited or application aborted.  Ignoring.
+[  45466ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/08-VIEWPORTS-HIGHLIGHTED-THIS-IS-THE-CRASH-POINT.png
+[  45467ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => "alive, gl err=0x0"
+[  45467ms] [harness] === CYCLE-ALL-SIX-VIEWPORT-CONFIGURATIONS ===
+[  45500ms] [harness] key Right (1/1)
+[  47665ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/09-config-2.png
+[  47698ms] [harness] key Right (1/1)
+[  49876ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/10-config-3.png
+[  49910ms] [harness] key Right (1/1)
+[  52069ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/11-config-4.png
+[  52103ms] [harness] key Right (1/1)
+[  54282ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/12-config-5.png
+[  54313ms] [harness] key Right (1/1)
+[  56488ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/13-config-6.png
+[  56522ms] [harness] key Right (1/1)
+[  58682ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/14-config-clamped-at-6.png
+[  58682ms] [harness] === BACK-TO-SINGLE-PLAYER ===
+[  58715ms] [harness] key Left (1/5)
+[  59056ms] [harness] key Left (2/5)
+[  59406ms] [harness] key Left (3/5)
+[  59741ms] [harness] key Left (4/5)
+[  60078ms] [harness] key Left (5/5)
+[  62960ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/15-back-to-single-player.png
+[  62960ms] [harness] === THE-OTHER-DemonstrateViewport-CALLER ===
+[  62994ms] [harness] key Down (1/1)
+[  64856ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/16-cursor-on-assign-viewports.png
+[  64889ms] [harness] key Enter (1/1)
+[  68753ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/17-assign-viewports-to-players.png
+[  68786ms] [harness] key Right (1/1)
+[  70977ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/18-assign-after-right.png
+[  71009ms] [harness] key Escape (1/1)
+[  73854ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/19-back-in-player-setup.png
+[  73886ms] [harness] key Escape (1/1)
+[  76758ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-assert/20-back-in-main-menu.png
+[  76759ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'still alive, canvas '+c.width+'x'+c.height})() => "still alive, canvas 1024x768"

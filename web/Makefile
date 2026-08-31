@@ -53,8 +53,22 @@ INCLUDES  := -I src/emscripten \
 # It is not free, and the cost carries into every later build. Rebuilding all
 # 100 translation units with EXCEPTIONS empty and nothing else changed produces
 # a 1,661,113-byte wasm; with -fexceptions it is 2,488,298 (+827,185 bytes,
-# ~+50%; the .js glue adds a further +25,151). That is the single largest known
-# line item in PLAN.md's M5 size budget.
+# ~+50%; the .js glue adds a further +25,151).
+#
+# THAT NUMBER IS THIS BUILD'S -- the DEDICATED one, which has no Asyncify -- and
+# it must not be quoted at the client. Exceptions and Asyncify multiply, because
+# ASYNCIFY=1 instruments the unwinder along with everything else. Measured at M5
+# task 2 by recompiling all 102 CLIENT translation units with EXCEPTIONS empty
+# and relinking (docs/evidence/m5-o2-assertions/measure-fexceptions-cost.sh):
+#
+#                          without -fexceptions   with        delta
+#   dedicated (this)              1,661,113    2,488,298   + 827,185  (+49.8%)
+#   client, pre-M5-task-2 link    6,477,276    8,879,522   +2,402,246 (+37.1%)
+#   client, shipped -O2 link      3,100,006    4,331,138   +1,231,132 (+39.7%)
+#
+# PLAN.md quoted +827,185 in three places as if it were the client's; all three
+# are now annotated there rather than replaced, because the figure is real, it
+# is just the wrong build's.
 EXCEPTIONS := -fexceptions
 
 # Shared by every variant compiled from this file (M0 dedicated, M1 client, and
@@ -184,8 +198,10 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 # (src/render/rSysdep.cpp); Asyncify is the machinery that makes that call able
 # to return.
 #
-# It is not free, and M5's size budget needs the number. Relinking the same 101
-# objects with and without these two flags:
+# It is not free, and M5's size budget needs the number. Relinking the same
+# objects with and without these two flags (101 of them when this was measured
+# at M2 -- the client links 102 today, since M4 added eWebPersist.o; the delta
+# below was re-measured at M5 recon as +5,893,427 / +197.4% and agrees):
 #     without   2,982,495 bytes wasm      584,996 bytes js
 #     with      8,871,099 bytes wasm      625,787 bytes js
 #     delta    +5,888,604 bytes (+197%)   +40,791 bytes (+7%)
@@ -317,7 +333,59 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 # --exclude-file bug above was actually caught: confirm "callMain" appears
 # outside of unexportedSymbols in the built armagetronad.js, do not trust
 # that adding the flag was enough.
-CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
+# ---- M5 Task 2: -O2 at link, with ASSERTIONS held on -------------------
+#
+# -O2 here is a LINK-time flag and does something the -O2 already in
+# BASE_CXXFLAGS cannot: it runs Binaryen's wasm-opt over the whole linked
+# module (after the Asyncify transform, which is where nearly all of this
+# binary's bulk comes from) and minifies the JS glue. Compile-time -O2 has
+# been on since M0 and does not reach either of those. The wire total for the
+# four served files drops from 4,097,666 to 1,707,754 bytes gzipped -- 3.91 MiB
+# to 1.63 MiB, a 58% cut -- against PLAN.md's 15 MB budget.
+#
+# -sASSERTIONS=1 is NOT redundant and NOT optional. Emscripten's default for
+# ASSERTIONS is 1 at -O0 and 0 from -O1 up (src/settings.js documents the
+# default, tools/link.py flips it with the optimisation level), so adding -O2
+# alone silently turns assertions OFF. That is the whole reason PLAN.md and
+# docs/porting/browser-runtime-notes.md section 10 banned -O at link from M2
+# through M4: section 10's defect class -- one glBegin/glEnd block gets one
+# vertex format -- has two failure modes, an assert in glEnd (loud, fixable)
+# and a slot count that happens to divide evenly (silent garbage geometry).
+# Dropping ASSERTIONS converts every future instance of the first kind into the
+# second kind.
+#
+# The ban was really a ban on losing ASSERTIONS, and the two are separable.
+# That is not an argument, it is a measurement -- re-established on this build
+# by FIRING the assert, not by reading flag defaults. With M5 task 1's
+# RenderEnd() removed from rViewportConfiguration::DemonstrateViewport (the
+# only known live section-10 site, hence the only one that can be fired):
+#   -O2 -sASSERTIONS=1  ->  Aborted(Assertion failed: `numVertices` must be an
+#                           integer.) from _emscripten_glEnd, same route and
+#                           same message as the no-O build.
+#   -O2 alone           ->  NO abort. The tab survives the same keystroke and
+#                           draws the panel with its border wrong, which is
+#                           exactly failure mode 2. The control that makes
+#                           that attributable to the DEFECT rather than to
+#                           -O2 or to ASSERTIONS=0 is the fourth cell: the
+#                           FIXED objects linked with bare -O2 render
+#                           correctly.
+# Full transcripts, screenshots and the re-runnable script:
+# docs/evidence/m5-o2-assertions/.
+#
+# Assertions cost 5.1% of the wire total over bare -O2. That is the price of
+# keeping this port's largest defect class loud, and it is worth it.
+#
+# -O2 rather than -O3/-Os/-Oz: measured at M5 recon, the four differ by 10,728
+# bytes on the wire (0.9%) and the raw-size ordering INVERTS under gzip. -O2 is
+# emcc's own recommended default. Not worth revisiting without a new
+# measurement.
+#
+# Deliberately NOT added to $(LDFLAGS): the dedicated build's wasm is a
+# byte-identity invariant across the whole port (2,488,298 bytes, md5
+# 9718a2a64978cb6e9b95ea2f0454cca5), and it is a Node diagnostic tool, not a
+# shipped artefact, so it has nothing to gain and an invariant to lose.
+CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
+                  $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
                   -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
                   -sEXPORTED_RUNTIME_METHODS=callMain,FS,IDBFS,addRunDependency,removeRunDependency \

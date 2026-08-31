@@ -242,6 +242,32 @@ void rViewportConfiguration::DemonstrateViewport(tString *titles){
         glVertex2f(-1,1);
         glVertex2f(1,1);
         glVertex2f(1,-1);
+        // Close the loop HERE, before the colour changes. Emscripten's GL
+        // emulation derives ONE interleaved vertex format for a whole
+        // glBegin/glEnd block, so a glColor* issued while the block is still
+        // open stops being state and becomes a per-vertex attribute: four
+        // glVertex2f at 4 slots each plus one colour slot is 17 slots against
+        // a {VERTEX 16 + COLOR 4} = 20-byte stride, and glEnd's
+        // `numVertices` assertion (4*17/20 = 3.4) aborts the page. Real
+        // OpenGL is happy to take a colour once per loop, which is why this
+        // stood unnoticed until the browser port.
+        //
+        // Nothing here flushed it either: the glColor3f below is followed by
+        // DisplayText, whose own RenderEnd is what reached glEnd with the
+        // ragged batch. With RenderEnd() called first the colour is plain
+        // state again, costs no slots, and DisplayText gets a clean batch of
+        // its own.
+        //
+        // Reachable, not theoretical: this function is called from
+        // ArmageTron_viewport_menuitem::RenderBackground and
+        // ArmageTronPlayer_to_viewport_menuitem::RenderBackground
+        // (src/tron/gMenus.cpp), and uMenu::OnEnter calls RenderBackground on
+        // the *selected* item, so merely highlighting "Viewports:" in the
+        // Player Setup menu used to kill the tab.
+        //
+        // docs/porting/browser-runtime-notes.md section 10 is the full rule;
+        // do not add a Begin*() call site near this one without reading it.
+        RenderEnd();
 
         glColor3f(1,1,1);
         DisplayText(0,0,.15,.5,titles[i]);

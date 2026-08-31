@@ -1,0 +1,252 @@
+[   1421ms] [harness] firefox: 154.0.1 (headless=true)
+[   1421ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     45ms] [page] load event fired
+[    120ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    136ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    136ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    138ms] [page] load event fired
+[    138ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[    172ms] [console.log] [PERSIST] populate ok in 5ms
+[    240ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    240ms] [harness] === BOOT-1-POPULATED ===
+[    290ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1246ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.keys=(t)=>t===null?[]:t.split('\n').filter(l=>l.trim().indexOf('KEYBOARD')===0).map(l=>l.trim().replace(/\s+/g,' '));S.binds=(K,a)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+a+' 1')>0).map(l=>l.split(' ')[1]);S.dump=(phase)=>{const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const K=S.keys(c);console.log('[MILE] '+JSON.stringify({phase:phase,canvas_w:cv.width,canvas_h:cv.height,present:c!==null,bytes:c===null?null:c.length,first_use:S.line(c,'FIRST_USE'),fullscreen:S.line(c,'FULLSCREEN'),screenmode:S.line(c,'ARMAGETRON_SCREENMODE'),screenmode_w:S.line(c,'ARMAGETRON_SCREENMODE_W'),screenmode_h:S.line(c,'ARMAGETRON_SCREENMODE_H'),windowsize_w:S.line(c,'ARMAGETRON_WINDOWSIZE_W'),windowsize_h:S.line(c,'ARMAGETRON_WINDOWSIZE_H'),n_keyboard:K.length,left_binds:S.binds(K,'CYCLE_TURN_LEFT'),right_binds:S.binds(K,'CYCLE_TURN_RIGHT'),tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__mile=S;return 'probe installed'})() => probe installed
+[   1248ms] [console.log] [MILE] {"phase":"boot1-before-play","canvas_w":1024,"canvas_h":768,"present":false,"bytes":null,"first_use":null,"fullscreen":null,"screenmode":null,"screenmode_w":null,"screenmode_h":null,"windowsize_w":null,"windowsize_h":null,"n_keyboard":0,"left_binds":[],"right_binds":[],"tip_left":null,"tip_right":null}
+[   1248ms] [harness] eval window.__mile.dump('boot1-before-play') => boot1-before-play
+[   1250ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1250ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1250ms] [console.error] 
+[   1251ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1251ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1251ms] [console.log] 
+[   1349ms] [console.log] [L] ENCODING latin1
+[   1351ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1474ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1526ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1528ms] [console.error] TODO: glShadeModel
+[   1538ms] [harness] click #start: clicked
+[  10559ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/00-boot1-language-menu.png
+[  10571ms] [harness] key Enter (1/1)
+[  10585ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10873ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10874ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13403ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/01-boot1-first-setup.png
+[  13406ms] [harness] key Escape (1/1)
+[  13436ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13708ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13708ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16736ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/02-boot1-after-first-setup.png
+[  16738ms] [console.log] [MILE] {"phase":"boot1-after-first-setup","canvas_w":1024,"canvas_h":768,"present":true,"bytes":21646,"first_use":"1","fullscreen":"1","screenmode":"0","screenmode_w":"0","screenmode_h":"0","windowsize_w":"640","windowsize_h":"480","n_keyboard":59,"left_binds":[],"right_binds":[],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  16738ms] [harness] eval window.__mile.dump('boot1-after-first-setup') => boot1-after-first-setup
+[  16738ms] [harness] === RELOAD-1-REQUESTED ===
+[  16742ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16742ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16742ms] [harness] eval location.reload() => undefined
+[  16742ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16750ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  16751ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  16759ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  16770ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16771ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16772ms] [page] load event fired
+[  16803ms] [console.log] [PERSIST] populate ok in 4ms
+[  16824ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  16843ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  16843ms] [harness] === BOOT-2-POPULATED ===
+[  18347ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.keys=(t)=>t===null?[]:t.split('\n').filter(l=>l.trim().indexOf('KEYBOARD')===0).map(l=>l.trim().replace(/\s+/g,' '));S.binds=(K,a)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+a+' 1')>0).map(l=>l.split(' ')[1]);S.dump=(phase)=>{const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const K=S.keys(c);console.log('[MILE] '+JSON.stringify({phase:phase,canvas_w:cv.width,canvas_h:cv.height,present:c!==null,bytes:c===null?null:c.length,first_use:S.line(c,'FIRST_USE'),fullscreen:S.line(c,'FULLSCREEN'),screenmode:S.line(c,'ARMAGETRON_SCREENMODE'),screenmode_w:S.line(c,'ARMAGETRON_SCREENMODE_W'),screenmode_h:S.line(c,'ARMAGETRON_SCREENMODE_H'),windowsize_w:S.line(c,'ARMAGETRON_WINDOWSIZE_W'),windowsize_h:S.line(c,'ARMAGETRON_WINDOWSIZE_H'),n_keyboard:K.length,left_binds:S.binds(K,'CYCLE_TURN_LEFT'),right_binds:S.binds(K,'CYCLE_TURN_RIGHT'),tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__mile=S;return 'probe installed'})() => probe installed
+[  18359ms] [console.log] [MILE] {"phase":"boot2-before-play","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22454,"first_use":"0","fullscreen":"1","screenmode":"0","screenmode_w":"0","screenmode_h":"0","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  18360ms] [harness] eval window.__mile.dump('boot2-before-play') => boot2-before-play
+[  18363ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  18364ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  18364ms] [console.error] 
+[  18364ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  18364ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  18364ms] [console.log] 
+[  18474ms] [console.log] [L] ENCODING latin1
+[  18475ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18490ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18492ms] [console.error] TODO: glShadeModel
+[  18500ms] [harness] click #start: clicked
+[  28527ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/03-boot2-main-menu.png
+[  28530ms] [console.log] [MILE] {"phase":"boot2-after-boot","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22454,"first_use":"0","fullscreen":"1","screenmode":"0","screenmode_w":"0","screenmode_h":"0","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  28530ms] [harness] eval window.__mile.dump('boot2-after-boot') => boot2-after-boot
+[  28532ms] [harness] key Down (1/2)
+[  28836ms] [harness] key Down (2/2)
+[  30051ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/04-boot2-cursor-on-system-setup.png
+[  30053ms] [harness] key Enter (1/1)
+[  32167ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/05-boot2-system-setup.png
+[  32170ms] [harness] key Enter (1/1)
+[  34306ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/06-boot2-display-settings.png
+[  34308ms] [harness] key Enter (1/1)
+[  37124ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/07-boot2-screen-mode.png
+[  37126ms] [harness] key Down (1/1)
+[  38643ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/08-boot2-cursor-on-screen-resolution.png
+[  38643ms] [harness] === THE-PLAYER-PICKS-320x200 ===
+[  38646ms] [harness] key Left (1/20)
+[  38952ms] [harness] key Left (2/20)
+[  39255ms] [harness] key Left (3/20)
+[  39558ms] [harness] key Left (4/20)
+[  39861ms] [harness] key Left (5/20)
+[  40164ms] [harness] key Left (6/20)
+[  40471ms] [harness] key Left (7/20)
+[  40774ms] [harness] key Left (8/20)
+[  41077ms] [harness] key Left (9/20)
+[  41383ms] [harness] key Left (10/20)
+[  41687ms] [harness] key Left (11/20)
+[  41993ms] [harness] key Left (12/20)
+[  42300ms] [harness] key Left (13/20)
+[  42607ms] [harness] key Left (14/20)
+[  42910ms] [harness] key Left (15/20)
+[  43216ms] [harness] key Left (16/20)
+[  43521ms] [harness] key Left (17/20)
+[  43828ms] [harness] key Left (18/20)
+[  44134ms] [harness] key Left (19/20)
+[  44442ms] [harness] key Left (20/20)
+[  46266ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/09-boot2-resolution-now-320x200.png
+[  46269ms] [console.log] [MILE] {"phase":"boot2-chosen-menu-still-open","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22454,"first_use":"0","fullscreen":"1","screenmode":"0","screenmode_w":"0","screenmode_h":"0","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  46269ms] [harness] eval window.__mile.dump('boot2-chosen-menu-still-open') => boot2-chosen-menu-still-open
+[  46269ms] [harness] === ESCAPE-LEAVES-SCREEN-MODE ===
+[  46272ms] [harness] key Escape (1/1)
+[  46302ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  46573ms] [harness] until 3x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 3)
+[  46573ms] [harness] until SATISFIED: saw 3x <<[PERSISTSAVE] menu-leave>>
+[  48086ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/10-boot2-back-in-display-settings.png
+[  48088ms] [console.log] [MILE] {"phase":"boot2-after-menu-leave","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22459,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  48089ms] [harness] eval window.__mile.dump('boot2-after-menu-leave') => boot2-after-menu-leave
+[  48090ms] [harness] key Escape (1/1)
+[  48119ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  48390ms] [harness] until 4x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 4)
+[  48390ms] [harness] until SATISFIED: saw 4x <<[PERSISTSAVE] menu-leave>>
+[  49600ms] [harness] key Escape (1/1)
+[  49632ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  49901ms] [harness] until 5x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 5)
+[  49902ms] [harness] until SATISFIED: saw 5x <<[PERSISTSAVE] menu-leave>>
+[  51414ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/11-boot2-back-at-main-menu.png
+[  51416ms] [harness] key Up (1/2)
+[  51726ms] [harness] key Up (2/2)
+[  52932ms] [harness] key Enter (1/1)
+[  55258ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/12-boot2-play-game-submenu.png
+[  55259ms] [harness] key Down (1/1)
+[  56778ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/13-boot2-cursor-on-start-new-game.png
+[  56779ms] [harness] === START-NEW-GAME ===
+[  56781ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  56781ms] [console.log] [L] TEAM_CREATED web_user
+[  56781ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  56782ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  56783ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  56784ms] [console.log] [L] NEW_ROUND 2026-08-31 10:01:53 UTC+0200
+[  56787ms] [console.log] [L] TEAM_CREATED ai_team
+[  56787ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  56788ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  56788ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  56789ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  56795ms] [harness] key Enter (1/1)
+[  56800ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  56800ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  56800ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  60097ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 1)
+[  60097ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  60097ms] [harness] === ROUND-1-STARTED ===
+[  61314ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/14-boot2-round1-driving.png
+[  61314ms] [harness] === ROUND-1-STEERING ===
+[  61316ms] [harness] key Left (1/2)
+[  61340ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  61618ms] [harness] key Left (2/2)
+[  61922ms] [harness] key Right (1/3)
+[  62225ms] [harness] key Right (2/3)
+[  62535ms] [harness] key Right (3/3)
+[  64050ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/15-boot2-round1-after-steering.png
+[  64050ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[  66014ms] [console.log] [L] DEATH_SUICIDE web_user
+[  66015ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  67881ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  71942ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  71942ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  71943ms] [console.log] [L] NEW_ROUND 2026-08-31 10:02:08 UTC+0200
+[  71945ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  71946ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  72031ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  72031ms] [harness] === ROUND-2-STARTED ===
+[  73233ms] [harness] === ROUND-2-STEERING ===
+[  73236ms] [harness] key Left (1/2)
+[  73540ms] [harness] key Left (2/2)
+[  73847ms] [harness] key Right (1/3)
+[  74150ms] [harness] key Right (2/3)
+[  74454ms] [harness] key Right (3/3)
+[  75983ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/16-boot2-round2-after-steering.png
+[  75983ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 120000ms, have 2)
+[  78462ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  79973ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  84047ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  84048ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  84048ms] [console.log] [L] NEW_ROUND 2026-08-31 10:02:20 UTC+0200
+[  84082ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  84082ms] [harness] === ROUND-3-STARTED ===
+[  85284ms] [harness] === ROUND-3-STEERING ===
+[  85292ms] [harness] key Left (1/2)
+[  85598ms] [harness] key Left (2/2)
+[  85903ms] [harness] key Right (1/3)
+[  86214ms] [harness] key Right (2/3)
+[  86519ms] [harness] key Right (3/3)
+[  88334ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/17-boot2-round3-after-steering.png
+[  88334ms] [harness] === INGAME-MENU-OPENED ===
+[  88336ms] [harness] key Escape (1/1)
+[  91152ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/18-boot2-ingame-menu.png
+[  91154ms] [harness] key Escape (1/1)
+[  91191ms] [console.log] [PERSISTSAVE] menu-leave n=4
+[  91455ms] [harness] until 6x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 6)
+[  91455ms] [harness] until SATISFIED: saw 6x <<[PERSISTSAVE] menu-leave>>
+[  91455ms] [harness] === INGAME-MENU-LEFT ===
+[  92960ms] [console.log] [MILE] {"phase":"boot2-after-steering","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22464,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  92961ms] [harness] eval window.__mile.dump('boot2-after-steering') => boot2-after-steering
+[  92961ms] [harness] === RELOAD-2-REQUESTED ===
+[  92970ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  92970ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  92970ms] [harness] eval location.reload() => undefined
+[  92970ms] [harness] until 3x <<[PERSIST] populate ok>> (timeout 90000ms, have 2)
+[  92988ms] [console.log] [PERSISTSAVE] js-backstop n=6
+[  92988ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  92999ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[  93010ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  93011ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  93012ms] [page] load event fired
+[  93046ms] [console.log] [PERSIST] populate ok in 4ms
+[  93066ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  93071ms] [harness] until SATISFIED: saw 3x <<[PERSIST] populate ok>>
+[  93071ms] [harness] === BOOT-3-POPULATED ===
+[  94583ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.keys=(t)=>t===null?[]:t.split('\n').filter(l=>l.trim().indexOf('KEYBOARD')===0).map(l=>l.trim().replace(/\s+/g,' '));S.binds=(K,a)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+a+' 1')>0).map(l=>l.split(' ')[1]);S.dump=(phase)=>{const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const K=S.keys(c);console.log('[MILE] '+JSON.stringify({phase:phase,canvas_w:cv.width,canvas_h:cv.height,present:c!==null,bytes:c===null?null:c.length,first_use:S.line(c,'FIRST_USE'),fullscreen:S.line(c,'FULLSCREEN'),screenmode:S.line(c,'ARMAGETRON_SCREENMODE'),screenmode_w:S.line(c,'ARMAGETRON_SCREENMODE_W'),screenmode_h:S.line(c,'ARMAGETRON_SCREENMODE_H'),windowsize_w:S.line(c,'ARMAGETRON_WINDOWSIZE_W'),windowsize_h:S.line(c,'ARMAGETRON_WINDOWSIZE_H'),n_keyboard:K.length,left_binds:S.binds(K,'CYCLE_TURN_LEFT'),right_binds:S.binds(K,'CYCLE_TURN_RIGHT'),tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__mile=S;return 'probe installed'})() => probe installed
+[  94586ms] [console.log] [MILE] {"phase":"boot3-before-play","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22464,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  94586ms] [harness] eval window.__mile.dump('boot3-before-play') => boot3-before-play
+[  94601ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/19-boot3-before-play.png
+[  94603ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  94603ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  94603ms] [console.error] 
+[  94603ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  94603ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  94604ms] [console.log] 
+[  94710ms] [console.log] [L] ENCODING latin1
+[  94710ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  94725ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  94728ms] [console.error] TODO: glShadeModel
+[  94735ms] [harness] click #start: clicked
+[ 104738ms] [console.log] [MILE] {"phase":"boot3-after-boot","canvas_w":320,"canvas_h":200,"present":true,"bytes":22469,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[ 104738ms] [harness] eval window.__mile.dump('boot3-after-boot') => boot3-after-boot
+[ 104745ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/20-boot3-main-menu-at-320x200.png
+[ 104748ms] [harness] key Enter (1/1)
+[ 107062ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/21-boot3-play-game-submenu.png
+[ 107062ms] [harness] === ESCAPE-LEAVES-PLAY-GAME-SUBMENU ===
+[ 107064ms] [harness] key Escape (1/1)
+[ 107093ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[ 107365ms] [harness] until 7x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 7)
+[ 107366ms] [harness] until SATISFIED: saw 7x <<[PERSISTSAVE] menu-leave>>
+[ 107366ms] [harness] === BOOT-3-SAVED-FROM-MEMORY ===
+[ 108876ms] [console.log] [MILE] {"phase":"boot3-after-save","canvas_w":320,"canvas_h":200,"present":true,"bytes":22469,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[ 108877ms] [harness] eval window.__mile.dump('boot3-after-save') => boot3-after-save
+[ 108888ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/22-boot3-final.png
+[ 108888ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[ 108889ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1977
+[ 108890ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[ 108890ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+    <anonymous> @ http://localhost:8000/armagetronad.html:0
+    <anonymous> @ http://localhost:8000/armagetronad.html:0
+[ 110912ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/23-after-deliberate-uncaught-error.png

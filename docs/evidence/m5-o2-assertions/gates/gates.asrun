@@ -1,0 +1,73 @@
+#### m2-gameplay/chrome  09:49:09
+     driver exit 0
+     CHECKER exit 0 -> m2-gameplay/chrome
+               [  71552ms] [EXCEPTION] structured stack, 1 frames:
+       
+       ALL CHECKS PASSED
+#### m2-gameplay/firefox  09:50:24
+     driver exit 0
+     CHECKER exit 0 -> m2-gameplay/firefox
+               [  71141ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+       
+       ALL CHECKS PASSED
+#### m3-audio/chrome  09:51:39
+     driver exit 0
+     CHECKER exit 0 -> m3-audio/chrome
+       Passing means: non-zero PCM reached SDL.audio.pushAudio. It does NOT mean the
+       buffers were rendered to a device (pushAudio is upstream of the Web Audio graph),
+       and it does NOT mean the mix is correct. Nobody has heard this.
+#### m3-audio/firefox  09:53:25
+     driver exit 0
+     CHECKER exit 0 -> m3-audio/firefox
+       Passing means: non-zero PCM reached SDL.audio.pushAudio. It does NOT mean the
+       buffers were rendered to a device (pushAudio is upstream of the Web Audio graph),
+       and it does NOT mean the mix is correct. Nobody has heard this.
+#### m4-persist/chrome  09:54:39
+     driver exit 0
+     CHECKER exit 1 -> m4-persist/chrome
+       PASS  PZ  every declared check produced a verdict (missing: none; unexpected: none)
+       
+       RESULT: FAIL (1 check)
+#### m4-persist/firefox  09:55:00
+     driver exit 0
+     CHECKER exit 1 -> m4-persist/firefox
+       PASS  PZ  every declared check produced a verdict (missing: none; unexpected: none)
+       
+       RESULT: FAIL (1 check)
+#### m4-settings/chrome  09:55:23
+     driver exit 0
+     CHECKER exit 0 -> m4-settings/chrome
+       PASS  SZ  all 17 declared checks produced a verdict
+       
+       PASS  18/18 checks
+#### m4-settings/firefox  09:55:58
+     driver exit 0
+     CHECKER exit 0 -> m4-settings/firefox
+       PASS  SZ  all 17 declared checks produced a verdict
+       
+       PASS  18/18 checks
+#### m4-maxfps/chrome  09:56:35
+     driver exit 0
+     CHECKER exit 0 -> m4-maxfps/chrome
+       VERDICT: PASS -- a player-chosen MAX_FPS survived two page reloads, and
+                SOUND_BUFFER_SHIFT 1 came from the binary rather than a config file.
+       ==============================================================================
+#### m4-maxfps/firefox  09:57:46
+     driver exit 0
+     CHECKER exit 0 -> m4-maxfps/firefox
+       VERDICT: PASS -- a player-chosen MAX_FPS survived two page reloads, and
+                SOUND_BUFFER_SHIFT 1 came from the binary rather than a config file.
+       ==============================================================================
+#### m4-milestone/chrome  09:58:58
+     driver exit 0
+     CHECKER exit 0 -> m4-milestone/chrome
+       PASS  MZ  all 21 declared checks produced a verdict
+       
+       PASS  22/22 checks
+#### m4-milestone/firefox  10:00:54
+     driver exit 0
+     CHECKER exit 0 -> m4-milestone/firefox
+       PASS  MZ  all 21 declared checks produced a verdict
+       
+       PASS  22/22 checks
+#### GATES ALL DONE 10:02:48

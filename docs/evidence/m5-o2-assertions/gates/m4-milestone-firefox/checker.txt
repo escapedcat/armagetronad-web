@@ -1,0 +1,32 @@
+transcript: docs/evidence/m5-o2-assertions/gates/m4-milestone-firefox/console.log
+lines: 253   run region: 0..245
+reload marks at lines 40 and 201
+page: armagetronad.html
+
+PASS  M1  three real page loads, partitioned by the two reload marks (populates at 8,51,212, marks at 40/201)
+PASS  M2  all 10 [MILE] phases are present exactly once
+PASS  M3  fresh browser profile: /persist/var/user.cfg does not exist before the game first runs (present=false)
+PASS  M4  boot 1 is a first-use boot, and at this point NO turn key is bound yet (FIRST_USE 1, 59 KEYBOARD lines, left [], right [])
+PASS  M5  the tooltip counters start at config/default.cfg's shipped values (left "0 2 1 1 1", right "0 3 1 1 1")
+PASS  M6  after a real reload, a page that has written nothing reads FIRST_USE 0 back (FIRST_USE 0, 22454 bytes, line 56)
+PASS  M7  the keyboard template survived, in the SDL-2 encoding: 1104 turns left, 1103 turns right (left ["1104","117"], right ["1103","111"], 79 KEYBOARD lines, was 59)
+PASS  M8  the main-menu key sequence reached a real game: [L] NEW_ROUND after the START-NEW-GAME mark (saw 3; mark at 130)
+      ..    NEW_ROUND at line 136: 2026-08-31 10:01:53 UTC+0200
+      ..    NEW_ROUND at line 164: 2026-08-31 10:02:08 UTC+0200
+      ..    NEW_ROUND at line 181: 2026-08-31 10:02:20 UTC+0200
+PASS  M9  with the choice made and the menu still open, the FILE still holds the old row -- the edit is memory-only (ARMAGETRON_SCREENMODE 0, 0x0)
+PASS  M10  leaving Screen Mode wrote the player's choice: row 14 at 320x200 (ARMAGETRON_SCREENMODE 14, 320x200, 1 menu-leave save between the marks)
+PASS  M11  boot 2 never resized the canvas: all 5 of its phases still read 1024x768
+PASS  M12  the arrow keys reached the cycle and turned it: both CYCLE_TURN tooltip counters spent to zero (left "0 2 1 1 1" -> "0 0 1 1 1", right "0 3 1 1 1" -> "0 0 1 1 1")
+PASS  M13  boot 3 starts at web/shell.html's own 1024x768, before main() has run (1024x768, line 217 > 201)
+PASS  M14  THE GAME CAME BACK AT THE RESOLUTION THE PLAYER PICKED: the canvas is 320x200 (320x200, was 1024x768 moments earlier)
+PASS  M15  boot 3 rewrote user.cfg from its own memory: exactly one menu-leave save between the two boot-3 marks (saw 1; marks at 236/241)
+PASS  M16  the file boot 3 wrote still has the counters spent, so config/default.cfg was NOT re-read -- the first-use path was skipped (left "0 0 1 1 1", right "0 0 1 1 1")
+PASS  M17  the bindings are still there two reloads later (left ["1104","117"], right ["1103","111"])
+PASS  M18  no exception, abort, stack overflow or SDL queue overflow in the run (saw 0)
+PASS  M19  the deliberate uncaught error at the end WAS seen, so M18 is an observation and not a silence (control mark at 245)
+PASS  M20  every until: step was satisfied rather than timing out (saw 0 timeouts)
+PASS  M21  every failed resource load in the run is the browser's own /favicon.ico probe (other failures: 0)
+PASS  MZ  all 21 declared checks produced a verdict
+
+PASS  22/22 checks

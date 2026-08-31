@@ -1,0 +1,28 @@
+transcript: docs/evidence/m5-o2-assertions/gates/m4-persist-firefox/console.log
+lines: 88   run region: 0..80   reload mark at line 45
+
+PASS  P1  the RELOAD-REQUESTED mark that partitions the two boots is present (line 45)
+PASS  P2  exactly two "[PERSIST] populate" lines, both ok (saw 2, ok 2)
+      ..    populate line 8: ok in 6ms
+      ..    populate line 58: ok in 3ms
+PASS  P3  boot 1: populate finished BEFORE the runtime reported ready / Play became clickable (populate at line 8, runtime ready at line 11)
+PASS  P4  boot 2: populate finished BEFORE the runtime reported ready / Play became clickable (populate at line 58, runtime ready at line 59)
+PASS  P5  /persist is EMPTY before the game runs, on a fresh browser profile (0 entries)
+PASS  P6  booting the game WROTE /persist/var/user.cfg (21646 bytes, hash d19f1a1)
+      ..    boot 1 /persist contents: /persist/var/ /persist/var/ladderlog.txt /persist/var/scorelog.txt /persist/var/user.cfg
+PASS  P7  the FIRST IndexedDB persist was triggered by the game itself, before this script wrote anything (persist at line 29, sentinel at 36, key presses: 0+)
+PASS  P8  exactly one sentinel nonce, minted in boot 1 (m4-mtgy0ztz-wqb6llqo)
+PASS  P9  IndexedDB itself holds user.cfg and the sentinel after boot 1 (5 keys in ["/persist"])
+      ..    boot 1 IndexedDB keys: /persist/m4-probe.txt /persist/var /persist/var/ladderlog.txt /persist/var/scorelog.txt /persist/var/user.cfg
+PASS  P10  boot 2 read user.cfg back at the SAME byte count (21646 -> 21646)
+FAIL  P11  boot 2 read user.cfg back with the SAME content hash (d19f1a1 -> 561a09c2)
+PASS  P12  boot 2 read back the sentinel nonce boot 1 minted (m4-mtgy0ztz-wqb6llqo -> "nonce=m4-mtgy0ztz-wqb6llqo\n")
+PASS  P13  IndexedDB still holds both files when boot 2 reads it directly (5 keys)
+PASS  P14  boot 2 was measured BEFORE it clicked Play, so its own save cannot explain the result (payloads at 63/65, click at 78)
+PASS  P15  no exception, crash, stack overflow or SDL queue overflow during the run (0)
+PASS  P16  every 404 during the run is /favicon.ico (0 others)
+PASS  P17  the deliberate uncaught error at the end of the script WAS recorded, so this transcript can see failures
+
+PASS  PZ  every declared check produced a verdict (missing: none; unexpected: none)
+
+RESULT: FAIL (1 check)

@@ -1,0 +1,108 @@
+[    672ms] [harness] chrome: Chrome/152.0.7977.65
+[    673ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     19ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     49ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     50ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     51ms] [page] load event fired
+[     52ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[     98ms] [console.log] [PERSIST] populate ok in 32ms
+[    120ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    287ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1127ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1128ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1128ms] [console.error] 
+[   1128ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1128ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1129ms] [console.log] 
+[   1264ms] [console.log] [L] ENCODING latin1
+[   1272ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1273ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1293ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1296ms] [console.error] TODO: glShadeModel
+[   1299ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1338ms] [harness] click #start: clicked
+[   1339ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1339ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1340ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1340ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1340ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10408ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/01-boot1-language-menu.png
+[  10446ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10447ms] [harness] key Enter (1/1)
+[  13824ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/02-boot1-first-setup.png
+[  13857ms] [harness] key Escape (1/1)
+[  13860ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  14158ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14159ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17226ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/03-boot1-after-first-setup.png
+[  17226ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17231ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17240ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17242ms] [harness] eval location.reload() => undefined
+[  17243ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17256ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17258ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17259ms] [page] load event fired
+[  17272ms] [console.log] [PERSIST] populate ok in 6ms
+[  17300ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17343ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19349ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19349ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19349ms] [console.error] 
+[  19350ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19350ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19350ms] [console.log] 
+[  19475ms] [console.log] [L] ENCODING latin1
+[  19478ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  19493ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  19496ms] [console.error] TODO: glShadeModel
+[  19499ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  19505ms] [harness] click #start: clicked
+[  31576ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/04-boot2-main-menu.png
+[  31576ms] [harness] === DOWN-1-SHOULD-HIGHLIGHT-PLAYER-SETUP ===
+[  31609ms] [harness] key Down (1/1)
+[  33475ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/05-cursor-on-player-setup.png
+[  33508ms] [harness] key Enter (1/1)
+[  36865ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/06-player-menu-top-item.png
+[  36865ms] [harness] === FOUR-DOWNS-THE-FOURTH-USED-TO-KILL-THE-TAB ===
+[  36897ms] [harness] key Down (1/1)
+[  38236ms] [harness] key Down (1/1)
+[  39576ms] [harness] key Down (1/1)
+[  40950ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/07-cursor-on-player-4.png
+[  40983ms] [harness] key Down (1/1)
+[  45366ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/08-VIEWPORTS-HIGHLIGHTED-THIS-IS-THE-CRASH-POINT.png
+[  45369ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => "alive, gl err=0x0"
+[  45369ms] [harness] === CYCLE-ALL-SIX-VIEWPORT-CONFIGURATIONS ===
+[  45402ms] [harness] key Right (1/1)
+[  47580ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/09-config-2.png
+[  47612ms] [harness] key Right (1/1)
+[  49759ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/10-config-3.png
+[  49791ms] [harness] key Right (1/1)
+[  51965ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/11-config-4.png
+[  51997ms] [harness] key Right (1/1)
+[  54189ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/12-config-5.png
+[  54222ms] [harness] key Right (1/1)
+[  56408ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/13-config-6.png
+[  56441ms] [harness] key Right (1/1)
+[  58621ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/14-config-clamped-at-6.png
+[  58621ms] [harness] === BACK-TO-SINGLE-PLAYER ===
+[  58654ms] [harness] key Left (1/5)
+[  58992ms] [harness] key Left (2/5)
+[  59333ms] [harness] key Left (3/5)
+[  59676ms] [harness] key Left (4/5)
+[  60012ms] [harness] key Left (5/5)
+[  62886ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/15-back-to-single-player.png
+[  62886ms] [harness] === THE-OTHER-DemonstrateViewport-CALLER ===
+[  62919ms] [harness] key Down (1/1)
+[  64807ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/16-cursor-on-assign-viewports.png
+[  64839ms] [harness] key Enter (1/1)
+[  68720ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/17-assign-viewports-to-players.png
+[  68754ms] [harness] key Right (1/1)
+[  70936ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/18-assign-after-right.png
+[  70963ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  70970ms] [harness] key Escape (1/1)
+[  73854ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/19-back-in-player-setup.png
+[  73878ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  73887ms] [harness] key Escape (1/1)
+[  76770ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-fix-assert-SHIPPED/20-back-in-main-menu.png
+[  76772ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'still alive, canvas '+c.width+'x'+c.height})() => "still alive, canvas 1024x768"

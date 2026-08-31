@@ -1,0 +1,70 @@
+[    638ms] [harness] chrome: Chrome/152.0.7977.65
+[    639ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     33ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     38ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     41ms] [page] load event fired
+[     42ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[     93ms] [console.log] [PERSIST] populate ok in 36ms
+[    302ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1011ms] [harness] eval (()=>{const mk=(type,kc,code,key)=>{const e=new KeyboardEvent(type,{bubbles:true,cancelable:true,key:key,code:code});Object.defineProperty(e,'keyCode',{get:()=>kc});Object.defineProperty(e,'which',{get:()=>kc});return e;};window.__k=(kc,code,key,ms)=>{const t=(window.Browser&&Browser.keyboardListeningElement)||document;t.dispatchEvent(mk('keydown',kc,code,key));setTimeout(()=>t.dispatchEvent(mk('keyup',kc,code,key)),ms);return 'sent '+code+' keyCode='+kc+' for '+ms+'ms to '+(t===document?'document':(t.id||t.tagName));};return 'synthetic key sender installed'})() => "synthetic key sender installed"
+[   8021ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   8022ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   8022ms] [console.error] 
+[   8022ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   8022ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   8023ms] [console.log] 
+[   8159ms] [console.log] [L] ENCODING latin1
+[   8167ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   8169ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   8190ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   8194ms] [console.error] TODO: glShadeModel
+[   8197ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   8238ms] [harness] click #start: clicked
+[   8240ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   8240ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   8241ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   8241ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   8241ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  14273ms] [harness] key Enter (1/1)
+[  14280ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  17615ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  17618ms] [harness] key Escape (1/1)
+[  17919ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  17920ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  19921ms] [harness] === KEYMAP-READOUT-what-the-camera-binds-actually-parsed-to ===
+[  19926ms] [harness] eval (()=>{try{const s=Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'});const want=/(LOOK_LEFT|LOOK_RIGHT|BANK_UP|BANK_DOWN|ZOOM_IN)/;const out=s.split('\n').filter(l=>l.indexOf('KEYBOARD')===0&&want.test(l)).map(l=>l.replace(/\s+/g,' ').trim());return JSON.stringify(out)}catch(e){return 'ERR '+e}})() => "[\"KEYBOARD 1118 PLAYER_BIND LOOK_RIGHT 1\",\"KEYBOARD 1116 PLAYER_BIND LOOK_LEFT 1\",\"KEYBOARD 332 PLAYER_BIND ZOOM_IN 1\",\"KEYBOARD 327 PLAYER_BIND BANK_DOWN 1\",\"KEYBOARD 326 PLAYER_BIND BANK_UP 1\",\"KEYBOARD 325 PLAYER_BIND LOOK_LEFT 1\",\"KEYBOARD 324 PLAYER_BIND LOOK_RIGHT 1\"]"
+[  21949ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  21950ms] [console.log] [L] TEAM_CREATED web_user
+[  21951ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  21954ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  21957ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  21958ms] [console.log] [L] NEW_ROUND 2026-08-31 10:55:44 UTC+0200
+[  21982ms] [console.log] [L] TEAM_CREATED ai_team
+[  21982ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  21983ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  21983ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  21984ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  22005ms] [harness] key Enter (1/1)
+[  22008ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  22008ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  22008ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  22242ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[  22308ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  22309ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  23510ms] [harness] === A-countdown-baseline ===
+[  23641ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/probe-chrome/01-A-countdown-baseline.png
+[  23642ms] [harness] === B-DRIFT-CONTROL-900ms-with-NO-input ===
+[  24661ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/probe-chrome/02-B-drift-control-no-input.png
+[  24661ms] [harness] === C-NUMPAD-6-LOOK_RIGHT-held-900ms ===
+[  24663ms] [harness] eval window.__k(102,'Numpad6','6',900) => "sent Numpad6 keyCode=102 for 900ms to document"
+[  25899ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/probe-chrome/03-C-after-numpad6-LOOK_RIGHT.png
+[  25899ms] [harness] === D-NUMPAD-4-LOOK_LEFT-held-1800ms ===
+[  25900ms] [harness] eval window.__k(100,'Numpad4','4',1800) => "sent Numpad4 keyCode=100 for 1800ms to document"
+[  28049ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/probe-chrome/04-D-after-numpad4-LOOK_LEFT.png
+[  28049ms] [harness] === E-CONTROL-synthetic-v-CAMERA_MODE ===
+[  28050ms] [harness] eval window.__k(86,'KeyV','v',80) => "sent KeyV keyCode=86 for 80ms to document"
+[  28443ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  28809ms] [console.log] [L] DEATH_FRAG web_user excel
+[  28810ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  29686ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/probe-chrome/05-E-CONTROL-after-synthetic-v.png
+[  29687ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'alive '+c.width+'x'+c.height})() => "alive 1024x768"

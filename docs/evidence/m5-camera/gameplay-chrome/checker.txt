@@ -1,0 +1,48 @@
+== /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/after-chrome.driver.txt
+   109 run lines, 20 positive-control lines
+
+rounds started   (NEW_ROUND):    3
+rounds COMPLETED (ROUND_WINNER): 3
+matches finished (MATCH_WINNER): 1
+PASS  three rounds completed (3 ROUND_WINNER lines)
+PASS  the match ended after exactly 3 rounds, i.e. SP_LIMIT_ROUNDS 3 was applied (default is 10)
+
+round 1: ai_team roster = 3 [word, excel, notepad]   ROUND_WINNER = ai_team [notepad, excel, word]
+PASS  round 1 was played against exactly 3 AIs
+PASS  round 1 ROUND_WINNER independently lists 3 AI players
+round 2: ai_team roster = 3 [word, excel, outlook]   ROUND_WINNER = ai_team [outlook, excel, word]
+PASS  round 2 was played against exactly 3 AIs
+PASS  round 2 ROUND_WINNER independently lists 3 AI players
+round 3: ai_team roster = 3 [word, excel, outlook]   ROUND_WINNER = ai_team [outlook, excel, word]
+PASS  round 3 was played against exactly 3 AIs
+PASS  round 3 ROUND_WINNER independently lists 3 AI players
+
+PASS  no "Stack overflow" during the run (0 hits)
+PASS  no "[EXCEPTION]" during the run (0 hits)
+PASS  no "SDL event queue full" during the run (0 hits)
+PASS  no "Assertion" during the run (0 hits)
+PASS  no "targetCrashed" during the run (0 hits)
+PASS  no "renderer crashed" during the run (0 hits)
+PASS  no "[GLERR]" during the run (0 hits)
+PASS  every 404 is /favicon.ico (2 total, 0 other)
+
+glGetError: 126 polls, 0 non-zero
+PASS  the glGetError poll actually ran
+PASS  the game produced no GL errors during the run
+
+frame rate over 39.56s / 2366 frames: per-second median 60, min 53; worst single frame 118.4 ms
+PASS  median frames-per-second >= 30 (60)
+PASS  MINIMUM frames-per-second >= 30 (53) -- the worst whole second
+note  worst single frame 118.4 ms = 8.4 fps instantaneous. Not a pass criterion -- docs/evidence/m2-gate/README.md, "The caveats, in full" -- but do not let it go unread.
+window: sampler span_s 39.56s vs driver wall clock 39.558s (NEW_ROUND #1 at 22709ms -> ROUND_WINNER #3 at 62267ms), drift 0.002s
+PASS  the measured window is the rounds themselves: 39.56s spanning all 3, agreeing with the driver's independent wall clock to 0.002s (bar: 0.5s)
+
+PASS  no "until TIMED OUT" anywhere in the file (0 hits) -- a driver records this and keeps going, so it is the only sign of a wait that never came
+
+PASS  browser-level WebGL warnings ARE visible in this transcript
+        [  70646ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+PASS  browser-reported uncaught JS errors ARE visible in this transcript (so the "no [EXCEPTION]" result above is a real observation)
+        [  72284ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+        [  72284ms] [EXCEPTION] structured stack, 1 frames:
+
+ALL CHECKS PASSED

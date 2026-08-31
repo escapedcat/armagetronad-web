@@ -1,0 +1,105 @@
+[    709ms] [harness] chrome: Chrome/152.0.7977.65
+[    710ms] [harness] navigating to http://localhost:8000/armagetronad-bug-noassert.html
+[      4ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     40ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     41ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     44ms] [page] load event fired
+[     49ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[     97ms] [console.log] [PERSIST] populate ok in 36ms
+[    105ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    279ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1118ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1119ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1119ms] [console.error] 
+[   1120ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1120ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1121ms] [console.log] 
+[   1228ms] [console.log] [L] ENCODING latin1
+[   1235ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1238ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1255ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1259ms] [console.error] TODO: glShadeModel
+[   1261ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad-bug-noassert.js
+[   1300ms] [harness] click #start: clicked
+[  10348ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/01-boot1-language-menu.png
+[  10375ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10380ms] [harness] key Enter (1/1)
+[  13716ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/02-boot1-first-setup.png
+[  13738ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13748ms] [harness] key Escape (1/1)
+[  14050ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14051ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17099ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/03-boot1-after-first-setup.png
+[  17100ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17105ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17106ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17106ms] [harness] eval location.reload() => undefined
+[  17107ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17121ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17122ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17124ms] [page] load event fired
+[  17133ms] [console.log] [PERSIST] populate ok in 3ms
+[  17153ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  17208ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  19211ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  19211ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  19212ms] [console.error] 
+[  19212ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  19212ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  19212ms] [console.log] 
+[  19298ms] [console.log] [L] ENCODING latin1
+[  19300ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  19315ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  19317ms] [console.error] TODO: glShadeModel
+[  19320ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad-bug-noassert.js
+[  19326ms] [harness] click #start: clicked
+[  31364ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/04-boot2-main-menu.png
+[  31364ms] [harness] === DOWN-1-SHOULD-HIGHLIGHT-PLAYER-SETUP ===
+[  31397ms] [harness] key Down (1/1)
+[  33239ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/05-cursor-on-player-setup.png
+[  33272ms] [harness] key Enter (1/1)
+[  36620ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/06-player-menu-top-item.png
+[  36620ms] [harness] === FOUR-DOWNS-THE-FOURTH-USED-TO-KILL-THE-TAB ===
+[  36653ms] [harness] key Down (1/1)
+[  37991ms] [harness] key Down (1/1)
+[  39327ms] [harness] key Down (1/1)
+[  40664ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/07-cursor-on-player-4.png
+[  40698ms] [harness] key Down (1/1)
+[  45054ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/08-VIEWPORTS-HIGHLIGHTED-THIS-IS-THE-CRASH-POINT.png
+[  45056ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => "alive, gl err=0x0"
+[  45056ms] [harness] === CYCLE-ALL-SIX-VIEWPORT-CONFIGURATIONS ===
+[  45089ms] [harness] key Right (1/1)
+[  47242ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/09-config-2.png
+[  47274ms] [harness] key Right (1/1)
+[  49438ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/10-config-3.png
+[  49471ms] [harness] key Right (1/1)
+[  51638ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/11-config-4.png
+[  51670ms] [harness] key Right (1/1)
+[  53824ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/12-config-5.png
+[  53856ms] [harness] key Right (1/1)
+[  56002ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/13-config-6.png
+[  56035ms] [harness] key Right (1/1)
+[  58190ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/14-config-clamped-at-6.png
+[  58190ms] [harness] === BACK-TO-SINGLE-PLAYER ===
+[  58223ms] [harness] key Left (1/5)
+[  58563ms] [harness] key Left (2/5)
+[  58901ms] [harness] key Left (3/5)
+[  59237ms] [harness] key Left (4/5)
+[  59574ms] [harness] key Left (5/5)
+[  62432ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/15-back-to-single-player.png
+[  62433ms] [harness] === THE-OTHER-DemonstrateViewport-CALLER ===
+[  62467ms] [harness] key Down (1/1)
+[  64309ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/16-cursor-on-assign-viewports.png
+[  64342ms] [harness] key Enter (1/1)
+[  68181ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/17-assign-viewports-to-players.png
+[  68215ms] [harness] key Right (1/1)
+[  70375ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/18-assign-after-right.png
+[  70398ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  70407ms] [harness] key Escape (1/1)
+[  73253ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/19-back-in-player-setup.png
+[  73280ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  73286ms] [harness] key Escape (1/1)
+[  76133ms] [harness] screenshot -> docs/evidence/m5-o2-assertions/cell-bug-noassert/20-back-in-main-menu.png
+[  76134ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'still alive, canvas '+c.width+'x'+c.height})() => "still alive, canvas 1024x768"
+
+Transcript: docs/evidence/m5-o2-assertions/cell-bug-noassert/console.log

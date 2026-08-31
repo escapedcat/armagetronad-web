@@ -1,0 +1,35 @@
+=== 1. STRUCTURAL: is eCompat anywhere near the dedicated build? ===
+    eCompat on the dedicated link line : 0  (want 0)
+    eCompat objects under web/build-m0 : 0  (want 0)
+    web/Makefile names eCompat.o in    : 177:                 $(CLIENT_OBJDIR)/emscripten/eCompat.o \ 
+
+=== 2. THE INVARIANT, forced to actually relink ===
+    web/dist-m0/armagetronad-dedicated.wasm
+    bytes 2488298  (want 2488298)   PASS
+    md5   9718a2a64978cb6e9b95ea2f0454cca5
+          (want 9718a2a64978cb6e9b95ea2f0454cca5)   PASS
+    js md5 6dd7f84eae1de362e4faf847a5d1b194
+
+=== 3. DETERMINISM, so an object comparison means anything ===
+    web/build-m0/network/nNetwork.o                 c8136745c6a5f6d38ef61ada2d07063d
+    recompiled, unmodified, same path  c8136745c6a5f6d38ef61ada2d07063d
+    PASS  identical
+
+=== 4. NEGATIVE CONTROL: substitute that identical object in place ===
+    bytes 2488298   md5 9718a2a64978cb6e9b95ea2f0454cca5
+    PASS  reproduces the shipped artefact exactly
+
+=== 5. POSITIVE CONTROL: one character, same length, same position ===
+    src/network/nNetwork.cpp : "Connektion kill request" -> "Connektion kill requesT"
+    (23 characters either way; one occurrence in the wasm)
+    changed lines: 2 (want 2: one - one +)   source restored: yes
+    control object md5 62e019647b26e3c234c29102ca7dbd9e  vs unmodified c8136745c6a5f6d38ef61ada2d07063d
+    bytes 2488298   md5 8e3f17e94014052f9a2f13f94fce4573
+    size  check: SAME -- BLIND to this change
+    md5   check: DIFFERENT -- caught it
+
+    Verdict: the md5 half of the invariant is load-bearing; size alone is not
+
+=== 6. TREE RESTORED, invariant re-checked ===
+    bytes 2488298   md5 9718a2a64978cb6e9b95ea2f0454cca5
+    PASS

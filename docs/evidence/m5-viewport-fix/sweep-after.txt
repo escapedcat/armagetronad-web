@@ -1,0 +1,18 @@
+RAGGED?  src/engine/eDebugLine.cpp:101  BeginLines()  vertices=2 colours=1 texcoords=0
+RAGGED?  src/engine/eDisplay.cpp:586  BeginLines()  vertices=14 colours=4 texcoords=0
+uniform  src/render/rGLRender.cpp:163  BeginLines()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+uniform  src/render/rGLRender.cpp:167  BeginTriangles()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+uniform  src/render/rGLRender.cpp:171  BeginQuads()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+uniform  src/render/rGLRender.cpp:175  BeginLineStrip()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+uniform  src/render/rGLRender.cpp:179  BeginLineLoop()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+uniform  src/render/rGLRender.cpp:183  BeginTriangleStrip()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+uniform  src/render/rGLRender.cpp:187  BeginQuadStrip()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+uniform  src/render/rGLRender.cpp:207  BeginTriangleFan()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+uniform  src/render/rRender.cpp:67  BeginLines()  vertices=2 colours=0 texcoords=0  *** NO RenderEnd within 120 lines ***
+RAGGED?  src/tron/gCycle.cpp:4468  BeginTriangles()  vertices=6 colours=3 texcoords=0
+RAGGED?  src/tron/gHud.cpp:100  BeginQuads()  vertices=8 colours=2 texcoords=0
+RAGGED?  src/tron/gWall.cpp:172  BeginLines()  vertices=2 colours=1 texcoords=0
+uniform  src/tron/gWall.cpp:203  BeginQuads()  vertices=4 colours=0 texcoords=4  *** NO RenderEnd within 120 lines ***
+RAGGED?  src/tron/gWall.cpp:1152  BeginLines()  vertices=6 colours=4 texcoords=4  *** NO RenderEnd within 120 lines ***
+RAGGED?  src/tron/gWall.cpp:1173  BeginQuads()  vertices=5 colours=4 texcoords=4  *** NO RenderEnd within 120 lines ***
+RAGGED?  src/tron/gWall.cpp:1269  BeginLineStrip()  vertices=3 colours=2 texcoords=2

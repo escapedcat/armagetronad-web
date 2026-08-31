@@ -1,0 +1,12 @@
+== compiling 102 translation units with EXCEPTIONS empty ==
+== link A: pre-task-2 settings (no -O at link, ASSERTIONS default on) ==
+== link B: shipped settings (-O2 -sASSERTIONS=1) ==
+
+== results (wasm bytes) ==
+   configuration                                    wasm
+   web/build-m1-noexc/dist/noexc-pretask2.wasm    6477276
+   web/build-m1-noexc/dist/noexc-shipped.wasm    3100006
+   web/dist-m1/armagetronad.wasm                 4331138
+   (compare noexc-pretask2 against the 8,879,522-byte client M5 task 1
+    left behind; noexc-shipped against web/dist-m1/armagetronad.wasm above)
+exit 0

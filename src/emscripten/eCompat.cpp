@@ -4,8 +4,12 @@ Armagetron Advanced -- compatibility shims for the browser (Emscripten) build.
 Every definition in this file exists for exactly one reason: the link of the
 browser client reported the symbol as undefined, because Emscripten's SDL 1.2
 emulation (emscripten/src/lib/libsdl.js) or its legacy-GL emulation
-(emscripten/src/lib/libglemu.js) does not provide it. Nothing here implements
-game behaviour, and nothing here is compiled into the dedicated build.
+(emscripten/src/lib/libglemu.js) does not provide it -- with ONE deliberate
+exception, added by M5 and marked as such where it sits: gluLookAt, which
+Emscripten does provide and provides wrongly. Apart from that one, nothing here
+implements game behaviour. Nothing here at all is compiled into the dedicated
+build: this file is named only in CLIENT_OBJS in web/Makefile, and does not
+appear on the dedicated link line.
 
 The list is the linker's, not a header diff's -- a header diff over these
 libraries produces false positives, because several names are *declared* by
@@ -20,7 +24,11 @@ actually reported, and it reported these twelve and no others:
     glCallList  glDeleteLists  glEndList  glGenLists  glNewList
     glRectf  glTexCoord2d  glTexCoord3fv
 
-M3 removed SDL_LoadWAV_RW from that list -- eleven definitions remain. It was
+M3 removed SDL_LoadWAV_RW from that list -- eleven of the twelve remain. M5
+added a TWELFTH definition that was never on it, gluLookAt, for the opposite
+reason: it linked fine and did nothing. A symbol that is defined and broken does
+not show up in an undefined-symbol list, so the list above is a floor on what
+this file has to contain, not a ceiling. See its own comment below. It was
 never referenced by any other object (the linker wanted it only because the
 SDL 1.2 SDL_LoadWAV macro expanded to it, and eSound.cpp #undef's that macro),
 and M3 established it is not implementable here anyway. Its own comment below
@@ -43,9 +51,20 @@ headers only, and must stay that way for glRectf to be able to compile.
 #define NO_SDL_GLEXT
 #include <SDL_opengl.h>
 
+// SDL_opengl.h pulls in GL but not GLU, so nothing here would declare
+// gluLookAt. Emscripten ships the header and src/render/rGL.h already includes
+// it for the same reason under __EMSCRIPTEN__ -- including it here rather than
+// hand-declaring the function is what keeps the definition below a copy of the
+// declaration eCamera.cpp compiled against. It is a system header, so the
+// "no game headers" rule above is intact. It carries its own extern "C".
+#include <GL/glu.h>
+
 // For free(), used by SDL_FreeWAV below. SDL_stdinc.h pulls this in already;
 // naming it keeps that from being an accident of SDL's include graph.
 #include <stdlib.h>
+
+// For sqrt(), used by gluLookAt below.
+#include <math.h>
 
 // Both headers already declare all twelve of these with C linkage, so these
 // definitions inherit it and the block below is documentation rather than a
@@ -137,6 +156,165 @@ void GLAPIENTRY glTexCoord2d( GLdouble s, GLdouble t )
 void GLAPIENTRY glTexCoord3fv( const GLfloat * v )
 {
     glTexCoord2f( v[0], v[1] );
+}
+
+// ---------------------------------------------------------------------------
+// GLU: gluLookAt. THIS ENTRY IS A DIFFERENT KIND FROM EVERY OTHER ONE IN THIS
+// FILE, and the difference is the whole reason it needs this much comment.
+//
+// Everything above completes a link that failed. This one REPLACES a link that
+// succeeded. gluLookAt is not an undefined symbol and never was: Emscripten
+// defines it, in libglemu.js, and the definition does not work. So the link was
+// clean, the call returned, and the camera silently never turned -- a
+// permanently top-down view in every camera mode, in every screenshot this port
+// has ever produced. It is therefore also the only definition here that changes
+// what the program DRAWS, and the only one that is new behaviour rather than a
+// stand-in for something the browser genuinely lacks.
+//
+// It is written against the GLU 1.3 specification of gluLookAt (the SGI
+// reference implementation, as carried by Mesa's
+// src/glu/sgi/libutil/project.c), not against Emscripten's version with the
+// mistakes taken out.
+//
+// THE EMSCRIPTEN BUG, VERIFIED IN THIS EMSDK, NOT QUOTED FROM A NOTE.
+// grep `gluLookAt:` in emscripten/src/lib/libglemu.js -- line 3888 in the emsdk
+// vendored at deps/emsdk, and greppable if that number drifts:
+//
+//     gluLookAt: (ex, ey, ez, cx, cy, cz, ux, uy, uz) => {
+//       ...
+//       GLImmediate.matrixLib.mat4.lookAt(GLImmediate.matrix[GLImmediate.currentMatrix],
+//           [ex, ey, ez], [cx, cy, cz], [ux, uy, uz]);
+//     },
+//
+// The bundled gl-matrix declares (grep `^mat4.lookAt` in
+// emscripten/src/gl-matrix.js, line 1356):
+//
+//     mat4.lookAt = function (eye, center, up, dest)
+//
+// -- DESTINATION LAST. Emscripten passes it FIRST. So the current matrix
+// arrives as `eye`, the real eye as `center`, the real centre as `up`, and the
+// sixteen-float result is written into the three-element array literal
+// `[ux, uy, uz]`, which is discarded at the end of the statement. THE CURRENT
+// MATRIX IS READ AND NEVER WRITTEN. gluPerspective eight lines above (:3880)
+// assigns its result back correctly, which is what makes this one function's
+// bug rather than a convention this file should have followed.
+//
+// AND THERE IS A SECOND BUG UNDER THE FIRST, WHICH IS WHY THE FIX IS NOT
+// "CALL mat4.lookAt WITH THE ARGUMENTS IN THE RIGHT ORDER".
+//
+// mat4.lookAt OVERWRITES its destination. It never reads it: the degenerate
+// path is `return mat4.identity(dest)` and the general path is sixteen plain
+// `dest[i] = ...` assignments. GL specifies gluLookAt as a POST-MULTIPLY of the
+// current matrix, and at this game's call site that distinction is not
+// cosmetic. rViewport::Perspective has just loaded a glFrustum into
+// GL_PROJECTION (the `#if 1` arm -- the gluPerspective in the `#if 0` arm below
+// it is dead code and is not what runs), so an overwriting gluLookAt would
+// throw the frustum away and leave the scene with no perspective divide at all.
+// Anyone "fixing" the argument order in a local emsdk patch would produce that,
+// see a still-wrong picture, and conclude the diagnosis was wrong.
+//
+// HOW THIS COMPOSES WITH THE CALL SITE, which was read before choosing where
+// the result lands. eCamera::Render makes the only live call (the earlier
+// gluLookAt in that function is inside a comment). Around it:
+//
+//     glMatrixMode(GL_PROJECTION); glLoadIdentity();
+//     glMatrixMode(GL_MODELVIEW);  glLoadIdentity();
+//     vp->Perspective(fov,zNear,1E+20);   // -> ProjMatrix(), i.e. back to
+//                                         //    GL_PROJECTION, then glFrustum
+//     gluLookAt(0,0,0, glancedir.x,glancedir.y,rise, top.x,top.y,1);
+//     glTranslatef(-pos_diff.x,-pos_diff.y,-z);
+//     glMatrixMode(GL_MODELVIEW);
+//
+// So the current matrix here is GL_PROJECTION, the whole view orientation is
+// carried on the projection matrix, and the required result is
+// frustum * lookAt * translate. This shim reaches that by doing exactly one
+// thing -- glMultMatrixf -- and never touching glMatrixMode. That is what lets
+// it compose with the call site instead of assuming it: it is correct on
+// whichever matrix is current, which is what the specification says.
+//
+// The eye translation is folded into the same matrix rather than issued as a
+// second glTranslated call, so the shim is one GL call and does not depend on
+// glTranslated (a `d` entry point this build has no other caller for). That is
+// the specification's own M * T(-eye), multiplied out: the translation column
+// is (-s.eye, -u.eye, +f.eye).
+//
+// glMultMatrixf is a real implementation, checked rather than assumed --
+// contrast EMSCRIPTEN's glTexCoord3f, which it declares and defines as an
+// abort() -- see the glTexCoord3fv shim above for why that one cannot be
+// forwarded to. glTexCoord3f is not defined in this file; naming it as though
+// it were "above" was a citation to a symbol that is not here.
+// grep `glMultMatrixf:` in libglemu.js: it calls
+// mat4.multiply(GLImmediate.matrix[current], m) with no third argument, and
+// mat4.multiply(a, b) with dest omitted computes a*b into a. That is GL's
+// post-multiply, in the right order.
+//
+// DEGENERATE INPUTS. GLU leaves them undefined and Mesa does not guard them;
+// gl-matrix loaded identity for eye==center and zeroed a row for up parallel to
+// the view direction. Both of those are worse than nothing HERE, because this
+// matrix is multiplied into a live projection: loading identity would discard
+// the frustum, and a zeroed row would collapse the frame to a line and blank
+// the screen. This shim leaves the current matrix untouched instead, so a
+// degenerate frame is an UNROTATED view for that frame rather than a black one.
+// Not "the previous frame's orientation" -- an earlier draft of this comment
+// said that and it was wrong in the one direction that misleads. eCamera::Render
+// does glLoadIdentity() and reloads glFrustum every single frame before calling
+// here, so at the moment of this early return the matrix holds THIS frame's
+// frustum and no view rotation at all: a degenerate frame renders top-down,
+// which is precisely the bug this shim exists to fix. Read a stuck-looking
+// camera as degenerate input reaching here, not as the shim failing to run.
+// Neither case is reachable from eCamera::Render as written -- glancedir is a
+// unit direction and `up` has a hard +1 z component -- so this is a guard
+// against a future caller, not a workaround for the present one.
+void GLAPIENTRY gluLookAt( GLdouble eyeX, GLdouble eyeY, GLdouble eyeZ,
+                           GLdouble centerX, GLdouble centerY, GLdouble centerZ,
+                           GLdouble upX, GLdouble upY, GLdouble upZ )
+{
+    // f = normalize( center - eye )
+    GLdouble fx = centerX - eyeX;
+    GLdouble fy = centerY - eyeY;
+    GLdouble fz = centerZ - eyeZ;
+    GLdouble flen = sqrt( fx*fx + fy*fy + fz*fz );
+    // Spelled as !( flen > 0.0 ) rather than flen == 0.0 so that NaN is caught
+    // too: a NaN compares false against everything, so an equality test would
+    // let it through and propagate a NaN matrix into GL_PROJECTION. Unreachable
+    // from the one live caller, and self-healing because the projection is
+    // reloaded every frame -- but the comment above promises a guard, and this
+    // is what makes that promise true at zero cost.
+    if ( !( flen > 0.0 ) )
+        return;                       // eye == center; see DEGENERATE INPUTS
+    fx /= flen; fy /= flen; fz /= flen;
+
+    // s = f x up, normalized. GLU crosses with the RAW up vector and
+    // normalizes afterwards, which is what makes a non-unit, non-perpendicular
+    // up legal -- and eCamera::Render passes exactly that, (top.x, top.y, 1).
+    GLdouble sx = fy*upZ - fz*upY;
+    GLdouble sy = fz*upX - fx*upZ;
+    GLdouble sz = fx*upY - fy*upX;
+    GLdouble slen = sqrt( sx*sx + sy*sy + sz*sz );
+    if ( slen == 0.0 )
+        return;                       // up parallel to f; see DEGENERATE INPUTS
+    sx /= slen; sy /= slen; sz /= slen;
+
+    // u = s x f. Already unit, because s and f are unit and orthogonal.
+    GLdouble ux = sy*fz - sz*fy;
+    GLdouble uy = sz*fx - sx*fz;
+    GLdouble uz = sx*fy - sy*fx;
+
+    // Column-major, m[column*4 + row], which is the only layout glMultMatrixf
+    // accepts. The rows of the rotation are s, u, -f; the last column is the
+    // folded-in T(-eye).
+    const GLfloat m[16] =
+    {
+        (GLfloat) sx, (GLfloat) ux, (GLfloat)-fx, 0.0f,
+        (GLfloat) sy, (GLfloat) uy, (GLfloat)-fy, 0.0f,
+        (GLfloat) sz, (GLfloat) uz, (GLfloat)-fz, 0.0f,
+        (GLfloat)-( sx*eyeX + sy*eyeY + sz*eyeZ ),
+        (GLfloat)-( ux*eyeX + uy*eyeY + uz*eyeZ ),
+        (GLfloat) ( fx*eyeX + fy*eyeY + fz*eyeZ ),
+        1.0f
+    };
+
+    glMultMatrixf( m );
 }
 
 // ---------------------------------------------------------------------------

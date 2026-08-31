@@ -11,7 +11,11 @@ the GL traps, and the camera. Each section is named so a comment can cite it.
 **If you are about to touch rendering, read §10 first.** "One `glBegin`/`glEnd`
 block, one vertex format" is the largest single class of defect this port has
 found. It has two shapes and **one of them is silent** — it draws wrong geometry
-without asserting. One instance is still unfixed (`rViewport.cpp:246`).
+without asserting. **As of M5 task 1 there is no known instance that **misbehaves today** — but two blocks in this class are still left open and are safe only by what happens to follow them (`gWallRim_helper` and `gNetPlayerWall::RenderNormal`, both in `gWall.cpp`, both in the leak list below; the second is annotated *fragile*). Stating that as "no unfixed instance" would be the same shape of claim as the "latent" miscall this section warns about one heading down**: the
+last one, in `rViewportConfiguration::DemonstrateViewport`, was fixed after being
+carried as "still latent" by four consecutive milestones — it was in fact a live
+crash four keystrokes from the main menu. Read §10's "How this one got miscalled
+for four milestones" before writing "latent" about a site in this class again.
 
 **If you are about to add `-O` to the client link, read §10 as well, and then
 don't.** `ASSERTIONS` being on is the only reason the loud shape of that defect
@@ -926,10 +930,11 @@ The only functions that currently leak an open block are:
   identical format, or `RenderBegin`, whose `BeginLineStrip`/`BeginQuadStrip` are
   different primitives and so force a real `glEnd`. Fragile — do not add a
   differently-shaped `GL_QUADS` emitter after it.
-- `rViewportConfiguration::DemonstrateViewport` (`rViewport.cpp:240`) — see the
-  latent list.
 - `rRenderer::Line` (`rRender.cpp:67`) — dead; `glRenderer::Line` overrides it
   and does call `End()`.
+
+`rViewportConfiguration::DemonstrateViewport` used to be on this list and is no
+longer: M5 task 1 gave it its `RenderEnd()`.
 
 **(B) Intra-batch non-uniformity.** A block the code opened itself emits
 attributes at a rate other than one per vertex. No inherited batch is involved,
@@ -951,26 +956,49 @@ perfectly reasonable.
 - **`gSparks.cpp` (shape B)** — one colour per *line segment*: 9 slots per
   iteration against a 5-slot stride. With `SPARKS == 10` that is 90/20 = 18, an
   integer, so it never asserted — it drew garbage. Fixed the same way.
+- **`rViewport.cpp` (shape A+B), M5 task 1** —
+  `rViewportConfiguration::DemonstrateViewport`: `BeginLineLoop()`, four
+  `glVertex2f`, then `glColor3f(1,1,1)` **with the block still open**, then
+  `DisplayText()`, whose destructor's `RenderEnd()` is what reached `glEnd` with
+  the ragged batch. 16 + 1 = 17 slots against stride 20 → `4*17/20 = 3.4`.
+  Fixed with a `RenderEnd()` after the fourth `glVertex2f`, so the colour is
+  state again and `DisplayText` gets its own batch. Predicted arithmetic and
+  observed abort agreed exactly.
 
-### Still latent — one site, and it is reachable today
+### How this one got miscalled for four milestones
 
-- **`rViewport.cpp:246`** (shape A+B) — `BeginLineLoop()`, four `glVertex2f`,
-  then `glColor3f(1,1,1)` **with the block still open**, then `DisplayText()`
-  whose `RenderEnd(true)` flushes it: 17 slots against stride 20 → `3.4`. Would
-  abort.
+This entry read "still latent" from M2 through M4 and it was never latent. It is
+worth a paragraph because the mistake was not in the analysis — the arithmetic
+above was right the whole time — but in the word.
 
-  It compiles (`rViewportConfiguration::DemonstrateViewport`, called from
-  `gMenus.cpp:805` and `:857`) and it is **reachable in the shipped build right
-  now**, through the viewport-configuration screen in the settings menu. It does
-  not depend on any keycode work: menu navigation switches on raw `SDLK_UP` /
-  `SDLK_DOWN` / `SDLK_LEFT` / `SDLK_RIGHT` (`uMenu.cpp:419-448`), which the
-  `KEYBOARD`-line remapping in `config/default.cfg` does not touch. This is a
-  pre-existing hazard, not one a later task introduces.
+What the M2 note actually said was "reachable in the shipped build right now …
+It was left unfixed only because nothing in M2 opens that screen, so a fix could
+not be verified by the browser harness." That is a statement about the *test
+coverage*, not about the *defect*. Each subsequent milestone read the heading,
+saw "latent", and moved on. Filing it under a heading that contradicted its own
+body is what made it survivable for three milestones after the one that found it.
 
-  It was left unfixed only because nothing in M2 opens that screen, so a fix
-  could not be verified by the browser harness. Whoever next touches the
-  settings menus should fix it (a `RenderEnd(true)` before the `glColor3f`) and
-  verify it by actually opening the screen.
+Measured on 2026-08-31 against `8fc86835`: from a boot with a persisted
+`user.cfg` the route is **main menu → Down → "Player Setup" → Enter → Down ×4**,
+and the fourth Down aborts the tab ~10 ms after the keydown, with
+`Assertion failed: numVertices must be an integer.` thrown from
+`_emscripten_glEnd`. `uMenu::OnEnter` calls `RenderBackground()` on the
+**selected** item only, and `DemonstrateViewport` is called from
+`ArmageTron_viewport_menuitem::RenderBackground` (`gMenus.cpp`), so *highlighting*
+the item is the whole trigger — no Enter, no Left/Right. Menu navigation reads
+raw `SDLK_UP`/`SDLK_DOWN`/`SDLK_LEFT`/`SDLK_RIGHT` (`uMenu.cpp:419-448`), which
+`config/default.cfg`'s `KEYBOARD` remapping does not touch, so no keycode work
+was ever a precondition either.
+
+Two rules out of it:
+
+1. **"Latent" means an open batch cannot reach the site, or the code is not in
+   the build.** It does *not* mean "our harness does not currently drive it".
+   If the only reason a site is unfixed is that nothing tests it, it is live and
+   unverified, and those are different words.
+2. **Write the reachability claim as a route, not as an adjective.** "Player
+   Setup → Down ×4" is checkable in ninety seconds by anyone; "reachable through
+   the settings menu" sat unchecked for three milestones.
 
 ### Compiled out of this build entirely — NOT latent
 
@@ -1002,7 +1030,8 @@ each omission produced a wrong entry in this list.
 
 **1. Grep for the raw forms too.** `glColor*`/`glTexCoord*`/`glVertex*` are
 frequently called **raw**, not through `glRenderer::Color`/`TexCoord` —
-`gCycle.cpp:4621`, `gWinZone.cpp:474`, `rViewport.cpp:246` and both cycle-wall
+`gCycle.cpp:4621`, `gWinZone.cpp:474`,
+`rViewportConfiguration::DemonstrateViewport` and both cycle-wall
 renderers all bypass the renderer. A sweep that greps only for `Color(` and
 `TexCoord(` misses most of the codebase, and for the same reason a fix inside
 `glRenderer::Color()` would not catch them.
@@ -1026,19 +1055,29 @@ python3 web/tools/sweep-immediate-mode.py src
 
 **Every line it currently prints is accounted for below, and that is what makes
 running it useful: a hit that is not in this table is new.** As of this commit
-it prints 19. Match them on the file and function, not on the line number,
-which is the `Begin*()` and moves whenever anything above it does.
+it prints **18** — it printed 19 until M5 task 1. Match them on the file and
+function, not on the line number, which is the `Begin*()` and moves whenever
+anything above it does.
 
 | hit | why it is not a new bug |
 |---|---|
 | `eDebugLine.cpp:101`, `eDisplay.cpp:586` | compiled out of this build entirely — see above |
 | `rGLRender.cpp:163`–`:207` | the `Begin*()` wrapper definitions themselves. There is no block for them to close |
 | `rRender.cpp:67` | dead `rRenderer::Line`; see the leak list above |
-| `rViewport.cpp:240` | the one still-latent site; see above |
 | `gCycle.cpp:4468` | **fixed.** The repeated colours are behind an `AA_PYRAMID_COLOR` macro that the regex does not match, so it still counts 3 colours against 6 vertices. A block this script calls ragged can be one a human already made uniform |
 | `gHud.cpp:100`, `gWall.cpp:172` | blocks that sit inside `/* */` comments, which the line-comment filter does not catch |
 | `gWall.cpp:203` | `gWallRim_helper`, the known leaker; see the leak list above |
 | `gWall.cpp:1152`, `:1173`, `:1269` | the cycle-wall renderers, whose colour/vertex counts span two functions so the per-region count is meaningless. `:1173` is `RenderNormal`, the second known leaker |
+
+**Why the count went 19 → 18 and not 19 → 19-with-one-reclassified.** The script
+prints a region only if it is ragged *or* textually unclosed (see the `if flag ==
+'uniform' and closed: continue` at the bottom of `sweep-immediate-mode.py`).
+`RenderEnd()` after the fourth `glVertex2f` makes the `DemonstrateViewport` block
+both closed and uniform — 4 vertices, 0 colours, 0 texcoords inside it — so it
+drops out of the output entirely rather than changing category. **A fix in this
+class removes a line; it does not turn one into `uniform`.** Expect the same
+shape from any future fix here, and treat a `uniform` line that is still printed
+as an unclosed block, not a clean one.
 
 **3. Check reachability in both dimensions before writing anything down** — the
 `#ifdef` test first, because it is one command and it eliminates whole files,
@@ -1050,10 +1089,20 @@ whoever reads this next after code that does not exist.
 
 ## 11. The camera never turns: `gluLookAt` is a no-op
 
-`src/engine/eCamera.cpp`, `config/default.cfg`. **Nothing in this port fixes
-either half of this section.** Both are recorded here because they are cheap to
-rediscover expensively: the first makes every screenshot of this port misleading,
-and the second makes a set of shipped bindings look broken for no visible reason.
+`src/engine/eCamera.cpp`, `config/default.cfg`.
+
+**FIXED IN M5 TASK 2B — the first half. `gluLookAt` is now implemented in
+`src/emscripten/eCompat.cpp` and the browser client renders a real 3D view.**
+The diagnosis below is kept in full because it is the reason that shim exists
+and is the thing to re-read if the camera ever goes flat again; read it as
+history, not as a live defect. The second half — the dead mouse binds — was
+**deliberately deferred by the same task**, with the cost measured rather than
+guessed; see the end of this section.
+
+It was recorded here from M2 and carried as a footnote through four milestones
+before anyone fixed it, which was a mistake worth naming: "every screenshot of
+this port is misleading" is not a footnote in a project whose pitch is "play
+Armagetron in your browser". §10 records the analogous miscall for a crash.
 
 ### The no-op
 
@@ -1101,16 +1150,70 @@ M2 gate frames:
   cycle just outside the frame — half the visible ground width is ~13.3 units.
   Moving the camera to 3 units back makes it appear.
 
+### What the fix had to be, and the second bug that only shows up when you write it
+
+**Correcting the argument order is not the fix**, and anyone who patches a local
+emsdk to "fix Emscripten's typo" will get a still-wrong picture and conclude the
+diagnosis was wrong. `mat4.lookAt` **overwrites** its destination — it never
+reads it; the degenerate path is `return mat4.identity(dest)` and the general
+path is sixteen plain `dest[i] = ...` assignments. GL specifies `gluLookAt` as a
+**post-multiply** of the current matrix, and at this game's call site
+`rViewport::Perspective` has just loaded a `glFrustum` into `GL_PROJECTION` (the
+`#if 1` arm; the `gluPerspective` in the `#if 0` arm below it is dead code and is
+not what runs). An overwriting `gluLookAt` would therefore throw the frustum away
+and leave the scene with no perspective divide at all.
+
+So the shim is written against the **GLU 1.3 specification** (the SGI reference
+implementation as carried by Mesa's `src/glu/sgi/libutil/project.c`), not against
+Emscripten's version with the mistakes taken out: build the rotation from
+`f`, `s = f × up`, `u = s × f`, fold `T(-eye)` into the same matrix, and issue
+one `glMultMatrixf`. It never touches `glMatrixMode`, so it is correct on
+whichever matrix is current and composes with `eCamera::Render` instead of
+assuming it. Full reasoning lives on the function in `eCompat.cpp`.
+
+**It overrides a symbol that was DEFINED, not undefined**, which makes it the
+only entry in `eCompat.cpp` of its kind. A broken-but-present JS library function
+never appears in an undefined-symbol list, so the linker-derived list that file
+is built around is a floor on what belongs there, not a ceiling. Defining
+`gluLookAt` natively removes Emscripten's version from the output entirely
+(`grep -c gluLookAt web/dist-m1/armagetronad.js` → 0, against a `T gluLookAt` in
+`eCompat.o`).
+
 Consequences to carry:
 
-- **No screenshot of this port has ever shown a correct 3D view**, and none will
-  until this is fixed. Do not write a gate that depends on one; the M2 gate
-  deliberately does not.
-- `CAMERA_IN` is not a workaround: `eCamera.cpp:1429-1433` removes the centred
-  object from the render list when the camera is within 1 unit of it.
-- The fix is small — implement `gluLookAt` correctly in `eCompat.cpp`, the way it
-  already shims `glRectf` — but it is **new behaviour rather than a bug-for-bug
-  port**, so it belongs to a task that owns it and can verify the result visually.
+- Screenshots of this port taken **before M5 task 2b** do not show a correct 3D
+  view and never could. That includes every frame in `docs/evidence/` up to and
+  including `m5-o2-assertions/`. They are still valid evidence for what they were
+  taken to show; they are not evidence about the camera.
+- The M2 gate deliberately does not depend on the view being correct, and should
+  stay that way — it is a gameplay gate, and `docs/evidence/m5-camera/` is where
+  the view itself is measured.
+- `CAMERA_IN` is not a workaround and was not used: `eCamera.cpp:1429-1433`
+  removes the centred object from the render list when the camera is within 1
+  unit of it.
+
+### How the fix was verified, and the signature that does NOT flip
+
+`docs/evidence/m5-camera/`. `measure-camera.py` turns the three signatures above
+into numbers, run against the frames M5 task 2 had already committed from the
+same gate script at the same step:
+
+| | Chrome before | after | Firefox before | after |
+|---|---|---|---|---|
+| columns holding a ≥300-row vertical ridge | 34 | **0** | 31 | **0** |
+| mean luma, rows 100..250 | 7.07 | **64.99** | 6.58 | **65.28** |
+
+Thirty-odd exactly-vertical grid lines became none — the grid converges — and
+the top of the frame became sky and arena rim instead of more floor.
+
+**The one-pixel line at x=511 is the weakest of the three and does not flip
+cleanly.** Two things a re-check should know before treating it as a criterion:
+it is frame-dependent (it measures a wall that happens to pass under the camera,
+and the Firefox before-frame has none — 46 rows, not 476), and it does **not**
+go to zero afterwards, because with the camera behind the cycle the player's own
+wall is still seen nearly edge-on near the centre column. What changes is its
+extent: rows 95..570 before, rows 582..697 after — it now stops at the cycle
+instead of running off the top of the frame.
 
 ### The other half: `SDLK_LAST` moved, so the mouse-camera binds are dead
 
@@ -1129,6 +1232,63 @@ disjoint, same as the rest of the table), but enabling mouse camera control in a
 browser needs pointer-lock behaviour verified first, and turning on bindings that
 have never been exercised is not a thing to do blind.
 
-Whoever fixes the camera should fix this at the same time — they are the same
-feature from a player's point of view, and a correct `gluLookAt` with no way to
-turn the camera is only half a result.
+#### M5 TASK 2B DECISION: DEFERRED, and here is the cost, measured
+
+The earlier version of this paragraph said "whoever fixes the camera should fix
+this at the same time — a correct `gluLookAt` with no way to turn the camera is
+only half a result." **That premise is wrong, and the measurement that shows it
+is why M5 deferred rather than shipped.** There is a way to turn the camera. It
+is the numpad, it is in the same block of `default.cfg`, and it works.
+
+`default.cfg:29-45` binds the camera to **both** the numpad and the mouse. The
+numpad half is 256-262, 266, 269, 270 — squarely inside `su_TranslateSDL12Keysym`'s
+256-272 range, so it is translated and live. **This is a readout of the running
+game's own keymap, not an inference from the source**: leaving the First Setup
+menu makes M4 persist `/persist/var/user.cfg`, and `tConfItem_key::WriteVal`
+dumps the live keymap by index, i.e. after translation. Read back through
+`Module.FS` in Chrome (`docs/evidence/m5-camera/camera-control/`):
+
+    KEYBOARD 1118 PLAYER_BIND LOOK_RIGHT 1     <- numpad 6, SDLK_KP_6.  LIVE
+    KEYBOARD 1116 PLAYER_BIND LOOK_LEFT  1     <- numpad 4, SDLK_KP_4.  LIVE
+    KEYBOARD  332 PLAYER_BIND ZOOM_IN    1     <- mouse button 3.       DEAD
+    KEYBOARD  327 PLAYER_BIND BANK_DOWN  1     <- mouse Y-.             DEAD
+    KEYBOARD  326 PLAYER_BIND BANK_UP    1     <- mouse Y+.             DEAD
+    KEYBOARD  325 PLAYER_BIND LOOK_LEFT  1     <- mouse X-.             DEAD
+    KEYBOARD  324 PLAYER_BIND LOOK_RIGHT 1     <- mouse X+.             DEAD
+
+Both encodings in one file, side by side, from the program itself. And the keys
+do what the table says: driven inside the round countdown — the one window where
+the view is live, in 3D, and cannot change by itself — with a **drift control**,
+an interval of exactly the same length and no input at all, shot at both ends:
+
+    900 ms, NO INPUT                    3.18% of the frame changed (countdown digit)
+    900 ms, numpad 6 held (LOOK_RIGHT)  6.97%   — the arena rim swings diagonal
+    1800 ms, numpad 4 held (LOOK_LEFT) 14.97%   — and swings back past centre
+
+**So the exact cost of deferring is three actions**, not the whole feature:
+`BANK_UP`, `BANK_DOWN` and `ZOOM_IN` are the only ones with no live binding
+anywhere, because 326/327/332 are their only binds. `LOOK_LEFT`, `LOOK_RIGHT`,
+`GLANCE_LEFT`, `GLANCE_RIGHT` and all six `MOVE_*` survive on the numpad.
+
+Why M5 still did not turn them on, given that the table change itself is five
+lines:
+
+- **It is not a table change in isolation.** It converts raw mouse motion into
+  camera rotation with no pointer lock. `SDL_WM_GrabInput` is called nowhere in
+  this tree (`grep -rn SDL_WM_GrabInput src/` — no hits), so nothing in the
+  program would hold the pointer; without it the cursor leaves the canvas
+  mid-swing and the rest of the gesture goes to the browser. With it, release is
+  Escape, which is also this game's menu key.
+- **`ZOOM_IN` lands on mouse button 3**, i.e. the browser's middle click —
+  autoscroll on Windows, X11 primary-selection paste — a default-prevented
+  gesture nobody here has tested.
+- **M5 is the deployment milestone.** Enabling an input path that has never been
+  exercised, on the milestone that puts this in front of strangers, is the wrong
+  trade, and the three affected actions are not ones a first-time visitor needs.
+
+The change stays available and stays safe: `SDLK_NEWLAST` is 1550 in this build
+(measured alongside `SDLK_LAST` 1536), so 1537-1549 fit under
+`tConfItem_key::ReadVal`'s `tASSERT(keysym < SDLK_NEWLAST)`, and 324-332 are
+unreachable indices today rather than aliases of anything — Emscripten's DOM map
+emits either an ASCII value under 128 or a `|1<<10` value at 1024 or above, so
+nothing can ever land on them.
