@@ -317,7 +317,59 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 # --exclude-file bug above was actually caught: confirm "callMain" appears
 # outside of unexportedSymbols in the built armagetronad.js, do not trust
 # that adding the flag was enough.
-CLIENT_LDFLAGS := $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
+# ---- M5 Task 2: -O2 at link, with ASSERTIONS held on -------------------
+#
+# -O2 here is a LINK-time flag and does something the -O2 already in
+# BASE_CXXFLAGS cannot: it runs Binaryen's wasm-opt over the whole linked
+# module (after the Asyncify transform, which is where nearly all of this
+# binary's bulk comes from) and minifies the JS glue. Compile-time -O2 has
+# been on since M0 and does not reach either of those. The wire total for the
+# four served files drops from 4,097,666 to 1,707,658 bytes gzipped -- 3.91 MiB
+# to 1.63 MiB, a 58% cut -- against PLAN.md's 15 MB budget.
+#
+# -sASSERTIONS=1 is NOT redundant and NOT optional. Emscripten's default for
+# ASSERTIONS is 1 at -O0 and 0 from -O1 up (src/settings.js documents the
+# default, tools/link.py flips it with the optimisation level), so adding -O2
+# alone silently turns assertions OFF. That is the whole reason PLAN.md and
+# docs/porting/browser-runtime-notes.md section 10 banned -O at link from M2
+# through M4: section 10's defect class -- one glBegin/glEnd block gets one
+# vertex format -- has two failure modes, an assert in glEnd (loud, fixable)
+# and a slot count that happens to divide evenly (silent garbage geometry).
+# Dropping ASSERTIONS converts every future instance of the first kind into the
+# second kind.
+#
+# The ban was really a ban on losing ASSERTIONS, and the two are separable.
+# That is not an argument, it is a measurement -- re-established on this build
+# by FIRING the assert, not by reading flag defaults. With M5 task 1's
+# RenderEnd() removed from rViewportConfiguration::DemonstrateViewport (the
+# only known live section-10 site, hence the only one that can be fired):
+#   -O2 -sASSERTIONS=1  ->  Aborted(Assertion failed: `numVertices` must be an
+#                           integer.) from _emscripten_glEnd, same route and
+#                           same message as the no-O build.
+#   -O2 alone           ->  NO abort. The tab survives the same keystroke and
+#                           draws the panel with its border wrong, which is
+#                           exactly failure mode 2. The control that makes
+#                           that attributable to the DEFECT rather than to
+#                           -O2 or to ASSERTIONS=0 is the fourth cell: the
+#                           FIXED objects linked with bare -O2 render
+#                           correctly.
+# Full transcripts, screenshots and the re-runnable script:
+# docs/evidence/m5-o2-assertions/.
+#
+# Assertions cost 5.1% of the wire total over bare -O2. That is the price of
+# keeping this port's largest defect class loud, and it is worth it.
+#
+# -O2 rather than -O3/-Os/-Oz: measured at M5 recon, the four differ by 10,728
+# bytes on the wire (0.9%) and the raw-size ordering INVERTS under gzip. -O2 is
+# emcc's own recommended default. Not worth revisiting without a new
+# measurement.
+#
+# Deliberately NOT added to $(LDFLAGS): the dedicated build's wasm is a
+# byte-identity invariant across the whole port (2,488,298 bytes, md5
+# 9718a2a64978cb6e9b95ea2f0454cca5), and it is a Node diagnostic tool, not a
+# shipped artefact, so it has nothing to gain and an invariant to lose.
+CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
+                  $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
                   -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
                   -sEXPORTED_RUNTIME_METHODS=callMain,FS,IDBFS,addRunDependency,removeRunDependency \
