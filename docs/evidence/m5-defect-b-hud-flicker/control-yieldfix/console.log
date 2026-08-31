@@ -1,0 +1,123 @@
+[    730ms] [harness] chrome: Chrome/152.0.7977.65
+[    731ms] [harness] navigating to http://localhost:8123/armagetronad-yieldfix.html
+[      6ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     34ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     34ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     36ms] [page] load event fired
+[     40ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8123/favicon.ico
+[     92ms] [console.log] [PERSIST] populate ok in 35ms
+[    107ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    286ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[   1121ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1122ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1123ms] [console.error] 
+[   1123ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1124ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1124ms] [console.log] 
+[   1260ms] [console.log] [L] ENCODING latin1
+[   1267ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1270ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1289ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1292ms] [console.error] TODO: glShadeModel
+[   1295ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad-yieldfix.js
+[   1336ms] [harness] click #start: clicked
+[   1338ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad-yieldfix.js
+[   1338ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad-yieldfix.js
+[   1338ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad-yieldfix.js
+[   1338ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad-yieldfix.js
+[   1339ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8123/armagetronad-yieldfix.js
+[  10369ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10374ms] [harness] key Enter (1/1)
+[  10676ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10676ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13208ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13214ms] [harness] key Escape (1/1)
+[  13516ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13516ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16518ms] [harness] === RELOAD-1 ===
+[  16527ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16527ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16528ms] [harness] eval location.reload() => undefined
+[  16528ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16547ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16547ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16549ms] [page] load event fired
+[  16563ms] [console.log] [PERSIST] populate ok in 4ms
+[  16586ms] [console.log] [PERSIST] runtime initialized, Play enabled
+[  16630ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  18137ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  18137ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  18139ms] [console.error] 
+[  18140ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  18141ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  18141ms] [console.log] 
+[  18268ms] [console.log] [L] ENCODING latin1
+[  18272ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18288ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18290ms] [console.error] TODO: glShadeModel
+[  18293ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8123/armagetronad-yieldfix.js
+[  18300ms] [harness] click #start: clicked
+[  29339ms] [harness] key Enter (1/1)
+[  31679ms] [harness] key Down (1/1)
+[  33189ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  33191ms] [console.log] [L] TEAM_CREATED web_user
+[  33191ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  33193ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  33195ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  33196ms] [console.log] [L] NEW_ROUND 2026-08-31 14:50:22 UTC+0200
+[  33218ms] [console.log] [L] TEAM_CREATED ai_team
+[  33218ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  33219ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  33219ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  33221ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  33237ms] [harness] key Enter (1/1)
+[  33238ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  33238ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  33238ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  33498ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8123/favicon.ico
+[  33538ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[  39684ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  39730ms] [console.log] [L] DEATH_FRAG web_user excel
+[  39732ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  41332ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  45403ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  45404ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  45404ms] [console.log] [L] NEW_ROUND 2026-08-31 14:50:34 UTC+0200
+[  45407ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  45407ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  45463ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  51939ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  53503ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  54646ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/kcontrol/01-hud-up.png
+[  54646ms] [harness] === ARM-LIGHT-RAF-SAMPLER ===
+[  54648ms] [harness] eval (()=>{const cv=document.getElementById('canvas');const HR={x:0,y:700,w:1024,h:68},WR={x:380,y:130,w:300,h:60};const oh=document.createElement('canvas');oh.width=HR.w;oh.height=HR.h;const ch=oh.getContext('2d',{willReadFrequently:true});const ow=document.createElement('canvas');ow.width=WR.w;ow.height=WR.h;const cw=ow.getContext('2d',{willReadFrequently:true});const S={ticks:[],fin:0,finTotal:0,glerr:0,run:true,t0:performance.now(),HR:HR,shots:[]};window.__K=S;const buf=new Uint8Array(HR.w*HR.h);const patch=(C)=>{if(!C||!C.prototype||!C.prototype.finish)return;const o=C.prototype.finish;C.prototype.finish=function(){S.fin++;S.finTotal++;return o.apply(this,arguments);};};patch(window.WebGLRenderingContext);patch(window.WebGL2RenderingContext);const loop=(ts)=>{if(!S.run)return;const f=S.fin;S.fin=0;ch.drawImage(cv,HR.x,HR.y,HR.w,HR.h,0,0,HR.w,HR.h);const d=ch.getImageData(0,0,HR.w,HR.h).data;let h=0;for(let i=0,o=0;i<HR.w*HR.h;i++,o+=4){const l=(d[o]*77+d[o+1]*151+d[o+2]*28)>>8;buf[i]=l;if(l>170)h++;}cw.drawImage(cv,WR.x,WR.y,WR.w,WR.h,0,0,WR.w,WR.h);const e=cw.getImageData(0,0,WR.w,WR.h).data;let w=0;for(let o=0;o<WR.w*WR.h*4;o+=4){if(((e[o]*77+e[o+1]*151+e[o+2]*28)>>8)>60)w++;}S.ticks.push([Math.round(ts),h,w,f]);if(S.ticks.length>200){const r=S.ticks.slice(-400).map(x=>x[1]).sort((a,b)=>a-b);const med=r[r.length>>1];if(med>=120&&h<=0.15*med&&w>=1500&&S.shots.length<3)S.shots.push({t:Math.round(ts),hud:h,world:w,fin:f,med:med,img:buf.slice()});}requestAnimationFrame(loop);};requestAnimationFrame(loop);return 'K probe armed (rAF only, light)'})() => "K probe armed (rAF only, light)"
+[  57572ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  57573ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  57573ms] [console.log] [L] NEW_ROUND 2026-08-31 14:50:46 UTC+0200
+[  64104ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  65685ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  68649ms] [harness] === TEN-TURNS ===
+[  68682ms] [harness] key Left (1/1)
+[  69708ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
+[  69917ms] [harness] key Right (1/1)
+[  71158ms] [harness] key Left (1/1)
+[  72398ms] [harness] key Right (1/1)
+[  73633ms] [harness] key Left (1/1)
+[  74868ms] [harness] key Right (1/1)
+[  76102ms] [harness] key Left (1/1)
+[  77338ms] [harness] key Right (1/1)
+[  77809ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  77810ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  77810ms] [console.log] [L] NEW_ROUND 2026-08-31 14:51:06 UTC+0200
+[  77811ms] [console.log] [L] NEW_MATCH 2026-08-31 14:51:06 UTC+0200
+[  78576ms] [harness] key Left (1/1)
+[  79815ms] [harness] key Right (1/1)
+[  84341ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  85889ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  89960ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  89960ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  89961ms] [console.log] [L] NEW_ROUND 2026-08-31 14:51:19 UTC+0200
+[  95142ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/kcontrol/02-late.png
+[  95145ms] [harness] eval (()=>{const S=window.__K;const T=S.ticks;const n=T.length;if(n<50)return 'few '+n;const q=(a,p)=>{const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.round(p*(s.length-1)))]};const dur=(T[n-1][0]-T[0][0])/1000;const hud=T.map(x=>x[1]),wo=T.map(x=>x[2]),fin=T.map(x=>x[3]);const wmed=q(wo,0.5);const live=T.filter(x=>x[2]>=0.7*wmed);const lh=live.map(x=>x[1]);const lmed=q(lh,0.5);const gone=live.filter(x=>x[1]<=0.15*lmed);const part=live.filter(x=>x[1]<=0.5*lmed);let runs=0,inrun=false;const runlens=[];let cur=0;for(const t of live){const g=t[1]<=0.15*lmed;if(g){cur++;inrun=true;}else{if(inrun){runs++;runlens.push(cur);cur=0;inrun=false;}}}if(inrun){runs++;runlens.push(cur);}return JSON.stringify({seconds:Math.round(dur*10)/10,raf_ticks:n,raf_hz:Math.round(n/dur*10)/10,game_swaps:S.finTotal,game_fps:Math.round(S.finTotal/dur*10)/10,swaps_per_tick_p50:q(fin,0.5),swaps_per_tick_zero:fin.filter(x=>x===0).length,world_med:wmed,ticks_world_up:live.length,hud_med:lmed,hud_p01:q(lh,0.01),hud_p05:q(lh,0.05),hud_p10:q(lh,0.1),hud_p25:q(lh,0.25),HUD_GONE_ticks:gone.length,HUD_GONE_pct:Math.round(gone.length/live.length*1000)/10,HUD_HALF_OR_LESS_ticks:part.length,HUD_HALF_pct:Math.round(part.length/live.length*1000)/10,gone_runs:runs,gone_run_len_max:runlens.length?Math.max.apply(null,runlens):0,gone_run_len_p50:runlens.length?q(runlens,0.5):0,saved:S.shots.length})})() => "{\"seconds\":40.5,\"raf_ticks\":2429,\"raf_hz\":60,\"game_swaps\":2427,\"game_fps\":60,\"swaps_per_tick_p50\":1,\"swaps_per_tick_zero\":250,\"world_med\":1367,\"ticks_world_up\":1838,\"hud_med\":883,\"hud_p01\":0,\"hud_p05\":0,\"hud_p10\":0,\"hud_p25\":841,\"HUD_GONE_ticks\":271,\"HUD_GONE_pct\":14.7,\"HUD_HALF_OR_LESS_ticks\":271,\"HUD_HALF_pct\":14.7,\"gone_runs\":3,\"gone_run_len_max\":91,\"gone_run_len_p50\":90,\"saved\":0}"
+[  95148ms] [harness] eval (()=>{const S=window.__K;const R=S.HR;const old=document.getElementById('__ov');if(old)old.remove();const div=document.createElement('div');div.id='__ov';div.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;background:#101010;z-index:999999;color:#eee;font:12px monospace;padding:4px;overflow:hidden';if(!S.shots.length){div.textContent='rAF SAMPLER: no compositor tick showed the world drawn with the HUD gone.';document.body.appendChild(div);return 'overlay empty';}for(const e of S.shots){const t=document.createElement('div');t.textContent='COMPOSITE t='+e.t+'ms  hud_bright='+e.hud+' (running median '+e.med+')  world_bright='+e.world+'  game_swaps_since_previous_tick='+e.fin;div.appendChild(t);const c=document.createElement('canvas');c.width=R.w;c.height=R.h;c.style.cssText='display:block;width:1008px;height:67px;image-rendering:pixelated;border:1px solid #4a4;margin-bottom:6px';const x=c.getContext('2d');const im=x.createImageData(R.w,R.h);for(let i=0,o=0;i<R.w*R.h;i++,o+=4){const v=e.img[i];im.data[o]=v;im.data[o+1]=v;im.data[o+2]=v;im.data[o+3]=255;}x.putImageData(im,0,0);div.appendChild(c);}document.body.appendChild(div);return 'overlay rows='+S.shots.length})() => "overlay empty"
+[  96009ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/kcontrol/03-composites-without-hud.png

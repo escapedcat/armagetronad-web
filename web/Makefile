@@ -510,6 +510,40 @@ web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2
 .PHONY: client-control
 client-control: data web/dist-m1/armagetronad-nomenusave.html
 
+# ---- M5 Task 4c: the CONTROL client for the HUD-flicker diagnosis ----------
+#
+#   source deps/emsdk/emsdk_env.sh
+#   make -f web/Makefile client client-yieldprobe -j8
+#
+# Same shape and same reason as client-control above: a second complete page,
+# armagetronad-yieldfix.html, differing from the shipped client in exactly one
+# preprocessor symbol. AA_WEB_YIELD_AFTER_PERFRAME moves rSysDep::SwapGL()'s
+# emscripten_sleep(0) from the top of the function to just after
+# rPerFrameTask::DoPerFrameTasks() -- i.e. from BEFORE the overlay layer is
+# drawn to AFTER it. The shipped placement lets the browser composite a frame
+# that has the world in it and not the HUD, which is the flicker; the control
+# is what turns "that is the cause" from an argument into a measurement.
+#
+# NOT part of `client` and not a default goal: it doubles the link time and
+# writes ~5 MB of artefacts that only the evidence run wants.
+YIELDPROBE_OBJS := $(filter-out $(CLIENT_OBJDIR)/render/rSysdep.o,$(CLIENT_OBJS)) \
+                   $(CLIENT_OBJDIR)/render/rSysdep-yieldfix.o
+
+# Its own object path, for the reason spelled out above eWebPersist-nomenusave.o.
+$(CLIENT_OBJDIR)/render/rSysdep-yieldfix.o: src/render/rSysdep.cpp web/Makefile
+	@mkdir -p $(dir $@)
+	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_YIELD_AFTER_PERFRAME -c $< -o $@
+
+web/dist-m1/armagetronad-yieldfix.html: $(YIELDPROBE_OBJS) $(LIBXML2)/lib/libxml2.a \
+                                web/shell.html web/webdefaults/autoexec.cfg \
+                                language/languages.txt config/aiplayers.cfg \
+                                resource/included/.mapversion
+	@mkdir -p web/dist-m1
+	$(EMXX) $(YIELDPROBE_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+
+.PHONY: client-yieldprobe
+client-yieldprobe: data web/dist-m1/armagetronad-yieldfix.html
+
 # ---- M4 Task 3: the CONTROL client that still overrides the player ---------
 #
 #   source deps/emsdk/emsdk_env.sh
