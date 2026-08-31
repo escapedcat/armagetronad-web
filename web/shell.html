@@ -32,6 +32,15 @@
     body { margin:0; background:#111; color:#eee;
            font:14px/1.4 system-ui, sans-serif; }
     #canvas { display:block; margin:0 auto; background:#000; }
+    /* The canvas takes focus so it can receive keys, and the browser then draws
+       its focus ring around the entire play area. Removing a focus indicator is
+       normally an accessibility regression, and it is not one here: the canvas
+       is tabindex="-1", so it is NOT in the tab order -- it is focused
+       programmatically, and nothing else on the page is focusable during play.
+       The ring therefore conveys no navigational information; it just frames
+       the game. Do not "restore" this without also giving the page something
+       to tab between. */
+    #canvas:focus, #canvas:focus-visible { outline: none; }
     #overlay { position:fixed; inset:0; display:grid; place-content:center;
                gap:1rem; text-align:center; background:#111; }
     #start[disabled] { opacity:.5; }
