@@ -29,30 +29,64 @@
   <meta charset="utf-8">
   <title>Armagetron Advanced</title>
   <style>
-    body { margin:0; background:#111; color:#eee;
+    html, body { height:100%; }
+    /* Centred with flexbox, and the page never scrolls: the canvas is sized
+       from the display now (see the sizing block in the script below), so on a
+       screen taller or wider than the browser window the default static layout
+       would put the play area half off-screen behind a scrollbar. */
+    body { margin:0; height:100%; overflow:hidden; background:#111; color:#eee;
+           display:flex; align-items:center; justify-content:center;
            font:14px/1.4 system-ui, sans-serif; }
-    #canvas { display:block; margin:0 auto; background:#000; }
+    /* max-width/max-height AND NOT width/height, AND NOT object-fit -- this is
+       load-bearing for the mouse. A replaced element under both max-* rules is
+       scaled down preserving its intrinsic ratio (the canvas's width/height
+       attributes), so the element's border box ends up exactly equal to the
+       drawn image. Emscripten's Browser.calculateMouseCoords scales a pointer
+       event by canvas.width / getBoundingClientRect().width, so an element box
+       that matches the image gives correct in-game coordinates. Sizing the
+       element to 100%/100% and letterboxing with object-fit would look
+       identical and put every mouse coordinate out by the size of the bars.
+       These are stylesheet rules rather than an inline style attribute on
+       purpose too: Browser.updateCanvasDimensions() calls
+       canvas.style.removeProperty('width'/'height') on every SDL_SetVideoMode,
+       which clears inline style and cannot touch a rule. */
+    #canvas { display:block; max-width:100%; max-height:100%; background:#000; }
     /* The canvas takes focus so it can receive keys, and the browser then draws
        its focus ring around the entire play area. Removing a focus indicator is
        normally an accessibility regression, and it is not one here: the canvas
        is tabindex="-1", so it is NOT in the tab order -- it is focused
-       programmatically, and nothing else on the page is focusable during play.
-       The ring therefore conveys no navigational information; it just frames
-       the game. Do not "restore" this without also giving the page something
-       to tab between. */
+       programmatically. The one other focusable thing on the page, the
+       fullscreen button, keeps its own ring and is reachable with Tab, so the
+       page does have something to tab between and this ring still conveys no
+       navigational information; it just frames the game. Do not "restore" it
+       without a reason that survives that sentence. */
     #canvas:focus, #canvas:focus-visible { outline: none; }
     #overlay { position:fixed; inset:0; display:grid; place-content:center;
                gap:1rem; text-align:center; background:#111; }
-    #start[disabled] { opacity:.5; }
     #status.error { color:#f77; max-width:32rem; }
+    /* Deliberately faint until pointed at: it sits over the top-right corner of
+       the play area for the whole session, because the player may want
+       fullscreen at any point and not only before the game starts. */
+    #fullscreen { position:fixed; top:.5rem; right:.5rem; z-index:10;
+                  opacity:.3; transition:opacity .15s;
+                  font:inherit; padding:.25rem .6rem; border-radius:.25rem;
+                  border:1px solid #555; background:#222; color:#eee;
+                  cursor:pointer; }
+    #fullscreen:hover, #fullscreen:focus-visible { opacity:1; }
   </style>
 </head>
 <body>
 
+  <!--
+    The loading indicator, and ONLY that. It is removed the moment the runtime
+    is ready and main() is called; there is no button and nothing to click.
+    Module.setStatus writes the download progress into #status, which is worth
+    keeping: the .wasm and the preloaded .data are ~5 MB together and on a cold
+    cache the page would otherwise be a black rectangle for several seconds.
+  -->
   <div id="overlay">
     <h1>Armagetron Advanced</h1>
     <p id="status">Loading&hellip;</p>
-    <button id="start" disabled>Play</button>
   </div>
   <!--
     The width/height attributes are load-bearing, not decoration. The game's
@@ -64,14 +98,28 @@
     given straight back onto the same canvas. So the canvas's size is both the
     question and the answer: with no attributes here the canvas is HTML's
     default 300x150 and the game faithfully runs at 300x150.
+
+    THESE TWO NUMBERS ARE NOW THE FALLBACK, NOT THE ANSWER. The script below
+    overwrites them from window.screen before the game boots, which is the
+    whole mechanism behind "high resolution": there is no runtime resize and no
+    sr_ReinitDisplay call anywhere in it. 1024x768 is what a browser with no
+    usable window.screen -- or a throw anywhere in that block -- still gets,
+    which is the size every gate before M5 ran at.
   -->
   <canvas id="canvas" width="1024" height="768"
           tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
 
+  <!--
+    The fullscreen control. type="button" matters: this element is not in a
+    form, but a bare <button> defaults to type="submit" and a future wrapper
+    would then reload the page on every click.
+  -->
+  <button id="fullscreen" type="button" aria-label="Toggle fullscreen">Fullscreen</button>
+
   <script>
     const statusEl  = document.getElementById('status');
-    const startEl   = document.getElementById('start');
     const overlayEl = document.getElementById('overlay');
+    const fullEl    = document.getElementById('fullscreen');
 
     // Both the .wasm and the .data package are fetched from inside
     // armagetronad.js with plain fetch()/XHR calls that are never awaited
@@ -91,11 +139,10 @@
       if (document.body.contains(overlayEl)) {
         statusEl.textContent = text;
         statusEl.classList.add('error');
-        startEl.disabled = true;
       } else {
-        // The overlay was already removed by a successful Play click, so
-        // failure happened after the game was already running -- put the
-        // message somewhere visible instead of silently doing nothing.
+        // The overlay was already removed by a successful start, so failure
+        // happened after the game was already running -- put the message
+        // somewhere visible instead of silently doing nothing.
         const banner = document.createElement('div');
         banner.textContent = text;
         banner.style.cssText =
@@ -152,6 +199,96 @@
       );
     })();
 
+    // ---- M5: the canvas is sized from the DISPLAY, before the game boots --
+    //
+    // WHY THIS IS THE WHOLE FIX. The comment on the <canvas> above spells out
+    // the mechanism: the game's default video mode is ArmageTron_Desktop, so
+    // it asks SDL for the desktop size, and Emscripten answers that question
+    // with canvas.width/canvas.height. Setting those here -- before
+    // armagetronad.js is even fetched, and therefore long before main() calls
+    // SDL_SetVideoMode -- makes the game INITIALISE at this resolution. There
+    // is no resize, no second SDL_SetVideoMode and no sr_ReinitDisplay
+    // involved, which is deliberate: the in-game resolution menu is a
+    // separate, diagnosed problem (docs/evidence/m5-defect-a-resolution) and
+    // this path does not touch it.
+    //
+    // WHY window.screen AND NOT window.innerWidth/innerHeight. innerWidth is
+    // the browser window, which the player is about to make fullscreen; sizing
+    // to it would mean the backing store is smaller than the screen exactly
+    // when it matters most, and the picture would be upscaled in fullscreen.
+    // screen.width/height is the display, so the fullscreen case is native and
+    // the windowed case is a clean downscale of a buffer that is at least as
+    // large as the window.
+    //
+    // WHY devicePixelRatio IS DELIBERATELY NOT APPLIED. It is the obvious
+    // thing to reach for and it is wrong here, for a measured reason. This
+    // machine's display is 3360x1890 CSS px at dpr 2, i.e. 6720x3780 device
+    // px: 25.4 megapixels against the 0.79 the port used to run at, a 32x
+    // increase in fill. The port is fill-bound, not geometry-bound, and it is
+    // capped at MAX_FPS 60 with a measured minimum of 52 fps at 1024x768 --
+    // there is nowhere near 32x of headroom in that. CSS pixels are the
+    // resolution a display "is" for layout purposes and the canvas is scaled
+    // to fit anyway, so nothing about the picture requires a 1:1 map to
+    // physical pixels. If a future device profile makes dpr worth spending,
+    // measure it the way MAX_CANVAS_PIXELS below was measured; do not assume.
+    //
+    // THE CAP IS MEASURED, NOT GUESSED. See docs/evidence/m5-startup/ for the
+    // frame-rate sweep that chose it and the numbers at each step. It is
+    // applied by AREA with the display's aspect ratio preserved, because the
+    // aspect ratio is what the game builds its projection from -- clamping
+    // width and height independently would distort it on a display whose
+    // shape is not the cap's.
+    //
+    // window.AA_CANVAS_SIZE IS A MEASUREMENT HOOK AND NOTHING ELSE. Nothing in
+    // the shipped page defines it. docs/evidence/m5-startup's generator writes
+    // control pages by injecting one <script> that sets it immediately after
+    // <body>, which is how the sweep holds everything except the resolution
+    // constant. Keep it: without it a resolution measurement has to be a
+    // rebuild, and a rebuild is not the same binary.
+    const MAX_CANVAS_PIXELS = 1920 * 1080;
+    (() => {
+      const canvas = document.getElementById('canvas');
+      try {
+        const forced = window.AA_CANVAS_SIZE;
+        if (Array.isArray(forced) && forced.length === 2 &&
+            forced[0] > 0 && forced[1] > 0) {
+          canvas.width  = Math.round(forced[0]);
+          canvas.height = Math.round(forced[1]);
+          console.log('[DISPLAY] AA_CANVAS_SIZE override -> canvas ' +
+                      canvas.width + 'x' + canvas.height);
+          return;
+        }
+        const scr = window.screen;
+        let w = Math.floor((scr && scr.width)  || 0);
+        let h = Math.floor((scr && scr.height) || 0);
+        if (!(w > 0 && h > 0)) {
+          console.log('[DISPLAY] no usable window.screen, keeping canvas ' +
+                      canvas.width + 'x' + canvas.height);
+          return;
+        }
+        const px = w * h;
+        let capped = false;
+        if (px > MAX_CANVAS_PIXELS) {
+          const k = Math.sqrt(MAX_CANVAS_PIXELS / px);
+          w = Math.max(1, Math.round(w * k));
+          h = Math.max(1, Math.round(h * k));
+          capped = true;
+        }
+        canvas.width  = w;
+        canvas.height = h;
+        console.log('[DISPLAY] screen ' + scr.width + 'x' + scr.height +
+                    ' dpr ' + (window.devicePixelRatio || 1) +
+                    ' -> canvas ' + w + 'x' + h +
+                    (capped ? ' (capped at ' + MAX_CANVAS_PIXELS + ' px)' : ''));
+      } catch (e) {
+        // Falling back to the attributes on the element is a working game at
+        // 1024x768, so this must never be allowed to escape and turn into
+        // showFailure's red banner over a page that never starts.
+        console.log('[DISPLAY] sizing failed, keeping canvas ' +
+                    canvas.width + 'x' + canvas.height + ': ' + e);
+      }
+    })();
+
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
@@ -195,29 +332,23 @@
       // addRunDependency is what makes that unrepresentable rather than
       // merely avoided. Emscripten's run() calls preRun() and then awaits
       // resolveRunDependencies() before it reaches initRuntime,
-      // onRuntimeInitialized (which is what enables the Play button) and
-      // callMain. So the button cannot even be clicked until the populate has
-      // finished -- and callMain's own first assertion is
-      // `runDependencies == 0` ("cannot call main when async dependencies
-      // remain"), so a future edit that breaks this ordering aborts loudly
-      // instead of silently reading an empty filesystem.
+      // onRuntimeInitialized -- which is where this page now calls main() --
+      // and callMain's own first assertion is `runDependencies == 0` ("cannot
+      // call main when async dependencies remain"), so a future edit that
+      // breaks this ordering aborts loudly instead of silently reading an
+      // empty filesystem.
       //
-      // Doing it here rather than with an `await` inside the Play handler is
-      // deliberate for one more reason: the handler stays SYNCHRONOUS, so
-      // callMain still runs in the same task as the click.
+      // M5 REMOVED THE PLAY BUTTON AND THAT DOES NOT WEAKEN ANY OF THIS. The
+      // ordering guarantee above is a property of the run dependency, not of
+      // the click: it held before the button existed to be clicked and it
+      // holds now that main() is called from onRuntimeInitialized, because
+      // both are downstream of resolveRunDependencies().
       //
-      // Be careful how strongly that is stated. Chrome and Firefox gate Web
-      // Audio autoplay on STICKY activation -- set by the click, not consumed
-      // by it, and it does not expire -- so an `await` here would very likely
-      // still be allowed to start audio in both. (WebKit is the engine that
-      // wants the gesture to still be executing, and it is a declared
-      // non-target.) The defensible form of the argument is narrower and does
-      // not depend on any autoplay rule: an `await` would change the exact
-      // timing relationship between the click, callMain and SDL_OpenAudio
-      // that M3's transcripts measured, and nothing in M4 re-establishes it.
-      // The two reasons above -- the stronger guarantee and the assert -- are
-      // the load-bearing ones; this is only the reason not to spend a
-      // re-measurement of M3 to buy nothing.
+      // preRun MUST NOT become async for a different reason, still true: an
+      // `await` here would move callMain out of the runtime's own startup task
+      // and change the exact timing relationship between boot, callMain and
+      // SDL_OpenAudio that M3's transcripts measured, and nothing since
+      // re-establishes it.
       //
       // preRun MUST be an array: the file packager appends its own callback
       // with Module['preRun'].push(...), which a bare function would break.
@@ -280,10 +411,31 @@
           release();
         }
       }],
-      // callMain is invoked from the button below, not automatically -- the
-      // button itself matters starting M3: browsers require a user gesture
-      // before audio can start, so waiting for a click costs nothing now and
-      // is already in place when sound lands.
+      // noInitialRun + an explicit callMain from onRuntimeInitialized, rather
+      // than letting the runtime auto-run. Two reasons, neither of them the
+      // one that used to be written here.
+      //
+      //   1. The page has work to do in the same task as the start: remove the
+      //      loading overlay, focus the canvas so the menu receives keys, and
+      //      arm the persistence backstop. run()'s auto-run path gives no hook
+      //      between initRuntime and callMain to do any of it.
+      //   2. Auto-run calls callMain(programArgs), and Module.arguments would
+      //      then be the array the runtime unshifts argv[0] onto in place. The
+      //      .slice() at the call site below is what keeps that from mutating
+      //      the page's own configuration.
+      //
+      // THE OLD REASON WAS WRONG AND IS WORTH NAMING SO IT DOES NOT COME BACK.
+      // It said a click was needed because "browsers require a user gesture
+      // before audio can start". Emscripten already handles that without one:
+      // $autoResumeAudioContext (libcore.js) registers one-shot keydown,
+      // mousedown and touchstart listeners on BOTH document and the canvas and
+      // resumes a suspended context, and libsdl.js wires it into
+      // SDL_OpenAudio. The player has to press a key to steer and the game
+      // boots into menus that need Enter and the arrow keys, so the gesture
+      // arrives within seconds of the page loading no matter what. M3's audio
+      // gate is the check on that claim, not this comment: its A11 asserts
+      // every AudioContext state seen in the measured window is 'running', and
+      // its A7c asserts the menus before round 1 are exactly silent.
       noInitialRun: true,
       setStatus: (text) => { statusEl.textContent = text || 'Ready'; },
       print:    (text) => console.log(text),
@@ -293,18 +445,51 @@
       // why this alone is not enough to catch a missing .wasm/.data file.
       onAbort:  (what) => showFailure(String(what)),
       onRuntimeInitialized: () => {
-        statusEl.textContent = 'Ready';
-        startEl.disabled = false;
         // This line exists to make the preRun ordering above CHECKABLE rather
-        // than merely asserted. It is the exact moment the Play button becomes
-        // clickable, i.e. the earliest moment main() can start, so a
+        // than merely asserted. It is the exact moment main() can start, so a
         // transcript in which it follows "[PERSIST] populate ok" is evidence
         // that the populate completed first. Delete the run dependency and
         // the two lines swap order deterministically -- which is how
         // docs/evidence/m4-persist demonstrates that this check can fail.
-        console.log('[PERSIST] runtime initialized, Play enabled');
+        console.log('[PERSIST] runtime initialized, starting the game');
+        startGame();
       }
     };
+
+    // THE START. Called from onRuntimeInitialized above and from nowhere else;
+    // it is idempotent anyway, because callMain twice is an abort.
+    //
+    // [BOOT] autostart IS THE HARNESS'S SYNCHRONISATION POINT, and it replaces
+    // `click:#start`. Every gate in web/tools/*.steps used to drive the page by
+    // clicking the button and every committed transcript recorded a
+    // "[harness] click #start" line; with the button gone those scripts would
+    // certify a page that does not exist. They now wait for this line instead
+    // -- which is strictly better evidence, because it is printed by the PAGE
+    // at the moment main() is entered rather than by the driver at the moment
+    // it asked. It is printed BEFORE callMain, not after: callMain does not
+    // return until the first emscripten_sleep unwinds the stack, so a line
+    // after it would be timestamped a frame late and, on a build that hangs in
+    // static initialisation, never at all.
+    let gameStarted = false;
+    function startGame() {
+      if (gameStarted) return;
+      gameStarted = true;             // also arms the backstop below
+      overlayEl.remove();
+      Module.canvas.focus();          // so the menu receives key events
+      console.log('[BOOT] autostart: calling main');
+      // .slice() matters: callMain(args) unshifts argv[0] onto whatever
+      // array it's given, mutating it in place, so passing Module.arguments
+      // directly would grow that same array by one on every call.
+      // Calling callMain() with no argument is NOT the fix, despite
+      // looking like the obvious one: callMain's own default parameter is
+      // `args = []` (confirmed against the built armagetronad.js), not
+      // Module['arguments'] -- only the runtime's own internal auto-run
+      // path defaults to that (a separate `run(args = programArgs)`, which
+      // noInitialRun skips entirely). Calling callMain() bare would launch
+      // main() with none of --datadir/--userdatadir/--userconfigdir.
+      // A copy is both non-mutating and correct.
+      Module.callMain(Module.arguments.slice());
+    }
 
     // ---- M4 task 2: the unload/visibility BACKSTOP -----------------------
     //
@@ -357,13 +542,17 @@
     // without any unload event at all. That reasoning is REASONED, NOT
     // MEASURED here; treat it as the weaker of the two claims on this page.
     //
-    // THE GUARD IS NOT DEFENSIVENESS. Before the Play click, Module's export
+    // THE GUARD IS NOT DEFENSIVENESS. Before main() starts, Module's export
     // getters are makeInvalidEarlyAccess stubs whose body is an abort(), and
     // `typeof` reports them as functions -- so a bare feature test would pass
     // and then take the runtime down. And main() is what tells tDirectories
     // where --userdatadir is, so a save before it would write to the wrong
-    // path.
-    let gameStarted = false;
+    // path. The window in which that matters got SHORTER when M5 removed the
+    // Play button -- it is now boot time rather than however long the page sat
+    // waiting for a click -- but it did not close: the .wasm still has to be
+    // fetched and instantiated, and a visibilitychange in that window is a
+    // perfectly ordinary thing for a player opening the page in a background
+    // tab to produce.
     const persistBackstop = (why) => {
       if (!gameStarted) return;
       // aa_web_save_config MUST NOT YIELD -- see the long warning on it in
@@ -383,23 +572,46 @@
     });
     window.addEventListener('beforeunload', () => persistBackstop('beforeunload'));
 
-    startEl.addEventListener('click', () => {
-      overlayEl.remove();
-      gameStarted = true;             // arms the backstop above
-      Module.canvas.focus();          // so the menu receives key events
-      // .slice() matters: callMain(args) unshifts argv[0] onto whatever
-      // array it's given, mutating it in place, so passing Module.arguments
-      // directly would grow that same array by one on every call (harmless
-      // here since the button is gone after one click, but wrong to write).
-      // Calling callMain() with no argument is NOT the fix, despite
-      // looking like the obvious one: callMain's own default parameter is
-      // `args = []` (confirmed against the built armagetronad.js), not
-      // Module['arguments'] -- only the runtime's own internal auto-run
-      // path defaults to that (a separate `run(args = programArgs)`, which
-      // noInitialRun skips entirely). Calling callMain() bare would launch
-      // main() with none of --datadir/--userdatadir/--userconfigdir.
-      // A copy is both non-mutating and correct.
-      Module.callMain(Module.arguments.slice());
+    // ---- M5: the fullscreen control --------------------------------------
+    //
+    // WHY document.documentElement AND NOT THE CANVAS, AND NOT
+    // Module.requestFullscreen. Emscripten's own Browser.requestFullscreen
+    // wraps the canvas in a freshly created <div> and makes THAT the
+    // fullscreen root -- and Browser.updateCanvasDimensions then has a branch,
+    // `getFullscreenElement() === canvas.parentNode`, that rewrites
+    // canvas.style width/height with !important on every subsequent
+    // SDL_SetVideoMode. Going fullscreen on the root element leaves the
+    // canvas's parent alone, so that branch never fires, the stylesheet rules
+    // above stay in charge of the presentation, and the element box keeps
+    // matching the drawn image (which is what keeps the mouse coordinates
+    // right -- see the #canvas rule).
+    //
+    // The backing store is NOT changed by going fullscreen. It was already
+    // sized from the display at boot, so fullscreen is the case it was sized
+    // FOR: the picture is 1:1 with the screen there, and merely downscaled in
+    // a window. If MAX_CANVAS_PIXELS capped it, that cap applies in both.
+    //
+    // REFOCUSING THE CANVAS IS NOT COSMETIC. A <button> keeps keyboard focus
+    // after it is clicked, and this one is the only focusable element on the
+    // page besides the canvas; without the refocus, every subsequent keystroke
+    // goes to the button (and Space or Enter re-triggers it) instead of
+    // steering the cycle.
+    const syncFullscreenLabel = () => {
+      fullEl.textContent = document.fullscreenElement ? 'Exit fullscreen'
+                                                      : 'Fullscreen';
+    };
+    document.addEventListener('fullscreenchange', syncFullscreenLabel);
+    fullEl.addEventListener('click', () => {
+      try {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.documentElement.requestFullscreen();
+      } catch (e) {
+        // requestFullscreen rejects on a page that is not allowed it (an
+        // iframe without allowfullscreen, a browser that refuses); a failed
+        // fullscreen must not become a red banner over a running game.
+        console.log('[DISPLAY] fullscreen request failed: ' + e);
+      }
+      if (gameStarted) Module.canvas.focus();
     });
   </script>
 
