@@ -517,7 +517,19 @@
         // the two lines swap order deterministically -- which is how
         // docs/evidence/m4-persist demonstrates that this check can fail.
         console.log('[PERSIST] runtime initialized, starting the game');
-        startGame();
+        let manual = false;
+        try {
+          manual = new URLSearchParams(location.search).get('autostart') === '0';
+        } catch (e) { /* a browser without URLSearchParams just autostarts */ }
+        if (manual) {
+          // Deliberately NOT spelled '[BOOT] autostart ...': gates match that
+          // string to find the moment main() ran, and a suppression line
+          // containing it as a substring made M4's P14 read the hold as the
+          // start. Measured -- it did.
+          console.log('[BOOT] main() HELD by ?autostart=0, waiting for AA_START()');
+        } else {
+          startGame();
+        }
       }
     };
 
@@ -535,6 +547,31 @@
     // return until the first emscripten_sleep unwinds the stack, so a line
     // after it would be timestamped a frame late and, on a build that hangs in
     // static initialisation, never at all.
+    //
+    // ?autostart=0 IS A HARNESS HOOK AND NOTHING ELSE, and it exists because
+    // removing the button removed a state four M4 checks measure. Those checks
+    // are about the window between "the runtime is ready" and "main() has run":
+    // P5 asserts /persist is EMPTY before the game runs, P7 that the FIRST
+    // IndexedDB persist was the game's own and not the gate's sentinel write,
+    // P11 that boot 2 read back boot 1's user.cfg content hash rather than one
+    // boot 2 had already overwritten, and P14 that boot 2's payloads were read
+    // before boot 2 could have saved. With main() called from
+    // onRuntimeInitialized there is no such window, and all four fail
+    // structurally -- measured, not predicted: they did fail, on the first
+    // re-recording after the button came out.
+    //
+    // WHY A QUERY PARAMETER AND NOT A CONTROL PAGE. The alternative was a
+    // generated armagetronad-manualstart.html with the flag injected, in the
+    // style of docs/evidence/m5-startup's resolution pages. That would have put
+    // the M4 gate back to certifying a page that is not the one the Demo
+    // serves, which is precisely the failure mode this task exists to clean up.
+    // A query string keeps the gate on the shipped artefact, and it survives
+    // the `location.reload()` those gates do in the middle without the harness
+    // having to re-apply it.
+    //
+    // THE COST, STATED: a visitor who types ?autostart=0 gets a page that loads
+    // and then sits there. It is a demo, the parameter is not linked from
+    // anywhere, and window.AA_START() starts it. That is the whole surface.
     let gameStarted = false;
     function startGame() {
       if (gameStarted) return;
@@ -555,6 +592,9 @@
       // A copy is both non-mutating and correct.
       Module.callMain(Module.arguments.slice());
     }
+    // Named on window so a harness can call it after ?autostart=0. Nothing in
+    // the shipped flow uses it.
+    window.AA_START = startGame;
 
     // ---- M4 task 2: the unload/visibility BACKSTOP -----------------------
     //

@@ -77,7 +77,7 @@
 
 wait:6000
 eval:(()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})()
-click:#start
+until:1:120000:[BOOT] autostart
 wait:5000
 mark:should-be-the-language-menu
 shot:01-language-menu

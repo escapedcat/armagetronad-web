@@ -38,7 +38,7 @@
 
 until:1:90000:[PERSIST] populate ok
 wait:1000
-click:#start
+until:1:120000:[BOOT] autostart
 wait:9000
 shot:01-language-menu
 key:Enter

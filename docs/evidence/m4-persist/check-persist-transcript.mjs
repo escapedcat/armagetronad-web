@@ -36,7 +36,7 @@
 // indistinguishable from success. web/shell.html holds an Emscripten run
 // dependency across the populate, which is why "[PERSIST] populate ok" must
 // precede "[PERSIST] runtime initialized" -- the latter being the exact moment
-// the Play button becomes clickable, i.e. the earliest moment main() can run.
+// main() is called, i.e. the earliest moment main() can run.
 //
 // HOW EACH CHECK IS SHOWN TO BE ABLE TO FAIL. An assertion never seen to fail
 // is not evidence. Three committed control runs cover the load-bearing ones:
@@ -231,10 +231,37 @@ check(!!b2 && b2.o.user_cfg?.present === true && !!b1post
   'boot 2 read user.cfg back at the SAME byte count'
   + (b2 && b1post ? ` (${b1post.o.user_cfg.bytes} -> ${b2.o.user_cfg.bytes})` : ''));
 
+// P11 IS KNOWN TO FAIL AGAINST ANY BUILD SINCE M4 TASK 2, AND THAT IS NOT A
+// PERSISTENCE FAILURE. It compares the hash sampled in boot 1 against what boot
+// 2 reads back. Between those two moments boot 1 unloads, and M4 task 2's
+// unload backstop (web/shell.html, `persistBackstop`) calls
+// _aa_web_save_config() -- so what boot 2 reads is boot 1's user.cfg written
+// LATER than the sample, same 21950 bytes, different content.
+//
+// The committed docs/evidence/m4-persist/chrome-console.log passes P11 because
+// it was recorded during M4 task 1, BEFORE task 2 added that backstop: it
+// contains zero [PERSISTBACKSTOP] and zero [PERSISTSAVE] lines, while every
+// re-recording since contains "[PERSISTSAVE] js-backstop n=1" and
+// "[PERSISTBACKSTOP] beforeunload". So this is a gate that has certified a page
+// that stopped existing inside its own milestone -- the same defect class M5
+// task 2 found in M4's other gate -- and M5 task 5 is reporting it rather than
+// silently rewriting the check to pass, because deciding what P11 should mean
+// now is a judgement about the claim, not about the code.
+//
+// THE MILESTONE CLAIM DOES NOT REST ON P11. P10 (same byte count), P12 (the
+// sentinel nonce, which the game cannot regenerate) and P13 (IndexedDB holds
+// both files) carry it, and all three are unaffected by a later write.
+const backstopped = lines.some((l) => l.includes('[PERSISTBACKSTOP] beforeunload'));
 check(!!b2 && !!b1post && b2.o.user_cfg?.hash !== null
       && b2.o.user_cfg?.hash === b1post.o.user_cfg?.hash, 'P11',
   'boot 2 read user.cfg back with the SAME content hash'
   + (b2 && b1post ? ` (${b1post.o.user_cfg?.hash} -> ${b2.o.user_cfg?.hash})` : ''));
+if (backstopped) {
+  note('P11 above: this transcript contains "[PERSISTBACKSTOP] beforeunload", so boot 1 '
+     + 'rewrote user.cfg during unload, AFTER the hash was sampled. A P11 failure here is '
+     + 'that write, not a persistence failure -- see the comment above this check. A '
+     + 'transcript without that line (M4 task 1 vintage) is the only kind P11 can pass.');
+}
 
 // The nonce is the check that cannot be satisfied by a coincidence: it did not
 // exist anywhere until boot 1 minted it.
@@ -249,14 +276,21 @@ check(!!b2idb && b2idb.o.absent === false
   'IndexedDB still holds both files when boot 2 reads it directly'
   + (b2idb ? ` (${b2idb.o.count} keys)` : ' (payload missing)'));
 
-// Boot 2 must have READ before it could have WRITTEN. The gate clicks Play in
-// boot 2 only after the two payloads above, so if that ordering were ever
+// Boot 2 must have READ before it could have WRITTEN. The gate reads the two
+// payloads above before boot 2's main() runs, so if that ordering were ever
 // reversed the round-trip checks could be satisfied by boot 2's own save.
-const clicks = lines.map((l, i) => [i, l]).filter(([, l]) => l.includes('[harness] click #start'));
-const boot2Click = clicks.find(([i]) => inBoot2(i));
-check(!!b2 && !!b2idb && (!boot2Click || (b2.i < boot2Click[0] && b2idb.i < boot2Click[0])), 'P14',
-  'boot 2 was measured BEFORE it clicked Play, so its own save cannot explain the result'
-  + (boot2Click ? ` (payloads at ${b2?.i}/${b2idb?.i}, click at ${boot2Click[0]})` : ' (boot 2 never clicked Play)'));
+//
+// THE MARKER IS THE PAGE'S, NOT THE HARNESS'S, and that is an improvement M5
+// task 5 made rather than a rename it was forced into. This used to look for
+// "[harness] click #start", the driver's record of having asked; it now looks
+// for "[BOOT] autostart", which web/shell.html prints on the line before it
+// calls main(). The old marker said when the DRIVER acted, this one says when
+// the GAME started -- which is the event P14 is actually about.
+const starts = lines.map((l, i) => [i, l]).filter(([, l]) => l.includes('[BOOT] autostart'));
+const boot2Start = starts.find(([i]) => inBoot2(i));
+check(!!b2 && !!b2idb && (!boot2Start || (b2.i < boot2Start[0] && b2idb.i < boot2Start[0])), 'P14',
+  'boot 2 was measured BEFORE its main() started, so its own save cannot explain the result'
+  + (boot2Start ? ` (payloads at ${b2?.i}/${b2idb?.i}, start at ${boot2Start[0]})` : ' (boot 2 never started)'));
 
 // ------------------------------------------------------------ hygiene
 const bad = [];

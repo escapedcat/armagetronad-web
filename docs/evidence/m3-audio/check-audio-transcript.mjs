@@ -211,7 +211,7 @@ if (!dev || !D.spec) {
 
 // -------------------------------- A3: the window starts at a real user gesture
 // This is the landmine M3 task 2 measured and the reason the gate is windowed
-// at all. `click:#start` goes through Runtime.evaluate / script.evaluate, which
+// at all. The old `click:#start` step went through Runtime.evaluate / script.evaluate, which
 // is NOT a user gesture, so the AudioContext stays suspended after the device
 // opens. In Firefox that produced a 6064 ms gap in pushAudio (8491 -> 14555 ms)
 // with no starvation warning, because a suspended context's clock does not
