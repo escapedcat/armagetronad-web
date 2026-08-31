@@ -1,0 +1,82 @@
+# DEFECT A control: pick 1024x768 -- the size the canvas ALREADY is -- and Apply.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+click:#start
+wait:9000
+key:Enter
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2500
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+wait:3000
+mark:RELOAD-1
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+wait:1500
+eval:(()=>{const cv=document.getElementById('canvas');const S={last:cv.width+'x'+cv.height,changes:[]};window.__A=S;setInterval(()=>{const s=cv.width+'x'+cv.height;if(s!==S.last){console.log('[RES] canvas-changed '+S.last+' -> '+s);S.changes.push([S.last,s,performance.now()]);S.last=s;}},40);S.dump=(p)=>{const g=cv.getContext('webgl')||cv.getContext('webgl2');console.log('[RES] '+JSON.stringify({phase:p,w:cv.width,h:cv.height,cw:cv.clientWidth,ch:cv.clientHeight,changes:S.changes.length,lost:g?g.isContextLost():'nogl'}));return p};return 'probe armed'})()
+click:#start
+wait:10000
+key:Down:2
+wait:900
+key:Enter
+wait:1800
+key:Enter
+wait:1800
+key:Enter
+wait:2500
+shot:07-screen-mode
+key:Down
+wait:1200
+mark:PICK-1024x768-THE-SIZE-IT-ALREADY-IS
+key:Left:20
+wait:1500
+key:Right:6
+wait:1500
+shot:10-now-1024x768
+eval:window.__A.dump('chosen-1024x768-menu-open')
+key:Up:3
+wait:1500
+shot:11-cursor-on-apply-changes
+mark:PRESS-ENTER-ON-APPLY-CHANGES
+key:Enter
+shot:12-apply+0
+shot:13-apply+1
+wait:1500
+shot:15-apply-after-1.5s
+eval:window.__A.dump('after-apply-1024x768')
+wait:2500
+shot:16-apply-after-4s
+eval:window.__A.dump('after-apply-1024x768-4s')
+# ---- now the same menu, but a size that IS different: 800x600 ----
+mark:NOW-PICK-800x600-IN-THE-SAME-SESSION
+key:Down:3
+wait:1200
+shot:17-cursor-back-on-resolution
+key:Left:20
+wait:1500
+key:Right:5
+wait:1500
+shot:18-now-800x600
+key:Up:3
+wait:1500
+shot:19-cursor-on-apply-again
+key:Enter
+shot:20-apply2+0
+wait:1500
+shot:21-apply2-after-1.5s
+eval:window.__A.dump('after-apply-800x600')
+mark:BACK-TO-MAIN-MENU-AND-PLAY
+key:Escape
+wait:1500
+key:Escape
+wait:1500
+key:Escape
+wait:2000
+key:Up:2
+wait:1200
+shot:22-cursor-on-play-game
+key:Enter
+until:1:90000:[L] NEW_ROUND
+wait:6000
+shot:23-playing-at-800x600
+eval:window.__A.dump('playing-at-800x600')
