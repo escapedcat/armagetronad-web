@@ -16,7 +16,7 @@ the assert and takes the size win. That claim is not argued here; it is fired.
 | **§ 10 bug present** | `cell-bug-assert` — **aborts** | `cell-bug-noassert` — **no abort, renders wrong** |
 | **bug absent** (M5 task 1's fix) | `cell-fix-assert-SHIPPED` — clean, **this is what ships** | `cell-fix-noassert` — clean |
 
-All four cells are real links of the same 101 objects, driven through the
+All four cells are real links of the same 102 objects, driven through the
 identical script (`web/tools/viewport-menu-gate.steps`, task 1's committed
 gate) in Chrome 152 headed against `python3 -m http.server 8000 --directory
 web/dist-m1`.

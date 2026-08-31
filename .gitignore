@@ -128,6 +128,10 @@ web/build-m0
 web/dist-m0
 web/build-m1
 web/dist-m1
+# M5 task 2's -fexceptions measurement builds a second, throwaway set of
+# client objects here so it cannot disturb web/build-m1. See
+# docs/evidence/m5-o2-assertions/measure-fexceptions-cost.sh.
+web/build-m1-noexc
 web/node_modules
 # Scratch space for planning/recon notes — never part of the port.
 .superpowers/

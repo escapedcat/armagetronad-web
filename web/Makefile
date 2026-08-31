@@ -53,8 +53,22 @@ INCLUDES  := -I src/emscripten \
 # It is not free, and the cost carries into every later build. Rebuilding all
 # 100 translation units with EXCEPTIONS empty and nothing else changed produces
 # a 1,661,113-byte wasm; with -fexceptions it is 2,488,298 (+827,185 bytes,
-# ~+50%; the .js glue adds a further +25,151). That is the single largest known
-# line item in PLAN.md's M5 size budget.
+# ~+50%; the .js glue adds a further +25,151).
+#
+# THAT NUMBER IS THIS BUILD'S -- the DEDICATED one, which has no Asyncify -- and
+# it must not be quoted at the client. Exceptions and Asyncify multiply, because
+# ASYNCIFY=1 instruments the unwinder along with everything else. Measured at M5
+# task 2 by recompiling all 102 CLIENT translation units with EXCEPTIONS empty
+# and relinking (docs/evidence/m5-o2-assertions/measure-fexceptions-cost.sh):
+#
+#                          without -fexceptions   with        delta
+#   dedicated (this)              1,661,113    2,488,298   + 827,185  (+49.8%)
+#   client, pre-M5-task-2 link    6,477,276    8,879,522   +2,402,246 (+37.1%)
+#   client, shipped -O2 link      3,100,006    4,331,138   +1,231,132 (+39.7%)
+#
+# PLAN.md quoted +827,185 in three places as if it were the client's; all three
+# are now annotated there rather than replaced, because the figure is real, it
+# is just the wrong build's.
 EXCEPTIONS := -fexceptions
 
 # Shared by every variant compiled from this file (M0 dedicated, M1 client, and
@@ -184,8 +198,10 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 # (src/render/rSysdep.cpp); Asyncify is the machinery that makes that call able
 # to return.
 #
-# It is not free, and M5's size budget needs the number. Relinking the same 101
-# objects with and without these two flags:
+# It is not free, and M5's size budget needs the number. Relinking the same
+# objects with and without these two flags (101 of them when this was measured
+# at M2 -- the client links 102 today, since M4 added eWebPersist.o; the delta
+# below was re-measured at M5 recon as +5,893,427 / +197.4% and agrees):
 #     without   2,982,495 bytes wasm      584,996 bytes js
 #     with      8,871,099 bytes wasm      625,787 bytes js
 #     delta    +5,888,604 bytes (+197%)   +40,791 bytes (+7%)
