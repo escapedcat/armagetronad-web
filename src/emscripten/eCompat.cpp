@@ -239,7 +239,10 @@ void GLAPIENTRY glTexCoord3fv( const GLfloat * v )
 // is (-s.eye, -u.eye, +f.eye).
 //
 // glMultMatrixf is a real implementation, checked rather than assumed --
-// contrast glTexCoord3f above, which is declared and defined as an abort().
+// contrast EMSCRIPTEN's glTexCoord3f, which it declares and defines as an
+// abort() -- see the glTexCoord3fv shim above for why that one cannot be
+// forwarded to. glTexCoord3f is not defined in this file; naming it as though
+// it were "above" was a citation to a symbol that is not here.
 // grep `glMultMatrixf:` in libglemu.js: it calls
 // mat4.multiply(GLImmediate.matrix[current], m) with no third argument, and
 // mat4.multiply(a, b) with dest omitted computes a*b into a. That is GL's
@@ -251,7 +254,14 @@ void GLAPIENTRY glTexCoord3fv( const GLfloat * v )
 // matrix is multiplied into a live projection: loading identity would discard
 // the frustum, and a zeroed row would collapse the frame to a line and blank
 // the screen. This shim leaves the current matrix untouched instead, so a
-// degenerate frame is the previous frame's orientation rather than a black one.
+// degenerate frame is an UNROTATED view for that frame rather than a black one.
+// Not "the previous frame's orientation" -- an earlier draft of this comment
+// said that and it was wrong in the one direction that misleads. eCamera::Render
+// does glLoadIdentity() and reloads glFrustum every single frame before calling
+// here, so at the moment of this early return the matrix holds THIS frame's
+// frustum and no view rotation at all: a degenerate frame renders top-down,
+// which is precisely the bug this shim exists to fix. Read a stuck-looking
+// camera as degenerate input reaching here, not as the shim failing to run.
 // Neither case is reachable from eCamera::Render as written -- glancedir is a
 // unit direction and `up` has a hard +1 z component -- so this is a guard
 // against a future caller, not a workaround for the present one.
@@ -264,7 +274,13 @@ void GLAPIENTRY gluLookAt( GLdouble eyeX, GLdouble eyeY, GLdouble eyeZ,
     GLdouble fy = centerY - eyeY;
     GLdouble fz = centerZ - eyeZ;
     GLdouble flen = sqrt( fx*fx + fy*fy + fz*fz );
-    if ( flen == 0.0 )
+    // Spelled as !( flen > 0.0 ) rather than flen == 0.0 so that NaN is caught
+    // too: a NaN compares false against everything, so an equality test would
+    // let it through and propagate a NaN matrix into GL_PROJECTION. Unreachable
+    // from the one live caller, and self-healing because the projection is
+    // reloaded every frame -- but the comment above promises a guard, and this
+    // is what makes that promise true at zero cost.
+    if ( !( flen > 0.0 ) )
         return;                       // eye == center; see DEGENERATE INPUTS
     fx /= flen; fy /= flen; fz /= flen;
 

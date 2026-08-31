@@ -340,7 +340,7 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 # module (after the Asyncify transform, which is where nearly all of this
 # binary's bulk comes from) and minifies the JS glue. Compile-time -O2 has
 # been on since M0 and does not reach either of those. The wire total for the
-# four served files drops from 4,097,666 to 1,707,658 bytes gzipped -- 3.91 MiB
+# four served files drops from 4,097,666 to 1,707,754 bytes gzipped -- 3.91 MiB
 # to 1.63 MiB, a 58% cut -- against PLAN.md's 15 MB budget.
 #
 # -sASSERTIONS=1 is NOT redundant and NOT optional. Emscripten's default for

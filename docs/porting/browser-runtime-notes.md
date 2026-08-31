@@ -11,7 +11,7 @@ the GL traps, and the camera. Each section is named so a comment can cite it.
 **If you are about to touch rendering, read §10 first.** "One `glBegin`/`glEnd`
 block, one vertex format" is the largest single class of defect this port has
 found. It has two shapes and **one of them is silent** — it draws wrong geometry
-without asserting. **As of M5 task 1 there is no known unfixed instance**: the
+without asserting. **As of M5 task 1 there is no known instance that **misbehaves today** — but two blocks in this class are still left open and are safe only by what happens to follow them (`gWallRim_helper` and `gNetPlayerWall::RenderNormal`, both in `gWall.cpp`, both in the leak list below; the second is annotated *fragile*). Stating that as "no unfixed instance" would be the same shape of claim as the "latent" miscall this section warns about one heading down**: the
 last one, in `rViewportConfiguration::DemonstrateViewport`, was fixed after being
 carried as "still latent" by four consecutive milestones — it was in fact a live
 crash four keystrokes from the main menu. Read §10's "How this one got miscalled

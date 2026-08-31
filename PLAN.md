@@ -157,7 +157,34 @@ Estimates are relative effort, not calendar commitments.
 >
 >    **Record the refuted hypothesis beside it so nobody re-proposes it: M3's per-callback mixing *cost* is not the cause.** A silent bundle removes exactly that work — `eWavData::Mix` returns before its resampling loop when no WAV decodes — on a **byte-identical wasm**, and still scores 1/3. Read that narrowly: it refutes the mixing *cost*, not "audio work on the main thread", because the callback, the open device and `pushAudio` all still run at 21.5/s under that lesion. And it is one run against a stochastic phenomenon, so it excludes a *deterministic* mechanism only. Characterising this properly needs a **rebuilt M2-era client** to compare against, which M3 did not do — the M2-era 3/3 is itself a single run from committed evidence. This sits on M4/M5 rather than M4 alone; whoever gets to it first should do the rebuild before theorising.
 
-**M5 — Validation, perf, packaging, launch (3–5 days).** Native-recorded demo playback in wasm build (best-effort diagnostic, not a gate); profile Asyncify overhead; try JSPI variant (check browser support at that time); brotli/size work (~8–15 MB wasm expected — note M0 measured `-fexceptions` alone at **+827 KB uncompressed, ~+50% of that build's wasm**, and it is mandatory in every configuration; JSPI would be the way to trade it back for `-fwasm-exceptions`) *(**Both halves of this line were overtaken at M5.** The +827 KB is M0's **dedicated** measurement and under-reports the client by 1.58 MB — see the corrected figures under M1 above. And the size work did not need brotli or JSPI: M5 task 2 put `-O2 -sASSERTIONS=1` on the client link and the wire total went **4,097,666 → 1,707,658 bytes gzipped**, 3.91 MiB → 1.63 MiB against a 15 MB budget. M5 recon dropped brotli — GitHub Pages serves gzip only, brotli buys 379 KB and needs a Cloudflare-proxied custom domain — and declined JSPI: it links and is 80% smaller, but Emscripten 6.0.8's `libsdl.js` pushes to `Asyncify.sleepCallbacks` under `#if ASYNCIFY` while that array exists only under `#if ASYNCIFY == 1`, which kills M3's audio.)*; confirm network menus fail gracefully. **Deploy: local clean `make` + `npx gh-pages` to GitHub Pages; verify wire size/compression on the live CDN (fallback: Cloudflare Pages); the Demo is publicly reachable.** CI automation deferred until the local build-and-deploy loop is proven.
+**M5 — Validation, perf, packaging, launch (3–5 days).** Native-recorded demo playback in wasm build (best-effort diagnostic, not a gate); profile Asyncify overhead; try JSPI variant (check browser support at that time); brotli/size work (~8–15 MB wasm expected — note M0 measured `-fexceptions` alone at **+827 KB uncompressed, ~+50% of that build's wasm**, and it is mandatory in every configuration; JSPI would be the way to trade it back for `-fwasm-exceptions`) *(**Both halves of this line were overtaken at M5.** The +827 KB is M0's **dedicated** measurement and under-reports the client by 1.58 MB — see the corrected figures under M1 above. And the size work did not need brotli or JSPI: M5 task 2 put `-O2 -sASSERTIONS=1` on the client link and the wire total went **4,097,666 → 1,707,754 bytes gzipped**, 3.91 MiB → 1.63 MiB against a 15 MB budget. M5 recon dropped brotli — GitHub Pages serves gzip only, brotli buys 379 KB and needs a Cloudflare-proxied custom domain — and declined JSPI: it links and is 80% smaller, but Emscripten 6.0.8's `libsdl.js` pushes to `Asyncify.sleepCallbacks` under `#if ASYNCIFY` while that array exists only under `#if ASYNCIFY == 1`, which kills M3's audio.)*; confirm network menus fail gracefully. **Deploy: local clean `make` + `npx gh-pages` to GitHub Pages; verify wire size/compression on the live CDN (fallback: Cloudflare Pages); the Demo is publicly reachable.** CI automation deferred until the local build-and-deploy loop is proven.
+
+> **M5 OPEN ITEM — one gate is knowingly red, and task 6 owns it.**
+>
+> **`m4-persist` check P11 fails on a fresh run** against the current build:
+> `boot 2 read user.cfg back with the SAME content hash (a579ed3e → 12176ddd)`.
+> M4's *committed* transcript still exits 0, so this was invisible until M5 task 2
+> re-ran every gate in a browser.
+>
+> **It is not `-O2`.** A control link with both flags removed reproduces M5 task 1's
+> client byte-for-byte and fails identically, twice. **Cause (mechanism plus
+> evidence, not a lesion):** M4 task 2 added the `beforeunload` backstop — a second
+> `user.cfg` writer that runs after `sr_LoadDefaultConfig()` — and M4 task 1's gate
+> was never re-run afterwards. The three-line diff matches exactly the three
+> settings that function raises, and the M4 transcript contains no `backstop` line
+> while today's contains `[PERSISTSAVE] js-backstop n=1`. **Not a product defect**:
+> the divergence converges upward and M4's own persistence-milestone gate is 21/21
+> in both engines. P11's hash-equality is simply now too strict for the shipped
+> behaviour.
+>
+> **The process finding is the durable part: a gate not re-run after a later task
+> changes its subject is stale evidence.** M4's committed transcript certifies a
+> build that stopped existing later in the same milestone. **Fix shape:** either
+> re-scope P11 to tolerate the backstop's write, or re-record M4's transcript
+> against a current build — the second is cheaper and keeps the check strict.
+> Recorded here rather than only in an evidence README, because a known-red gate
+> filed where nobody re-reads it is exactly how `rViewport.cpp` survived four
+> milestones.
 
 > **Inherited from M4 — three byte-level traps, then the untested paths.**
 >
