@@ -30,6 +30,8 @@
 //   --port N           devtools port (default 9222)
 //   --width/--height N canvas/window size (default 1024x768)
 //   --chrome PATH      Chrome binary (default: macOS Google Chrome)
+//   --chrome-flag F    extra Chrome command-line flag; repeatable. Used by the
+//                      https rig for --ignore-certificate-errors-spki-list.
 //   --keep-open        leave the browser running after the script (for poking at it)
 //
 // STEPS (executed in order)
@@ -99,6 +101,7 @@ function parseArgs(argv) {
     height: 768,
     chrome: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     keepOpen: false,
+    chromeFlags: [],
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -115,6 +118,12 @@ function parseArgs(argv) {
     else if (a === '--width') opt.width = Number(next());
     else if (a === '--height') opt.height = Number(next());
     else if (a === '--chrome') opt.chrome = next();
+    // Repeatable escape hatch for a flag this harness has no opinion about.
+    // Added by M5 task 3 for --ignore-certificate-errors-spki-list, which the
+    // https rig needs and no gate before it did. Deliberately NOT a way to
+    // change the flags above: those are argued for in the comment at the
+    // spawn site and a run that overrides them is not the same measurement.
+    else if (a === '--chrome-flag') opt.chromeFlags.push(next());
     else throw new Error(`unknown option: ${a}`);
   }
   return opt;
@@ -226,6 +235,7 @@ async function main() {
     '--disable-backgrounding-occluded-windows',
     '--mute-audio',
     '--hide-scrollbars',
+    ...opt.chromeFlags,
     'about:blank',
   ];
   if (!opt.headed) {

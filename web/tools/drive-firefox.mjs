@@ -23,7 +23,8 @@
 //        --script 'wait:2000,click:#start,wait:20000,shot:booted'
 //
 // Options and steps are the same as drive-browser.mjs (--url, --out, --script,
-// --script-file, --headed, --port, --width, --height, --firefox, --keep-open;
+// --script-file, --headed, --port, --width, --height, --firefox, --keep-open,
+// plus --accept-insecure-certs for the https rig;
 // steps wait/shot/click/key/eval/mark/until). Unlike Chrome, key events work in
 // headless mode here, so --headed is only needed to watch it happen.
 //
@@ -66,6 +67,7 @@ function parseArgs(argv) {
     height: 768,
     firefox: '/Applications/Firefox.app/Contents/MacOS/firefox',
     keepOpen: false,
+    acceptInsecureCerts: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -80,6 +82,15 @@ function parseArgs(argv) {
     else if (a === '--width') opt.width = Number(next());
     else if (a === '--height') opt.height = Number(next());
     else if (a === '--firefox') opt.firefox = next();
+    // Added by M5 task 3 so the https rig's self-signed certificate can be
+    // used. This is the WebDriver capability, not a pref: Firefox exposes no
+    // equivalent of Chrome's --ignore-certificate-errors-spki-list, so the
+    // page is loaded with a certificate OVERRIDE rather than with a
+    // certificate the browser considers valid. That difference is confined to
+    // the connection; the mixed-content rules that this flag exists to
+    // measure key off the document's https: scheme. Say so in any evidence
+    // that uses it rather than implying a clean cert.
+    else if (a === '--accept-insecure-certs') opt.acceptInsecureCerts = true;
     else throw new Error(`unknown option: ${a}`);
   }
   return opt;
@@ -195,7 +206,11 @@ async function main() {
 
   try {
     bidi = await BiDi.connect(`ws://127.0.0.1:${opt.port}/session`);
-    const session = await bidi.send('session.new', { capabilities: {} });
+    const session = await bidi.send('session.new', {
+      capabilities: opt.acceptInsecureCerts
+        ? { alwaysMatch: { acceptInsecureCerts: true } }
+        : {},
+    });
     const tree = await bidi.send('browsingContext.getTree', {});
     const context = tree.contexts[0].context;
 
