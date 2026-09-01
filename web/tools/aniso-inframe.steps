@@ -1,0 +1,79 @@
+# M5: anisotropic filtering, flipped mid-run, with the run's own noise floor.
+#
+#   node docs/evidence/m5-texture/make-texprobe-page.mjs
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --width 1280 --height 800 \
+#        --out docs/evidence/m5-texture/inframe \
+#        --url http://localhost:8000/aniso-off.html \
+#        --script-file web/tools/aniso-inframe.steps
+#   kill %1
+#   node docs/evidence/m5-texture/extract-dumps.mjs docs/evidence/m5-texture/inframe
+#
+# WHY NOT TWO PAGES. Two runs of this game are not the same scene: the local
+# player's colour differs between runs (measured: one drew a green cycle, the
+# next a yellow one) and the cycles are never in the same place at the same
+# offset. That swamps any filtering difference. Everything here happens inside
+# ONE run instead, during the ~5 s countdown after NEW_ROUND while the cycles
+# are still stationary.
+#
+# THE SHAPE OF THE MEASUREMENT
+#
+#   crop A          aniso off
+#   wait 200 ms
+#   crop B          aniso off      -> |A-B| is the NOISE FLOOR of this run
+#   setAniso(16)
+#   wait 200 ms
+#   crop C          aniso on       -> |B-C| is the signal
+#
+# A signal that does not clear the noise floor is not a signal. Recording the
+# floor in the same run, from the same crops, at the same spacing is what makes
+# a null result here worth anything -- and a null result is a live possibility,
+# which is why it is built in rather than added afterwards if the numbers
+# disappoint.
+#
+# The page is aniso-off.html: AA_FORCE_ANISO=0, so the shim is NOT armed and
+# every texture starts at MAX_ANISOTROPY 1. setAniso does the flip explicitly.
+wait:1000
+until:1:120000:[BOOT] autostart
+eval:(()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height+' dpr '+devicePixelRatio+' window '+innerWidth+'x'+innerHeight})()
+
+wait:6000
+key:Enter
+wait:3000
+key:Escape
+wait:4000
+key:Enter
+
+until:1:60000:[L] NEW_ROUND
+mark:ROUND-1-STARTED
+# 2 s into the ~5 s countdown: the cycles are placed but not yet moving.
+wait:2000
+
+mark:CROP-A-ANISO-OFF
+eval:window.AA_GLPROBE.crop('cycle')
+eval:window.AA_GLPROBE.crop('floor_far')
+eval:window.AA_GLPROBE.crop('floor_mid')
+eval:window.AA_GLPROBE.crop('wall_left')
+wait:200
+mark:CROP-B-ANISO-OFF-NOISE-FLOOR
+eval:window.AA_GLPROBE.crop('cycle')
+eval:window.AA_GLPROBE.crop('floor_far')
+eval:window.AA_GLPROBE.crop('floor_mid')
+eval:window.AA_GLPROBE.crop('wall_left')
+
+mark:FLIPPING-ANISOTROPY-TO-16
+eval:window.AA_GLPROBE.setAniso(16)
+wait:200
+mark:CROP-C-ANISO-ON
+eval:window.AA_GLPROBE.crop('cycle')
+eval:window.AA_GLPROBE.crop('floor_far')
+eval:window.AA_GLPROBE.crop('floor_mid')
+eval:window.AA_GLPROBE.crop('wall_left')
+
+# Read back off the context that the flip actually landed.
+mark:TEXTURE-TABLE-AFTER-FLIP
+eval:JSON.stringify(window.AA_GLPROBE.summary())
+
+# And the cycle's footprint at this resolution, which is the number that decides
+# whether this report is about filtering at all.
+eval:JSON.stringify(window.AA_GLPROBE.cycleFootprint())

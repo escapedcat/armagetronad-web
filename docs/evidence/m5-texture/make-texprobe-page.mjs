@@ -197,6 +197,44 @@ window.AA_GLPROBE = { tex: [], byId: new Map(), draw: {}, ctx: null, errors: [] 
       };
     });
 
+
+    // ---- the anisotropy A/B ------------------------------------------------
+    // window.AA_FORCE_ANISO is set by ONE injected line in aniso-on.html and
+    // to 0 in aniso-off.html; the two pages are otherwise byte-identical and
+    // load the same .js/.wasm/.data. This is deliberately a JS shim and not a
+    // C++ change: it proves whether anisotropic filtering is the cause while
+    // holding the binary fixed, which a rebuild could not do. It is NOT the
+    // shape a fix would ship in -- see the report.
+    //
+    // The rule mirrors what a C++ change would have to do: raise
+    // TEXTURE_MAX_ANISOTROPY_EXT only on textures whose MIN filter is
+    // mipmapped, because anisotropic filtering samples the mip chain and a
+    // texture without one (title.jpg) must not be given it. Emscripten has
+    // already called getExtension('EXT_texture_filter_anisotropic') on this
+    // context in GL.initExtensions (libwebgl.js), so the enum is enabled and
+    // this needs no cooperation from the page.
+    var AF = Number(window.AA_FORCE_ANISO || 0);
+    if (AF > 0) {
+      var oTPi = proto.texParameteri;
+      proto.texParameteri = function (target, pname, param) {
+        var r = oTPi.apply(this, arguments);
+        try {
+          if (target === 3553 && pname === 10241 /* MIN_FILTER */ &&
+              (param === 0x2700 || param === 0x2701 || param === 0x2702 || param === 0x2703)) {
+            var ext = this.getExtension('EXT_texture_filter_anisotropic');
+            if (ext) {
+              var max = this.getParameter(0x84FF);
+              oTPi.call(this, 3553, 0x84FE, Math.min(AF, max));
+            }
+          }
+        } catch (err) { P.errors.push('aniso shim: ' + err); }
+        return r;
+      };
+      console.log('[TEXPROBE] anisotropy shim armed at ' + AF + 'x');
+    } else {
+      console.log('[TEXPROBE] anisotropy shim NOT armed (AA_FORCE_ANISO=' + AF + ')');
+    }
+
     // ---- context facts ------------------------------------------------------
     var oGet = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (type) {
@@ -331,6 +369,118 @@ window.AA_GLPROBE = { tex: [], byId: new Map(), draw: {}, ctx: null, errors: [] 
                glGetError: '0x' + err.toString(16) };
     };
 
+
+    // ---- 1:1 crops of the backing store -------------------------------------
+    // A CDP screenshot is taken at the CSS size, so at a canvas larger than the
+    // window it is a DOWNSCALE and useless for judging sharpness. These copy a
+    // rectangle of the drawing buffer at 1:1 into a 2D canvas instead. The
+    // canvas is created with preserveDrawingBuffer (web/shell.html forces it),
+    // so the pixels are there to be read between frames.
+    //
+    // Rectangles are normalised so the same names mean the same part of the
+    // frame at any resolution. 'cycle' is where the player's own machine sits a
+    // few seconds into a round under the default CAMERA_CUSTOM; 'floor_far' is
+    // the receding grid near the horizon, which is the oblique minified surface
+    // anisotropic filtering exists for and is NOT the same question as the
+    // cycle.
+    P.RECTS = {
+      cycle:     [0.42, 0.50, 0.16, 0.20],
+      floor_far: [0.30, 0.28, 0.40, 0.12],
+      floor_mid: [0.25, 0.40, 0.50, 0.16],
+      wall_left: [0.00, 0.14, 0.30, 0.12]
+    };
+    P.crop = function (name) {
+      var cv = document.getElementById('canvas');
+      var r = P.RECTS[name];
+      if (!cv || !r) return null;
+      var x = Math.round(r[0] * cv.width), y = Math.round(r[1] * cv.height);
+      var w = Math.round(r[2] * cv.width), h = Math.round(r[3] * cv.height);
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      var cx = c.getContext('2d');
+      cx.imageSmoothingEnabled = false;
+      cx.drawImage(cv, x, y, w, h, 0, 0, w, h);
+      return c.toDataURL('image/png');
+    };
+
+    // The player cycle's on-screen footprint, in pixels, measured rather than
+    // eyeballed: the tightest box around texels that differ from the black
+    // floor inside the 'cycle' rect. This is what decides whether the report is
+    // about FILTERING or about the cycle simply covering more pixels natively.
+    P.cycleFootprint = function () {
+      var cv = document.getElementById('canvas');
+      var r = P.RECTS.cycle;
+      var x = Math.round(r[0] * cv.width), y = Math.round(r[1] * cv.height);
+      var w = Math.round(r[2] * cv.width), h = Math.round(r[3] * cv.height);
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      var cx = c.getContext('2d', { willReadFrequently: true });
+      cx.drawImage(cv, x, y, w, h, 0, 0, w, h);
+      var d = cx.getImageData(0, 0, w, h).data;
+      // The floor is the dark grid; the cycle is the only saturated thing in
+      // this rect. Threshold on channel spread, which the grey grid lines have
+      // none of, rather than on brightness, which they do have.
+      var x0 = w, y0 = h, x1 = -1, y1 = -1, n = 0;
+      for (var j = 0; j < h; j++) for (var i = 0; i < w; i++) {
+        var o = (j * w + i) * 4, R = d[o], G = d[o+1], B = d[o+2];
+        var spread = Math.max(R, G, B) - Math.min(R, G, B);
+        if (spread > 40) {
+          n++;
+          if (i < x0) x0 = i; if (i > x1) x1 = i;
+          if (j < y0) y0 = j; if (j > y1) y1 = j;
+        }
+      }
+      return { canvas: cv.width + 'x' + cv.height, rect: w + 'x' + h,
+               saturated_px: n,
+               bbox: x1 < 0 ? null : (x1 - x0 + 1) + 'x' + (y1 - y0 + 1) };
+    };
+
+
+    // ---- flip anisotropy on the live textures, mid-run --------------------
+    // WHY THIS EXISTS AND THE TWO-PAGE A/B DOES NOT SUFFICE. Two separate runs
+    // of this game are not the same scene: the local player's colour is not the
+    // same from run to run, and the cycles are never in quite the same place at
+    // the same wall-clock offset. Measured: an aniso-off run and an aniso-on run
+    // drew a GREEN cycle and a YELLOW one. A pixel diff between those two is
+    // dominated by that, not by filtering, and no amount of care with the step
+    // timings fixes it.
+    //
+    // So the real experiment is within ONE run: crop, flip anisotropy on every
+    // live texture, crop again. Same colours, same positions, ~200 ms apart --
+    // and taken during the post-NEW_ROUND countdown, while the cycles are still
+    // stationary. The step script takes a THIRD crop before the flip so the
+    // run carries its own noise floor: whatever two crops 200 ms apart differ
+    // by with nothing changed is the number the flip has to beat.
+    //
+    // isTexture() is not optional: rITexture::Unload deletes textures whenever
+    // the texture mode changes, and binding a deleted one raises
+    // INVALID_OPERATION -- which is exactly the warning the first probe run put
+    // in its transcript.
+    P.setAniso = function (n) {
+      var gl = P.gl;
+      if (!gl) return 'no context';
+      var ext = gl.getExtension('EXT_texture_filter_anisotropic');
+      if (!ext) return 'EXT_texture_filter_anisotropic unavailable';
+      var max = gl.getParameter(0x84FF);
+      var want = Math.min(n, max);
+      var prev = gl.getParameter(gl.TEXTURE_BINDING_2D);
+      var touched = 0, skipped = 0, dead = 0;
+      P.tex.forEach(function (e) {
+        if (!e.obj) return;
+        if (!gl.isTexture(e.obj)) { dead++; return; }
+        gl.bindTexture(gl.TEXTURE_2D, e.obj);
+        var min = gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER);
+        if (min === 0x2700 || min === 0x2701 || min === 0x2702 || min === 0x2703) {
+          gl.texParameterf(gl.TEXTURE_2D, 0x84FE, want);
+          touched++;
+        } else skipped++;
+      });
+      gl.bindTexture(gl.TEXTURE_2D, prev);
+      return JSON.stringify({ set: want, max: max, mipmapped_touched: touched,
+                              non_mipmapped_skipped: skipped, already_deleted: dead,
+                              glGetError: '0x' + gl.getError().toString(16) });
+    };
+
     P.summary = function () {
       var out = { ctx: P.ctx, errors: P.errors, textures: [] };
       P.tex.forEach(function (e) {
@@ -351,15 +501,80 @@ window.AA_GLPROBE = { tex: [], byId: new Map(), draw: {}, ctx: null, errors: [] 
 })();
 `;
 
+
+// The anisotropy shim ON ITS OWN, with none of the probe's hooks. The image A/B
+// can afford the probe -- both sides carry it, so it cancels -- but a FRAME RATE
+// A/B cannot: the probe wraps both draw entry points, and under
+// -sLEGACY_GL_EMULATION every glBegin/glEnd pair is a draw call, so it is on the
+// hottest path in the program. These two pages exist so the frame-rate cost of
+// anisotropic filtering is measured against a page that is otherwise the
+// shipped client, not against a page carrying an instrument.
+const SHIM = `
+(function () {
+  try {
+    var AF = Number(window.AA_FORCE_ANISO || 0);
+    if (AF <= 0) { console.log('[ANISO] not armed'); return; }
+    var proto = WebGLRenderingContext.prototype;
+    var oTPi = proto.texParameteri;
+    proto.texParameteri = function (target, pname, param) {
+      var r = oTPi.apply(this, arguments);
+      if (target === 3553 && pname === 10241 &&
+          (param === 0x2700 || param === 0x2701 || param === 0x2702 || param === 0x2703)) {
+        var ext = this.getExtension('EXT_texture_filter_anisotropic');
+        if (ext) oTPi.call(this, 3553, 0x84FE, Math.min(AF, this.getParameter(0x84FF)));
+      }
+      return r;
+    };
+    console.log('[ANISO] armed at ' + AF + 'x');
+  } catch (e) { console.log('[ANISO] install failed: ' + e); }
+})();
+`;
+
 const html = readFileSync(SRC, 'utf8');
 const occurrences = html.split('<body>').length - 1;
 if (occurrences !== 1) {
   console.error(`expected exactly one <body> in ${SRC}, found ${occurrences}`);
   process.exit(1);
 }
-const inject = `<script>${PROBE}</script>`;
-const out = html.replace('<body>', `<body>${inject}`);
-if (!out.includes(inject)) { console.error('injection failed'); process.exit(1); }
-const file = join(DIST, 'texprobe.html');
-writeFileSync(file, out);
-console.log(`${file}  (${out.length - html.length} bytes injected)`);
+
+// THE A/B PAIR IS 3600x2086 BECAUSE THAT IS WHAT THIS DISPLAY ACTUALLY GETS.
+// Measured in a maximised Chrome with no CDP metrics override: CSS 1800x1169 at
+// devicePixelRatio 2, maximised inner 1800x1043, so web/shell.html's rule
+// yields 3600x2086 = 7.51 Mpx and the 3840x2160 area cap does NOT bite. The
+// probe run at the harness's default 1280x800 renders the cycle at about an
+// eighth of the pixels it really has, which is exactly the confound this pair
+// has to avoid: a screenshot taken at the wrong resolution cannot tell
+// "filtered badly" from "smaller".
+const CANVAS = [3600, 2086];
+
+const pages = [
+  ['texprobe.html',     null,   0,  PROBE],   // whatever the window gives; aniso off
+  ['aniso-off.html',    CANVAS, 0,  PROBE],   // image A/B, instrumented
+  ['aniso-on.html',     CANVAS, 16, PROBE],
+  ['fps-aniso-off.html', CANVAS, 0,  SHIM],   // frame-rate A/B, not instrumented
+  ['fps-aniso-on.html',  CANVAS, 16, SHIM],
+];
+
+for (const [name, size, af, script] of pages) {
+  const pre = (size ? `window.AA_CANVAS_SIZE=[${size[0]},${size[1]}];` : '') +
+              `window.AA_FORCE_ANISO=${af};`;
+  const inject = `<script>${pre}</script><script>${script}</script>`;
+  const out = html.replace('<body>', `<body>${inject}`);
+  if (!out.includes(inject)) { console.error(`injection failed for ${name}`); process.exit(1); }
+  const file = join(DIST, name);
+  writeFileSync(file, out);
+  console.log(`${file}  canvas=${size ? size.join('x') : 'from window'}  aniso=${af || 'off'}`);
+}
+
+// The pair must differ in EXACTLY the anisotropy number, or the A/B is not a
+// control. Asserted rather than trusted.
+for (const [off, on] of [['aniso-off.html', 'aniso-on.html'],
+                        ['fps-aniso-off.html', 'fps-aniso-on.html']]) {
+  const a = readFileSync(join(DIST, off), 'utf8');
+  const b = readFileSync(join(DIST, on), 'utf8');
+  if (a.replace('AA_FORCE_ANISO=0', 'AA_FORCE_ANISO=16') !== b) {
+    console.error(`${off} and ${on} differ in more than AA_FORCE_ANISO`);
+    process.exit(1);
+  }
+  console.log(`control check: ${off} and ${on} differ in AA_FORCE_ANISO and nothing else`);
+}

@@ -1,0 +1,61 @@
+# M5: does anisotropic filtering change what the Demo looks like?
+#
+#   node docs/evidence/m5-texture/make-texprobe-page.mjs
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   for v in off on; do
+#     node web/tools/drive-browser.mjs --headed --width 1280 --height 800 \
+#          --out docs/evidence/m5-texture/ab-$v \
+#          --url http://localhost:8000/aniso-$v.html \
+#          --script-file web/tools/aniso-ab.steps
+#   done
+#   kill %1
+#   node docs/evidence/m5-texture/extract-dumps.mjs docs/evidence/m5-texture/ab-off
+#   node docs/evidence/m5-texture/extract-dumps.mjs docs/evidence/m5-texture/ab-on
+#
+# THE PAIR IS A CONTROL. aniso-off.html and aniso-on.html are the shipped page
+# plus the same injected probe, differing in the single number AA_FORCE_ANISO;
+# make-texprobe-page.mjs asserts that and exits non-zero if it is ever untrue.
+# Same .js, same .wasm, same .data. So a difference between two runs of THIS
+# file is attributable to anisotropic filtering and to nothing else.
+#
+# --width/--height are 1280x800 and the CANVAS IS 3600x2086. That is deliberate
+# and it is why the evidence is crops rather than screenshots: the harness pins
+# deviceScaleFactor to 1, so a CDP screenshot is taken at the CSS size and would
+# be a 2.8x DOWNSCALE of the drawing buffer -- which destroys exactly the detail
+# under test. AA_GLPROBE.crop() copies a rectangle of the drawing buffer at 1:1
+# into a 2D canvas instead, so a crop pixel is a rendered pixel. 3600x2086 is
+# what this display actually produces (see make-texprobe-page.mjs).
+wait:1000
+until:1:120000:[BOOT] autostart
+eval:(()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height+' dpr '+devicePixelRatio+' window '+innerWidth+'x'+innerHeight})()
+
+wait:6000
+key:Enter
+wait:3000
+key:Escape
+wait:4000
+key:Enter
+
+until:1:60000:[L] NEW_ROUND
+mark:ROUND-1-STARTED
+# The same 5.5 s the M2 gate waits: NEW_ROUND is followed by a ~5 s countdown,
+# so this lands just as the cycles start moving and before the AI has had time
+# to make the two runs diverge. It is the most repeatable moment in a round.
+wait:5500
+
+# The measurement that decides whether this report is about FILTERING or about
+# the cycle simply covering more pixels in the maintainer's native game.
+mark:CYCLE-FOOTPRINT-FOLLOWS
+eval:JSON.stringify(window.AA_GLPROBE.cycleFootprint())
+
+mark:CROPS-FOLLOW
+eval:window.AA_GLPROBE.crop('cycle')
+eval:window.AA_GLPROBE.crop('floor_far')
+eval:window.AA_GLPROBE.crop('floor_mid')
+eval:window.AA_GLPROBE.crop('wall_left')
+
+# Proof the shim did what it says: with AA_FORCE_ANISO=16 every mipmapped
+# texture must read back MAX_ANISOTROPY 16, and with 0 every one must read back
+# 1. This is read off the context, so a shim that silently failed cannot pass.
+mark:TEXTURE-TABLE-FOLLOWS
+eval:JSON.stringify(window.AA_GLPROBE.summary())
