@@ -1,0 +1,30 @@
+source      : docs/evidence/m5-launch/wire-facts.json
+url         : https://escapedcat.github.io/armagetronad-web
+measured    : 2026-09-01T12:04:48Z
+dist        : web/dist-m1
+
+PASS  W1   the wasm's content-type is exactly "application/wasm" (got "application/wasm")
+PASS  W2   the wasm arrives gzip-encoded (content-encoding: "gzip")
+PASS  W3   the gzip body decodes to exactly the identity body (4,331,484 B, sha256 9a56e22fc1ef2b94…)
+PASS  W4   the edge really does compress a 4,331,484 B file: 1,274,267 B on the wire, 29.4% (bar: under 35%)
+PASS  W5   all 5 deployed files arrive gzip-encoded
+PASS  W6   all 5 carry "vary: Accept-Encoding"
+PASS  W7   all 5 deployed files are byte-identical to web/dist-m1 (sha256)
+PASS  W8   a first visit transfers 1,748,947 B = 1.668 MiB for the 4 game files (5,380,255 B unpacked), against PLAN.md's 15,000,000 B budget -- 8.6x under
+       via the bare Pages URL, i.e. including index.html: 1,750,214 B
+       armagetronad.html        4,395 ->     2,078  47.3%  text/html; charset=utf-8
+       armagetronad.js        357,282 ->    87,938  24.6%  application/javascript; charset=utf-8
+       armagetronad.wasm    4,331,484 -> 1,274,267  29.4%  application/wasm
+       armagetronad.data      687,094 ->   384,664  56.0%  application/octet-stream
+       index.html               2,353 ->     1,267  53.8%  text/html; charset=utf-8
+PASS  W9   a name that does not exist ("armagetronad.wasmx") answers with content-type "text/html; charset=utf-8", not "application/wasm" -- so W1 is a fact about the file, not about the host
+       its status is 404 and its body is 9,379 B; neither is asserted, because a 404 HTML error page is what a HEALTHY Pages sends too.
+PASS  W10  "Accept-Encoding: br" alone still returns identity at this size (content-encoding: (absent)) -- Pages is gzip-only
+PASS  W11  a browser's own "Accept-Encoding: gzip, deflate, br, zstd" gets gzip (got "gzip")
+PASS  W12  the bare site root answers 200 "text/html; charset=utf-8" -- a visitor who pastes the Pages URL gets a page, not GitHub's 404
+PASS  W13  all 5 files answered 200 on both the identity and the gzip fetch
+
+PASS  WZ   every declared check ran: 13 declared, 13 executed
+
+ALL CHECKS PASSED
+checker exit=0
