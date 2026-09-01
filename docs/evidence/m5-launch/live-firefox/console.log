@@ -1,0 +1,117 @@
+[   1392ms] [harness] firefox: 154.0.1 (headless=true)
+[   1392ms] [harness] navigating to https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[     29ms] [page] load event fired
+[    413ms] [console.log] [DISPLAY] viewport 1024x768 dpr 1 -> canvas 1024x768
+[    609ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    609ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    610ms] [page] load event fired
+[    631ms] [browser.error/network] 404  <- https://escapedcat.github.io/favicon.ico
+[   1020ms] [console.log] [PERSIST] populate ok in 8ms
+[   1149ms] [console.log] [PERSIST] runtime initialized, starting the game
+[   1149ms] [console.log] [BOOT] autostart: calling main
+[   1149ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1150ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1150ms] [console.error] 
+[   1150ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1150ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1150ms] [console.log] 
+[   1243ms] [console.log] [L] ENCODING latin1
+[   1246ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1344ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1372ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1374ms] [console.error] TODO: glShadeModel
+[   1615ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped
+[   8619ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => canvas 1024x768
+[   8619ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   8619ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  14620ms] [harness] === first-run-flow-language-menu ===
+[  14645ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/01-language-menu.png
+[  14660ms] [harness] key Enter (1/1)
+[  14672ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  17980ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/02-first-setup-menu.png
+[  17980ms] [harness] === escape-accepts-the-defaults-and-leaves-first-setup ===
+[  17985ms] [harness] key Escape (1/1)
+[  18002ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  22308ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/03-welcome-message.png
+[  22308ms] [harness] === enter-dismisses-the-welcome-message-and-starts-the-match ===
+[  22311ms] [harness] key Enter (1/1)
+[  22314ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  22314ms] [console.log] [L] TEAM_CREATED web_user
+[  22315ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  22316ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  22316ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  22318ms] [console.log] [L] NEW_ROUND 2026-09-01 14:09:08 UTC+0200
+[  22321ms] [console.log] [L] TEAM_CREATED ai_team
+[  22321ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  22322ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  22322ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  22323ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  22343ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  22344ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  22344ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  22612ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  22613ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  22614ms] [harness] === ROUND-1-STARTED ===
+[  28142ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/04-round1-driving-HUD-shows-enemies.png
+[  28144ms] [harness] key Left (1/1)
+[  28145ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  29675ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/05-round1-after-LEFT.png
+[  29676ms] [harness] key Right (1/1)
+[  30572ms] [console.log] [L] DEATH_FRAG web_user word
+[  30573ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  31203ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/06-round1-after-RIGHT.png
+[  31203ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
+[  32405ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  32414ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
+[  32415ms] [harness] === ROUND-1-COMPLETE ===
+[  32443ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/07-round1-ended.png
+[  32443ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  36440ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  36441ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  36441ms] [console.log] [L] NEW_ROUND 2026-09-01 14:09:23 UTC+0200
+[  36443ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  36444ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  36483ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  36483ms] [harness] === ROUND-2-STARTED ===
+[  42005ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/08-round2-driving-HUD-shows-enemies.png
+[  42011ms] [harness] key Right (1/1)
+[  43536ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/09-round2-after-RIGHT.png
+[  43538ms] [harness] key Left (1/1)
+[  44789ms] [console.log] [L] DEATH_FRAG web_user excel
+[  45121ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/10-round2-after-LEFT.png
+[  45121ms] [harness] until 2x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
+[  46554ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  46636ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  46636ms] [harness] === ROUND-2-COMPLETE ===
+[  46672ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/11-round2-ended.png
+[  46672ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 60000ms, have 2)
+[  50594ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  50594ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  50594ms] [console.log] [L] NEW_ROUND 2026-09-01 14:09:37 UTC+0200
+[  50607ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  50608ms] [harness] === ROUND-3-STARTED ===
+[  56129ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/12-round3-driving-HUD-shows-enemies.png
+[  56134ms] [harness] key Left (1/1)
+[  57659ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/13-round3-after-LEFT.png
+[  57661ms] [harness] key Left (1/1)
+[  59186ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/14-round3-after-LEFT-again.png
+[  59186ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  60060ms] [console.log] [L] DEATH_SUICIDE web_user
+[  61712ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  61713ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
+[  61713ms] [harness] === ROUND-3-COMPLETE ===
+[  61764ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/15-round3-ended.png
+[  65766ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
+[  69795ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/16-after-the-match.png
+[  69799ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => {"total_frames_sampled":4072,"rounds_started":3,"rounds_won":3,"overall":{"span_s":39.33,"frames":2348,"mean_fps":59.7,"frame_ms":{"p50":17,"p90":19,"p99":21,"max":36},"inst_fps":{"median":58.82,"p10":52.63,"p01":47.62,"min":27.78},"fps_per_second":[60,60,60,60,60,60,59,60,60,60,60,60,59,60,59,60,60,60,60,60,60,60,59,60,59,58,59,60,59,60,60,60,60,60,60,60,60,59,60],"fps_per_second_min":58,"fps_per_second_median":60},"per_round":[{"span_s":10.09,"frames":604,"mean_fps":59.88,"frame_ms":{"p50":17,"p90":19,"p99":21,"max":28},"inst_fps":{"median":58.82,"p10":52.63,"p01":47.62,"min":35.71},"fps_per_second":[60,60,60,60,60,60,59,60,60,60],"fps_per_second_min":59,"fps_per_second_median":60},{"span_s":10.05,"frames":601,"mean_fps":59.81,"frame_ms":{"p50":17,"p90":19,"p99":21,"max":25},"inst_fps":{"median":58.82,"p10":52.63,"p01":47.62,"min":40},"fps_per_second":[60,60,60,60,60,59,60,60,60,60],"fps_per_second_min":59,"fps_per_second_median":60},{"span_s":11.11,"frames":664,"mean_fps":59.76,"frame_ms":{"p50":17,"p90":19,"p99":21,"max":28},"inst_fps":{"median":58.82,"p10":52.63,"p01":47.62,"min":35.71},"fps_per_second":[60,60,60,60,60,60,60,60,60,59,60],"fps_per_second_min":59,"fps_per_second_median":60}]}
+[  69799ms] [harness] === positive-control-deliberate-webgl-warning-follows ===
+[  69812ms] [harness] eval (()=>{const c=document.createElement('canvas');const g=c.getContext('webgl');if(!g)return 'no webgl context for the control';g.hint(0x0C50,g.FASTEST);return 'deliberate bad glHint issued, gl.getError()=0x'+g.getError().toString(16)+' (0x500 == INVALID_ENUM)'})() => deliberate bad glHint issued, gl.getError()=0x500 (0x500 == INVALID_ENUM)
+[  71339ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/17-final-state.png
+[  71342ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const codes={};for(const g of S.gl)codes['0x'+g[1].toString(16)]=(codes['0x'+g[1].toString(16)]||0)+1;return JSON.stringify({glGetError_polls:S.polls,glGetError_nonzero:S.gl.length,codes:codes,first:S.gl.slice(0,5)})})() => {"glGetError_polls":138,"glGetError_nonzero":0,"codes":{},"first":[]}
+[  71342ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  71343ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 11014
+[  71343ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[  71346ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+    <anonymous> @ https://escapedcat.github.io/armagetronad-web/armagetronad.html:0
+    <anonymous> @ https://escapedcat.github.io/armagetronad-web/armagetronad.html:0
+[  73379ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-firefox/18-after-deliberate-uncaught-error.png
