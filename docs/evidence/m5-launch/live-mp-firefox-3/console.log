@@ -1,0 +1,489 @@
+[   1357ms] [harness] firefox: 154.0.1 (headless=true)
+[   1357ms] [harness] navigating to https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[     49ms] [page] load event fired
+[    384ms] [console.log] [DISPLAY] viewport 1024x768 dpr 1 -> canvas 1024x768
+[    564ms] [browser.error/network] 404  <- https://escapedcat.github.io/favicon.ico
+[    575ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    575ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    576ms] [page] load event fired
+[    577ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[    992ms] [console.log] [PERSIST] populate ok in 5ms
+[   1085ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[   1099ms] [console.log] [PERSIST] runtime initialized, starting the game
+[   1099ms] [console.log] [BOOT] autostart: calling main
+[   1099ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1099ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1100ms] [console.error] 
+[   1100ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1100ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1100ms] [console.log] 
+[   1192ms] [console.log] [L] ENCODING latin1
+[   1194ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1282ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1310ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1312ms] [console.error] TODO: glShadeModel
+[   2087ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   2088ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  11119ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/01-boot1-language-menu.png
+[  11133ms] [harness] key Enter (1/1)
+[  11159ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  14460ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/02-boot1-first-setup.png
+[  14465ms] [harness] key Escape (1/1)
+[  14498ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  14767ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14768ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17795ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/03-boot1-after-first-setup.png
+[  17795ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17804ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17805ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17805ms] [harness] eval location.reload() => undefined
+[  17805ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17880ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  17880ms] [console.log] [PERSISTBACKSTOP] visibilitychange-hidden
+[  17886ms] [console.log] [DISPLAY] viewport 1024x768 dpr 1 -> canvas 1024x768
+[  17890ms] [browser.error/network] 404  <- https://escapedcat.github.io/favicon.ico
+[  17906ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17906ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17907ms] [page] load event fired
+[  17937ms] [console.log] [PERSIST] populate ok in 2ms
+[  17955ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17956ms] [console.log] [BOOT] autostart: calling main
+[  17956ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17956ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17956ms] [console.error] 
+[  17956ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17957ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17957ms] [console.log] 
+[  18009ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  18051ms] [console.log] [L] ENCODING latin1
+[  18052ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18066ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18069ms] [console.error] TODO: glShadeModel
+[  20011ms] [harness] eval (()=>{const R=window.WebSocket;if(R.__wrapped)return 'already';const L=[];function W(u,p){L.push([Math.round(performance.now()),String(u)]);return p===undefined?new R(u):new R(u,p);}W.prototype=R.prototype;W.CONNECTING=R.CONNECTING;W.OPEN=R.OPEN;W.CLOSING=R.CLOSING;W.CLOSED=R.CLOSED;W.__wrapped=true;window.__wsLog=L;window.WebSocket=W;return 'WebSocket counter installed; page origin is '+location.protocol})() => WebSocket counter installed; page origin is https:
+[  20012ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  20012ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  32039ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/04-boot2-main-menu.png
+[  32039ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  32044ms] [harness] key Enter (1/1)
+[  34861ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/05-play-game-menu-opens-on-multiplayer.png
+[  34862ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  34864ms] [harness] key Enter (1/1)
+[  37691ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/06-network-menu-opens-on-online-multiplayer.png
+[  37692ms] [harness] eval (()=>{return 'ws attempts before the master query: '+window.__wsLog.length})() => ws attempts before the master query: 0
+[  37692ms] [harness] === ENTER-3-ONLINE-MULTIPLAYER-STARTS-THE-MASTER-QUERY ===
+[  37694ms] [harness] key Enter (1/1)
+[  37747ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  37747ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  37774ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  37774ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  38028ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  38029ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  38288ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  38289ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  38547ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  38548ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  38802ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  38803ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  39062ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  39062ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  39318ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  39318ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  39578ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  39578ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  39831ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  39832ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  40006ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/07-master-query-t02s.png
+[  40086ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  40086ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  40349ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  40349ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  40611ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  40611ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  40867ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  40867ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  41125ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  41126ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  41386ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  41387ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  41637ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  41637ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  41891ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  41892ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42144ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42145ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42400ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42401ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42659ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42660ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42725ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42726ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42729ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42729ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42734ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42734ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42739ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master4.armagetronad.net:4533/.
+
+[  42740ms] [EXCEPTION] The connection to ws://master4.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42792ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  42792ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  42818ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  42819ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  43019ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/08-master-query-t05s.png
+[  43070ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  43070ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  43324ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  43324ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  43579ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  43579ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  43830ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  43831ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  44086ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  44087ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  44342ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  44342ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  44595ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  44595ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  44860ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  44861ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  45111ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  45112ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  45369ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  45370ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  45633ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  45634ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  45891ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  45892ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  46151ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  46151ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  46404ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  46405ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  46660ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  46660ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  46912ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  46913ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47173ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47174ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47425ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47426ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47686ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47687ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47728ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47728ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47732ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47733ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47738ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47738ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47742ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master3.armagetronad.net:4533/.
+
+[  47743ms] [EXCEPTION] The connection to ws://master3.armagetronad.net:4533/ was interrupted while the page was loading.
+
+[  47800ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  47800ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  47825ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  47826ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  48033ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/09-master-query-t10s.png
+[  48084ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  48084ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  48350ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  48351ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  48600ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  48601ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  48864ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  48864ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  49119ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  49120ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  49378ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  49379ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  49637ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  49638ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  49894ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  49895ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  50155ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  50156ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  50412ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  50412ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  50668ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  50669ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  50936ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  50937ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  51188ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  51189ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  51445ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  51446ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  51697ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  51698ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  51959ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  51959ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52221ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  52222ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52483ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  52484ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52730ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  52730ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52734ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  52735ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52739ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  52740ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52745ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master2.armagetronad.org:4533/.
+
+[  52745ms] [EXCEPTION] The connection to ws://master2.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52793ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  52793ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  52823ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  52823ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  53058ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/10-master-query-t15s.png
+[  53076ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  53076ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  53330ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  53330ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  53584ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  53585ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  53839ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  53840ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  54100ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  54100ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  54347ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  54348ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  54598ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  54599ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  54861ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  54861ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  55117ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  55118ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  55376ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  55376ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  55636ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  55637ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  55892ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  55893ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  56140ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  56141ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  56396ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  56396ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  56654ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  56656ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  56905ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  56905ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  57163ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57168ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  57420ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57420ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  57675ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57675ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  57729ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57729ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  57734ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57734ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  57739ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57739ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  57744ms] [EXCEPTION] Firefox can’t establish a connection to the server at ws://master1.armagetronad.org:4533/.
+
+[  57744ms] [EXCEPTION] The connection to ws://master1.armagetronad.org:4533/ was interrupted while the page was loading.
+
+[  58078ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/11-master-query-t20s.png
+[  63098ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/12-master-query-t25s.png
+[  68117ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/13-master-query-t30s.png
+[  78135ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/14-master-query-t40s.png
+[  88159ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/15-master-query-t50s.png
+[  98179ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/16-master-query-t60s.png
+[  98180ms] [harness] eval (()=>{const L=window.__wsLog;const t=L.map(e=>e[0]);return JSON.stringify({attempts:L.length,firstMs:t[0]??null,lastMs:t[t.length-1]??null,spanMs:t.length?t[t.length-1]-t[0]:0,distinctUrls:[...new Set(L.map(e=>e[1]))].length})})() => {"attempts":99,"firstMs":19940,"lastMs":39938,"spanMs":19998,"distinctUrls":4}
+[  98181ms] [harness] eval (()=>{const c={};for(const e of window.__wsLog)c[e[1]]=(c[e[1]]||0)+1;return JSON.stringify(c)})() => {"ws://master4.armagetronad.net:4533/":25,"ws://master3.armagetronad.net:4533/":25,"ws://master2.armagetronad.org:4533/":24,"ws://master1.armagetronad.org:4533/":25}
+[  98181ms] [harness] === DISMISS-WHATEVER-IS-ON-SCREEN-AND-SEE-WHERE-WE-LAND ===
+[  98184ms] [harness] key Enter (1/1)
+[ 102512ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/17-after-first-dismiss.png
+[ 102516ms] [harness] key Enter (1/1)
+[ 106845ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-firefox-3/18-after-second-dismiss.png
+[ 106846ms] [harness] eval (()=>{return 'ws attempts total: '+window.__wsLog.length})() => ws attempts total: 99
+[ 106847ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => alive, gl err=0x0

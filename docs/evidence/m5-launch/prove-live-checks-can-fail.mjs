@@ -158,8 +158,199 @@ const jsonSuite = {
   ],
 };
 
+
+// ============================================================ the live gate
+// The multiplayer transcript is TEXT, so its mutations are line surgery rather
+// than field edits. Everything below is aimed at one predicate; where two
+// checks read the same line they read DIFFERENT substrings of it, which is why
+// none of these cases needs to declare collateral.
+const stamped = (t) => `[  12345ms] ${t}`;
+
+function mapLine(L, needle, fn) {
+  const i = L.findIndex((l) => l.includes(needle));
+  if (i < 0) throw new Error(`prover: no line containing ${needle}`);
+  L[i] = fn(L[i]);
+  return L;
+}
+function mapAll(L, needle, fn) {
+  let hit = 0;
+  const out = L.map((l) => (l.includes(needle) ? (hit++, fn(l)) : l));
+  if (!hit) throw new Error(`prover: no line containing ${needle}`);
+  return out;
+}
+function dropLines(L, needle, n) {
+  let left = n;
+  const out = L.filter((l) => !(left > 0 && l.includes(needle) && !l.includes('] [harness] ')
+                                && left--));
+  if (left > 0) throw new Error(`prover: wanted ${n} lines containing ${needle}, short by ${left}`);
+  return out;
+}
+const insert = (L, text) => { L.splice(3, 0, stamped(text)); return L; };
+// The summary eval's JSON arrives escaped in Chrome and raw in Firefox, so
+// every field edit tolerates the backslash.
+const setField = (L, field, val) =>
+  mapLine(L, 'firstMs', (l) => l.replace(
+    new RegExp('(\\\\?"' + field + '\\\\?":\\s*)\\d+'), `$1${val}`));
+
+function mpSuite(source, engine) {
+  // Chrome and Firefox describe the same event with different sentences. X3
+  // counts the clause that says the endpoint was refused; X9 counts the phrase
+  // "Mixed Content" alone, which is the phrase a naive gate would grep for and
+  // which Firefox never prints.
+  const CLAUSE = engine === 'firefox'
+    ? 'establish a connection to the server at ws://'
+    : 'this endpoint must be available over WSS';
+
+  const cases = [
+    { name: 'X1a the run was against the local rig, not the deployment',
+      expect: ['X1'],
+      why: 'this is precisely what task 3 could NOT rule out about its own numbers, and it '
+         + 'is why X1 exists: every figure in that task came from https://localhost:8443 '
+         + 'behind a self-signed certificate.',
+      apply: (L) => mapLine(L, '[harness] navigating to',
+        (l) => l.replace(/navigating to \S+/, 'navigating to https://localhost:8443/armagetronad.html')) },
+
+    { name: 'X1b the page reported itself as http:',
+      expect: ['X1'],
+      why: 'the second conjunct, and the independent one: the driver says what it was '
+         + 'TOLD to open, the page says what it actually IS.',
+      apply: (L) => mapLine(L, 'page origin is https:',
+        (l) => l.replace('page origin is https:', 'page origin is http:')) },
+
+    { name: 'X2  a consistent 19-attempt world, i.e. the http: figure',
+      expect: ['X2'],
+      why: 'mutated CONSISTENTLY -- summary, running total and browser lines all moved to '
+         + '19 -- so X3 and X6 still agree with each other and only the band check fires. '
+         + 'A lazier mutation of the one number would have knocked out three checks and '
+         + 'proven none of them.',
+      apply: (L) => {
+        const n = L.filter((l) => l.includes(CLAUSE) && !l.includes('] [harness] ')).length;
+        let out = dropLines(L, CLAUSE, n - 19);
+        out = setField(out, 'attempts', 19);
+        return mapLine(out, 'ws attempts total',
+          (l) => l.replace(/(=> "?ws attempts total: )\d+/, '$119'));
+      } },
+
+    { name: 'X3  the browser recorded five fewer events than the module made attempts',
+      expect: ['X3'],
+      apply: (L) => dropLines(L, CLAUSE, 5) },
+
+    { name: 'X4a one attempt went somewhere that is not a master server',
+      expect: ['X4'],
+      apply: (L) => mapLine(L, 'for(const e of window.__wsLog)',
+        (l) => l.replace('master1.armagetronad.org', 'evil.example.com')) },
+
+    { name: 'X4b the page saw three distinct endpoints, not four',
+      expect: ['X4'],
+      why: 'the other conjunct: the per-URL map and the distinct count are two different '
+         + 'in-page derivations and X4 asserts both.',
+      apply: (L) => setField(L, 'distinctUrls', 3) },
+
+    { name: 'X5  the attempts spanned 40 s, not the 4x5 s master timeout',
+      expect: ['X5'],
+      apply: (L) => setField(L, 'spanMs', 40000) },
+
+    { name: 'X6a five sockets were opened before the master query was ever started',
+      expect: ['X6'],
+      why: 'if the page opened ws:// sockets on its own the count would not be attributable '
+         + 'to the menu route at all.',
+      apply: (L) => mapLine(L, 'ws attempts before the master query',
+        (l) => l.replace(/(=> "?ws attempts before the master query: )\d+/, '$15')) },
+
+    { name: 'X6b seven more sockets were opened after the query finished',
+      expect: ['X6'],
+      why: 'the other conjunct, and the one that matters for the decision task 3 took: the '
+         + 'noise is acceptable BECAUSE it is bounded and stops.',
+      apply: (L) => mapLine(L, 'ws attempts total',
+        (l) => l.replace(/(=> "?ws attempts total: )(\d+)/, (_, p, d) => p + (Number(d) + 7))) },
+
+    { name: 'X7  the GL context came back with an error after the master query',
+      expect: ['X7'],
+      apply: (L) => mapLine(L, 'alive, gl err=0x0',
+        (l) => l.replace(/gl err=0x0/g, 'gl err=0x502')) },
+
+    { name: 'X8a a THIRD exception text appears',
+      expect: ['X8'],
+      why: 'this is the case that shows the rule was not loosened. Firefox logs 192-194 '
+         + '[EXCEPTION] lines on this route and every gate in this project forbids the tag; '
+         + 'X8 permits two texts by name and nothing else.',
+      apply: (L) => insert(L, '[EXCEPTION] TypeError: synthetic, injected by the prover') },
+
+    { name: 'X8b a PERMITTED text on a line that names no ws:// endpoint',
+      expect: ['X8'],
+      why: 'the second conjunct of the allowance. "was interrupted while the page was '
+         + 'loading" is an ordinary Firefox message about any request; it is waved through '
+         + 'only when the line is about a ws:// endpoint.',
+      apply: (L) => insert(L, '[EXCEPTION] The connection to https://example.com/x '
+                            + 'was interrupted while the page was loading.') },
+
+    { name: 'X8c an ordinary hazard text appears in the run',
+      expect: ['X8'],
+      apply: (L) => insert(L, '[console.error] Stack overflow (synthetic, injected by the prover)') },
+
+    engine === 'firefox'
+      ? { name: 'X9  Firefox starts printing "Mixed Content" after all',
+          expect: ['X9'],
+          why: 'X9 asserts the ABSENCE of the phrase, which is the whole trap: with no such '
+             + 'line and ~96 attempts blocked, a grep-based gate reads Firefox as not '
+             + 'blocking. Note this case flips X9 ALONE -- X3 counts a different substring '
+             + 'on purpose, so the two are independently provable.',
+          apply: (L) => insert(L, '[browser.error/security] Mixed Content: synthetic line '
+                                + 'injected by the prover') }
+      : { name: 'X9  Chrome stops naming mixed content, keeping the rest of the sentence',
+          expect: ['X9'],
+          why: 'the same substring separation seen from the other side: the per-attempt '
+             + 'clause X3 counts is untouched, so X3 still passes and only X9 fires.',
+          apply: (L) => mapAll(L, 'Mixed Content',
+            (l) => l.replace(/Mixed Content/g, 'Insecure content')) },
+
+    { name: 'X10 a wait expired instead of being satisfied',
+      expect: ['X10'],
+      apply: (L) => insert(L, '[harness] until TIMED OUT after 30000ms: saw 0x <<synthetic>>, wanted 1') },
+
+    { name: 'X11 something other than the favicon 404s',
+      expect: ['X11'],
+      apply: (L) => insert(L, '[browser.error/network] Failed to load resource: the server '
+                            + 'responded with a status of 404 (Not Found)   <- '
+                            + 'https://escapedcat.github.io/armagetronad-web/armagetronad.data') },
+  ];
+
+  return {
+    name: `the live multiplayer route, ${engine}, against the public URL`,
+    checker: join(HERE, 'check-live-multiplayer.mjs'),
+    source,
+    idRe: /^(PASS|FAIL)  (X\w+)/gm,
+    load: (p) => readFileSync(p, 'utf8').split('\n'),
+    save: (d, p) => writeFileSync(p, d.join('\n')),
+    ext: '.log',
+    // NOT a mutation: a real transcript from a real run, recorded by M5 task 3
+    // against the self-signed local rig at https://localhost:8443. It is the
+    // world X1 exists to exclude, and it exists on disk, so X1 gets a witness
+    // stronger than any line surgery.
+    realControls: engine === 'firefox'
+      ? [{ file: join(HERE, '..', 'm5-https', 'mp-https-ff', 'console.log'),
+           what: "task 3's Firefox run against the LOCAL RIG, not the deployment",
+           expect: ['X1'] }]
+      : [{ file: join(HERE, '..', 'm5-https', 'mp-https', 'console.log'),
+           what: "task 3's Chrome run against the LOCAL RIG, not the deployment",
+           expect: ['X1'] }],
+    notCoverable: [[
+      'XZ',
+      'XZ compares the ids that produced a verdict against the declared list. Every\n'
+      + '        check() in check-live-multiplayer.mjs is an unconditional top-level\n'
+      + '        statement, so no transcript can stop one running: it is a regression guard\n'
+      + '        on the checker source, not a check on the transcript.',
+    ]],
+    cases,
+  };
+}
+
 // ---------------------------------------------------------------- harness
-const SUITES = [jsonSuite];
+const SUITES = [
+  jsonSuite,
+  mpSuite(join(HERE, 'live-mp-chrome', 'console.log'), 'chrome'),
+  mpSuite(join(HERE, 'live-mp-firefox', 'console.log'), 'firefox'),
+];
 
 let bad = 0;
 let total = 0;
@@ -201,9 +392,9 @@ try {
     for (const c of s.cases) {
       total++;
       const doc = s.load(s.source);
-      c.apply(doc);
+      const out = c.apply(doc) || doc;
       const file = join(tmp, `case-${n++}${s.ext}`);
-      s.save(doc, file);
+      s.save(out, file);
       const r = runChecker(s.checker, file, s.idRe);
       const ok = r.status === 1 && same(r.failed, c.expect);
       if (!ok) bad++;
@@ -211,6 +402,17 @@ try {
       console.log(`       expected FAIL: ${c.expect.join(' ')}`
         + `   observed: ${r.failed.join(' ') || '(none)'}   exit ${r.status}`);
       if (c.why) console.log(`       ${c.why}`);
+    }
+
+    for (const rc of s.realControls || []) {
+      total++;
+      const r = runChecker(s.checker, rc.file, s.idRe);
+      const ok = r.status === 1 && same(r.failed, rc.expect);
+      if (!ok) bad++;
+      console.log(`${ok ? 'ok  ' : 'BAD '} REAL CONTROL (not a mutation): ${rc.what}`);
+      console.log(`       ${rc.file}`);
+      console.log(`       expected FAIL: ${rc.expect.join(' ')}`
+        + `   observed: ${r.failed.join(' ') || '(none)'}   exit ${r.status}`);
     }
 
     console.log('');

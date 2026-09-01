@@ -1,0 +1,34 @@
+== /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/live-mp-chrome-2/console.log
+   engine chrome Chrome/152.0.7977.65
+   url    https://escapedcat.github.io/armagetronad-web/armagetronad.html
+   195 lines, 146 of them not harness echoes
+
+PASS  X1   the transcript is a run against the public https deployment (driver: https://escapedcat.github.io/armagetronad-web/armagetronad.html; page: "WebSocket counter installed; page origin is https:")
+PASS  X2   the module made 98 ws:// connection attempts, inside the 96-100 band (4 masters x 24-25 attempts each) -- reproduced against the real deployment, which is what completes task 3
+PASS  X3   two independent counts agree: 98 from the in-page WebSocket wrapper, 98 browser lines saying "...this endpoint must be available over WSS..." from the browser
+       and the totals bracket the query: 0 attempts BEFORE the master query was started, 98 after the menu was dismissed twice
+PASS  X4   all attempts went to exactly 4 distinct ws:// master endpoints
+        24  ws://master1.armagetronad.org:4533/
+        25  ws://master2.armagetronad.org:4533/
+        24  ws://master3.armagetronad.net:4533/
+        25  ws://master4.armagetronad.net:4533/
+PASS  X5   first attempt to last spans 20.00s (band 18-22s) -- 4 masters x sn_Connect's 5s timeout, not the 26s the plan states
+PASS  X6   nothing was attempted before the master query (0) and nothing more was attempted after it (98 total vs 98 at the end of the query) -- the ~100 lines are bounded and stop when the fourth master times out
+PASS  X7   after both dismissals the canvas still has a live GL context with no error ("alive, gl err=0x0")
+PASS  X8   no forbidden text in the run, and all 0 [EXCEPTION] lines are one of the TWO permitted mixed-content texts on a ws:// endpoint
+       permitted, verbatim:
+         "...establish a connection to the server at ws://..."
+         "...was interrupted while the page was loading...."
+       The rule is NOT loosened: a third text, or either text on a line that
+       does not name a ws:// endpoint, still fails.
+note  this engine emitted no [EXCEPTION] at all. https-multiplayer.steps has no
+note    deliberate-error control, so that zero is not by itself proof the channel
+note    works -- the same driver's gameplay-gate run in this session does carry
+note    that control, and the other engine's transcript here is full of them.
+PASS  X9   Chrome names the cause in so many words: 98 lines matching /mixed content/i. This is the engine where the grep WOULD work, which is exactly why the Firefox half of this gate must not rely on it
+PASS  X10  no "until TIMED OUT" anywhere in the file (0 hits) -- the driver records this and keeps going, so it is the only sign of a wait that never came
+PASS  X11  every 404 is /favicon.ico (1 total, 0 other) -- the browser asks for it once per navigation and the deployment has none
+
+PASS  XZ   every declared check ran: 11 declared, 11 executed
+
+ALL CHECKS PASSED

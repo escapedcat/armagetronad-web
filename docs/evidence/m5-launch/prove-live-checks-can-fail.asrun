@@ -61,6 +61,124 @@ ok   W13b a file 404s on the identity fetch
 
 Cases declaring collateral (expect > 1 id): 1 of 19.
 
+==== the live multiplayer route, chrome, against the public URL
+checker : /Users/user/data/src/armagetronad-web/.worktrees/m5-launch/docs/evidence/m5-launch/check-live-multiplayer.mjs
+source  : /Users/user/data/src/armagetronad-web/.worktrees/m5-launch/docs/evidence/m5-launch/live-mp-chrome/console.log
+
+ok   baseline: the unmutated input passes (exit 0, 12 checks, 0 failures)
+
+ok   X1a the run was against the local rig, not the deployment
+       expected FAIL: X1   observed: X1   exit 1
+       this is precisely what task 3 could NOT rule out about its own numbers, and it is why X1 exists: every figure in that task came from https://localhost:8443 behind a self-signed certificate.
+ok   X1b the page reported itself as http:
+       expected FAIL: X1   observed: X1   exit 1
+       the second conjunct, and the independent one: the driver says what it was TOLD to open, the page says what it actually IS.
+ok   X2  a consistent 19-attempt world, i.e. the http: figure
+       expected FAIL: X2   observed: X2   exit 1
+       mutated CONSISTENTLY -- summary, running total and browser lines all moved to 19 -- so X3 and X6 still agree with each other and only the band check fires. A lazier mutation of the one number would have knocked out three checks and proven none of them.
+ok   X3  the browser recorded five fewer events than the module made attempts
+       expected FAIL: X3   observed: X3   exit 1
+ok   X4a one attempt went somewhere that is not a master server
+       expected FAIL: X4   observed: X4   exit 1
+ok   X4b the page saw three distinct endpoints, not four
+       expected FAIL: X4   observed: X4   exit 1
+       the other conjunct: the per-URL map and the distinct count are two different in-page derivations and X4 asserts both.
+ok   X5  the attempts spanned 40 s, not the 4x5 s master timeout
+       expected FAIL: X5   observed: X5   exit 1
+ok   X6a five sockets were opened before the master query was ever started
+       expected FAIL: X6   observed: X6   exit 1
+       if the page opened ws:// sockets on its own the count would not be attributable to the menu route at all.
+ok   X6b seven more sockets were opened after the query finished
+       expected FAIL: X6   observed: X6   exit 1
+       the other conjunct, and the one that matters for the decision task 3 took: the noise is acceptable BECAUSE it is bounded and stops.
+ok   X7  the GL context came back with an error after the master query
+       expected FAIL: X7   observed: X7   exit 1
+ok   X8a a THIRD exception text appears
+       expected FAIL: X8   observed: X8   exit 1
+       this is the case that shows the rule was not loosened. Firefox logs 192-194 [EXCEPTION] lines on this route and every gate in this project forbids the tag; X8 permits two texts by name and nothing else.
+ok   X8b a PERMITTED text on a line that names no ws:// endpoint
+       expected FAIL: X8   observed: X8   exit 1
+       the second conjunct of the allowance. "was interrupted while the page was loading" is an ordinary Firefox message about any request; it is waved through only when the line is about a ws:// endpoint.
+ok   X8c an ordinary hazard text appears in the run
+       expected FAIL: X8   observed: X8   exit 1
+ok   X9  Chrome stops naming mixed content, keeping the rest of the sentence
+       expected FAIL: X9   observed: X9   exit 1
+       the same substring separation seen from the other side: the per-attempt clause X3 counts is untouched, so X3 still passes and only X9 fires.
+ok   X10 a wait expired instead of being satisfied
+       expected FAIL: X10   observed: X10   exit 1
+ok   X11 something other than the favicon 404s
+       expected FAIL: X11   observed: X11   exit 1
+ok   REAL CONTROL (not a mutation): task 3's Chrome run against the LOCAL RIG, not the deployment
+       /Users/user/data/src/armagetronad-web/.worktrees/m5-launch/docs/evidence/m5-https/mp-https/console.log
+       expected FAIL: X1   observed: X1   exit 1
+
+--   XZ   NOT COVERABLE, by design.
+        XZ compares the ids that produced a verdict against the declared list. Every
+        check() in check-live-multiplayer.mjs is an unconditional top-level
+        statement, so no transcript can stop one running: it is a regression guard
+        on the checker source, not a check on the transcript.
+
+Cases declaring collateral (expect > 1 id): 0 of 16.
+
+==== the live multiplayer route, firefox, against the public URL
+checker : /Users/user/data/src/armagetronad-web/.worktrees/m5-launch/docs/evidence/m5-launch/check-live-multiplayer.mjs
+source  : /Users/user/data/src/armagetronad-web/.worktrees/m5-launch/docs/evidence/m5-launch/live-mp-firefox/console.log
+
+ok   baseline: the unmutated input passes (exit 0, 12 checks, 0 failures)
+
+ok   X1a the run was against the local rig, not the deployment
+       expected FAIL: X1   observed: X1   exit 1
+       this is precisely what task 3 could NOT rule out about its own numbers, and it is why X1 exists: every figure in that task came from https://localhost:8443 behind a self-signed certificate.
+ok   X1b the page reported itself as http:
+       expected FAIL: X1   observed: X1   exit 1
+       the second conjunct, and the independent one: the driver says what it was TOLD to open, the page says what it actually IS.
+ok   X2  a consistent 19-attempt world, i.e. the http: figure
+       expected FAIL: X2   observed: X2   exit 1
+       mutated CONSISTENTLY -- summary, running total and browser lines all moved to 19 -- so X3 and X6 still agree with each other and only the band check fires. A lazier mutation of the one number would have knocked out three checks and proven none of them.
+ok   X3  the browser recorded five fewer events than the module made attempts
+       expected FAIL: X3   observed: X3   exit 1
+ok   X4a one attempt went somewhere that is not a master server
+       expected FAIL: X4   observed: X4   exit 1
+ok   X4b the page saw three distinct endpoints, not four
+       expected FAIL: X4   observed: X4   exit 1
+       the other conjunct: the per-URL map and the distinct count are two different in-page derivations and X4 asserts both.
+ok   X5  the attempts spanned 40 s, not the 4x5 s master timeout
+       expected FAIL: X5   observed: X5   exit 1
+ok   X6a five sockets were opened before the master query was ever started
+       expected FAIL: X6   observed: X6   exit 1
+       if the page opened ws:// sockets on its own the count would not be attributable to the menu route at all.
+ok   X6b seven more sockets were opened after the query finished
+       expected FAIL: X6   observed: X6   exit 1
+       the other conjunct, and the one that matters for the decision task 3 took: the noise is acceptable BECAUSE it is bounded and stops.
+ok   X7  the GL context came back with an error after the master query
+       expected FAIL: X7   observed: X7   exit 1
+ok   X8a a THIRD exception text appears
+       expected FAIL: X8   observed: X8   exit 1
+       this is the case that shows the rule was not loosened. Firefox logs 192-194 [EXCEPTION] lines on this route and every gate in this project forbids the tag; X8 permits two texts by name and nothing else.
+ok   X8b a PERMITTED text on a line that names no ws:// endpoint
+       expected FAIL: X8   observed: X8   exit 1
+       the second conjunct of the allowance. "was interrupted while the page was loading" is an ordinary Firefox message about any request; it is waved through only when the line is about a ws:// endpoint.
+ok   X8c an ordinary hazard text appears in the run
+       expected FAIL: X8   observed: X8   exit 1
+ok   X9  Firefox starts printing "Mixed Content" after all
+       expected FAIL: X9   observed: X9   exit 1
+       X9 asserts the ABSENCE of the phrase, which is the whole trap: with no such line and ~96 attempts blocked, a grep-based gate reads Firefox as not blocking. Note this case flips X9 ALONE -- X3 counts a different substring on purpose, so the two are independently provable.
+ok   X10 a wait expired instead of being satisfied
+       expected FAIL: X10   observed: X10   exit 1
+ok   X11 something other than the favicon 404s
+       expected FAIL: X11   observed: X11   exit 1
+ok   REAL CONTROL (not a mutation): task 3's Firefox run against the LOCAL RIG, not the deployment
+       /Users/user/data/src/armagetronad-web/.worktrees/m5-launch/docs/evidence/m5-https/mp-https-ff/console.log
+       expected FAIL: X1   observed: X1   exit 1
+
+--   XZ   NOT COVERABLE, by design.
+        XZ compares the ids that produced a verdict against the declared list. Every
+        check() in check-live-multiplayer.mjs is an unconditional top-level
+        statement, so no transcript can stop one running: it is a regression guard
+        on the checker source, not a check on the transcript.
+
+Cases declaring collateral (expect > 1 id): 0 of 16.
+
 THE LIVE CONTROLS, which are stronger than any mutation above, and which are
 recorded in wire-facts.json in the same run as the facts they control for:
   W9    a filename that does not exist, fetched from the real deployment.
@@ -71,5 +189,5 @@ recorded in wire-facts.json in the same run as the facts they control for:
   W10   a real "Accept-Encoding: br" request to the real 4.3 MB wasm.
   W11   a real browser Accept-Encoding to the same file, in the same run.
 
-RESULT: PASS -- all 19 cases flipped exactly the checks they declared
-prover exit=0
+RESULT: PASS -- all 53 cases flipped exactly the checks they declared
+PROVER EXIT=0
