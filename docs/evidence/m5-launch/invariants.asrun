@@ -1,0 +1,25 @@
+# M5 task 5 -- invariants, re-verified after all work on this branch.
+# Rebuilt, not read off an artefact that was already sitting there: the plan
+# warns that a stale dist-m0 in this repo once had the RIGHT SIZE and the wrong
+# md5, so size alone is not sufficient and neither is an old file.
+
+$ git diff --stat 923ec7fb..HEAD -- src/ web/Makefile web/shell.html web/webdefaults/ config/
+(empty: nothing that feeds either link changed on this branch, so no
+ substitute-in-place control link applies)
+
+$ grep -n 'O2' web/Makefile | grep CLIENT_LDFLAGS
+387:CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
+
+$ . deps/emsdk/emsdk_env.sh && make -f web/Makefile dedicated -j8   # full rebuild, 100 objects
+make exit 0
+
+$ stat -f %z web/dist-m0/armagetronad-dedicated.wasm
+2488298
+$ md5 -q web/dist-m0/armagetronad-dedicated.wasm
+9718a2a64978cb6e9b95ea2f0454cca5
+
+REQUIRED: 2488298 bytes AND md5 9718a2a64978cb6e9b95ea2f0454cca5  -- both hold.
+
+# And the client artefacts this task measured are still the deployed ones:
+$ node docs/evidence/m5-launch/check-wire-facts.mjs docs/evidence/m5-launch/wire-facts.json  # W7
+PASS  W7   all 5 deployed files are byte-identical to web/dist-m1 (sha256)
