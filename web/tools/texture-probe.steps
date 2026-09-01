@@ -1,0 +1,105 @@
+# M5: what the shipped client actually asks WebGL for when it draws the cycle.
+#
+#   node docs/evidence/m5-texture/make-texprobe-page.mjs
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --width 1280 --height 800 \
+#        --out docs/evidence/m5-texture/run-chrome \
+#        --url http://localhost:8000/texprobe.html \
+#        --script-file web/tools/texture-probe.steps
+#   kill %1
+#
+# --headed is REQUIRED for Chrome (drive-browser.mjs's header says why) and here
+# it is required twice over: this measures the GPU's answers, and headless
+# Chrome rasterises in software, where VENDOR/RENDERER and the extension list
+# are SwiftShader's rather than the machine's.
+#
+# THE PAGE IS texprobe.html, NOT armagetronad.html: the shipped page plus one
+# injected <script>, same .js/.wasm/.data. See make-texprobe-page.mjs.
+#
+# SCREENSHOTS ARE THE BACKING STORE, 1:1. drive-browser.mjs pins
+# deviceScaleFactor to 1, web/shell.html then sizes the canvas to
+# innerWidth*dpr = innerWidth, and CSS stretches it to fill the window -- so one
+# screenshot pixel is one canvas pixel and nothing is resampled on the way out.
+# That is only true at deviceScaleFactor 1; do not read a shot from a run with
+# a different override as texel-accurate.
+wait:1000
+until:1:120000:[BOOT] autostart
+
+# The context facts, read off the live context the game is drawing into.
+# GL_VENDOR here IS rScreen.cpp's gl_vendor: Emscripten's _glGetString forwards
+# 7936/7937 to GLctx.getParameter verbatim (armagetronad.js), so this settles
+# the strstr(gl_vendor,"ATI") trilinear downgrade by measurement rather than by
+# reasoning about what a browser "would" report.
+eval:JSON.stringify(window.AA_GLPROBE.ctx)
+
+wait:6000
+shot:01-language-menu
+key:Enter
+wait:3000
+key:Escape
+wait:4000
+shot:02-welcome-message
+key:Enter
+
+until:1:60000:[L] NEW_ROUND
+mark:ROUND-1-STARTED
+wait:5500
+shot:03-round1-cycle-oblique
+key:Left
+wait:1500
+shot:04-round1-after-LEFT
+key:Right
+wait:1500
+shot:05-round1-after-RIGHT
+wait:3000
+shot:06-round1-later
+
+# Everything the probe saw: one row per WebGLTexture, with the parameters the
+# game ASKED for (hooked texParameteri) next to the parameters READ BACK off
+# the context at the moment that texture was bound for a draw call.
+mark:TEXTURE-TABLE-FOLLOWS
+eval:JSON.stringify(window.AA_GLPROBE.summary())
+
+# LEVEL 0, READ BACK. "Which texture is the cycle body" is answered by looking
+# at it, not by arguing from 256x256. Each of these attaches the texture to a
+# framebuffer and reads its texels; the result is a PNG data URL in the
+# transcript, which docs/evidence/m5-texture/extract-dumps.mjs turns into files.
+# These are the TEXELS THE GAME UPLOADED, so comparing them against the shipped
+# textures/*.png tests the whole decode path -- Emscripten's SDL IMG_Load goes
+# through a 2D canvas (libsdl.js IMG_Load_RW: drawImage then getImageData in
+# SDL_LockSurface), which is a premultiply/un-premultiply round trip that native
+# libpng does not have. Ids are dense from 1; dump() answers null past the end.
+mark:TEXTURE-DUMPS-FOLLOW
+eval:window.AA_GLPROBE.dump(1)
+eval:window.AA_GLPROBE.dump(2)
+eval:window.AA_GLPROBE.dump(3)
+eval:window.AA_GLPROBE.dump(4)
+eval:window.AA_GLPROBE.dump(5)
+eval:window.AA_GLPROBE.dump(6)
+eval:window.AA_GLPROBE.dump(7)
+eval:window.AA_GLPROBE.dump(8)
+eval:window.AA_GLPROBE.dump(9)
+eval:window.AA_GLPROBE.dump(10)
+eval:window.AA_GLPROBE.dump(11)
+eval:window.AA_GLPROBE.dump(12)
+eval:window.AA_GLPROBE.dump(13)
+eval:window.AA_GLPROBE.dump(14)
+eval:window.AA_GLPROBE.dump(15)
+eval:window.AA_GLPROBE.dump(16)
+eval:window.AA_GLPROBE.dump(17)
+eval:window.AA_GLPROBE.dump(18)
+eval:window.AA_GLPROBE.dump(19)
+eval:window.AA_GLPROBE.dump(20)
+eval:window.AA_GLPROBE.dump(21)
+eval:window.AA_GLPROBE.dump(22)
+eval:window.AA_GLPROBE.dump(23)
+eval:window.AA_GLPROBE.dump(24)
+
+# Does a usable mip chain exist? glGenerateMipmap returning without error does
+# not establish it. Each of these draws the texture into a 1x1 framebuffer
+# minified by its own width, so the sample must come from the smallest level.
+# A texture with a mipmapped min filter and a missing chain is INCOMPLETE and
+# reads back opaque black; forced_LINEAR is the control that never consults a
+# level at all.
+mark:MIP-CHAIN-TEST-FOLLOWS
+eval:JSON.stringify(window.AA_GLPROBE.tex.filter(t=>t.w).map(t=>window.AA_GLPROBE.mipLevels(t.id)))
