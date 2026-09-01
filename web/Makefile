@@ -510,39 +510,90 @@ web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2
 .PHONY: client-control
 client-control: data web/dist-m1/armagetronad-nomenusave.html
 
-# ---- M5 Task 4c: the CONTROL client for the HUD-flicker diagnosis ----------
+# ---- M5 Task 5: the CONTROL client with the OLD yield placement ------------
 #
 #   source deps/emsdk/emsdk_env.sh
-#   make -f web/Makefile client client-yieldprobe -j8
+#   make -f web/Makefile client client-oldyield -j8
 #
-# Same shape and same reason as client-control above: a second complete page,
-# armagetronad-yieldfix.html, differing from the shipped client in exactly one
-# preprocessor symbol. AA_WEB_YIELD_AFTER_PERFRAME moves rSysDep::SwapGL()'s
-# emscripten_sleep(0) from the top of the function to just after
-# rPerFrameTask::DoPerFrameTasks() -- i.e. from BEFORE the overlay layer is
-# drawn to AFTER it. The shipped placement lets the browser composite a frame
-# that has the world in it and not the HUD, which is the flicker; the control
-# is what turns "that is the cause" from an argument into a measurement.
+# Same shape and same reason as client-control and client-fullscreentoggle: a
+# second complete page, armagetronad-oldyield.html, differing from the shipped
+# client in exactly one preprocessor symbol.
+#
+# THIS TARGET IS THE INVERSE OF THE ONE M5 TASK 4C ADDED, and the rename is the
+# point rather than tidying. 4c shipped rSysDep::SwapGL()'s emscripten_sleep(0)
+# at the TOP of the function -- above rPerFrameTask::DoPerFrameTasks(), which
+# draws the entire overlay -- and built `client-yieldprobe` with it moved below,
+# to prove that placement was the HUD flicker. Task 5 made the moved placement
+# the shipped one (after the swap block, so it is also after glFlush), so the
+# control has to become the OLD placement or there is nothing to compare
+# against. AA_WEB_YIELD_BEFORE_PERFRAME puts it back at the top.
+#
+# The claim it falsifies: on the shipped page a compositor-clock sampler must
+# find the HUD-gone run count collapse, and on THIS page it must not. A run
+# where both pages look the same means the sampler is not measuring what it
+# thinks it is -- which is exactly what happened to the three swap-time probes
+# kept in docs/evidence/m5-defect-b-hud-flicker/negative-swap-time-only/.
 #
 # NOT part of `client` and not a default goal: it doubles the link time and
 # writes ~5 MB of artefacts that only the evidence run wants.
-YIELDPROBE_OBJS := $(filter-out $(CLIENT_OBJDIR)/render/rSysdep.o,$(CLIENT_OBJS)) \
-                   $(CLIENT_OBJDIR)/render/rSysdep-yieldfix.o
+OLDYIELD_OBJS := $(filter-out $(CLIENT_OBJDIR)/render/rSysdep.o,$(CLIENT_OBJS)) \
+                 $(CLIENT_OBJDIR)/render/rSysdep-oldyield.o
 
 # Its own object path, for the reason spelled out above eWebPersist-nomenusave.o.
-$(CLIENT_OBJDIR)/render/rSysdep-yieldfix.o: src/render/rSysdep.cpp web/Makefile
+$(CLIENT_OBJDIR)/render/rSysdep-oldyield.o: src/render/rSysdep.cpp web/Makefile
 	@mkdir -p $(dir $@)
-	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_YIELD_AFTER_PERFRAME -c $< -o $@
+	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_YIELD_BEFORE_PERFRAME -c $< -o $@
 
-web/dist-m1/armagetronad-yieldfix.html: $(YIELDPROBE_OBJS) $(LIBXML2)/lib/libxml2.a \
+web/dist-m1/armagetronad-oldyield.html: $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.a \
                                 web/shell.html web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion
 	@mkdir -p web/dist-m1
-	$(EMXX) $(YIELDPROBE_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+	$(EMXX) $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
-.PHONY: client-yieldprobe
-client-yieldprobe: data web/dist-m1/armagetronad-yieldfix.html
+.PHONY: client-oldyield
+client-oldyield: data web/dist-m1/armagetronad-oldyield.html
+
+# ---- M5 Task 5: the CONTROL client that still has the fullscreen key -------
+#
+#   source deps/emsdk/emsdk_env.sh
+#   make -f web/Makefile client client-fullscreentoggle -j8
+#
+# Same shape and same reason as client-control and client-yieldprobe above: a
+# second complete page, armagetronad-fstoggle.html, differing from the shipped
+# client in exactly one preprocessor symbol. AA_WEB_KEEP_FULLSCREEN_TOGGLE
+# removes the early return M5 task 5 added to gMenus.cpp's
+# toggle_fullscreen_func, so on this page the 'f' and 'n' keys still flip
+# currentScreensetting.fullscreen and call sr_ReinitDisplay().
+#
+# IT IS THE POSITIVE CONTROL FOR A NEGATIVE CLAIM, which is the only reason it
+# exists. The shipped claim is "pressing f during play does nothing and the
+# canvas keeps the size the page gave it". Run against the shipped page alone
+# that is indistinguishable from a key event that never reached the game --
+# from a driver that types into the wrong element, from an SDL keysym that does
+# not match the bind, from a canvas that never had focus. On this page the SAME
+# keystroke through the SAME script must visibly re-init the display. If it
+# does not, the shipped result means nothing and the run is void.
+#
+# NOT part of `client` and not a default goal: it doubles the link time and
+# writes ~5 MB of artefacts that only the evidence run wants.
+FSTOGGLE_OBJS := $(filter-out $(CLIENT_OBJDIR)/tron/gMenus.o,$(CLIENT_OBJS)) \
+                 $(CLIENT_OBJDIR)/tron/gMenus-fstoggle.o
+
+# Its own object path, for the reason spelled out above eWebPersist-nomenusave.o.
+$(CLIENT_OBJDIR)/tron/gMenus-fstoggle.o: src/tron/gMenus.cpp web/Makefile
+	@mkdir -p $(dir $@)
+	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_KEEP_FULLSCREEN_TOGGLE -c $< -o $@
+
+web/dist-m1/armagetronad-fstoggle.html: $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a \
+                                web/shell.html web/webdefaults/autoexec.cfg \
+                                language/languages.txt config/aiplayers.cfg \
+                                resource/included/.mapversion
+	@mkdir -p web/dist-m1
+	$(EMXX) $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+
+.PHONY: client-fullscreentoggle
+client-fullscreentoggle: data web/dist-m1/armagetronad-fstoggle.html
 
 # ---- M4 Task 3: the CONTROL client that still overrides the player ---------
 #

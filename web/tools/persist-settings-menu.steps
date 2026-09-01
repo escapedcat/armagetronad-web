@@ -3,8 +3,21 @@
 #
 #   python3 -m http.server 8000 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --out /tmp/setmenu-chrome \
+#        --url http://localhost:8000/armagetronad.html?autostart=0 \
 #        --script-file web/tools/persist-settings-menu.steps
 #   kill %1
+#
+# M5 task 5: THIS GATE MUST BE DRIVEN WITH ?autostart=0 -- the URL in the recipe
+# above is not optional. Removing the Play button made main() run from
+# onRuntimeInitialized, which deletes the window between "the runtime is ready"
+# and "main() has run" that this script's payload phases are named after
+# (boot1-after-play, boot2-before-play). Measured on the first re-recording
+# without it: P5, P7, P11 and P14 all fail, structurally and not because
+# persistence broke. web/shell.html honours ?autostart=0 by holding main() until
+# window.AA_START() is called, which is what the `eval:window.AA_START()` steps
+# below do; the parameter survives the location.reload() in the middle. See the
+# long comment at that hook in web/shell.html for why a query parameter rather
+# than a generated control page.
 #
 # READ IT WITH THE TRANSCRIPT AND THE SCREENSHOTS; there is no checker, on
 # purpose. web/tools/persist-settings-gate.steps is the gate, and it stays
@@ -52,7 +65,7 @@
 # reload. Nothing is claimed about this boot.
 until:1:90000:[PERSIST] populate ok
 wait:1000
-click:#start
+eval:window.AA_START()
 wait:9000
 shot:01-boot1-language-menu
 key:Enter
@@ -71,7 +84,7 @@ mark:BOOT-2-POPULATED
 wait:1500
 
 # ---------------------------------------------------------------- BOOT 2
-click:#start
+eval:window.AA_START()
 wait:9000
 shot:04-boot2-main-menu
 
@@ -130,7 +143,7 @@ eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}cat
 
 # And the game shows it: same three keystrokes, and the toggle reads the value
 # the player chose two page loads ago.
-click:#start
+eval:window.AA_START()
 wait:9000
 key:Down
 wait:900

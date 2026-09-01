@@ -45,7 +45,7 @@
 # highlighted line really says "Viewports:", do not trust the step count alone.
 until:1:90000:[PERSIST] populate ok
 wait:1000
-click:#start
+until:1:120000:[BOOT] autostart
 wait:9000
 shot:01-boot1-language-menu
 key:Enter
@@ -59,7 +59,7 @@ mark:RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU
 eval:location.reload()
 until:2:90000:[PERSIST] populate ok
 wait:2000
-click:#start
+until:2:120000:[BOOT] autostart
 wait:12000
 shot:04-boot2-main-menu
 mark:DOWN-1-SHOULD-HIGHLIGHT-PLAYER-SETUP

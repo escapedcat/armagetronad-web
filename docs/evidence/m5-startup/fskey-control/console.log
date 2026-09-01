@@ -1,0 +1,89 @@
+[    577ms] [harness] chrome: Chrome/152.0.7977.65
+[    577ms] [harness] navigating to http://localhost:8000/armagetronad-fstoggle.html
+[      8ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 0)
+[     24ms] [console.log] [DISPLAY] viewport 1024x768 dpr 1 -> canvas 1024x768
+[     32ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     32ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     34ms] [page] load event fired
+[     37ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[     86ms] [console.log] [PERSIST] populate ok in 31ms
+[    300ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    301ms] [console.log] [BOOT] autostart: calling main
+[    303ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    303ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    304ms] [console.error] 
+[    304ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    304ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    304ms] [console.log] 
+[    317ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[    430ms] [console.log] [L] ENCODING latin1
+[    438ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    439ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    461ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    464ms] [console.error] TODO: glShadeModel
+[    468ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad-fstoggle.js
+[    513ms] [harness] eval (()=>{addEventListener('keydown',(e)=>console.log('[FSKEY] DOM keydown key='+e.key+' keyCode='+e.keyCode+' trusted='+e.isTrusted),true);return 'dom key logger armed'})() => "dom key logger armed"
+[    514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-fstoggle.js
+[    515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-fstoggle.js
+[    515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-fstoggle.js
+[    515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-fstoggle.js
+[    516ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad-fstoggle.js
+[   9516ms] [harness] eval (()=>{const c=document.getElementById('canvas');return '[FSKEY] before: canvas '+c.width+'x'+c.height})() => "[FSKEY] before: canvas 1024x768"
+[   9517ms] [console.log] [FSKEY] DOM keydown key=Enter keyCode=13 trusted=true
+[   9548ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[   9550ms] [harness] key Enter (1/1)
+[  12857ms] [console.log] [FSKEY] DOM keydown key=Escape keyCode=27 trusted=true
+[  12884ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  12887ms] [harness] key Escape (1/1)
+[  18194ms] [console.log] [FSKEY] DOM keydown key=Enter keyCode=13 trusted=true
+[  18215ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  18216ms] [console.log] [L] TEAM_CREATED web_user
+[  18216ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  18218ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  18220ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  18220ms] [console.log] [L] NEW_ROUND 2026-08-31 18:30:07 UTC+0200
+[  18237ms] [console.log] [L] TEAM_CREATED ai_team
+[  18238ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  18238ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  18238ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  18240ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  18273ms] [harness] key Enter (1/1)
+[  18274ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  18274ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  18275ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  18542ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[  18575ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  18576ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  24691ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  25055ms] [console.log] [L] DEATH_FRAG web_user excel
+[  25055ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  25712ms] [harness] screenshot -> docs/evidence/m5-startup/fskey-control/01-round1-before-the-key.png
+[  25712ms] [harness] === PRESS-f-KNOWN-DEAD-SEE-HEADER ===
+[  25713ms] [console.log] [FSKEY] DOM keydown key=f keyCode=70 trusted=true
+[  25746ms] [harness] key F (1/1)
+[  26305ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  30392ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  30392ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  30392ms] [console.log] [L] NEW_ROUND 2026-08-31 18:30:20 UTC+0200
+[  30396ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  30397ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  31057ms] [harness] eval (()=>{const c=document.getElementById('canvas');return '[FSKEY] after f: canvas '+c.width+'x'+c.height+' fullscreenElement='+(document.fullscreenElement?document.fullscreenElement.tagName:'null')})() => "[FSKEY] after f: canvas 1024x768 fullscreenElement=null"
+[  31178ms] [harness] screenshot -> docs/evidence/m5-startup/fskey-control/02-after-f.png
+[  31178ms] [harness] === PRESS-n-SHOULD-ENTER-BROWSER-FULLSCREEN ===
+[  31179ms] [console.log] [FSKEY] DOM keydown key=n keyCode=78 trusted=true
+[  31212ms] [harness] key N (1/1)
+[  37218ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  37522ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return '[FSKEY] after n: canvas '+c.width+'x'+c.height+' contextLost='+g.isContextLost()+' fullscreenElement='+(document.fullscreenElement?document.fullscreenElement.tagName:'null')})() => "[FSKEY] after n: canvas 640x480 contextLost=false fullscreenElement=null"
+[  37688ms] [harness] screenshot -> docs/evidence/m5-startup/fskey-control/03-after-n.png
+[  37688ms] [harness] === PRESS-n-AGAIN-SHOULD-LEAVE-FULLSCREEN ===
+[  37689ms] [console.log] [FSKEY] DOM keydown key=n keyCode=78 trusted=true
+[  37724ms] [harness] key N (1/1)
+[  38467ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  42492ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  42492ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  42493ms] [console.log] [L] NEW_ROUND 2026-08-31 18:30:32 UTC+0200
+[  44031ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return '[FSKEY] after second n: canvas '+c.width+'x'+c.height+' contextLost='+g.isContextLost()+' fullscreenElement='+(document.fullscreenElement?document.fullscreenElement.tagName:'null')})() => "[FSKEY] after second n: canvas 1024x768 contextLost=false fullscreenElement=null"
+[  44145ms] [harness] screenshot -> docs/evidence/m5-startup/fskey-control/04-after-second-n.png
+[  44146ms] [console.log] [FSKEY] DOM keydown key=ArrowLeft keyCode=37 trusted=true
+[  44177ms] [harness] key Left (1/1)
+[  46580ms] [harness] screenshot -> docs/evidence/m5-startup/fskey-control/05-still-driving.png

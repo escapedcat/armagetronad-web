@@ -2,15 +2,29 @@
 #
 #   python3 -m http.server 8000 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --out docs/evidence/m4-config-precedence \
+#        --url http://localhost:8000/armagetronad.html?autostart=0 \
 #        --script-file web/tools/maxfps-precedence.steps
 #   kill %1
+#
+# M5 task 5: THIS GATE MUST BE DRIVEN WITH ?autostart=0 -- the URL in the recipe
+# above is not optional. Removing the Play button made main() run from
+# onRuntimeInitialized, which deletes the window between "the runtime is ready"
+# and "main() has run" that this script's payload phases are named after
+# (boot1-after-play, boot2-before-play). Measured on the first re-recording
+# without it: P5, P7, P11 and P14 all fail, structurally and not because
+# persistence broke. web/shell.html honours ?autostart=0 by holding main() until
+# window.AA_START() is called, which is what the `eval:window.AA_START()` steps
+# below do; the parameter survives the location.reload() in the middle. See the
+# long comment at that hook in web/shell.html for why a query parameter rather
+# than a generated control page.
 #
 # Then score the transcript with
 #   node docs/evidence/m4-config-precedence/check-maxfps-transcript.mjs <console.log>
 #
 # THE SAME FILE ALSO DRIVES THE CONTROL PAGE, unchanged:
 #   node web/tools/drive-browser.mjs --headed --out /tmp/oldcfg \
-#        --url http://localhost:8000/armagetronad-oldautoexec.html \
+#        --url http://localhost:8000/armagetronad.html?autostart=0 \
+#        --url http://localhost:8000/armagetronad-oldautoexec.html?autostart=0 \
 #        --script-file web/tools/maxfps-precedence.steps
 # armagetronad-oldautoexec.html (web/Makefile, target client-oldautoexec) is
 # byte-identical in wasm to the real client and differs only in its preloaded
@@ -21,6 +35,7 @@
 #
 # --headed IS REQUIRED. Chrome 152 headless drops the synthesised key events
 # this script is made of; see drive-browser.mjs's header.
+#        --url http://localhost:8000/armagetronad.html?autostart=0 \
 #
 # ---------------------------------------------------------------------------
 # WHY THE SETTING IS MAX_FPS AND NOT SOUND_BUFFER_SHIFT.
@@ -86,7 +101,7 @@
 # the main menu. Nothing is claimed about this boot except the audio line.
 until:1:90000:[PERSIST] populate ok
 wait:1000
-click:#start
+eval:window.AA_START()
 wait:9000
 shot:01-boot1-language-menu
 
@@ -119,7 +134,7 @@ wait:1500
 
 # ---------------------------------------------------------------- BOOT 2
 # The player goes to Screen Mode and lowers the frame cap.
-click:#start
+eval:window.AA_START()
 wait:9000
 shot:04-boot2-main-menu
 eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const c=rd('/persist/var/user.cfg');const a=rd('/data/webdefaults/autoexec.cfg');const pick=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>l.trim().indexOf(k+' ')===0);return m?m.trim().slice(k.length+1).trim():null};console.log('[MAXFPS] '+JSON.stringify({phase:'boot2-main-menu',max_fps:pick(c,'MAX_FPS'),sound_buffer_shift:pick(c,'SOUND_BUFFER_SHIFT'),autoexec_max_fps:pick(a,'MAX_FPS'),autoexec_sound_buffer_shift:pick(a,'SOUND_BUFFER_SHIFT'),user_cfg_bytes:c?c.length:null,autoexec_bytes:a?a.length:null}));return 'read'})()
@@ -186,7 +201,7 @@ eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}cat
 # The file surviving is necessary but not sufficient -- the RUNNING GAME has to
 # be using it. Walk back to the same menu row; the item renders live sr_maxFPS,
 # so shot 13 is a picture of the value the game is actually capped at.
-click:#start
+eval:window.AA_START()
 wait:9000
 key:Down:2
 wait:900

@@ -17,7 +17,7 @@
 // USAGE
 //   python3 -m http.server 8000 --directory web/dist-m1 &
 //   node web/tools/drive-browser.mjs --out /tmp/shots \
-//        --script 'wait:2000,shot:loaded,click:#start,wait:20000,shot:booted'
+//        --script 'wait:2000,shot:loaded,wait:20000,shot:booted'
 //
 // OPTIONS
 //   --url URL          page to open (default http://localhost:8000/armagetronad.html)
@@ -94,7 +94,10 @@ function parseArgs(argv) {
   const opt = {
     url: 'http://localhost:8000/armagetronad.html',
     out: 'web-evidence',
-    steps: 'wait:2000,shot:00-loading,click:#start,wait:20000,shot:01-booted'.split(','),
+    // The default script no longer clicks #start: M5 removed the Play button and
+    // the page autostarts. A default that clicks a missing element would fail
+    // confusingly for anyone running the driver with no --script/--script-file.
+        steps: 'wait:2000,shot:00-loading,wait:20000,shot:01-booted'.split( ',' ),
     headed: false,
     port: 9222,
     width: 1024,
@@ -144,6 +147,15 @@ const KEYS = {
   Space:  { keyCode: 32, code: 'Space',      key: ' ',      text: ' ' },
   Tab:    { keyCode:  9, code: 'Tab',        key: 'Tab' },
 };
+// The plain letters, so a step can press a letter-bound action. drive-firefox
+// has had these since M3 (its own KEYS table loops over the alphabet); Chrome
+// needed the three DOM fields spelled out. `text` is what makes it a character
+// keypress rather than a bare rawKeyDown -- without it Emscripten's SDL shim
+// gets a keydown with no character and the game sees nothing.
+for (const c of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+  KEYS[c] = { keyCode: c.charCodeAt(0), code: `Key${c}`,
+              key: c.toLowerCase(), text: c.toLowerCase() };
+}
 for (const c of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
   KEYS[c] = { keyCode: c.charCodeAt(0), code: `Key${c}`, key: c.toLowerCase(), text: c.toLowerCase() };
 }

@@ -1,103 +1,110 @@
-[   1586ms] [harness] firefox: 154.0.1 (headless=true)
-[   1586ms] [harness] navigating to http://localhost:8000/armagetronad.html
-[     42ms] [page] load event fired
-[    136ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
-[    154ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
-[    154ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
-[    156ms] [page] load event fired
-[   1193ms] [harness] eval (()=>{if(window.__aud)return 'already installed';const S={t:[],mx:[],nz:[],pa:[],cs:[],lat:[],marks:[],firstKey:null,installedAt:null,spec:null,err:null,polls:0};window.__aud=S;S.scan=function(a,from,to){let m=0,n=0;for(let i=from;i<to;i++){const v=a[i];if(v!==0){n++;const q=v<0?-v:v;if(q>m)m=q;}}return [m,n];};addEventListener('keydown',function(e){if(e.isTrusted&&S.firstKey===null){S.firstKey=performance.now();console.log('[AUDIOPROBE] first TRUSTED keydown at '+Math.round(S.firstKey)+'ms, AudioContext state '+((typeof SDL!=='undefined'&&SDL.audioContext)?SDL.audioContext.state:'none'));}},true);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};const iv=setInterval(function(){S.polls++;try{if(typeof SDL==='undefined'||!SDL.audio||!SDL.audio.pushAudio||SDL.audio.__probed)return;const orig=SDL.audio.pushAudio;SDL.audio.pushAudio=function(ptr,sizeBytes){try{const A=SDL.audio,c=SDL.audioContext;let m=-1,n=-1;if(A.bytesPerSample===2){const r=S.scan(HEAP16,ptr>>1,(ptr+sizeBytes)>>1);m=r[0];n=r[1];}else if(!S.err){S.err='bytesPerSample is '+A.bytesPerSample+', not 2';}S.t.push(performance.now());S.mx.push(m);S.nz.push(n);S.pa.push(A.paused?1:0);S.cs.push(c?c.state:'none');S.lat.push(c?Math.round((A.nextPlayTime-c.currentTime)*1000):null);}catch(e){if(!S.err)S.err=String(e);}return orig.apply(this,arguments);};SDL.audio.__probed=true;S.installedAt=performance.now();S.spec={freq:SDL.audio.freq,samples:SDL.audio.samples,channels:SDL.audio.channels,format:SDL.audio.format,bytesPerSample:SDL.audio.bytesPerSample,bufferSize:SDL.audio.bufferSize,bufferDurationSecs:SDL.audio.bufferDurationSecs,bufferingDelay:SDL.audio.bufferingDelay,queued:SDL.audio.numSimultaneouslyQueuedBuffers,ctxSampleRate:SDL.audioContext?SDL.audioContext.sampleRate:null};console.log('[AUDIOPROBE] installed on SDL.audio.pushAudio at '+Math.round(S.installedAt)+'ms after '+S.polls+' polls: '+JSON.stringify(S.spec));clearInterval(iv);}catch(e){if(!S.err)S.err=String(e);}},50);return 'audio probe armed: pushAudio wrapper pending, [L] lines timestamped, first trusted keydown watched';})() => audio probe armed: pushAudio wrapper pending, [L] lines timestamped, first trusted keydown watched
-[   8209ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
-[   8212ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
-[   8216ms] [console.error] 
-[   8216ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
-[   8216ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
-[   8218ms] [console.log] 
-[   8346ms] [console.log] [L] ENCODING latin1
-[   8350ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
-[   8507ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
-[   8542ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
-[   8545ms] [console.error] TODO: glShadeModel
-[   8558ms] [harness] click #start: clicked
-[   8558ms] [console.log] [AUDIOPROBE] installed on SDL.audio.pushAudio at 8556ms after 131 polls: {"freq":22050,"samples":1024,"channels":2,"format":32784,"bytesPerSample":2,"bufferSize":4096,"bufferDurationSecs":0.046439909297052155,"bufferingDelay":0.05,"queued":5,"ctxSampleRate":48000}
-[  14560ms] [harness] === first-run-flow-language-menu ===
-[  14592ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/01-language-menu.png
-[  14605ms] [console.log] [AUDIOPROBE] first TRUSTED keydown at 14602ms, AudioContext state suspended
-[  14608ms] [harness] key Enter (1/1)
-[  17911ms] [harness] === escape-accepts-the-defaults-and-leaves-first-setup ===
-[  17914ms] [harness] key Escape (1/1)
-[  22235ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/02-welcome-message.png
-[  22236ms] [harness] === enter-dismisses-the-welcome-message-and-starts-the-match ===
-[  22238ms] [harness] key Enter (1/1)
-[  22241ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
-[  22242ms] [console.log] [L] TEAM_CREATED web_user
-[  22242ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
-[  22243ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
-[  22244ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
-[  22245ms] [console.log] [L] NEW_ROUND 2026-08-28 14:12:05 UTC+0200
-[  22247ms] [console.log] [L] TEAM_CREATED ai_team
-[  22248ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
-[  22248ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
-[  22248ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
-[  22249ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
-[  22271ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
-[  22271ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
-[  22271ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
-[  22539ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
-[  22539ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
-[  22540ms] [harness] === ROUND-1-STARTED ===
-[  28062ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/03-round1-driving.png
-[  28065ms] [harness] key Left (1/1)
-[  28070ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
-[  29569ms] [harness] key Right (1/1)
-[  29871ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
-[  30473ms] [console.log] [L] DEATH_FRAG web_user word
-[  30475ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
-[  32346ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
-[  32394ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
-[  32395ms] [harness] === ROUND-1-COMPLETE ===
-[  32395ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
-[  36392ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
-[  36392ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
-[  36393ms] [console.log] [L] NEW_ROUND 2026-08-28 14:12:19 UTC+0200
-[  36396ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
-[  36397ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
-[  36435ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
-[  36435ms] [harness] === ROUND-2-STARTED ===
-[  41957ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/04-round2-driving.png
-[  41962ms] [harness] key Right (1/1)
-[  43465ms] [harness] key Left (1/1)
-[  43766ms] [harness] until 2x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
-[  44732ms] [console.log] [L] DEATH_FRAG web_user excel
-[  46517ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
-[  46601ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
-[  46601ms] [harness] === ROUND-2-COMPLETE ===
-[  46602ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 60000ms, have 2)
-[  50569ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
-[  50570ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
-[  50570ms] [console.log] [L] NEW_ROUND 2026-08-28 14:12:33 UTC+0200
-[  50640ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
-[  50640ms] [harness] === ROUND-3-STARTED ===
-[  56155ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/05-round3-driving.png
-[  56160ms] [harness] key Left (1/1)
-[  57670ms] [harness] key Left (1/1)
-[  57971ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
-[  60121ms] [console.log] [L] DEATH_SUICIDE web_user
-[  61676ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
-[  61707ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
-[  61707ms] [harness] === ROUND-3-COMPLETE ===
-[  65699ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
-[  69733ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/06-after-the-match.png
-[  69737ms] [console.log] [AUDIODUMP] {"probe_error":null,"install_polls":131,"installed_at_ms":8556,"spec":{"freq":22050,"samples":1024,"channels":2,"format":32784,"bytesPerSample":2,"bufferSize":4096,"bufferDurationSecs":0.046439909297052155,"bufferingDelay":0.05,"queued":5,"ctxSampleRate":48000},"first_trusted_key_ms":14602,"rounds_started":3,"rounds_won":3,"whole_run":{"calls":1192,"calls_unpaused":1192,"calls_paused":0,"buffers_with_nonzero_pcm":1023,"peak_abs_sample":5145,"push_gap_max_ms":6078,"ctx_states":{"suspended":5,"running":1187}},"pre_gesture":{"calls":5,"calls_unpaused":5,"calls_paused":0,"buffers_with_nonzero_pcm":0,"peak_abs_sample":0,"push_gap_max_ms":1,"ctx_states":{"suspended":5}},"window":{"from_ms":14602,"to_ms":61674,"span_s":47.07,"calls":1014,"calls_unpaused":1014,"calls_paused":0,"buffers_with_nonzero_pcm":850,"nonzero_fraction":0.838,"peak_abs_sample":5145,"maxabs":{"p10":0,"p50":990,"p90":2259},"push_gap_ms":{"p50":48,"p99":57,"max":66},"latency_ms":{"p50":278,"max":282},"ctx_states":{"running":1014}},"per_round":[{"round":1,"from_ms":22243,"to_ms":32344,"span_s":10.1,"calls_unpaused":218,"buffers_with_nonzero_pcm":218,"nonzero_fraction":1,"peak_abs_sample":4156,"push_gap_max_ms":60},{"round":2,"from_ms":36391,"to_ms":46514,"span_s":10.12,"calls_unpaused":218,"buffers_with_nonzero_pcm":218,"nonzero_fraction":1,"peak_abs_sample":4879,"push_gap_max_ms":56},{"round":3,"from_ms":50568,"to_ms":61674,"span_s":11.11,"calls_unpaused":240,"buffers_with_nonzero_pcm":240,"nonzero_fraction":1,"peak_abs_sample":5145,"push_gap_max_ms":65}]}
-[  69737ms] [harness] eval (()=>{const S=window.__aud;if(!S)return 'no probe';const q=function(a,p){if(!a.length)return null;const s=a.slice().sort(function(x,y){return x-y});return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const mark=function(pre){return S.marks.filter(function(m){return m[1].indexOf(pre)===0}).map(function(m){return m[0]})};const nr=mark('[L] NEW_ROUND');const rw=mark('[L] ROUND_WINNER');const stats=function(t0,t1){const I=[];for(let i=0;i<S.t.length;i++)if(S.t[i]>=t0&&S.t[i]<=t1)I.push(i);const up=I.filter(function(i){return !S.pa[i]});const gaps=[];for(let k=1;k<up.length;k++)gaps.push(Math.round(S.t[up[k]]-S.t[up[k-1]]));const mx=up.map(function(i){return S.mx[i]});const nzb=mx.filter(function(v){return v>0}).length;const lat=up.map(function(i){return S.lat[i]}).filter(function(v){return v!==null});const st={};for(const i of I)st[S.cs[i]]=(st[S.cs[i]]||0)+1;return{from_ms:Math.round(t0),to_ms:Math.round(t1),span_s:Math.round((t1-t0)/10)/100,calls:I.length,calls_unpaused:up.length,calls_paused:I.length-up.length,buffers_with_nonzero_pcm:nzb,nonzero_fraction:up.length?Math.round(1000*nzb/up.length)/1000:null,peak_abs_sample:mx.length?Math.max.apply(null,mx):null,maxabs:{p10:q(mx,0.1),p50:q(mx,0.5),p90:q(mx,0.9)},push_gap_ms:{p50:q(gaps,0.5),p99:q(gaps,0.99),max:gaps.length?Math.max.apply(null,gaps):null},latency_ms:{p50:q(lat,0.5),max:lat.length?Math.max.apply(null,lat):null},ctx_states:st}};const slim=function(s,n){return{round:n,from_ms:s.from_ms,to_ms:s.to_ms,span_s:s.span_s,calls_unpaused:s.calls_unpaused,buffers_with_nonzero_pcm:s.buffers_with_nonzero_pcm,nonzero_fraction:s.nonzero_fraction,peak_abs_sample:s.peak_abs_sample,push_gap_max_ms:s.push_gap_ms.max}};const brief=function(s){return{calls:s.calls,calls_unpaused:s.calls_unpaused,calls_paused:s.calls_paused,buffers_with_nonzero_pcm:s.buffers_with_nonzero_pcm,peak_abs_sample:s.peak_abs_sample,push_gap_max_ms:s.push_gap_ms.max,ctx_states:s.ctx_states}};const whole=stats(-1,1e12);const win=(S.firstKey!==null&&rw.length)?stats(S.firstKey,rw[rw.length-1]):null;const pre=(S.firstKey!==null)?stats(-1,S.firstKey):null;const per=[];for(let i=0;i<Math.min(nr.length,rw.length);i++)per.push(slim(stats(nr[i],rw[i]),i+1));const out={probe_error:S.err,install_polls:S.polls,installed_at_ms:S.installedAt===null?null:Math.round(S.installedAt),spec:S.spec,first_trusted_key_ms:S.firstKey===null?null:Math.round(S.firstKey),rounds_started:nr.length,rounds_won:rw.length,whole_run:brief(whole),pre_gesture:pre?brief(pre):null,window:win,per_round:per};console.log('[AUDIODUMP] '+JSON.stringify(out));return 'audio dump printed'})() => audio dump printed
-[  69739ms] [console.log] [AUDIOSERIES] [0,0,0,0,0,0,0,1959,1347,1475,1360,1227,1326,2899,4156,2737,2842,1184,1166,1363,899,2576,1502,1245,1305,1261,1303,3674,4879,2865,3063,1848,1433,1135,1162,1651,1725,1053,1050,1018,1110,2299,5145,3735,1702,2761,1837,1101,1256,1166,1433,1458,1355,1461,1614,1321]
-[  69739ms] [harness] eval (()=>{const S=window.__aud;if(!S||S.firstKey===null)return 'no window';const t0=S.firstKey;const sec=[];for(let i=0;i<S.t.length;i++){if(S.t[i]<t0)continue;const k=Math.floor((S.t[i]-t0)/1000);if(sec[k]===undefined||S.mx[i]>sec[k])sec[k]=S.mx[i];}for(let k=0;k<sec.length;k++)if(sec[k]===undefined)sec[k]=0;console.log('[AUDIOSERIES] '+JSON.stringify(sec));return 'series printed'})() => series printed
-[  69740ms] [harness] === control-classifier-on-known-input ===
-[  69740ms] [console.log] [AUDIOCONTROL] all-zero=>[0,0] three-non-zero=>[32767,3]
-[  69741ms] [harness] eval (()=>{const S=window.__aud;if(!S)return 'no probe';const z=new Int16Array(64);const s=new Int16Array(64);s[7]=-12345;s[9]=1;s[63]=32767;console.log('[AUDIOCONTROL] all-zero=>'+JSON.stringify(S.scan(z,0,64))+' three-non-zero=>'+JSON.stringify(S.scan(s,0,64)));return 'control printed'})() => control printed
-[  70241ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
-[  70243ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 9203
-[  70243ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
-[  70243ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[   1403ms] [harness] firefox: 154.0.1 (headless=true)
+[   1403ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     48ms] [page] load event fired
+[    107ms] [console.log] [DISPLAY] viewport 1024x768 dpr 1 -> canvas 1024x768
+[    119ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    129ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    129ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    132ms] [page] load event fired
+[    167ms] [console.log] [PERSIST] populate ok in 5ms
+[    281ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    281ms] [console.log] [BOOT] autostart: calling main
+[    281ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    282ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    282ms] [console.error] 
+[    282ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    282ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    283ms] [console.log] 
+[    378ms] [console.log] [L] ENCODING latin1
+[    381ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    487ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    515ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    518ms] [console.error] TODO: glShadeModel
+[   1147ms] [harness] eval (()=>{if(window.__aud)return 'already installed';const S={t:[],mx:[],nz:[],pa:[],cs:[],lat:[],marks:[],firstKey:null,installedAt:null,spec:null,err:null,polls:0};window.__aud=S;S.scan=function(a,from,to){let m=0,n=0;for(let i=from;i<to;i++){const v=a[i];if(v!==0){n++;const q=v<0?-v:v;if(q>m)m=q;}}return [m,n];};addEventListener('keydown',function(e){if(e.isTrusted&&S.firstKey===null){S.firstKey=performance.now();console.log('[AUDIOPROBE] first TRUSTED keydown at '+Math.round(S.firstKey)+'ms, AudioContext state '+((typeof SDL!=='undefined'&&SDL.audioContext)?SDL.audioContext.state:'none'));}},true);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};const iv=setInterval(function(){S.polls++;try{if(typeof SDL==='undefined'||!SDL.audio||!SDL.audio.pushAudio||SDL.audio.__probed)return;const orig=SDL.audio.pushAudio;SDL.audio.pushAudio=function(ptr,sizeBytes){try{const A=SDL.audio,c=SDL.audioContext;let m=-1,n=-1;if(A.bytesPerSample===2){const r=S.scan(HEAP16,ptr>>1,(ptr+sizeBytes)>>1);m=r[0];n=r[1];}else if(!S.err){S.err='bytesPerSample is '+A.bytesPerSample+', not 2';}S.t.push(performance.now());S.mx.push(m);S.nz.push(n);S.pa.push(A.paused?1:0);S.cs.push(c?c.state:'none');S.lat.push(c?Math.round((A.nextPlayTime-c.currentTime)*1000):null);}catch(e){if(!S.err)S.err=String(e);}return orig.apply(this,arguments);};SDL.audio.__probed=true;S.installedAt=performance.now();S.spec={freq:SDL.audio.freq,samples:SDL.audio.samples,channels:SDL.audio.channels,format:SDL.audio.format,bytesPerSample:SDL.audio.bytesPerSample,bufferSize:SDL.audio.bufferSize,bufferDurationSecs:SDL.audio.bufferDurationSecs,bufferingDelay:SDL.audio.bufferingDelay,queued:SDL.audio.numSimultaneouslyQueuedBuffers,ctxSampleRate:SDL.audioContext?SDL.audioContext.sampleRate:null};console.log('[AUDIOPROBE] installed on SDL.audio.pushAudio at '+Math.round(S.installedAt)+'ms after '+S.polls+' polls: '+JSON.stringify(S.spec));clearInterval(iv);}catch(e){if(!S.err)S.err=String(e);}},50);return 'audio probe armed: pushAudio wrapper pending, [L] lines timestamped, first trusted keydown watched';})() => audio probe armed: pushAudio wrapper pending, [L] lines timestamped, first trusted keydown watched
+[   1200ms] [console.log] [AUDIOPROBE] installed on SDL.audio.pushAudio at 1198ms after 1 polls: {"freq":22050,"samples":1024,"channels":2,"format":32784,"bytesPerSample":2,"bufferSize":4096,"bufferDurationSecs":0.046439909297052155,"bufferingDelay":0.05,"queued":5,"ctxSampleRate":48000}
+[   8150ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   8151ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  14152ms] [harness] === first-run-flow-language-menu ===
+[  14185ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/audio-firefox/01-language-menu.png
+[  14194ms] [console.log] [AUDIOPROBE] first TRUSTED keydown at 14191ms, AudioContext state suspended
+[  14196ms] [harness] key Enter (1/1)
+[  14222ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  17503ms] [harness] === escape-accepts-the-defaults-and-leaves-first-setup ===
+[  17507ms] [harness] key Escape (1/1)
+[  17538ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  21824ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/audio-firefox/02-welcome-message.png
+[  21825ms] [harness] === enter-dismisses-the-welcome-message-and-starts-the-match ===
+[  21827ms] [harness] key Enter (1/1)
+[  21829ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  21830ms] [console.log] [L] TEAM_CREATED web_user
+[  21830ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  21830ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  21831ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  21832ms] [console.log] [L] NEW_ROUND 2026-08-31 19:01:50 UTC+0200
+[  21834ms] [console.log] [L] TEAM_CREATED ai_team
+[  21834ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  21835ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  21835ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  21835ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  21877ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  21877ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  21877ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  22128ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  22128ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  22129ms] [harness] === ROUND-1-STARTED ===
+[  27666ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/audio-firefox/03-round1-driving.png
+[  27671ms] [harness] key Left (1/1)
+[  27688ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  29208ms] [harness] key Right (1/1)
+[  29509ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
+[  30058ms] [console.log] [L] DEATH_FRAG web_user word
+[  30059ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  31943ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  32037ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
+[  32037ms] [harness] === ROUND-1-COMPLETE ===
+[  32037ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  35995ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  35995ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  35995ms] [console.log] [L] NEW_ROUND 2026-08-31 19:02:04 UTC+0200
+[  35998ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  35998ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  36076ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  36076ms] [harness] === ROUND-2-STARTED ===
+[  41602ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/audio-firefox/04-round2-driving.png
+[  41605ms] [harness] key Right (1/1)
+[  43109ms] [harness] key Left (1/1)
+[  43411ms] [harness] until 2x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
+[  44342ms] [console.log] [L] DEATH_FRAG web_user excel
+[  46077ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  46136ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  46137ms] [harness] === ROUND-2-COMPLETE ===
+[  46137ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 60000ms, have 2)
+[  50136ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  50136ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  50137ms] [console.log] [L] NEW_ROUND 2026-08-31 19:02:18 UTC+0200
+[  50177ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  50178ms] [harness] === ROUND-3-STARTED ===
+[  55703ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/audio-firefox/05-round3-driving.png
+[  55705ms] [harness] key Left (1/1)
+[  57209ms] [harness] key Left (1/1)
+[  57510ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  59639ms] [console.log] [L] DEATH_SUICIDE web_user
+[  61285ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  61349ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
+[  61349ms] [harness] === ROUND-3-COMPLETE ===
+[  65321ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
+[  69376ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/audio-firefox/06-after-the-match.png
+[  69381ms] [console.log] [AUDIODUMP] {"probe_error":null,"install_polls":1,"installed_at_ms":1198,"spec":{"freq":22050,"samples":1024,"channels":2,"format":32784,"bytesPerSample":2,"bufferSize":4096,"bufferDurationSecs":0.046439909297052155,"bufferingDelay":0.05,"queued":5,"ctxSampleRate":48000},"first_trusted_key_ms":14191,"rounds_started":3,"rounds_won":3,"whole_run":{"calls":1188,"calls_unpaused":1188,"calls_paused":0,"buffers_with_nonzero_pcm":1023,"peak_abs_sample":5880,"push_gap_max_ms":71,"ctx_states":{"running":1188}},"pre_gesture":{"calls":0,"calls_unpaused":0,"calls_paused":0,"buffers_with_nonzero_pcm":0,"peak_abs_sample":null,"push_gap_max_ms":null,"ctx_states":{}},"window":{"from_ms":14191,"to_ms":61273,"span_s":47.08,"calls":1014,"calls_unpaused":1014,"calls_paused":0,"buffers_with_nonzero_pcm":849,"nonzero_fraction":0.837,"peak_abs_sample":5880,"maxabs":{"p10":0,"p50":971,"p90":2261},"push_gap_ms":{"p50":48,"p99":62,"max":71},"latency_ms":{"p50":277,"max":282},"ctx_states":{"running":1014}},"per_round":[{"round":1,"from_ms":21829,"to_ms":31935,"span_s":10.11,"calls_unpaused":217,"buffers_with_nonzero_pcm":217,"nonzero_fraction":1,"peak_abs_sample":4518,"push_gap_max_ms":68},{"round":2,"from_ms":35986,"to_ms":46066,"span_s":10.08,"calls_unpaused":217,"buffers_with_nonzero_pcm":217,"nonzero_fraction":1,"peak_abs_sample":4781,"push_gap_max_ms":67},{"round":3,"from_ms":50125,"to_ms":61273,"span_s":11.15,"calls_unpaused":240,"buffers_with_nonzero_pcm":240,"nonzero_fraction":1,"peak_abs_sample":5880,"push_gap_max_ms":71}]}
+[  69381ms] [harness] eval (()=>{const S=window.__aud;if(!S)return 'no probe';const q=function(a,p){if(!a.length)return null;const s=a.slice().sort(function(x,y){return x-y});return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const mark=function(pre){return S.marks.filter(function(m){return m[1].indexOf(pre)===0}).map(function(m){return m[0]})};const nr=mark('[L] NEW_ROUND');const rw=mark('[L] ROUND_WINNER');const stats=function(t0,t1){const I=[];for(let i=0;i<S.t.length;i++)if(S.t[i]>=t0&&S.t[i]<=t1)I.push(i);const up=I.filter(function(i){return !S.pa[i]});const gaps=[];for(let k=1;k<up.length;k++)gaps.push(Math.round(S.t[up[k]]-S.t[up[k-1]]));const mx=up.map(function(i){return S.mx[i]});const nzb=mx.filter(function(v){return v>0}).length;const lat=up.map(function(i){return S.lat[i]}).filter(function(v){return v!==null});const st={};for(const i of I)st[S.cs[i]]=(st[S.cs[i]]||0)+1;return{from_ms:Math.round(t0),to_ms:Math.round(t1),span_s:Math.round((t1-t0)/10)/100,calls:I.length,calls_unpaused:up.length,calls_paused:I.length-up.length,buffers_with_nonzero_pcm:nzb,nonzero_fraction:up.length?Math.round(1000*nzb/up.length)/1000:null,peak_abs_sample:mx.length?Math.max.apply(null,mx):null,maxabs:{p10:q(mx,0.1),p50:q(mx,0.5),p90:q(mx,0.9)},push_gap_ms:{p50:q(gaps,0.5),p99:q(gaps,0.99),max:gaps.length?Math.max.apply(null,gaps):null},latency_ms:{p50:q(lat,0.5),max:lat.length?Math.max.apply(null,lat):null},ctx_states:st}};const slim=function(s,n){return{round:n,from_ms:s.from_ms,to_ms:s.to_ms,span_s:s.span_s,calls_unpaused:s.calls_unpaused,buffers_with_nonzero_pcm:s.buffers_with_nonzero_pcm,nonzero_fraction:s.nonzero_fraction,peak_abs_sample:s.peak_abs_sample,push_gap_max_ms:s.push_gap_ms.max}};const brief=function(s){return{calls:s.calls,calls_unpaused:s.calls_unpaused,calls_paused:s.calls_paused,buffers_with_nonzero_pcm:s.buffers_with_nonzero_pcm,peak_abs_sample:s.peak_abs_sample,push_gap_max_ms:s.push_gap_ms.max,ctx_states:s.ctx_states}};const whole=stats(-1,1e12);const win=(S.firstKey!==null&&rw.length)?stats(S.firstKey,rw[rw.length-1]):null;const pre=(S.firstKey!==null)?stats(-1,S.firstKey):null;const per=[];for(let i=0;i<Math.min(nr.length,rw.length);i++)per.push(slim(stats(nr[i],rw[i]),i+1));const out={probe_error:S.err,install_polls:S.polls,installed_at_ms:S.installedAt===null?null:Math.round(S.installedAt),spec:S.spec,first_trusted_key_ms:S.firstKey===null?null:Math.round(S.firstKey),rounds_started:nr.length,rounds_won:rw.length,whole_run:brief(whole),pre_gesture:pre?brief(pre):null,window:win,per_round:per};console.log('[AUDIODUMP] '+JSON.stringify(out));return 'audio dump printed'})() => audio dump printed
+[  69382ms] [console.log] [AUDIOSERIES] [0,0,0,0,0,0,0,1572,1251,1331,1251,1069,1320,3375,4518,2930,2453,1184,1096,1037,839,2006,1630,1307,1288,1311,1333,3306,4781,2928,3195,1558,1233,1230,1057,2119,1894,1233,1266,1096,1160,1891,5880,3794,1644,2943,1495,1087,1014,1062,1222,1290,1422,2011,1896,1686]
+[  69382ms] [harness] eval (()=>{const S=window.__aud;if(!S||S.firstKey===null)return 'no window';const t0=S.firstKey;const sec=[];for(let i=0;i<S.t.length;i++){if(S.t[i]<t0)continue;const k=Math.floor((S.t[i]-t0)/1000);if(sec[k]===undefined||S.mx[i]>sec[k])sec[k]=S.mx[i];}for(let k=0;k<sec.length;k++)if(sec[k]===undefined)sec[k]=0;console.log('[AUDIOSERIES] '+JSON.stringify(sec));return 'series printed'})() => series printed
+[  69383ms] [harness] === control-classifier-on-known-input ===
+[  69383ms] [console.log] [AUDIOCONTROL] all-zero=>[0,0] three-non-zero=>[32767,3]
+[  69383ms] [harness] eval (()=>{const S=window.__aud;if(!S)return 'no probe';const z=new Int16Array(64);const s=new Int16Array(64);s[7]=-12345;s[9]=1;s[63]=32767;console.log('[AUDIOCONTROL] all-zero=>'+JSON.stringify(S.scan(z,0,64))+' three-non-zero=>'+JSON.stringify(S.scan(s,0,64)));return 'control printed'})() => control printed
+[  69884ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  69887ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 10387
+[  69888ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[  69890ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
     <anonymous> @ http://localhost:8000/armagetronad.html:0
     <anonymous> @ http://localhost:8000/armagetronad.html:0
-[  72270ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate-firefox/07-after-deliberate-uncaught-error.png
+[  71920ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/audio-firefox/07-after-deliberate-uncaught-error.png

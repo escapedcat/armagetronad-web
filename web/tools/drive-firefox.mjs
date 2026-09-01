@@ -20,7 +20,7 @@
 // USAGE
 //   python3 -m http.server 8000 --directory web/dist-m1 &
 //   node web/tools/drive-firefox.mjs --out /tmp/shots \
-//        --script 'wait:2000,click:#start,wait:20000,shot:booted'
+//        --script 'wait:2000,wait:20000,shot:booted'
 //
 // Options and steps are the same as drive-browser.mjs (--url, --out, --script,
 // --script-file, --headed, --port, --width, --height, --firefox, --keep-open,
@@ -61,7 +61,10 @@ function parseArgs(argv) {
   const opt = {
     url: 'http://localhost:8000/armagetronad.html',
     out: 'web-evidence-firefox',
-    steps: 'wait:2000,shot:00-loading,click:#start,wait:20000,shot:01-booted'.split(','),
+    // The default script no longer clicks #start: M5 removed the Play button and
+    // the page autostarts. A default that clicks a missing element would fail
+    // confusingly for anyone running the driver with no --script/--script-file.
+        steps: 'wait:2000,shot:00-loading,wait:20000,shot:01-booted'.split( ',' ),
     headed: false,
     port: 9333,
     width: 1024,

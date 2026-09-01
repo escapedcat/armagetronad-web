@@ -193,10 +193,10 @@ const MUTATIONS = [
   },
   {
     id: 'P14',
-    what: "move boot 2's Play click ABOVE the payloads it is supposed to follow",
+    what: "move boot 2's game start ABOVE the payloads it is supposed to follow",
     apply: (L) => {
       const reload = L.findIndex((l) => l.includes('=== RELOAD-REQUESTED ==='));
-      const click = L.findIndex((l, i) => i > reload && l.includes('[harness] click #start'));
+      const click = L.findIndex((l, i) => i > reload && l.includes('[BOOT] autostart'));
       const line = L[click];
       L.splice(click, 1);
       L.splice(findPhase(L, FS_TAG, 'boot2-before-play'), 0, line);

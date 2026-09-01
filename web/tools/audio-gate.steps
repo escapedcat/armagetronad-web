@@ -55,7 +55,7 @@
 #
 # WHY THE MEASUREMENT IS WINDOWED TO THE FIRST *TRUSTED* KEY PRESS
 # ----------------------------------------------------------------
-# `click:#start` runs through Runtime.evaluate / script.evaluate, which is not
+# The old `click:#start` step ran through Runtime.evaluate / script.evaluate, which is not
 # a user gesture, so the AudioContext stays SUSPENDED after the module boots
 # and opens the device. Measured in M3 task 2: in Firefox that produces a
 # 6064 ms gap in pushAudio (8491 ms -> 14555 ms) with NO starvation warning at
@@ -131,9 +131,12 @@
 wait:1000
 eval:(()=>{if(window.__aud)return 'already installed';const S={t:[],mx:[],nz:[],pa:[],cs:[],lat:[],marks:[],firstKey:null,installedAt:null,spec:null,err:null,polls:0};window.__aud=S;S.scan=function(a,from,to){let m=0,n=0;for(let i=from;i<to;i++){const v=a[i];if(v!==0){n++;const q=v<0?-v:v;if(q>m)m=q;}}return [m,n];};addEventListener('keydown',function(e){if(e.isTrusted&&S.firstKey===null){S.firstKey=performance.now();console.log('[AUDIOPROBE] first TRUSTED keydown at '+Math.round(S.firstKey)+'ms, AudioContext state '+((typeof SDL!=='undefined'&&SDL.audioContext)?SDL.audioContext.state:'none'));}},true);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};const iv=setInterval(function(){S.polls++;try{if(typeof SDL==='undefined'||!SDL.audio||!SDL.audio.pushAudio||SDL.audio.__probed)return;const orig=SDL.audio.pushAudio;SDL.audio.pushAudio=function(ptr,sizeBytes){try{const A=SDL.audio,c=SDL.audioContext;let m=-1,n=-1;if(A.bytesPerSample===2){const r=S.scan(HEAP16,ptr>>1,(ptr+sizeBytes)>>1);m=r[0];n=r[1];}else if(!S.err){S.err='bytesPerSample is '+A.bytesPerSample+', not 2';}S.t.push(performance.now());S.mx.push(m);S.nz.push(n);S.pa.push(A.paused?1:0);S.cs.push(c?c.state:'none');S.lat.push(c?Math.round((A.nextPlayTime-c.currentTime)*1000):null);}catch(e){if(!S.err)S.err=String(e);}return orig.apply(this,arguments);};SDL.audio.__probed=true;S.installedAt=performance.now();S.spec={freq:SDL.audio.freq,samples:SDL.audio.samples,channels:SDL.audio.channels,format:SDL.audio.format,bytesPerSample:SDL.audio.bytesPerSample,bufferSize:SDL.audio.bufferSize,bufferDurationSecs:SDL.audio.bufferDurationSecs,bufferingDelay:SDL.audio.bufferingDelay,queued:SDL.audio.numSimultaneouslyQueuedBuffers,ctxSampleRate:SDL.audioContext?SDL.audioContext.sampleRate:null};console.log('[AUDIOPROBE] installed on SDL.audio.pushAudio at '+Math.round(S.installedAt)+'ms after '+S.polls+' polls: '+JSON.stringify(S.spec));clearInterval(iv);}catch(e){if(!S.err)S.err=String(e);}},50);return 'audio probe armed: pushAudio wrapper pending, [L] lines timestamped, first trusted keydown watched';})()
 
-# The module needs ~7 s to fetch and instantiate before the Play button works.
+# The module needs a few seconds to fetch and instantiate; since M5 task 5 the
+# game starts by itself when it is ready, so this waits for the page to say so
+# rather than clicking anything. The wait after it is what the old script spent
+# on the click; it is kept so the menus have settled before the first key.
 wait:7000
-click:#start
+until:1:120000:[BOOT] autostart
 wait:6000
 mark:first-run-flow-language-menu
 shot:01-language-menu

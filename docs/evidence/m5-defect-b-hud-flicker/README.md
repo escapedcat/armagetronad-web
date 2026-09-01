@@ -151,3 +151,83 @@ compiles it at all — but the md5 was re-checked rather than argued.
 - **It was measured in Chrome only**, on a local server, at 1024x768. Firefox
   paces `setTimeout` and compositing differently and should be measured before
   anyone quotes 20.7% as a property of the Demo rather than of this run.
+
+
+---
+
+# M5 task 5: the fix, and what it did NOT fix
+
+The yield moved. It is no longer at the top of `rSysDep::SwapGL()`; the drawing
+path now yields **after the swap block** (after `SDL_mutexP(sr_netLock)` retakes
+the lock), and the `!sr_glOut` early-return path carries its own. `client-oldyield`
+replaces `client-yieldprobe` as the control build — the shipped and control roles
+are now the inverse of task 4c's, so `AA_WEB_YIELD_BEFORE_PERFRAME` restores the
+old placement rather than the new one.
+
+## Why after the swap block and not simply below `DoPerFrameTasks()`
+
+Both places have the complete frame in the drawing buffer, so both fix the
+flicker. This one is additionally **after `glFlush()`** — `rSysDep::swapMode_`
+defaults to `rSwap_glFlush` — so every draw call for the frame, the overlay's
+included, has been submitted *and* flushed before the browser can composite.
+It is also after `make_screenshot()`'s `glReadPixels`.
+
+**The mutex argument for preferring it does not hold, and task 4c's report was
+wrong about it.** That report worried the control placement "moves the yield
+across `SDL_mutexV(sr_netLock)`". It does not: the control yields immediately
+*before* that unlock, exactly where the old top-of-function placement did. And
+there is no mutex to cross in any case — `rSysDep::StartNetSyncThread()` returns
+before it reaches `SDL_CreateMutex()`, so `sr_netLock` is always NULL;
+Emscripten's `SDL_mutexP`/`SDL_mutexV` are `(mutex) => 0`; and `sr_LockSDL()` /
+`sr_UnlockSDL()` have had their bodies commented out upstream for years. What
+*is* true, and is why the yield sits after `SDL_mutexP` rather than between the
+V and the P, is that the unlocked span is the window a net-sync thread would run
+in if one were ever started again.
+
+## Measured, `probes/kprobe.steps`, both engines, 40.5 s of play each
+
+| | **Chrome fixed** | **Chrome old yield** | **Firefox fixed** | **Firefox old yield** |
+|---|---|---|---|---|
+| game fps / rAF Hz | 59.9 / 120 | 59.7 / 119.7 | 59.2 / 118.9 | 59.2 / 117.4 |
+| HUD median (bright px) | 881 | 838 | 867 | **153** |
+| ticks with the HUD gone | 15.2% | 42.4% | 16.8% | 40.6% |
+| **separate gone-runs** | **3** | **873** | **3** | **824** |
+| **short runs (<300 ms)** | **0** | **870** | **0** | **822** |
+| long runs (>=300 ms) | 3 | 3 | 3 | 3 |
+| median gone-run length | 180 ticks | **1 tick** | 180 ticks | **1 tick** |
+| live detector captures | **0** | 3 | **0** | 3 |
+
+Both engines, same shape: **every short blink is gone and the three long
+stretches are untouched.** The live detector printed *"no compositor tick showed
+the world drawn with the HUD gone"* on both fixed runs.
+
+Task 4c measured 38 gone-runs on the old build against 873/824 here. The
+difference is the sampling rate, not the defect: this machine's rAF ran at
+**120 Hz** in these runs against 60 Hz in 4c's, so twice as many compositor
+ticks land inside each ~4 ms window, and the run-splitting is finer. The
+within-run comparison is what carries the claim, and it was taken under
+identical conditions.
+
+## The three long stretches are round transitions. This is now evidence, not a word.
+
+`kprobe.steps` gained a ladder-log timestamper and a `[HUDRUNS]` dump that
+attributes every gone-run to what the game was doing. In all four runs above,
+**all three long stretches start ~515 ms after a `ROUND_SCORE` /
+`ROUND_SCORE_TEAM` / `NEW_ROUND` triple and last 1.49-1.51 s**, and there are
+exactly three because the window covers three round transitions:
+
+    LONG 180 ticks 1492 ms
+        -520ms [L] ROUND_SCORE -2 web_user web_user
+        -520ms [L] ROUND_SCORE_TEAM -2 web_user
+        -520ms [L] NEW_ROUND 2026-08-31 18:38:34 UTC+0200
+
+They are identical in the fixed and the control build — same count, same length,
+same position to within ~10 ms — so they are the game not drawing the HUD
+between rounds, by design, and not a second defect.
+
+**Report both numbers, not the ratio.** A visitor sees ~1.5 s with no HUD at
+each round change, before and after this fix, and that is plausibly what "still
+there sometimes quite a bit" describes. What this fix removes is the other
+thing: the sub-frame blink that used to happen hundreds of times in 40 seconds.
+If the round-transition gap is judged too long, that is a separate change to
+what `rPerFrameTask` draws during a transition, and nothing here touches it.

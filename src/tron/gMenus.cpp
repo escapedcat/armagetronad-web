@@ -42,6 +42,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "tRecorder.h"
 #include "rSysdep.h"
 
+#if !defined(DEDICATED) && defined(__EMSCRIPTEN__)
+// For EM_ASM in toggle_fullscreen_func below. Guarded rather than
+// unconditional so the dedicated build's preprocessed output is unchanged --
+// see the long comment there.
+#include <emscripten.h>
+#endif
+
 #include <sstream>
 #include <set>
 #include <array>
@@ -1226,6 +1233,107 @@ static bool con_func(REAL x){
 static bool toggle_fullscreen_func( REAL x )
 {
 #ifndef DEDICATED
+#if defined(__EMSCRIPTEN__) && !defined(AA_WEB_KEEP_FULLSCREEN_TOGGLE)
+    // IN THE BROWSER, TOGGLE_FULLSCREEN MEANS THE BROWSER'S FULLSCREEN.
+    //
+    // The key stays bound. config/default.cfg binds this action to keycodes
+    // 319, 110 ('n') and 102 ('f'), those binds persist into user.cfg on first
+    // use, and players have had them for twenty years. What changes is what
+    // they DO.
+    //
+    // WHAT THE CODE BELOW THIS BLOCK DOES, AND WHY IT IS WRONG HERE. It flips
+    // currentScreensetting.fullscreen and calls sr_ReinitDisplay(). Emscripten
+    // ignores the SDL_FULLSCREEN bit entirely, so no window ever becomes
+    // fullscreen -- but the flag is not inert, because it selects WHICH
+    // resolution setting the game reads: lowlevel_sr_InitDisplay takes
+    // currentScreensetting.res when it is set and windowSize when it is not
+    // (the same asymmetry that makes "Window Size" the dead row in the
+    // resolution menu -- docs/evidence/m5-defect-a-resolution). So the key
+    // re-inits the display INTO A STORED SIZE NOBODY CHOSE, throwing away the
+    // canvas size web/shell.html established from the viewport before boot.
+    // Measured, not argued: with this block compiled out, pressing 'n' during
+    // play moves the canvas from 1024x768 to 640x480
+    // (docs/evidence/m5-startup, armagetronad-fstoggle.html).
+    //
+    // THE BACKING STORE IS DELIBERATELY NOT TOUCHED. Browser fullscreen is
+    // presentation: the page's CSS stretches the existing drawing buffer to the
+    // screen. Resizing the buffer here would mean SDL_SetVideoMode again, which
+    // is the sr_ReinitDisplay path this whole change exists to leave alone.
+    //
+    // THE GESTURE QUESTION, WHICH IS THE ONE THAT DECIDES WHETHER THIS WORKS.
+    // requestFullscreen() needs transient user activation -- it must run inside
+    // the browser's own event handler. This game does not process keys there:
+    // SDL's DOM listener queues the event and the game reads it out of its own
+    // loop one or more Asyncify yields later, so by the time this function runs
+    // the handler has long returned. Whether the activation survives that is a
+    // fact about the browser, not something to reason about, so the JS below
+    // reports the outcome of the promise on a [FSKEY] line and
+    // web/tools/fullscreen-key-gate.steps reads it. A rejection is not
+    // swallowed and is not turned into a red banner either: the .catch() is
+    // what keeps an unhandled rejection out of shell.html's
+    // window.onunhandledrejection.
+    //
+    // MEASURED ANSWER: THE ACTIVATION SURVIVES. From the DOM keydown to this
+    // function is 7-16 ms in Chrome -- the game reads its queued key inside the
+    // same frame -- and `requestFullscreen` RESOLVES about 130 ms later.
+    // Pressing the key again exits. Chrome's activation window is five seconds
+    // and this uses about three thousandths of it, so there is a lot of margin;
+    // it is still worth re-measuring if the frame loop ever gets slower.
+    //
+    // ONLY 'n' REACHES THIS FUNCTION. 'f' DOES NOT, AND THAT IS OLDER THAN THIS
+    // CHANGE. Measured in the same runs: DOM keyCode 70 arrives, Emscripten's
+    // SDL.lookupKeyCodeForEvent turns it into keysym 102, the persisted
+    // /persist/var/user.cfg contains `KEYBOARD 102 PLAYER_BIND
+    // TOGGLE_FULLSCREEN 0` -- and this function is not entered at all, not even
+    // with x <= 0 (probed with an unconditional log at the top). Keysym 110
+    // ('n') on the same line shape does enter it, twice, x=1 then x=-1. The
+    // control build that still runs the sr_ReinitDisplay body behaves
+    // identically -- 'f' does nothing there either while 'n' resizes the canvas
+    // to 640x480 -- so whatever swallows keysym 102 predates M5 task 5 and is
+    // not caused by it. It is NOT the dead 313-322 range uInput.cpp documents
+    // (that is keysym 319, the third bind). Unresolved; the two candidates
+    // worth checking first are config/keys_cursor.cfg and
+    // config/keys_cursor_single.cfg, which both rebind 102 to a player action,
+    // and whatever else can write keymap[102] after the config load.
+    if ( x > 0 )
+    {
+        EM_ASM({
+            try {
+                console.log('[FSKEY] TOGGLE_FULLSCREEN: action fired at '
+                            + Math.round(performance.now()) + 'ms, fullscreenElement='
+                            + (document.fullscreenElement ? document.fullscreenElement.tagName : 'null'));
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                    console.log('[FSKEY] TOGGLE_FULLSCREEN: exitFullscreen requested');
+                } else {
+                    var p = document.documentElement.requestFullscreen();
+                    if (p && p.then) {
+                        p.then(function() { console.log('[FSKEY] TOGGLE_FULLSCREEN: requestFullscreen RESOLVED'); }
+                             , function(e) { console.log('[FSKEY] TOGGLE_FULLSCREEN: requestFullscreen REJECTED: ' + e); });
+                    } else {
+                        console.log('[FSKEY] TOGGLE_FULLSCREEN: requestFullscreen returned no promise');
+                    }
+                }
+            } catch (e) {
+                console.log('[FSKEY] TOGGLE_FULLSCREEN: requestFullscreen THREW: ' + e);
+            }
+        });
+    }
+
+    // The guard is __EMSCRIPTEN__ inside the existing #ifndef DEDICATED, so the
+    // dedicated server's preprocessed output is unchanged -- verified by md5,
+    // not argued.
+    //
+    // AA_WEB_KEEP_FULLSCREEN_TOGGLE IS A CONTROL-BUILD SWITCH AND NOTHING ELSE,
+    // same shape as AA_WEB_YIELD_AFTER_PERFRAME in rSysdep.cpp. It is never
+    // defined by the `client` target; web/Makefile's `client-fullscreentoggle`
+    // target defines it to link a second page that still runs the
+    // sr_ReinitDisplay body below. Without that page, "pressing f no longer
+    // resizes the canvas" is an absence rather than a measurement -- it cannot
+    // tell a changed action apart from a key that never reached the game at
+    // all.
+    return true;
+#endif
 #ifdef DEBUG
     // don't toggle fullscreen while playing back in debug mode, that's annoying
     if ( tRecorder::IsPlayingBack() )

@@ -1,107 +1,117 @@
-[   1499ms] [harness] firefox: 154.0.1 (headless=true)
-[   1500ms] [harness] navigating to http://localhost:8000/armagetronad.html
-[     49ms] [page] load event fired
-[    130ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
-[    146ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
-[    146ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
-[    147ms] [page] load event fired
-[   1158ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped
-[   8161ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => canvas 1024x768
-[   8165ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
-[   8165ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
-[   8166ms] [console.error] 
-[   8167ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
-[   8167ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
-[   8167ms] [console.log] 
-[   8299ms] [console.log] [L] ENCODING latin1
-[   8303ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
-[   8441ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
-[   8444ms] [console.error] TODO: glShadeModel
-[   8456ms] [harness] click #start: clicked
-[  14474ms] [harness] === first-run-flow-language-menu ===
-[  14494ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/01-language-menu.png
-[  14505ms] [harness] key Enter (1/1)
-[  17821ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/02-first-setup-menu.png
-[  17821ms] [harness] === escape-accepts-the-defaults-and-leaves-first-setup ===
-[  17828ms] [harness] key Escape (1/1)
-[  22158ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/03-welcome-message.png
-[  22158ms] [harness] === enter-dismisses-the-welcome-message-and-starts-the-match ===
-[  22161ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
-[  22161ms] [console.log] [L] TEAM_CREATED web_user
-[  22162ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
-[  22163ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
-[  22164ms] [console.log] [L] NEW_ROUND 2026-08-27 20:22:36 UTC+0200
-[  22168ms] [console.log] [L] TEAM_CREATED ai_team
-[  22168ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
-[  22169ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
-[  22169ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
-[  22193ms] [harness] key Enter (1/1)
-[  22496ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
-[  22497ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
-[  22497ms] [harness] === ROUND-1-STARTED ===
-[  28013ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/04-round1-driving-HUD-shows-enemies.png
-[  28015ms] [harness] key Left (1/1)
-[  29530ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/05-round1-after-LEFT.png
-[  29532ms] [harness] key Right (1/1)
-[  30400ms] [console.log] [L] DEATH_FRAG web_user word
-[  31046ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/06-round1-after-RIGHT.png
-[  31047ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
-[  32283ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
-[  32359ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
-[  32359ms] [harness] === ROUND-1-COMPLETE ===
-[  32381ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/07-round1-ended.png
-[  32381ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
-[  36323ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
-[  36323ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
-[  36323ms] [console.log] [L] NEW_ROUND 2026-08-27 20:22:50 UTC+0200
-[  36326ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
-[  36326ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
-[  36418ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
-[  36418ms] [harness] === ROUND-2-STARTED ===
-[  41935ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/08-round2-driving-HUD-shows-enemies.png
-[  41938ms] [harness] key Right (1/1)
-[  43452ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/09-round2-after-RIGHT.png
-[  43457ms] [harness] key Left (1/1)
-[  44689ms] [console.log] [L] DEATH_FRAG web_user excel
-[  44973ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/10-round2-after-LEFT.png
-[  44973ms] [harness] until 2x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
-[  46406ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
-[  46488ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
-[  46488ms] [harness] === ROUND-2-COMPLETE ===
-[  46509ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/11-round2-ended.png
-[  46510ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 60000ms, have 2)
-[  50468ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
-[  50469ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
-[  50469ms] [console.log] [L] NEW_ROUND 2026-08-27 20:23:04 UTC+0200
-[  50545ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
-[  50545ms] [harness] === ROUND-3-STARTED ===
-[  56058ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/12-round3-driving-HUD-shows-enemies.png
-[  56061ms] [harness] key Left (1/1)
-[  57575ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/13-round3-after-LEFT.png
-[  57577ms] [harness] key Left (1/1)
-[  59091ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/14-round3-after-LEFT-again.png
-[  59091ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
-[  60026ms] [console.log] [L] DEATH_SUICIDE web_user
-[  61575ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
-[  61609ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
-[  61610ms] [harness] === ROUND-3-COMPLETE ===
-[  61628ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/15-round3-ended.png
-[  65601ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
-[  69377ms] [console.log] [L] DEATH_TEAMKILL word outlook
-[  69642ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/16-after-the-match.png
-[  69646ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const ks=Object.keys(sec).map(Number).sort((a,b)=>a-b);const per=ks.slice(0,-1).map(k=>sec[k]);const span=(t1-t0)/1000;return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => {"total_frames_sampled":3604,"rounds_started":3,"rounds_won":3,"overall":{"span_s":39.41,"frames":2324,"mean_fps":58.97,"frame_ms":{"p50":17,"p90":20,"p99":26,"max":41},"inst_fps":{"median":58.82,"p10":50,"p01":38.46,"min":24.39},"fps_per_second":[57,57,58,60,57,58,58,60,60,60,60,60,59,60,58,59,60,59,59,58,60,60,58,58,56,57,57,57,60,60,60,60,60,60,59,61,60,59,60],"fps_per_second_min":56,"fps_per_second_median":59},"per_round":[{"span_s":10.12,"frames":592,"mean_fps":58.5,"frame_ms":{"p50":17,"p90":21,"p99":29,"max":41},"inst_fps":{"median":58.82,"p10":47.62,"p01":34.48,"min":24.39},"fps_per_second":[57,57,58,60,57,58,58,60,60,60],"fps_per_second_min":57,"fps_per_second_median":58},{"span_s":10.08,"frames":594,"mean_fps":58.92,"frame_ms":{"p50":17,"p90":21,"p99":25,"max":29},"inst_fps":{"median":58.82,"p10":47.62,"p01":40,"min":34.48},"fps_per_second":[59,59,59,60,58,59,59,60,58,58],"fps_per_second_min":58,"fps_per_second_median":59},{"span_s":11.11,"frames":666,"mean_fps":59.96,"frame_ms":{"p50":17,"p90":19,"p99":21,"max":23},"inst_fps":{"median":58.82,"p10":52.63,"p01":47.62,"min":43.48},"fps_per_second":[60,60,60,60,60,60,60,60,60,60,60],"fps_per_second_min":60,"fps_per_second_median":60}]}
-[  69646ms] [harness] === positive-control-deliberate-webgl-warning-follows ===
-[  69664ms] [harness] eval (()=>{const c=document.createElement('canvas');const g=c.getContext('webgl');if(!g)return 'no webgl context for the control';g.hint(0x0C50,g.FASTEST);return 'deliberate bad glHint issued, gl.getError()=0x'+g.getError().toString(16)+' (0x500 == INVALID_ENUM)'})() => deliberate bad glHint issued, gl.getError()=0x500 (0x500 == INVALID_ENUM)
-[  71186ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/17-final-state.png
-[  71191ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const codes={};for(const g of S.gl)codes['0x'+g[1].toString(16)]=(codes['0x'+g[1].toString(16)]||0)+1;return JSON.stringify({glGetError_polls:S.polls,glGetError_nonzero:S.gl.length,codes:codes,first:S.gl.slice(0,5)})})() => {"glGetError_polls":123,"glGetError_nonzero":0,"codes":{},"first":[]}
-[  71191ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
-[  71192ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 7754
-[  71192ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
-[  71193ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[   1396ms] [harness] firefox: 154.0.1 (headless=true)
+[   1396ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     53ms] [page] load event fired
+[    109ms] [console.log] [DISPLAY] viewport 1024x768 dpr 1 -> canvas 1024x768
+[    121ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    131ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    131ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    133ms] [page] load event fired
+[    169ms] [console.log] [PERSIST] populate ok in 5ms
+[    285ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    286ms] [console.log] [BOOT] autostart: calling main
+[    286ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    286ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    286ms] [console.error] 
+[    286ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    286ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    286ms] [console.log] 
+[    383ms] [console.log] [L] ENCODING latin1
+[    386ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    481ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    508ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    511ms] [console.error] TODO: glShadeModel
+[   1154ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped
+[   8159ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => canvas 1024x768
+[   8161ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   8161ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  14163ms] [harness] === first-run-flow-language-menu ===
+[  14193ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/01-language-menu.png
+[  14204ms] [harness] key Enter (1/1)
+[  14217ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  17542ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/02-first-setup-menu.png
+[  17542ms] [harness] === escape-accepts-the-defaults-and-leaves-first-setup ===
+[  17546ms] [harness] key Escape (1/1)
+[  17588ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  21861ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/03-welcome-message.png
+[  21862ms] [harness] === enter-dismisses-the-welcome-message-and-starts-the-match ===
+[  21863ms] [harness] key Enter (1/1)
+[  21873ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  21873ms] [console.log] [L] TEAM_CREATED web_user
+[  21873ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  21874ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  21874ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  21875ms] [console.log] [L] NEW_ROUND 2026-08-31 19:03:04 UTC+0200
+[  21877ms] [console.log] [L] TEAM_CREATED ai_team
+[  21878ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  21878ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  21878ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  21878ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  21905ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  21905ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  21905ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  22165ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  22166ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  22166ms] [harness] === ROUND-1-STARTED ===
+[  27688ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/04-round1-driving-HUD-shows-enemies.png
+[  27690ms] [harness] key Left (1/1)
+[  27704ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  29261ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/05-round1-after-LEFT.png
+[  29267ms] [harness] key Right (1/1)
+[  30167ms] [console.log] [L] DEATH_FRAG web_user word
+[  30167ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  30794ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/06-round1-after-RIGHT.png
+[  30794ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
+[  31984ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  32005ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
+[  32006ms] [harness] === ROUND-1-COMPLETE ===
+[  32034ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/07-round1-ended.png
+[  32034ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  36028ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  36029ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  36029ms] [console.log] [L] NEW_ROUND 2026-08-31 19:03:18 UTC+0200
+[  36031ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  36032ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  36079ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  36080ms] [harness] === ROUND-2-STARTED ===
+[  41607ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/08-round2-driving-HUD-shows-enemies.png
+[  41609ms] [harness] key Right (1/1)
+[  43133ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/09-round2-after-RIGHT.png
+[  43141ms] [harness] key Left (1/1)
+[  44404ms] [console.log] [L] DEATH_FRAG web_user excel
+[  44665ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/10-round2-after-LEFT.png
+[  44666ms] [harness] until 2x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
+[  46140ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  46181ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  46181ms] [harness] === ROUND-2-COMPLETE ===
+[  46208ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/11-round2-ended.png
+[  46208ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 60000ms, have 2)
+[  50206ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  50206ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  50206ms] [console.log] [L] NEW_ROUND 2026-08-31 19:03:32 UTC+0200
+[  50248ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  50249ms] [harness] === ROUND-3-STARTED ===
+[  55777ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/12-round3-driving-HUD-shows-enemies.png
+[  55779ms] [harness] key Left (1/1)
+[  57303ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/13-round3-after-LEFT.png
+[  57305ms] [harness] key Left (1/1)
+[  58833ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/14-round3-after-LEFT-again.png
+[  58833ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  59733ms] [console.log] [L] DEATH_SUICIDE web_user
+[  61310ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  61363ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
+[  61363ms] [harness] === ROUND-3-COMPLETE ===
+[  61395ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/15-round3-ended.png
+[  65360ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
+[  69422ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/16-after-the-match.png
+[  69426ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => {"total_frames_sampled":3991,"rounds_started":3,"rounds_won":3,"overall":{"span_s":39.43,"frames":2285,"mean_fps":57.95,"frame_ms":{"p50":17,"p90":22,"p99":31,"max":46},"inst_fps":{"median":58.82,"p10":45.45,"p01":32.26,"min":21.74},"fps_per_second":[59,58,59,58,57,57,58,59,60,59,60,58,59,58,58,59,56,57,56,59,58,59,56,58,56,58,59,59,58,56,58,56,57,58,57,59,56,60,58],"fps_per_second_min":56,"fps_per_second_median":58},"per_round":[{"span_s":10.11,"frames":590,"mean_fps":58.37,"frame_ms":{"p50":17,"p90":21,"p99":32,"max":46},"inst_fps":{"median":58.82,"p10":47.62,"p01":31.25,"min":21.74},"fps_per_second":[59,58,59,58,57,57,58,59,60,59],"fps_per_second_min":57,"fps_per_second_median":59},{"span_s":10.11,"frames":581,"mean_fps":57.46,"frame_ms":{"p50":17,"p90":22,"p99":31,"max":44},"inst_fps":{"median":58.82,"p10":45.45,"p01":32.26,"min":22.73},"fps_per_second":[58,58,57,57,56,59,58,59,56,57],"fps_per_second_min":56,"fps_per_second_median":58},{"span_s":11.1,"frames":638,"mean_fps":57.47,"frame_ms":{"p50":17,"p90":23,"p99":32,"max":42},"inst_fps":{"median":58.82,"p10":43.48,"p01":31.25,"min":23.81},"fps_per_second":[57,56,58,56,57,59,57,57,58,59,59],"fps_per_second_min":56,"fps_per_second_median":57}]}
+[  69426ms] [harness] === positive-control-deliberate-webgl-warning-follows ===
+[  69447ms] [harness] eval (()=>{const c=document.createElement('canvas');const g=c.getContext('webgl');if(!g)return 'no webgl context for the control';g.hint(0x0C50,g.FASTEST);return 'deliberate bad glHint issued, gl.getError()=0x'+g.getError().toString(16)+' (0x500 == INVALID_ENUM)'})() => deliberate bad glHint issued, gl.getError()=0x500 (0x500 == INVALID_ENUM)
+[  70974ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/17-final-state.png
+[  70981ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const codes={};for(const g of S.gl)codes['0x'+g[1].toString(16)]=(codes['0x'+g[1].toString(16)]||0)+1;return JSON.stringify({glGetError_polls:S.polls,glGetError_nonzero:S.gl.length,codes:codes,first:S.gl.slice(0,5)})})() => {"glGetError_polls":136,"glGetError_nonzero":0,"codes":{},"first":[]}
+[  70981ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  70982ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 10437
+[  70983ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[  70985ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
     <anonymous> @ http://localhost:8000/armagetronad.html:0
     <anonymous> @ http://localhost:8000/armagetronad.html:0
-[  71660ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
-[  71660ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
-[  71660ms] [console.log] [L] NEW_ROUND 2026-08-27 20:23:25 UTC+0200
-[  71660ms] [console.log] [L] NEW_MATCH 2026-08-27 20:23:25 UTC+0200
-[  73215ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/gate2-firefox/18-after-deliberate-uncaught-error.png
+[  73018ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/rec/gameplay-firefox/18-after-deliberate-uncaught-error.png

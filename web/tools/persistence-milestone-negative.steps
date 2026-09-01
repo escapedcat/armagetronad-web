@@ -4,11 +4,24 @@
 #
 #   python3 -m http.server 8000 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --out /tmp/mile-negative \
+#        --url http://localhost:8000/armagetronad.html?autostart=0 \
 #        --script-file web/tools/persistence-milestone-negative.steps
 #   node docs/evidence/m4-persistence/check-milestone-transcript.mjs \
 #        /tmp/mile-negative/console.log
 #   # expected: exit status 1, with M14 M16 M17 FAIL
 #   kill %1
+#
+# M5 task 5: THIS GATE MUST BE DRIVEN WITH ?autostart=0 -- the URL in the recipe
+# above is not optional. Removing the Play button made main() run from
+# onRuntimeInitialized, which deletes the window between "the runtime is ready"
+# and "main() has run" that this script's payload phases are named after
+# (boot1-after-play, boot2-before-play). Measured on the first re-recording
+# without it: P5, P7, P11 and P14 all fail, structurally and not because
+# persistence broke. web/shell.html honours ?autostart=0 by holding main() until
+# window.AA_START() is called, which is what the `eval:window.AA_START()` steps
+# below do; the parameter survives the location.reload() in the middle. See the
+# long comment at that hook in web/shell.html for why a query parameter rather
+# than a generated control page.
 #
 # HOW IT DIFFERS FROM THE GATE: ONE EXECUTABLE LINE, of the 132 this script
 # has. The plain `eval:location.reload()` under the RELOAD-2 mark becomes a
@@ -85,7 +98,7 @@ eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8
 # about this run rather than about a leftover profile.
 eval:window.__mile.dump('boot1-before-play')
 
-click:#start
+eval:window.AA_START()
 wait:9000
 shot:00-boot1-language-menu
 
@@ -125,7 +138,7 @@ eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8
 # checker records it. That is the baseline A1's payoff is measured against.
 eval:window.__mile.dump('boot2-before-play')
 
-click:#start
+eval:window.AA_START()
 wait:10000
 
 # A2, ON THE SCREEN: the main menu, not the language menu.
@@ -278,7 +291,7 @@ eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8
 eval:window.__mile.dump('boot3-before-play')
 shot:19-boot3-before-play
 
-click:#start
+eval:window.AA_START()
 wait:10000
 
 # A1, THE AFTER HALF, and A2 on screen at the same time: a 320x200 canvas
