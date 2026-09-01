@@ -87,9 +87,13 @@ check('W3', w.gunzip_ok === true && w.decoded_sha256 === w.identity_sha256
 // M5 recon could not find a compressible file larger than 2.2 MB on any
 // *.github.io host, so whether the edge gives up above some threshold was open.
 // 35% is the bar; the measurement is ~29%.
+// Stated as the ratio ALONE, not as `wire < identity && ratio < 0.35`: for
+// positive sizes the ratio bar already implies the inequality, and a conjunct
+// that no mutation can isolate is a conjunct that never gets proven -- which
+// is the exact defect M4 task 3's review found in a prover.
 {
   const ratio = w.wire_bytes / w.identity_bytes;
-  check('W4', w.wire_bytes < w.identity_bytes && ratio < 0.35,
+  check('W4', w.wire_bytes > 0 && ratio < 0.35,
         `the edge really does compress a ${num(w.identity_bytes)} B file: `
         + `${num(w.wire_bytes)} B on the wire, ${(ratio * 100).toFixed(1)}% (bar: under 35%)`);
 }

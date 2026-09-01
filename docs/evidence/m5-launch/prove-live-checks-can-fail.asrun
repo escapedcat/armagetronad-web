@@ -1,0 +1,75 @@
+==== wire facts of the public deployment
+checker : /Users/user/data/src/armagetronad-web/.worktrees/m5-launch/docs/evidence/m5-launch/check-wire-facts.mjs
+source  : /Users/user/data/src/armagetronad-web/.worktrees/m5-launch/docs/evidence/m5-launch/wire-facts.json
+
+ok   baseline: the unmutated input passes (exit 0, 14 checks, 0 failures)
+
+ok   W1  the wasm is served as a generic byte stream
+       expected FAIL: W1   observed: W1   exit 1
+       this is the failure mode that is INVISIBLE from "does the game run" -- Emscripten falls back to ArrayBuffer instantiation and the page still works.
+ok   W2  the wasm arrives uncompressed
+       expected FAIL: W2 W5   observed: W2 W5   exit 1
+       W5 asserts ALL five files are gzipped and the wasm is one of the five, so a mutation that un-gzips the wasm cannot leave W5 standing. Declared, not tolerated.
+ok   W3a the gzip body decodes to different bytes than the identity body
+       expected FAIL: W3   observed: W3   exit 1
+ok   W3b the gzip body decodes to a different LENGTH
+       expected FAIL: W3   observed: W3   exit 1
+ok   W3c the gzip body did not decode at all
+       expected FAIL: W3   observed: W3   exit 1
+ok   W4  the edge gives up on a 4.3 MB file (92% of identity on the wire)
+       expected FAIL: W4   observed: W4   exit 1
+       this is the exact fact M5 recon could not settle -- the largest compressible asset it could find on any *.github.io host was 2.2 MB.
+ok   W5  one NON-wasm file arrives uncompressed
+       expected FAIL: W5   observed: W5   exit 1
+       aimed away from the wasm on purpose, so W5 is exercised without W2.
+ok   W6  a file is missing "vary: Accept-Encoding"
+       expected FAIL: W6   observed: W6   exit 1
+ok   W7a a deployed file differs from the local build
+       expected FAIL: W7   observed: W7   exit 1
+ok   W7b there is no local build to compare against
+       expected FAIL: W7   observed: W7   exit 1
+       the second conjunct. This is the case a fresh clone hits, and it must FAIL rather than pass quietly -- an unrun comparison is not a passed comparison.
+ok   W8  the first visit costs 20 MB, over PLAN.md’s 15 MB budget
+       expected FAIL: W8   observed: W8   exit 1
+       inflated on the .data rather than the wasm, so the ratio bar W4 owns is untouched.
+ok   W9a THE TRAP: the bogus name answers with the wasm content-type
+       expected FAIL: W9   observed: W9   exit 1
+       status stays 404. A control asserting on status would still call this a pass, which is the whole reason W9 asserts on content-type.
+ok   W9b the bogus name answers with neither the wasm type nor html
+       expected FAIL: W9   observed: W9   exit 1
+       the other conjunct: W9 asserts BOTH that it is not the wasm type and that it is the html error page, so that a host answering everything with a third type cannot slip through.
+ok   W10 Pages starts serving brotli
+       expected FAIL: W10   observed: W10   exit 1
+       not a defect if it happened -- it would be a 22% saving -- but it would falsify recon’s "gzip only", so the gate must notice rather than assume.
+ok   W11 a real browser Accept-Encoding gets identity
+       expected FAIL: W11   observed: W11   exit 1
+ok   W12a the bare site root is a 404 (task 4’s first deploy, exactly)
+       expected FAIL: W12   observed: W12   exit 1
+       that deploy published the wasm, the js and the data and NEITHER html file, while gh-pages printed "Published" and exited 0.
+ok   W12b the site root answers 200 with something that is not a page
+       expected FAIL: W12   observed: W12   exit 1
+ok   W13a a file 404s on the gzip fetch
+       expected FAIL: W13   observed: W13   exit 1
+ok   W13b a file 404s on the identity fetch
+       expected FAIL: W13   observed: W13   exit 1
+
+--   WZ   NOT COVERABLE, by design.
+        WZ compares the ids that produced a verdict against the declared list. Every
+        check() in check-wire-facts.mjs is an unconditional top-level statement, so
+        no input can stop one running: it is a regression guard on the checker
+        source, not a check on the observation.
+
+Cases declaring collateral (expect > 1 id): 1 of 19.
+
+THE LIVE CONTROLS, which are stronger than any mutation above, and which are
+recorded in wire-facts.json in the same run as the facts they control for:
+  W9    a filename that does not exist, fetched from the real deployment.
+        It answers 404 text/html -- so W1 is a fact about the file and not
+        a fact about the host, and the status-vs-content-type trap is not
+        hypothetical: the status is 404 in BOTH the healthy and the broken
+        world, which is what W9a demonstrates.
+  W10   a real "Accept-Encoding: br" request to the real 4.3 MB wasm.
+  W11   a real browser Accept-Encoding to the same file, in the same run.
+
+RESULT: PASS -- all 19 cases flipped exactly the checks they declared
+prover exit=0
