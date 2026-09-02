@@ -39,7 +39,13 @@ set -eu
 URL=${URL:-https://escapedcat.github.io/armagetronad-web}
 PAGE=armagetronad.html
 DIST=web/dist-m1
-OUT=web-evidence/live-gate
+# Default output goes under docs/evidence/, not a new top-level directory.
+# An earlier default of `web-evidence/live-gate` put 16 MB of run artefacts
+# untracked in the repo root, one `git add -A` away from being committed and
+# duplicating what docs/evidence/m5-launch/ already holds. Anything written
+# here is scratch by default; pass --out to put a run somewhere you intend to
+# keep.
+OUT=docs/evidence/m5-launch/.runs/live-gate
 PROXY_PORT=8890
 USE_PROXY=1
 ONLY=all
