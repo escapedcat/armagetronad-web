@@ -84,13 +84,23 @@ else {
 }
 
 // ---- measured rounds
-const measured = d.rounds.filter((r) => r.round >= 2 && r.length_s >= 30);
-if (measured.length < 2) problems.push(`${measured.length} measured round(s) >= 30 s (need rounds 2 and 3)`);
+// The measured span is NEW_ROUND's first world frame to the human's death
+// (measured_to_s; report.js), or the whole round for a [PERF] line from before
+// that field existed. Thirty seconds of it is the minimum for an early-vs-late
+// comparison to mean anything.
+const spanOf = (r) => (r.measured_to_s != null ? r.measured_to_s : r.length_s);
+const measured = d.rounds.filter((r) => r.round >= 2 && spanOf(r) >= 30);
+if (measured.length < 2) problems.push(`${measured.length} measured round(s) with a span >= 30 s (need rounds 2 and 3)`);
 const lateShots = [];
 for (const r of measured) {
   if (!(r.late_5s.frames >= 30)) problems.push(`round ${r.round}: ${r.late_5s.frames} frames in the late window`);
-  if (!(r.late_5s.draws_per_frame > EMPTY_ARENA_DRAWS_PER_FRAME * 1.25))
-    problems.push(`round ${r.round}: ${r.late_5s.draws_per_frame} draws/frame late is not above an empty arena (${EMPTY_ARENA_DRAWS_PER_FRAME}) by a quarter`);
+  // The floor is the larger of the calibrated constant and this round's OWN
+  // overlay-only frames (pre_round.draws_per_frame), so a HUD that grows
+  // moves the bar with it.
+  const own = (r.pre_round && r.pre_round.draws_per_frame) || 0;
+  const floor = Math.max(EMPTY_ARENA_DRAWS_PER_FRAME, own);
+  if (!(r.late_5s.draws_per_frame > floor * 1.25))
+    problems.push(`round ${r.round}: ${r.late_5s.draws_per_frame} draws/frame late is not above the no-geometry floor (${floor}) by a quarter`);
   // a screenshot in the second half of this round, present on disk
   const a = nr[r.round - 1], b = rw[r.round - 1];
   if (!a || !b) { problems.push(`round ${r.round}: cannot locate NEW_ROUND/ROUND_WINNER in the transcript`); continue; }
@@ -103,6 +113,8 @@ for (const r of measured) {
 }
 
 if (problems.length) { console.log('INVALID: ' + problems.join('; ')); process.exit(1); }
+const swaps = d.swaps ? `; swaps finish ${d.swaps.finish} / flush ${d.swaps.flush}` : '';
 console.log(`VALID: ${measured.length} rounds at cpu ${d.cpu_rate}x; late ms p50 ${measured.map((r) => r.late_5s.ms_p50).join('/')}; `
   + `late draws/frame ${measured.map((r) => r.late_5s.draws_per_frame).join('/')} (floor ${EMPTY_ARENA_DRAWS_PER_FRAME}); `
-  + `late shots ${lateShots.join(' / ')}`);
+  + `spans ${measured.map((r) => `${r.measured_from_s != null ? r.measured_from_s : 0}-${spanOf(r)} s`).join('/')}; `
+  + `late shots ${lateShots.join(' / ')}${swaps}`);

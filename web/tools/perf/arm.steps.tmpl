@@ -2,8 +2,10 @@
 # (comment lines are left alone). Not runnable on its own.
 # Round 1 takes the two key presses and switches the throttle on; it is NOT measured.
 # (The negative control showed the match runs without the presses: README.md, "Drive".)
-# The 1.5 s pause before the keys keeps round 1's first second genuinely idle: that
-# second's draws/frame is the empty-arena floor check-arm.mjs is calibrated from.
+# The 3 s pause before the keys puts both presses AFTER the round's 4 s countdown
+# (PREPARE_TIME in gGame.cpp; the until: step is satisfied about 2.3 s after NEW_ROUND),
+# so they land on a cycle that can move. At the plan's timing they landed in the
+# countdown, when gGame's GameLoop does not call Timestep.
 # Every shot: is bracketed by eval:__fps.shot(NAME,'begin'|'end') so report.js can
 # drop the frames the screenshot itself disturbed (README, "Screenshots"). The 30 s
 # shot in each measured round is the one check-arm.mjs can always find in the round's
@@ -22,7 +24,7 @@ tap:#tapzone
 wait:2000
 until:1:120000:[L] NEW_ROUND
 mark:ROUND-1-SETUP-NOT-MEASURED
-wait:1500
+wait:3000
 key:Right:1
 key:Left:1
 wait:1500
