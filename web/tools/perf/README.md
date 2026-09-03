@@ -252,37 +252,55 @@ measured rounds both rose in the last quarter with draws flat at 107–111:
 Mechanism 2 (the rubber path of `gCycleMovement::TimestepCore`: a
 `GetMaxSpaceAhead` sensor scan every step and recursive re-simulation when
 a wall is near) scales with walls *near* the cycle, so the template that
-measures it is the opposite of `base`: the shipped `SP_SIZE_FACTOR -3` (the
-tutorial lowers it to −5, a 0.177× arena), `SP_NUM_AIS 0`, and the idle
-human driving straight from its spawn into the rim, where it stays. The
-draw count is flat by construction; the reading is per-second
-`ms_to_first_draw` before contact against after it.
+measures it is the opposite of `base`: `SP_NUM_AIS 0`, `SP_SIZE_FACTOR 0`
+(the tutorial lowers it to −2, a 0.5× arena), and the idle human driving
+straight from its spawn into the rim — 225 map units, 15 s at 15.0 after
+the countdown — where it stays. The draw count is flat by construction
+apart from the sparks the grind itself throws; the reading is per-second
+`ms_to_first_draw` in the throttled free-driving seconds before contact
+against the seconds at the rim. `docs/evidence/m6-lag/task3-mechanisms/`
+has the numbers.
 
-Three facts of the tutorial match shape it, all in the template's header:
-`welcome()` assigns `sg_rubberCycle = 5` after `autoexec.cfg` is read, so
-`CYCLE_RUBBER` cannot be raised and is not in the arm; what keeps the cycle
-alive is `CYCLE_RUBBER_TIME 0.1` — `TimestepCore` decays the reservoir by
-`rubber /= (1 + ts/CYCLE_RUBBER_TIME)` every step, so pressed against a wall
-at 15.0 it settles at 1.5 of the 5 granted (the HUD's *Rubber Used* gauge
-shows exactly that, and 0 while free) and only a single step over about
-0.23 s can kill it. And a lone cycle ends no round (`gGame.cpp`'s
-`Analysis`: a winner needs more than one team; a winnerless round only
-advances when `alive == 0`), so the template kills it when the measurement
-is done: a 6 s main-thread stall, passed whole by `gGame::Timestep` under
-`TIMESTEP_MAX 10` and cut by `eGameObject::TimestepThis` into its
-hardcoded ten pieces, reaches `TimestepCore` as 0.6 s steps that the
-reservoir cannot absorb. A free cycle survives the same stall (it moves 90
-units), so each death after a stall is also the proof of contact. A 1 s
-stall does not kill — ten 0.2 s pieces, 3 needed against 3.5 free — and
-was the first attempt.
+Four facts of the tutorial match shape it, all argued in the template's
+header:
 
-`check-arm.mjs` reports the grind arm **INVALID** by design: it requires
-rounds 2 and 3, and the grind measures round 2 only (round 1 is the setup —
-keys, throttle, first kill). The arm's validity is stated in its evidence
-README from the screenshots (the cycle at the rim with the gauge at 1.5),
-the `DEATH_` mark after each stall, and the round length. A winnerless
-round writes no `ROUND_WINNER`, which is why `report.js` closes a round at
-the next `NEW_ROUND` (`closed_by`).
+- `welcome()` assigns `sg_rubberCycle = 5` after `autoexec.cfg` is read, so
+  `CYCLE_RUBBER` cannot be raised and is not in the arm. What keeps the
+  cycle alive is `CYCLE_RUBBER_TIME 0.1`: `TimestepCore` decays the
+  reservoir by `rubber /= (1 + ts/CYCLE_RUBBER_TIME)` every step, so pressed
+  against a wall at 15.0 it settles at 1.5 of the 5 granted — the HUD's
+  *Rubber Used* gauge shows exactly 1.5 there and 0 while free — and only
+  a single step over about 0.23 s can kill it.
+- **An arm with no AI has one round, and it is round 1.** A lone cycle
+  ends no round: with one team there is no winner (`gGame.cpp`'s
+  `Analysis`: a winner needs more than one team), and the winnerless path
+  (`alive == 0`) never fires either, because `Analysis` counts a human whose
+  cycle object is gone as "not yet logged in" and, with `ais == 0`, adds one
+  to `alive` for it — measured: the cycle killed 14.8 s into round 1, no
+  `NEW_ROUND` in the next 60 s. `everytime.cfg`, which could have switched
+  an AI off between rounds, is read only under `#ifdef DEDICATED`. So the
+  grind arm measures round 1 *after* the throttle — a stated deviation from
+  "round 1 is never measured", whose two reasons (the tutorial's key
+  presses at 5.4 and 5.7 s, the throttle at 7.7 s) are both over before the
+  free-driving window opens at 8 s. The alternative, one AI so that rounds
+  can end, puts a second rubber path and a second trail into the scene
+  whose cost varies with the AI's own wall proximity — the thing being
+  measured.
+- **The stall is the proof of contact and the end of the span.** A 6 s
+  main-thread stall, passed whole by `gGame::Timestep` under
+  `TIMESTEP_MAX 10` and cut by `eGameObject::TimestepThis` into its
+  hardcoded ten pieces, reaches `TimestepCore` as 0.6 s steps the reservoir
+  cannot absorb; a free cycle survives the same stall (it moves 90 units),
+  so a `DEATH_` mark right after the stall proves the cycle was pressed
+  against a wall. A 1 s stall does not kill — five 0.2 s pieces, 3 needed
+  against 3.5 free — and was the first attempt. The stall is bracketed like
+  a screenshot, so its frame is in no statistic; the measured span ends at
+  the death, so `late_5s` is the last five seconds of grinding.
+- `check-arm.mjs` reports the arm **INVALID** by design (it wants rounds 2
+  and 3). The arm's validity is stated in its evidence README from the
+  `DEATH_` mark after the stall, the screenshots (gauge at 0 while free,
+  1.5 at the rim), and the window lengths. The round itself never ends;
+  `report.js` closes it at report time (`closed_by: report`).
 
 ## Screenshots and the late window
 

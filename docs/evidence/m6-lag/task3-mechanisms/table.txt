@@ -1,0 +1,5 @@
+round 1 (the two key presses sent, throttle switched on) is not measured and is not listed. early = 5 s from the first world frame after NEW_ROUND; late = 5 s before the human's death (ROUND_WINNER if none). ms are frame COSTS at MAX_FPS 1000; cpu = CDP throttle rate.
+arm            rd len_s early_ms late_ms ratio_ms early_draws late_draws ratio_draws late_kb hitches>50ms cpu gate   
+grind          (no measured round; 1 started, 0 won)  INVALID
+grind-nosound  (no measured round; 1 started, 0 won)  INVALID
+grind-r2       (no measured round; 1 started, 0 won)  INVALID

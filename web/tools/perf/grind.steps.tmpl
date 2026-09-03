@@ -1,7 +1,7 @@
 # The GRIND arm: one cycle, no AIs, driven straight into the rim and held there.
 # SAMPLER, REPORT, CONFIGLINES, TAGHERE, CPURATE are substituted by run-arm.sh (comment
 # lines are left alone). Not runnable on its own. Run it through run-arm.sh with this
-# file as the 5th argument and, as the 4th, the four lines SP_SIZE_FACTOR -3,
+# file as the 5th argument and, as the 4th, the four lines SP_SIZE_FACTOR 0,
 # SP_NUM_AIS 0, CYCLE_RUBBER_TIME 0.1 and TIMESTEP_MAX 10 separated the way
 # run-arm.sh's header says (a backslash-n pair per line break; the tripwire that
 # refuses a doubled backslash reads comment lines too, which is why this comment
@@ -27,37 +27,53 @@
 # about 233 ms. (The plan's CYCLE_RUBBER_TIME 0 takes the else branch, rubber = 0
 # every step: alive too, but the HUD's Rubber Used gauge reads 0 and cannot prove the
 # grind; 0.1 shows a steady 30 % fill while grinding and 0 while free.)
-# TIMESTEP_MAX 10 is for the kill switch below. SP_NUM_AIS 0 is honoured because
-# welcome() sets autoNum 0. SP_SIZE_FACTOR -3 is the shipped value, written out so
-# the arm says what it ran; welcome() lowers it by 2 more (a 0.177x arena, the rim
-# 450 * 0.177 = 80 map units ahead of the spawn: 5.3 s at 15.0 after the 4 s
-# countdown, so contact about 9.5 s after NEW_ROUND).
+# TIMESTEP_MAX 10 is for the stall below. SP_NUM_AIS 0 is honoured because
+# welcome() sets autoNum 0. SP_SIZE_FACTOR 0 -- not the shipped -3 -- because the
+# rim must be far enough away for a throttled free-driving window BEFORE contact:
+# welcome() lowers the factor by 2, so 0 is a 0.5x arena and the rim is
+# 450 * 0.5 = 225 map units ahead of the spawn, 15 s at 15.0 after the 4 s countdown,
+# contact about 19 s after NEW_ROUND. At -3 (tutorial -5, 0.177x) contact came 9.3 s
+# after NEW_ROUND, 1.6 s after the throttle went on (22:10 attempt, round 1: two
+# throttled seconds before the rim), which is no window at all.
 #
-# THE KILL SWITCH. A lone cycle ends no round: with one team there is no winner
-# (gGame.cpp Analysis: winner needs eTeam::teams.Len() > 1) and the round only
-# advances when alive == 0, so a cycle that cannot die at the rim would hold round 1
-# open for ever and round 2 would never start. The harness therefore kills it with a
-# 6 s busy loop on the main thread (an eval: step; CDP has no timeout on it), which
-# makes the game's next timestep 6 s long. Two choppers stand between that and the
-# cycle: gGame::Timestep cuts a step into pieces of TIMESTEP_MAX (0.2 s shipped; 10
-# here, so it passes the 6 s whole), then eGameObject::TimestepThis cuts it into
-# pieces of a HARDCODED 0.2 s, at most ten -- so 6 s reaches TimestepCore as ten
-# 0.6 s pieces. In each, the rubber path splits the piece at the moment the
-# reservoir would run out (0.233 s at 15.0 with 3.5 of 5 free), the reservoir decays
-# back to 1.5 at the end of that half, and the second half (0.367 s, 5.5 needed
-# against 3.5 free, the recursion guard forbidding a further split) moves the cycle
-# 2 units through the rim: Move() throws, and "prevent it if there is rubber left"
-# has none. A FREE cycle just moves 90 units and lives -- so the death that follows
-# each stall is itself proof the cycle was pressed against a wall. Measured on the
-# way here: a 1 s stall did NOT kill (ten 0.2 s pieces, 3 needed against 3.5 free,
-# twice, 22:10 run) -- a shorter stall is a no-op, not a gentler kill. The stall is
-# bracketed like a screenshot (sampler.js S.shot), so report.js drops its frame from
-# every statistic; the span ends at the DEATH_ mark anyway. No ROUND_WINNER is written
-# for a winnerless round; report.js closes a round at the next NEW_ROUND
-# (closed_by: next_round), which is what the until: steps wait for.
+# THE ONLY ROUND, AND WHY IT IS ROUND 1. A lone cycle ends no round: with one team
+# there is no winner (gGame.cpp Analysis: a winner needs eTeam::teams.Len() > 1), and
+# the winnerless path (alive == 0, 4 s after the last death) never fires either,
+# because Analysis counts a human whose cycle object is gone as "not yet logged in"
+# and, with ais == 0, adds one to alive for it. Measured: the 22:21 attempt killed the
+# cycle 14.8 s into round 1 (DEATH_SUICIDE 13 ms after the stall) and no NEW_ROUND
+# followed in 60 s. everytime.cfg, which could have switched an AI off between
+# rounds, is read only under #ifdef DEDICATED. So an arm with no AI has exactly one
+# round, round 1, and this template measures it -- a stated deviation from the
+# plan's "round 1 is never measured", whose two reasons are both over before the
+# window opens: the tutorial's two key presses land at 5.4 and 5.7 s and the
+# throttle goes on at 7.7 s; the free-driving window is 8-18 s and the rim from
+# about 19 s, all throttled. The alternative, one AI so rounds can end, puts a
+# second rubber path and a second trail into the scene whose cost would vary with
+# the AI's own wall proximity -- the very thing being measured.
 #
-# ROUND 1 is setup and is NOT measured: the tutorial's two key presses after the
-# countdown (arm.steps.tmpl says why the 3 s), the throttle, the first kill.
+# THE STALL is the proof of contact, and ends the measured span. A 6 s busy loop on
+# the main thread (an eval: step; CDP has no timeout on it) makes the game's next
+# timestep 6 s long. gGame::Timestep passes it whole under TIMESTEP_MAX 10 (0.2 s
+# shipped), then eGameObject::TimestepThis cuts it into its HARDCODED ten pieces of
+# 0.6 s. In each, the rubber path splits the piece where the reservoir would run out
+# (0.233 s at 15.0 with 3.5 of 5 free), the reservoir decays back to 1.5 at the end of
+# that half, and the second half (0.367 s, 5.5 needed against 3.5 free, the
+# recursion guard forbidding a further split) moves the cycle 2 units through the
+# rim: Move() throws and "prevent it if there is rubber left" has none. A FREE cycle
+# survives the same stall (it moves 90 units), so a DEATH_ mark right after the stall
+# proves the cycle was pressed against a wall. A 1 s stall does not kill -- five
+# 0.2 s pieces, 3 needed against 3.5 free -- measured twice on the 22:10 attempt. The
+# stall is bracketed like a screenshot (sampler.js S.shot) so report.js drops its
+# frame from every statistic; the measured span ends at the DEATH_ mark, so the
+# late_5s window is the last five seconds of grinding. The round itself never ends
+# (above); report.js closes it at report time (closed_by: report).
+#
+# The two key presses after the countdown are the tutorial's (arm.steps.tmpl says why
+# the 3 s wait); the throttle goes on right after them. Every shot: is bracketed as in
+# arm.steps.tmpl. check-arm.mjs reports this arm INVALID by design (it wants rounds 2
+# and 3); the arm's validity is the DEATH_ mark after the stall, the screenshots with
+# the gauge at 1.5 of 5 at the rim, and the window lengths, all in the evidence README.
 wait:800
 eval:SAMPLER
 eval:(()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# perf arm TAGHERE\nMAX_FPS 1000\nCONFIGLINES\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})()
@@ -71,7 +87,7 @@ wait:3500
 tap:#tapzone
 wait:2000
 until:1:120000:[L] NEW_ROUND
-mark:ROUND-1-SETUP-NOT-MEASURED
+mark:ROUND-1-GRIND-MEASURED-FROM-THROTTLE-ON
 wait:3000
 key:Right:1
 key:Left:1
@@ -81,37 +97,35 @@ shot:r1-after-tutorial-keys
 eval:__fps.shot('r1-after-tutorial-keys','end')
 cpu:CPURATE
 mark:THROTTLE-ON
-wait:7000
-eval:__fps.shot('kill-stall-r1','begin')
-eval:(()=>{const t0=performance.now();while(performance.now()-t0<6000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
-eval:__fps.shot('kill-stall-r1','end')
-until:2:60000:[L] NEW_ROUND
-mark:ROUND-2-GRIND
-wait:2000
-eval:__fps.shot('g-02s-before-rim','begin')
-shot:g-02s-before-rim
-eval:__fps.shot('g-02s-before-rim','end')
 wait:4000
-eval:__fps.shot('g-06s-approach','begin')
-shot:g-06s-approach
-eval:__fps.shot('g-06s-approach','end')
+eval:__fps.shot('g-12s-free','begin')
+shot:g-12s-free
+eval:__fps.shot('g-12s-free','end')
 wait:6000
-eval:__fps.shot('g-12s-grinding','begin')
-shot:g-12s-grinding
-eval:__fps.shot('g-12s-grinding','end')
-wait:8000
-eval:__fps.shot('g-20s-grinding','begin')
-shot:g-20s-grinding
-eval:__fps.shot('g-20s-grinding','end')
+eval:__fps.shot('g-18s-approach','begin')
+shot:g-18s-approach
+eval:__fps.shot('g-18s-approach','end')
+wait:6000
+eval:__fps.shot('g-24s-grinding','begin')
+shot:g-24s-grinding
+eval:__fps.shot('g-24s-grinding','end')
 wait:10000
-eval:__fps.shot('g-30s-grinding','begin')
-shot:g-30s-grinding
-eval:__fps.shot('g-30s-grinding','end')
-wait:8000
-eval:__fps.shot('kill-stall-r2','begin')
+eval:__fps.shot('g-34s-grinding','begin')
+shot:g-34s-grinding
+eval:__fps.shot('g-34s-grinding','end')
+wait:10000
+eval:__fps.shot('g-44s-grinding','begin')
+shot:g-44s-grinding
+eval:__fps.shot('g-44s-grinding','end')
+wait:10000
+eval:__fps.shot('g-54s-grinding','begin')
+shot:g-54s-grinding
+eval:__fps.shot('g-54s-grinding','end')
+wait:5000
+eval:__fps.shot('kill-stall','begin')
 eval:(()=>{const t0=performance.now();while(performance.now()-t0<6000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
-eval:__fps.shot('kill-stall-r2','end')
-until:3:60000:[L] NEW_ROUND
+eval:__fps.shot('kill-stall','end')
+until:1:15000:[L] DEATH_
 mark:GRIND-OVER
-wait:1000
+wait:2000
 eval:REPORT
