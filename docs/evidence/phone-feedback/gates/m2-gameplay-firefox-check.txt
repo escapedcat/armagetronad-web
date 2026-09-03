@@ -26,16 +26,16 @@ PASS  no "renderer crashed" during the run (0 hits)
 PASS  no "[GLERR]" during the run (0 hits)
 PASS  every 404 is /favicon.ico (1 total, 0 other)
 
-glGetError: 137 polls, 0 non-zero
+glGetError: 136 polls, 0 non-zero
 PASS  the glGetError poll actually ran
 PASS  the game produced no GL errors during the run
 
-frame rate over 39.43s / 2315 frames: per-second median 60, min 39; worst single frame 122 ms
-PASS  median frames-per-second >= 30 (60)
-PASS  MINIMUM frames-per-second >= 30 (39) -- the worst whole second
-note  worst single frame 122 ms = 8.2 fps instantaneous. Not a pass criterion -- docs/evidence/m2-gate/README.md, "The caveats, in full" -- but do not let it go unread.
-window: sampler span_s 39.43s vs driver wall clock 39.433s (NEW_ROUND #1 at 21851ms -> ROUND_WINNER #3 at 61284ms), drift 0.003s
-PASS  the measured window is the rounds themselves: 39.43s spanning all 3, agreeing with the driver's independent wall clock to 0.003s (bar: 0.5s)
+frame rate over 39.41s / 2299 frames: per-second median 59, min 55; worst single frame 47 ms
+PASS  median frames-per-second >= 30 (59)
+PASS  MINIMUM frames-per-second >= 30 (55) -- the worst whole second
+note  worst single frame 47 ms = 21.3 fps instantaneous. Not a pass criterion -- docs/evidence/m2-gate/README.md, "The caveats, in full" -- but do not let it go unread.
+window: sampler span_s 39.41s vs driver wall clock 39.406s (NEW_ROUND #1 at 21879ms -> ROUND_WINNER #3 at 61285ms), drift 0.004s
+PASS  the measured window is the rounds themselves: 39.41s spanning all 3, agreeing with the driver's independent wall clock to 0.004s (bar: 0.5s)
 
 PASS  no "until TIMED OUT" anywhere in the file (0 hits) -- a driver records this and keeps going, so it is the only sign of a wait that never came
 
@@ -44,6 +44,6 @@ note    This engine reports nothing for a deliberately invalid glHint, so the
 note    absence of WebGL warnings elsewhere in this file proves nothing on its
 note    own -- check 4 (glGetError) is what carries that claim here.
 PASS  browser-reported uncaught JS errors ARE visible in this transcript (so the "no [EXCEPTION]" result above is a real observation)
-        [  70932ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+        [  70918ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
 
 ALL CHECKS PASSED

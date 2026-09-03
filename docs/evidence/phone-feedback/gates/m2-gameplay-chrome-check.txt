@@ -30,19 +30,19 @@ glGetError: 140 polls, 0 non-zero
 PASS  the glGetError poll actually ran
 PASS  the game produced no GL errors during the run
 
-frame rate over 39.62s / 2375 frames: per-second median 60, min 58; worst single frame 32.2 ms
+frame rate over 39.59s / 2372 frames: per-second median 60, min 58; worst single frame 33.6 ms
 PASS  median frames-per-second >= 30 (60)
 PASS  MINIMUM frames-per-second >= 30 (58) -- the worst whole second
-note  worst single frame 32.2 ms = 31.1 fps instantaneous. Not a pass criterion -- docs/evidence/m2-gate/README.md, "The caveats, in full" -- but do not let it go unread.
-window: sampler span_s 39.62s vs driver wall clock 39.619s (NEW_ROUND #1 at 21851ms -> ROUND_WINNER #3 at 61470ms), drift 0.001s
-PASS  the measured window is the rounds themselves: 39.62s spanning all 3, agreeing with the driver's independent wall clock to 0.001s (bar: 0.5s)
+note  worst single frame 33.6 ms = 29.8 fps instantaneous. Not a pass criterion -- docs/evidence/m2-gate/README.md, "The caveats, in full" -- but do not let it go unread.
+window: sampler span_s 39.59s vs driver wall clock 39.588s (NEW_ROUND #1 at 21842ms -> ROUND_WINNER #3 at 61430ms), drift 0.002s
+PASS  the measured window is the rounds themselves: 39.59s spanning all 3, agreeing with the driver's independent wall clock to 0.002s (bar: 0.5s)
 
 PASS  no "until TIMED OUT" anywhere in the file (0 hits) -- a driver records this and keeps going, so it is the only sign of a wait that never came
 
 PASS  browser-level WebGL warnings ARE visible in this transcript
-        [  69727ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
+        [  69771ms] [browser.warning/rendering] WebGL: INVALID_ENUM: hint: invalid target
 PASS  browser-reported uncaught JS errors ARE visible in this transcript (so the "no [EXCEPTION]" result above is a real observation)
-        [  71329ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
-        [  71329ms] [EXCEPTION] structured stack, 1 frames:
+        [  71368ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+        [  71368ms] [EXCEPTION] structured stack, 1 frames:
 
 ALL CHECKS PASSED

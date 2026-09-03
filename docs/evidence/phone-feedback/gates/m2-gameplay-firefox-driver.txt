@@ -1,121 +1,121 @@
-[   1429ms] [harness] firefox: 155.0 (headless=true)
-[   1429ms] [harness] navigating to http://localhost:8000/armagetronad.html
-[     38ms] [page] load event fired
-[    127ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 8192
-[    127ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
-[    139ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
-[    148ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
-[    148ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
-[    150ms] [page] load event fired
-[    187ms] [console.log] [PERSIST] populate ok in 6ms
+[   1442ms] [harness] firefox: 155.0 (headless=true)
+[   1443ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     52ms] [page] load event fired
+[    129ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 8192
+[    129ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[    141ms] [browser.error/network] 404 File not found <- http://localhost:8000/favicon.ico
+[    151ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    151ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    152ms] [page] load event fired
+[    187ms] [console.log] [PERSIST] populate ok in 5ms
 [    302ms] [console.log] [PERSIST] runtime initialized, starting the game
-[    302ms] [console.log] [CAMERA] stock camera (factor 1)
-[    303ms] [console.log] [BOOT] autostart: calling main
-[    303ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
-[    303ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
-[    304ms] [console.error] 
-[    304ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
-[    314ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
-[    315ms] [console.log] 
-[    403ms] [console.log] [L] ENCODING latin1
-[    406ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
-[    524ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    303ms] [console.log] [CAMERA] stock camera (factor 1)
+[    308ms] [console.log] [BOOT] autostart: calling main
+[    308ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    308ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    308ms] [console.error] 
+[    309ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    309ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    309ms] [console.log] 
+[    399ms] [console.log] [L] ENCODING latin1
+[    402ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    525ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
 [    542ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
-[    544ms] [console.error] TODO: glShadeModel
-[   1157ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped
-[   8162ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => canvas 1024x768
-[   8164ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
-[   8164ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[    545ms] [console.error] TODO: glShadeModel
+[   1158ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped
+[   8165ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => canvas 1024x768
+[   8166ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   8166ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
 [  14166ms] [harness] === first-run-flow-language-menu ===
-[  14184ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/01-language-menu.png
-[  14197ms] [harness] key Enter (1/1)
-[  14209ms] [console.log] [PERSISTSAVE] menu-leave n=1
-[  17515ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/02-first-setup-menu.png
-[  17516ms] [harness] === escape-accepts-the-defaults-and-leaves-first-setup ===
-[  17519ms] [harness] key Escape (1/1)
-[  17550ms] [console.log] [PERSISTSAVE] menu-leave n=2
-[  21836ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/03-welcome-message.png
-[  21836ms] [harness] === enter-dismisses-the-welcome-message-and-starts-the-match ===
-[  21838ms] [harness] key Enter (1/1)
-[  21848ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
-[  21848ms] [console.log] [L] TEAM_CREATED web_user
-[  21849ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
-[  21849ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
-[  21850ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
-[  21851ms] [console.log] [L] NEW_ROUND 2026-09-03 13:47:02 UTC+0200
-[  21853ms] [console.log] [L] TEAM_CREATED ai_team
-[  21853ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
-[  21853ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
-[  21854ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
-[  21854ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
-[  21867ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
-[  21867ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
-[  21867ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
-[  22139ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
-[  22139ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
-[  22139ms] [harness] === ROUND-1-STARTED ===
-[  27668ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/04-round1-driving-HUD-shows-enemies.png
-[  27672ms] [harness] key Left (1/1)
-[  27679ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
-[  29229ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/05-round1-after-LEFT.png
-[  29233ms] [harness] key Right (1/1)
-[  30129ms] [console.log] [L] DEATH_FRAG web_user word
-[  30130ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
-[  30761ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/06-round1-after-RIGHT.png
-[  30761ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
-[  31977ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
-[  32073ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
-[  32074ms] [harness] === ROUND-1-COMPLETE ===
-[  32099ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/07-round1-ended.png
-[  32100ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
-[  36032ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
-[  36033ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
-[  36033ms] [console.log] [L] NEW_ROUND 2026-09-03 13:47:16 UTC+0200
-[  36034ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
-[  36035ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
-[  36035ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
-[  36035ms] [harness] === ROUND-2-STARTED ===
-[  41559ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/08-round2-driving-HUD-shows-enemies.png
-[  41563ms] [harness] key Right (1/1)
-[  43087ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/09-round2-after-RIGHT.png
-[  43095ms] [harness] key Left (1/1)
-[  44404ms] [console.log] [L] DEATH_FRAG web_user excel
-[  44623ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/10-round2-after-LEFT.png
-[  44623ms] [harness] until 2x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
-[  46132ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
-[  46139ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
-[  46140ms] [harness] === ROUND-2-COMPLETE ===
-[  46168ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/11-round2-ended.png
-[  46168ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 60000ms, have 2)
-[  50178ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
-[  50178ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
-[  50178ms] [console.log] [L] NEW_ROUND 2026-09-03 13:47:30 UTC+0200
-[  50211ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
-[  50211ms] [harness] === ROUND-3-STARTED ===
-[  55734ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/12-round3-driving-HUD-shows-enemies.png
-[  55736ms] [harness] key Left (1/1)
-[  57259ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/13-round3-after-LEFT.png
-[  57268ms] [harness] key Left (1/1)
-[  58792ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/14-round3-after-LEFT-again.png
-[  58792ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
-[  59669ms] [console.log] [L] DEATH_SUICIDE web_user
-[  61284ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
-[  61315ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
-[  61316ms] [harness] === ROUND-3-COMPLETE ===
-[  61344ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/15-round3-ended.png
-[  65323ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
-[  69372ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/16-after-the-match.png
-[  69383ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => {"total_frames_sampled":4029,"rounds_started":3,"rounds_won":3,"overall":{"span_s":39.43,"frames":2315,"mean_fps":58.71,"frame_ms":{"p50":17,"p90":19,"p99":25,"max":122},"inst_fps":{"median":58.82,"p10":52.63,"p01":40,"min":8.2},"fps_per_second":[60,60,60,60,60,60,59,60,60,60,60,59,60,60,61,47,60,55,39,60,56,56,60,59,60,60,60,60,60,60,60,60,60,60,59,60,60,59,60],"fps_per_second_min":39,"fps_per_second_median":60},"per_round":[{"span_s":10.13,"frames":606,"mean_fps":59.85,"frame_ms":{"p50":17,"p90":19,"p99":21,"max":31},"inst_fps":{"median":58.82,"p10":52.63,"p01":47.62,"min":32.26},"fps_per_second":[60,60,60,60,60,60,59,60,60,60],"fps_per_second_min":59,"fps_per_second_median":60},{"span_s":10.1,"frames":559,"mean_fps":55.35,"frame_ms":{"p50":17,"p90":19,"p99":58,"max":122},"inst_fps":{"median":58.82,"p10":52.63,"p01":17.24,"min":8.2},"fps_per_second":[58,50,60,52,42,57,59,56,60,59],"fps_per_second_min":42,"fps_per_second_median":58},{"span_s":11.11,"frames":665,"mean_fps":59.88,"frame_ms":{"p50":17,"p90":19,"p99":21,"max":26},"inst_fps":{"median":58.82,"p10":52.63,"p01":47.62,"min":38.46},"fps_per_second":[60,60,61,59,60,60,60,59,60,60,60],"fps_per_second_min":59,"fps_per_second_median":60}]}
-[  69383ms] [harness] === positive-control-deliberate-webgl-warning-follows ===
-[  69396ms] [harness] eval (()=>{const c=document.createElement('canvas');const g=c.getContext('webgl');if(!g)return 'no webgl context for the control';g.hint(0x0C50,g.FASTEST);return 'deliberate bad glHint issued, gl.getError()=0x'+g.getError().toString(16)+' (0x500 == INVALID_ENUM)'})() => deliberate bad glHint issued, gl.getError()=0x500 (0x500 == INVALID_ENUM)
-[  70926ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/17-final-state.png
-[  70927ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const codes={};for(const g of S.gl)codes['0x'+g[1].toString(16)]=(codes['0x'+g[1].toString(16)]||0)+1;return JSON.stringify({glGetError_polls:S.polls,glGetError_nonzero:S.gl.length,codes:codes,first:S.gl.slice(0,5)})})() => {"glGetError_polls":137,"glGetError_nonzero":0,"codes":{},"first":[]}
-[  70928ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
-[  70928ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 10856
-[  70929ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
-[  70932ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[  14201ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/01-language-menu.png
+[  14212ms] [harness] key Enter (1/1)
+[  14231ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  17526ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/02-first-setup-menu.png
+[  17526ms] [harness] === escape-accepts-the-defaults-and-leaves-first-setup ===
+[  17530ms] [harness] key Escape (1/1)
+[  17562ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  21860ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/03-welcome-message.png
+[  21861ms] [harness] === enter-dismisses-the-welcome-message-and-starts-the-match ===
+[  21874ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  21875ms] [console.log] [L] TEAM_CREATED web_user
+[  21876ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  21877ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  21877ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  21879ms] [console.log] [L] NEW_ROUND 2026-09-03 14:04:02 UTC+0200
+[  21884ms] [console.log] [L] TEAM_CREATED ai_team
+[  21885ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  21885ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  21885ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  21886ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  21904ms] [harness] key Enter (1/1)
+[  21912ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  21912ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  21912ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  22206ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  22207ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  22207ms] [harness] === ROUND-1-STARTED ===
+[  27742ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/04-round1-driving-HUD-shows-enemies.png
+[  27745ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  27750ms] [harness] key Left (1/1)
+[  29275ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/05-round1-after-LEFT.png
+[  29283ms] [harness] key Right (1/1)
+[  30132ms] [console.log] [L] DEATH_FRAG web_user word
+[  30133ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  30809ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/06-round1-after-RIGHT.png
+[  30810ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
+[  31991ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  32034ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
+[  32034ms] [harness] === ROUND-1-COMPLETE ===
+[  32065ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/07-round1-ended.png
+[  32065ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  36064ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  36065ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  36065ms] [console.log] [L] NEW_ROUND 2026-09-03 14:04:16 UTC+0200
+[  36067ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  36068ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  36112ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  36112ms] [harness] === ROUND-2-STARTED ===
+[  41637ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/08-round2-driving-HUD-shows-enemies.png
+[  41641ms] [harness] key Right (1/1)
+[  43166ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/09-round2-after-RIGHT.png
+[  43168ms] [harness] key Left (1/1)
+[  44414ms] [console.log] [L] DEATH_FRAG web_user excel
+[  44695ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/10-round2-after-LEFT.png
+[  44695ms] [harness] until 2x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
+[  46158ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  46213ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  46213ms] [harness] === ROUND-2-COMPLETE ===
+[  46241ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/11-round2-ended.png
+[  46241ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 60000ms, have 2)
+[  50204ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  50207ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  50207ms] [console.log] [L] NEW_ROUND 2026-09-03 14:04:30 UTC+0200
+[  50282ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  50282ms] [harness] === ROUND-3-STARTED ===
+[  55812ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/12-round3-driving-HUD-shows-enemies.png
+[  55814ms] [harness] key Left (1/1)
+[  57339ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/13-round3-after-LEFT.png
+[  57341ms] [harness] key Left (1/1)
+[  58866ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/14-round3-after-LEFT-again.png
+[  58866ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  59809ms] [console.log] [L] DEATH_SUICIDE web_user
+[  61285ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  61289ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
+[  61289ms] [harness] === ROUND-3-COMPLETE ===
+[  61317ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/15-round3-ended.png
+[  65330ms] [console.log] [L] MATCH_WINNER ai_team outlook excel word
+[  69349ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/16-after-the-match.png
+[  69353ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => {"total_frames_sampled":3994,"rounds_started":3,"rounds_won":3,"overall":{"span_s":39.41,"frames":2299,"mean_fps":58.34,"frame_ms":{"p50":17,"p90":21,"p99":29,"max":47},"inst_fps":{"median":58.82,"p10":47.62,"p01":34.48,"min":21.28},"fps_per_second":[57,56,58,58,58,58,58,60,60,59,59,57,57,59,55,56,55,56,58,60,60,59,60,60,59,60,58,60,58,57,57,56,59,60,60,59,60,59,60],"fps_per_second_min":55,"fps_per_second_median":59},"per_round":[{"span_s":10.11,"frames":588,"mean_fps":58.15,"frame_ms":{"p50":17,"p90":22,"p99":28,"max":47},"inst_fps":{"median":58.82,"p10":45.45,"p01":35.71,"min":21.28},"fps_per_second":[57,56,58,58,58,58,58,60,60,59],"fps_per_second_min":56,"fps_per_second_median":58},{"span_s":10.09,"frames":585,"mean_fps":57.96,"frame_ms":{"p50":17,"p90":21,"p99":33,"max":38},"inst_fps":{"median":58.82,"p10":47.62,"p01":30.3,"min":26.32},"fps_per_second":[56,54,56,56,59,60,60,59,60,60],"fps_per_second_min":54,"fps_per_second_median":59},{"span_s":11.08,"frames":650,"mean_fps":58.66,"frame_ms":{"p50":17,"p90":21,"p99":28,"max":42},"inst_fps":{"median":58.82,"p10":47.62,"p01":35.71,"min":23.81},"fps_per_second":[59,56,57,56,59,60,60,60,60,59,60],"fps_per_second_min":56,"fps_per_second_median":59}]}
+[  69353ms] [harness] === positive-control-deliberate-webgl-warning-follows ===
+[  69376ms] [harness] eval (()=>{const c=document.createElement('canvas');const g=c.getContext('webgl');if(!g)return 'no webgl context for the control';g.hint(0x0C50,g.FASTEST);return 'deliberate bad glHint issued, gl.getError()=0x'+g.getError().toString(16)+' (0x500 == INVALID_ENUM)'})() => deliberate bad glHint issued, gl.getError()=0x500 (0x500 == INVALID_ENUM)
+[  70904ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/17-final-state.png
+[  70905ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const codes={};for(const g of S.gl)codes['0x'+g[1].toString(16)]=(codes['0x'+g[1].toString(16)]||0)+1;return JSON.stringify({glGetError_polls:S.polls,glGetError_nonzero:S.gl.length,codes:codes,first:S.gl.slice(0,5)})})() => {"glGetError_polls":136,"glGetError_nonzero":0,"codes":{},"first":[]}
+[  70905ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  70915ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 10409
+[  70915ms] [console.error] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
+[  70918ms] [EXCEPTION] TypeError: can't access property "thisIsADeliberateUncaughtError" of null
     <anonymous> @ http://localhost:8000/armagetronad.html:0
     <anonymous> @ http://localhost:8000/armagetronad.html:0
-[  72961ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/18-after-deliberate-uncaught-error.png
+[  72953ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m2-gameplay-firefox/18-after-deliberate-uncaught-error.png
 
 Transcript: docs/evidence/phone-feedback/gates/m2-gameplay-firefox/console.log

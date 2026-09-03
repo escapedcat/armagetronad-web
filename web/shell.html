@@ -800,6 +800,8 @@
 
       const touchEl = document.getElementById('touch');
       const rotateEl = document.getElementById('rotate');
+      // The <p> wrapping the button, so hiding it takes its spacing with it.
+      const anywayEl = document.getElementById('rotate-anyway').parentNode;
       const chipEl = document.getElementById('reloadchip');
       const decision = decideTouch();
       // One machine-readable line, so a gate can assert which branch ran rather
@@ -899,10 +901,16 @@
       let chipDismissed = false;
       const applyOrientation = () => {
         const portrait = viewportIsPortrait();
-        // The prompt stays up only while the hold is on. Once the game has been
-        // released to start, a later rotation into portrait is the player's own
-        // doing and gets the chip, not a full-screen takeover.
-        rotateEl.hidden = !(portrait && window.AA_BOOT_HELD_FOR_PORTRAIT);
+        // PORTRAIT ALWAYS GETS THE PROMPT, before the boot and after it, which
+        // is Phase 3's behaviour unchanged -- an earlier version of this block
+        // showed it only while the boot was held, and that was a regression
+        // dressed up as tidiness: a player who rotates mid-game gets a
+        // letterboxed sliver, and "turn your phone sideways" is more use to
+        // them than a chip at the bottom of it. The chip is additional
+        // information for that case, not a replacement.
+        rotateEl.hidden = !portrait;
+        // The escape hatch only means anything while the game has not started.
+        anywayEl.hidden = !window.AA_BOOT_HELD_FOR_PORTRAIT;
         if (!chipDismissed) chipEl.hidden = (portrait === sizedForPortrait);
         console.log('[TOUCH] orientation portrait=' + portrait +
                     ' (sized for portrait: ' + sizedForPortrait +
@@ -940,8 +948,8 @@
           if (!viewportIsPortrait()) window.AA_RELEASE_PORTRAIT_HOLD('poll');
         }, 250);
       }
-      document.getElementById('rotate-anyway')
-        .addEventListener('click', () => window.AA_RELEASE_PORTRAIT_HOLD('button'));
+      document.getElementById('rotate-anyway').addEventListener('click',
+        () => window.AA_RELEASE_PORTRAIT_HOLD('button'));
       document.getElementById('reloadchip-go')
         .addEventListener('click', () => location.reload());
       document.getElementById('reloadchip-x')

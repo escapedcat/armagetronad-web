@@ -1,52 +1,52 @@
-[    729ms] [harness] mobile emulation: 412x782 CSS px dpr 3 (= 1236x2346 device px), touch on
-[    731ms] [harness] chrome: Chrome/152.0.7977.75
-[    731ms] [harness] navigating to http://localhost:8000/armagetronad.html?diag=1
-[     36ms] [console.log] [DISPLAY] at load: viewport 412x782 dpr 3 -> canvas 1236x2346 aspect 0.5269 gpu-axis-limit 16384
-[     37ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
-[     37ms] [console.log] [BOOT] portrait at load: HOLDING main() until landscape
-[     38ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: true)
-[     80ms] [console.log] [DIAG] ?diag=1: readout on, glFlush/glFinish counted
-[     89ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
-[     90ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
-[     96ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: true)
-[    102ms] [page] load event fired
-[    115ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
-[    156ms] [console.log] [PERSIST] populate ok in 37ms
-[    368ms] [console.log] [PERSIST] runtime initialized, starting the game
-[    369ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
-[    369ms] [console.log] [BOOT] main() HELD in portrait, waiting for landscape
-[   2098ms] [harness] screenshot -> docs/evidence/phone-feedback/portrait/p00-portrait-holding.png
-[   2099ms] [harness] eval JSON.stringify({held:window.AA_BOOT_HELD_FOR_PORTRAIT,runtime_ready:!!window.AA_RUNTIME_READY,rotate_prompt_visible:!document.getElementById('rotate').hidden,viewport:innerWidth+'x'+innerHeight,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height}) => "{\"held\":true,\"runtime_ready\":true,\"rotate_prompt_visible\":true,\"viewport\":\"412x782\",\"canvas\":\"1236x2346\"}"
-[  12104ms] [harness] eval JSON.stringify({phase:'runtime-is-ready-and-it-is-STILL-held',held:window.AA_BOOT_HELD_FOR_PORTRAIT,runtime_ready:!!window.AA_RUNTIME_READY,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height}) => "{\"phase\":\"runtime-is-ready-and-it-is-STILL-held\",\"held\":true,\"runtime_ready\":true,\"canvas\":\"1236x2346\"}"
-[  12168ms] [harness] screenshot -> docs/evidence/phone-feedback/portrait/p01-still-held-after-runtime-ready.png
-[  12168ms] [harness] === ROTATE-TO-LANDSCAPE ===
-[  12170ms] [harness] metrics -> 915x350 dpr 3
-[  12193ms] [console.log] [DISPLAY] portrait hold released by resize: viewport 915x350 dpr 3 -> canvas 2745x1050 aspect 2.6143 gpu-axis-limit 16384
-[  12194ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
-[  12194ms] [console.log] [BOOT] portrait hold released by resize
-[  12194ms] [console.log] [BOOT] autostart: calling main
-[  12196ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
-[  12197ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
-[  12197ms] [console.error] 
-[  12197ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
-[  12197ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
-[  12198ms] [console.log] 
-[  12324ms] [console.log] [L] ENCODING latin1
-[  12333ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
-[  12335ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
-[  12351ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
-[  12355ms] [console.error] TODO: glShadeModel
-[  12358ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
-[  12395ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
-[  12397ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[  12397ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[  12397ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[  12398ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[  12398ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[  13177ms] [harness] eval JSON.stringify({phase:'after-rotation',held:window.AA_BOOT_HELD_FOR_PORTRAIT,viewport:innerWidth+'x'+innerHeight,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height,rotate_prompt_visible:!document.getElementById('rotate').hidden,chip_visible:!document.getElementById('reloadchip').hidden}) => "{\"phase\":\"after-rotation\",\"held\":false,\"viewport\":\"915x350\",\"canvas\":\"2745x1050\",\"rotate_prompt_visible\":false,\"chip_visible\":false}"
-[  13177ms] [harness] until 1x <<[BOOT] autostart>> (timeout 60000ms, have 1)
-[  13178ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
-[  22292ms] [harness] screenshot -> docs/evidence/phone-feedback/portrait/p02-started-in-landscape-at-the-right-shape.png
-[  22293ms] [harness] eval document.getElementById('diag').textContent => "dpr 3   vp 915x350  vis 915x350\nbs  2745x1050  a 2.6143\ncss 915x350  a 2.6143  err 0.00%\ngl  2745x1050  MATCH\nfps 60 swaps/s   cam x0.5   touch on"
+[    653ms] [harness] mobile emulation: 412x782 CSS px dpr 3 (= 1236x2346 device px), touch on
+[    654ms] [harness] chrome: Chrome/152.0.7977.75
+[    654ms] [harness] navigating to http://localhost:8000/armagetronad.html?diag=1
+[     26ms] [console.log] [DISPLAY] at load: viewport 412x782 dpr 3 -> canvas 1236x2346 aspect 0.5269 gpu-axis-limit 16384
+[     27ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     27ms] [console.log] [BOOT] portrait at load: HOLDING main() until landscape
+[     28ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: true)
+[     61ms] [console.log] [DIAG] ?diag=1: readout on, glFlush/glFinish counted
+[     70ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     71ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     83ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: true)
+[     86ms] [page] load event fired
+[     95ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    136ms] [console.log] [PERSIST] populate ok in 34ms
+[    345ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    346ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    347ms] [console.log] [BOOT] main() HELD in portrait, waiting for landscape
+[   2078ms] [harness] screenshot -> docs/evidence/phone-feedback/portrait/p00-portrait-holding.png
+[   2079ms] [harness] eval JSON.stringify({held:window.AA_BOOT_HELD_FOR_PORTRAIT,runtime_ready:!!window.AA_RUNTIME_READY,rotate_prompt_visible:!document.getElementById('rotate').hidden,viewport:innerWidth+'x'+innerHeight,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height}) => "{\"held\":true,\"runtime_ready\":true,\"rotate_prompt_visible\":true,\"viewport\":\"412x782\",\"canvas\":\"1236x2346\"}"
+[  12081ms] [harness] eval JSON.stringify({phase:'runtime-is-ready-and-it-is-STILL-held',held:window.AA_BOOT_HELD_FOR_PORTRAIT,runtime_ready:!!window.AA_RUNTIME_READY,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height}) => "{\"phase\":\"runtime-is-ready-and-it-is-STILL-held\",\"held\":true,\"runtime_ready\":true,\"canvas\":\"1236x2346\"}"
+[  12136ms] [harness] screenshot -> docs/evidence/phone-feedback/portrait/p01-still-held-after-runtime-ready.png
+[  12136ms] [harness] === ROTATE-TO-LANDSCAPE ===
+[  12138ms] [harness] metrics -> 915x350 dpr 3
+[  12157ms] [console.log] [DISPLAY] portrait hold released by resize: viewport 915x350 dpr 3 -> canvas 2745x1050 aspect 2.6143 gpu-axis-limit 16384
+[  12158ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[  12158ms] [console.log] [BOOT] portrait hold released by resize
+[  12158ms] [console.log] [BOOT] autostart: calling main
+[  12161ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  12161ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  12161ms] [console.error] 
+[  12161ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  12162ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  12162ms] [console.log] 
+[  12288ms] [console.log] [L] ENCODING latin1
+[  12297ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[  12298ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  12315ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  12318ms] [console.error] TODO: glShadeModel
+[  12322ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  12357ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[  12358ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  12359ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  12359ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  12359ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  12359ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  13141ms] [harness] eval JSON.stringify({phase:'after-rotation',held:window.AA_BOOT_HELD_FOR_PORTRAIT,viewport:innerWidth+'x'+innerHeight,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height,rotate_prompt_visible:!document.getElementById('rotate').hidden,chip_visible:!document.getElementById('reloadchip').hidden}) => "{\"phase\":\"after-rotation\",\"held\":false,\"viewport\":\"915x350\",\"canvas\":\"2745x1050\",\"rotate_prompt_visible\":false,\"chip_visible\":false}"
+[  13142ms] [harness] until 1x <<[BOOT] autostart>> (timeout 60000ms, have 1)
+[  13142ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  22253ms] [harness] screenshot -> docs/evidence/phone-feedback/portrait/p02-started-in-landscape-at-the-right-shape.png
+[  22254ms] [harness] eval document.getElementById('diag').textContent => "dpr 3   vp 915x350  vis 915x350\nbs  2745x1050  a 2.6143\ncss 915x350  a 2.6143  err 0.00%\ngl  2745x1050  MATCH\nfps 60 swaps/s   cam x0.5   touch on"
 
 Transcript: docs/evidence/phone-feedback/portrait/console.log

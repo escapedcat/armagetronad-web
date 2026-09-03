@@ -243,7 +243,16 @@ quoting any frame rate from this directory.
 | gate | Chrome | Firefox |
 |---|---|---|
 | M4 persistence milestone (`gates/m4-milestone-*`) | PASS 22/22 | PASS 22/22 |
-| M2 gameplay (`gates/m2-gameplay-*`) | ALL PASSED — median 60 fps, worst second 58 | ALL PASSED — median 60 fps, worst second 39 |
+| M2 gameplay (`gates/m2-gameplay-*`) | ALL PASSED — median 60 fps, worst second 58 | ALL PASSED — median 59 fps, worst second 55 |
+| Phase 3 touch overlay (`gates/phase3-touch-gate/`) | menus and both steering halves driven by real taps, all four tooltip counters spent, no timeouts | — |
+
+The Phase 3 run is here because it is the one gate this work could plausibly
+have broken and it is not in the dispatch's list. Its transcript is
+**identical** to Phase 3's, row for row, including `rotated-to-portrait`
+showing the full-screen prompt. An earlier version of this change showed that
+prompt only while the boot was held, which the gate caught: a player who
+rotates mid-game gets a letterboxed sliver, and "turn your phone sideways" is
+more use to them than a chip at the bottom of it.
 
 `make -f web/Makefile dedicated`, forced to relink by deleting its output first:
 **2,488,298 bytes, md5 `9718a2a64978cb6e9b95ea2f0454cca5`.** Only

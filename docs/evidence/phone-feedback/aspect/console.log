@@ -1,58 +1,57 @@
-[    728ms] [harness] mobile emulation: 915x350 CSS px dpr 3 (= 2745x1050 device px), touch on
-[    729ms] [harness] chrome: Chrome/152.0.7977.75
-[    729ms] [harness] navigating to http://localhost:8000/armagetronad.html
-[     47ms] [console.log] [DISPLAY] at load: viewport 915x350 dpr 3 -> canvas 2745x1050 aspect 2.6143 gpu-axis-limit 16384
-[     47ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
-[     48ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
-[     57ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
-[     59ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
-[     59ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
-[     61ms] [page] load event fired
-[     61ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
-[    114ms] [console.log] [PERSIST] populate ok in 36ms
-[    308ms] [console.log] [PERSIST] runtime initialized, starting the game
-[    309ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
-[    310ms] [console.log] [BOOT] autostart: calling main
-[    312ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
-[    312ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
-[    313ms] [console.error] 
-[    313ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
-[    313ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
-[    313ms] [console.log] 
-[    443ms] [console.log] [L] ENCODING latin1
-[    450ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
-[    451ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
-[    470ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
-[    473ms] [console.error] TODO: glShadeModel
-[    477ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
-[    514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[    514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[    514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[    514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[    515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
-[    809ms] [harness] eval (()=>{const R=(x)=>Math.round(x*100)/100;window.__ap=(phase)=>{const c=document.getElementById('canvas');const r=c.getBoundingClientRect();let gl=null;try{gl=c.getContext('webgl')||c.getContext('experimental-webgl');}catch(e){}const p=document.createElement('div');p.style.cssText='position:absolute;left:-9999px;top:0;width:100vw;height:100vh';document.body.appendChild(p);const b1=p.getBoundingClientRect();const vw=R(b1.width),vh=R(b1.height);p.style.height='100dvh';const dvh=R(p.getBoundingClientRect().height);p.style.height='100svh';const svh=R(p.getBoundingClientRect().height);p.style.height='100lvh';const lvh=R(p.getBoundingClientRect().height);p.remove();const vv=window.visualViewport;const o={phase:phase,bs:c.width+'x'+c.height,bs_aspect:R((c.width/c.height)*1000)/1000,css:R(r.width)+'x'+R(r.height),css_aspect:R((r.width/r.height)*1000)/1000,aspect_err_pct:R(((r.width/r.height)/(c.width/c.height)-1)*10000)/100,drawbuf:gl?gl.drawingBufferWidth+'x'+gl.drawingBufferHeight:'no-gl',db_matches_bs:gl?(gl.drawingBufferWidth===c.width&&gl.drawingBufferHeight===c.height):null,inner:innerWidth+'x'+innerHeight,dpr:devicePixelRatio,vw:vw,vh:vh,dvh:dvh,svh:svh,lvh:lvh,vv:vv?R(vv.width)+'x'+R(vv.height)+'@'+R(vv.offsetTop):'none',body_h:document.body.clientHeight,root_h:document.documentElement.clientHeight,rect_top:R(r.top),rect_bottom:R(r.bottom),fully_visible:(r.top>=-0.5&&r.bottom<=(vv?vv.height:innerHeight)+0.5)};console.log('[ASPECT] '+JSON.stringify(o));return o.aspect_err_pct;};return 'aspect probe installed'})() => "aspect probe installed"
-[    810ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
-[    810ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
-[   9814ms] [console.log] [ASPECT] {"phase":"A-load-915x350-urlbar-showing","bs":"2745x1050","bs_aspect":2.61429,"css":"915x350","css_aspect":2.61429,"aspect_err_pct":0,"drawbuf":"2745x1050","db_matches_bs":true,"inner":"915x350","dpr":3,"vw":915,"vh":350,"dvh":350,"svh":350,"lvh":350,"vv":"915x350@0","body_h":350,"root_h":350,"rect_top":0,"rect_bottom":350,"fully_visible":true}
-[   9814ms] [harness] eval window.__ap('A-load-915x350-urlbar-showing') => 0
-[   9894ms] [harness] screenshot -> docs/evidence/phone-feedback/aspect/a1-load.png
-[   9895ms] [harness] === B-VIEWPORT-GROWS-TO-412-AFTER-LOAD ===
-[   9896ms] [harness] metrics -> 915x412 dpr 3
-[   9904ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
-[  11398ms] [console.log] [ASPECT] {"phase":"B-viewport-grew-to-412","bs":"2745x1050","bs_aspect":2.61429,"css":"915x350","css_aspect":2.61429,"aspect_err_pct":0,"drawbuf":"2745x1050","db_matches_bs":true,"inner":"915x412","dpr":3,"vw":915,"vh":412,"dvh":412,"svh":412,"lvh":412,"vv":"915x412@0","body_h":412,"root_h":412,"rect_top":31,"rect_bottom":381,"fully_visible":true}
-[  11399ms] [harness] eval window.__ap('B-viewport-grew-to-412') => 0
-[  11475ms] [harness] screenshot -> docs/evidence/phone-feedback/aspect/a2-viewport-grew.png
-[  11475ms] [harness] === C-VIEWPORT-BACK-TO-350 ===
-[  11477ms] [harness] metrics -> 915x350 dpr 3
-[  11479ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
-[  12980ms] [console.log] [ASPECT] {"phase":"C-viewport-back-to-350","bs":"2745x1050","bs_aspect":2.61429,"css":"915x350","css_aspect":2.61429,"aspect_err_pct":0,"drawbuf":"2745x1050","db_matches_bs":true,"inner":"915x350","dpr":3,"vw":915,"vh":350,"dvh":350,"svh":350,"lvh":350,"vv":"915x350@0","body_h":350,"root_h":350,"rect_top":0,"rect_bottom":350,"fully_visible":true}
-[  12981ms] [harness] eval window.__ap('C-viewport-back-to-350') => 0
-[  12981ms] [harness] === D-FORCED-MISMATCH-4-3-BACKING-STORE-AGAINST-A-STALE-2-61-CUSTOM-PROPERTY ===
-[  12984ms] [harness] eval (()=>{const c=document.getElementById('canvas');c.width=1024;c.height=768;return 'backing store now 1024x768, --aa-aspect deliberately left at '+getComputedStyle(document.documentElement).getPropertyValue('--aa-aspect')})() => "backing store now 1024x768, --aa-aspect deliberately left at 2.6142857142857143"
-[  13487ms] [console.log] [ASPECT] {"phase":"D-forced-mismatch-4-3-backing-store","bs":"1024x768","bs_aspect":1.33333,"css":"915x686.25","css_aspect":1.33333,"aspect_err_pct":0,"drawbuf":"1024x768","db_matches_bs":true,"inner":"915x350","dpr":3,"vw":915,"vh":350,"dvh":350,"svh":350,"lvh":350,"vv":"915x350@0","body_h":350,"root_h":350,"rect_top":-168.12,"rect_bottom":518.13,"fully_visible":false}
-[  13487ms] [harness] eval window.__ap('D-forced-mismatch-4-3-backing-store') => 0
-[  13576ms] [harness] screenshot -> docs/evidence/phone-feedback/aspect/a3-forced-mismatch.png
-[  13576ms] [harness] === E-RESTORED ===
-[  13579ms] [harness] eval (()=>{const c=document.getElementById('canvas');c.width=2745;c.height=1050;return 'restored'})() => "restored"
-[  14082ms] [console.log] [ASPECT] {"phase":"E-restored","bs":"2745x1050","bs_aspect":2.61429,"css":"915x350","css_aspect":2.61429,"aspect_err_pct":0,"drawbuf":"2745x1050","db_matches_bs":true,"inner":"915x350","dpr":3,"vw":915,"vh":350,"dvh":350,"svh":350,"lvh":350,"vv":"915x350@0","body_h":350,"root_h":350,"rect_top":0,"rect_bottom":350,"fully_visible":true}
-[  14083ms] [harness] eval window.__ap('E-restored') => 0
+[    990ms] [harness] mobile emulation: 915x350 CSS px dpr 3 (= 2745x1050 device px), touch on
+[    995ms] [harness] chrome: Chrome/152.0.7977.75
+[    995ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     56ms] [console.log] [DISPLAY] at load: viewport 915x350 dpr 3 -> canvas 2745x1050 aspect 2.6143 gpu-axis-limit 16384
+[     56ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     58ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     67ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     68ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     75ms] [page] load event fired
+[     88ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    154ms] [console.log] [PERSIST] populate ok in 55ms
+[    350ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    351ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    351ms] [console.log] [BOOT] autostart: calling main
+[    354ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    354ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    354ms] [console.error] 
+[    355ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    355ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    355ms] [console.log] 
+[    478ms] [console.log] [L] ENCODING latin1
+[    487ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    490ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    508ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    512ms] [console.error] TODO: glShadeModel
+[    516ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[    556ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    557ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    557ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    557ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    558ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    814ms] [harness] eval (()=>{const R=(x)=>Math.round(x*100)/100;window.__ap=(phase)=>{const c=document.getElementById('canvas');const r=c.getBoundingClientRect();let gl=null;try{gl=c.getContext('webgl')||c.getContext('experimental-webgl');}catch(e){}const p=document.createElement('div');p.style.cssText='position:absolute;left:-9999px;top:0;width:100vw;height:100vh';document.body.appendChild(p);const b1=p.getBoundingClientRect();const vw=R(b1.width),vh=R(b1.height);p.style.height='100dvh';const dvh=R(p.getBoundingClientRect().height);p.style.height='100svh';const svh=R(p.getBoundingClientRect().height);p.style.height='100lvh';const lvh=R(p.getBoundingClientRect().height);p.remove();const vv=window.visualViewport;const o={phase:phase,bs:c.width+'x'+c.height,bs_aspect:R((c.width/c.height)*1000)/1000,css:R(r.width)+'x'+R(r.height),css_aspect:R((r.width/r.height)*1000)/1000,aspect_err_pct:R(((r.width/r.height)/(c.width/c.height)-1)*10000)/100,drawbuf:gl?gl.drawingBufferWidth+'x'+gl.drawingBufferHeight:'no-gl',db_matches_bs:gl?(gl.drawingBufferWidth===c.width&&gl.drawingBufferHeight===c.height):null,inner:innerWidth+'x'+innerHeight,dpr:devicePixelRatio,vw:vw,vh:vh,dvh:dvh,svh:svh,lvh:lvh,vv:vv?R(vv.width)+'x'+R(vv.height)+'@'+R(vv.offsetTop):'none',body_h:document.body.clientHeight,root_h:document.documentElement.clientHeight,rect_top:R(r.top),rect_bottom:R(r.bottom),fully_visible:(r.top>=-0.5&&r.bottom<=(vv?vv.height:innerHeight)+0.5)};console.log('[ASPECT] '+JSON.stringify(o));return o.aspect_err_pct;};return 'aspect probe installed'})() => "aspect probe installed"
+[    815ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[    815ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   9822ms] [console.log] [ASPECT] {"phase":"A-load-915x350-urlbar-showing","bs":"2745x1050","bs_aspect":2.61429,"css":"915x350","css_aspect":2.61429,"aspect_err_pct":0,"drawbuf":"2745x1050","db_matches_bs":true,"inner":"915x350","dpr":3,"vw":915,"vh":350,"dvh":350,"svh":350,"lvh":350,"vv":"915x350@0","body_h":350,"root_h":350,"rect_top":0,"rect_bottom":350,"fully_visible":true}
+[   9823ms] [harness] eval window.__ap('A-load-915x350-urlbar-showing') => 0
+[   9893ms] [harness] screenshot -> docs/evidence/phone-feedback/aspect/a1-load.png
+[   9893ms] [harness] === B-VIEWPORT-GROWS-TO-412-AFTER-LOAD ===
+[   9895ms] [harness] metrics -> 915x412 dpr 3
+[   9895ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[  11400ms] [console.log] [ASPECT] {"phase":"B-viewport-grew-to-412","bs":"2745x1050","bs_aspect":2.61429,"css":"915x350","css_aspect":2.61429,"aspect_err_pct":0,"drawbuf":"2745x1050","db_matches_bs":true,"inner":"915x412","dpr":3,"vw":915,"vh":412,"dvh":412,"svh":412,"lvh":412,"vv":"915x412@0","body_h":412,"root_h":412,"rect_top":31,"rect_bottom":381,"fully_visible":true}
+[  11402ms] [harness] eval window.__ap('B-viewport-grew-to-412') => 0
+[  11470ms] [harness] screenshot -> docs/evidence/phone-feedback/aspect/a2-viewport-grew.png
+[  11470ms] [harness] === C-VIEWPORT-BACK-TO-350 ===
+[  11472ms] [harness] metrics -> 915x350 dpr 3
+[  11473ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[  12978ms] [console.log] [ASPECT] {"phase":"C-viewport-back-to-350","bs":"2745x1050","bs_aspect":2.61429,"css":"915x350","css_aspect":2.61429,"aspect_err_pct":0,"drawbuf":"2745x1050","db_matches_bs":true,"inner":"915x350","dpr":3,"vw":915,"vh":350,"dvh":350,"svh":350,"lvh":350,"vv":"915x350@0","body_h":350,"root_h":350,"rect_top":0,"rect_bottom":350,"fully_visible":true}
+[  12978ms] [harness] eval window.__ap('C-viewport-back-to-350') => 0
+[  12978ms] [harness] === D-FORCED-MISMATCH-4-3-BACKING-STORE-AGAINST-A-STALE-2-61-CUSTOM-PROPERTY ===
+[  12982ms] [harness] eval (()=>{const c=document.getElementById('canvas');c.width=1024;c.height=768;return 'backing store now 1024x768, --aa-aspect deliberately left at '+getComputedStyle(document.documentElement).getPropertyValue('--aa-aspect')})() => "backing store now 1024x768, --aa-aspect deliberately left at 2.6142857142857143"
+[  13485ms] [console.log] [ASPECT] {"phase":"D-forced-mismatch-4-3-backing-store","bs":"1024x768","bs_aspect":1.33333,"css":"915x686.25","css_aspect":1.33333,"aspect_err_pct":0,"drawbuf":"1024x768","db_matches_bs":true,"inner":"915x350","dpr":3,"vw":915,"vh":350,"dvh":350,"svh":350,"lvh":350,"vv":"915x350@0","body_h":350,"root_h":350,"rect_top":-168.12,"rect_bottom":518.13,"fully_visible":false}
+[  13485ms] [harness] eval window.__ap('D-forced-mismatch-4-3-backing-store') => 0
+[  13575ms] [harness] screenshot -> docs/evidence/phone-feedback/aspect/a3-forced-mismatch.png
+[  13575ms] [harness] === E-RESTORED ===
+[  13578ms] [harness] eval (()=>{const c=document.getElementById('canvas');c.width=2745;c.height=1050;return 'restored'})() => "restored"
+[  14081ms] [console.log] [ASPECT] {"phase":"E-restored","bs":"2745x1050","bs_aspect":2.61429,"css":"915x350","css_aspect":2.61429,"aspect_err_pct":0,"drawbuf":"2745x1050","db_matches_bs":true,"inner":"915x350","dpr":3,"vw":915,"vh":350,"dvh":350,"svh":350,"lvh":350,"vv":"915x350@0","body_h":350,"root_h":350,"rect_top":0,"rect_bottom":350,"fully_visible":true}
+[  14081ms] [harness] eval window.__ap('E-restored') => 0

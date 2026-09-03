@@ -229,7 +229,7 @@ against, so no rebuild is needed first. Then, in landscape:
 | | Chrome | Firefox |
 |---|---|---|
 | M4 persistence milestone | PASS 22/22 | PASS 22/22 |
-| M2 gameplay | ALL PASSED — median 60 fps, worst second 58 | ALL PASSED — median 60 fps, worst second 39 |
+| M2 gameplay | ALL PASSED — median 60 fps, worst second 58 | ALL PASSED — median 59 fps, worst second 55 |
 
 `make -f web/Makefile dedicated`, forced to relink by deleting its output:
 **2,488,298 bytes, md5 `9718a2a64978cb6e9b95ea2f0454cca5`.** Only
