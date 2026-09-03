@@ -1,0 +1,147 @@
+# Build the browser client and publish it to GitHub Pages.
+#
+# WHY THIS EXISTS. Until now a deploy was a person running `npm run deploy` on a
+# machine that happened to hold a fresh `make client`. That published the right
+# thing every time it was done -- and it was not done when the tap/Escape
+# controls and the title-picture fix merged, so the live site lagged main by a
+# whole PR until someone noticed. A merge to main should BE the deploy.
+#
+# WHAT IT REUSES, DELIBERATELY. The publish step is the same `npm run deploy`
+# from web/package.json, not a second mechanism: that script carries the
+# publish-set gate (check-publish-set.mjs, set equality against the declared
+# release files) and two flags that are bug fixes proven on the live site
+# (`-f`, and the `-v "{**/*,**/.*}"` dotfile clear -- read the deployComment in
+# web/package.json before touching either). CI only appends what a runner
+# needs: `-x` so the tokenised URL is never printed, `-r` with the token, `-u`
+# for the committer. A local `npm run deploy` still works unchanged.
+#
+# WHAT RUNS WHEN.
+#   pull_request -> build + publish-set gate, NO deploy. Every PR proves the
+#                   client still builds from a clean checkout, which nothing did
+#                   before; this workflow's own PR is the first such proof.
+#   push to main -> build + deploy. Docs-only pushes are skipped (paths-ignore
+#                   rather than paths: an ignore list cannot forget a build input).
+#   workflow_dispatch -> build + deploy FROM THE CHOSEN REF. This is how a branch
+#                   gets onto the phone for a test before it merges. main wins the
+#                   next time it changes.
+#
+# BUILD TIME. emsdk (~1.8 GB installed) and the static libxml2 are cached across
+# runs; the client itself is rebuilt from scratch every time -- Make keys on
+# mtimes and a fresh checkout defeats an object cache, so none is attempted.
+# Expect the first run to be the slowest; the header of the first successful run
+# is where the real number lives.
+#
+# REPRODUCIBILITY, STATED HONESTLY. web/README.md's "byte-identical from a clean
+# build" was measured on ONE machine. Whether a Linux runner's wasm matches the
+# maintainer's macOS build is a question the first CI deploy answers, not one this
+# file assumes: `sh web/tools/wire-facts.sh` compares the deployed sha256 with a
+# local build's.
+#
+# NOTE ON FILE PLACEMENT. As with upstream-watch.yml: this repo keeps new files
+# under src/emscripten/, web/, deps/ or docs/, and a workflow cannot live there.
+# The logic -- the Makefile, the deploy script, the gate -- all does. The
+# exception is the scheduler, not the substance.
+
+name: deploy-pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/workflows/upstream-watch.yml'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/workflows/upstream-watch.yml'
+  workflow_dispatch:
+
+# gh-pages is force-pushed as a single parentless commit; two deploys racing
+# would let the older build win. Queue them, never cancel a deploy midway.
+concurrency:
+  group: deploy-pages-${{ github.event_name == 'pull_request' && github.ref || 'live' }}
+  cancel-in-progress: false
+
+env:
+  EMSDK_VERSION: '6.0.8'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # the gh-pages push; read-only anyway on PRs from forks
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The documented install, verbatim (web/README.md "Toolchain"), so a
+      # runner and a laptop build with the same thing. The whole SDK directory is
+      # cached, and because the cache is saved at the END of the job it also
+      # carries Emscripten's own cache of ports (SDL, libpng) and the system libs
+      # the first link compiles -- the network-bound half of a first build.
+      - name: Restore emsdk
+        id: emsdk-cache
+        uses: actions/cache@v4
+        with:
+          path: deps/emsdk
+          key: emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-v1
+
+      - name: Install emsdk ${{ env.EMSDK_VERSION }}
+        if: steps.emsdk-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git deps/emsdk
+          cd deps/emsdk
+          ./emsdk install "$EMSDK_VERSION"
+          ./emsdk activate "$EMSDK_VERSION"
+
+      - name: Pin check
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          emcc --version | head -1
+          emcc --version | head -1 | grep -q " $EMSDK_VERSION " || { echo "emcc is not $EMSDK_VERSION"; exit 1; }
+
+      - name: Restore libxml2
+        id: libxml2-cache
+        uses: actions/cache@v4
+        with:
+          path: deps/build/libxml2-install
+          key: libxml2-${{ hashFiles('deps/build-libxml2.sh') }}-emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-v1
+
+      - name: Build libxml2 (static wasm)
+        if: steps.libxml2-cache.outputs.cache-hit != 'true'
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          ./deps/build-libxml2.sh
+
+      - name: Build the browser client
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          make -f web/Makefile client -j"$(nproc)"
+          ls -l web/dist-m1/
+
+      # The gate inside `npm run deploy` runs on every event; the publish itself
+      # only off PRs. On a PR this step therefore proves the release set is exactly
+      # the five declared files and stops -- which is what a PR check should do.
+      - name: Publish-set gate (PR)
+        if: github.event_name == 'pull_request'
+        working-directory: web
+        run: |
+          cp index.html dist-m1/index.html
+          node tools/check-publish-set.mjs dist-m1
+
+      - name: Deploy to gh-pages
+        if: github.event_name != 'pull_request'
+        working-directory: web
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          npm run deploy -- -x \
+            -r "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            -u "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          echo "Deployed $(git rev-parse --short HEAD) from ${GITHUB_REF_NAME}"
