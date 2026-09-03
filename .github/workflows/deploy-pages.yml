@@ -85,7 +85,7 @@ jobs:
     permissions:
       contents: write   # the gh-pages push; read-only anyway on PRs from forks
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
