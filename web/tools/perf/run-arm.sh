@@ -18,15 +18,20 @@
 #   <arm>/steps.txt      the driver script this arm actually ran
 #   <arm>/console.log    the transcript; the LAST "[PERF] <arm> {...}" is the result
 #   <arm>/*.png          screenshots; r?-30s/r?-50s.png are the trail-geometry proof
+#   <arm>/uptime.txt     `uptime` immediately before and after the drive
 #   <arm>-driver.txt     drive-browser.mjs's stdout/stderr
 #
 # MEASUREMENT HYGIENE, checked here because it was violated once: no other
 # drive-browser.mjs may be running (two Chromes on devtools port 9222 collide,
 # and any browser automation on the box steals the CPU the throttle is
-# metering), and the 1-minute load average must be low. A number taken on a
-# loaded machine measures the load, not the game. Set AA_PERF_MAXLOAD to raise
-# the ceiling knowingly; the default 6 is where a rate-6 throttle stops being
-# the dominant slowdown on this 8-core desktop.
+# metering). The load average is RECORDED, not gated: `uptime` before and after
+# the drive lands in <arm>/uptime.txt and on stdout, so a reader can see what
+# the machine was doing. This 10-core desktop idles near load 9-13 from the
+# maintainer's own apps (a browser, the window server) -- a steady background
+# that the early-vs-late ratio design absorbs and that a gate at a "quiet" load
+# would wait on forever. The one hard precondition is OURS: no build or driver
+# of ours beside the run. Set AA_PERF_MAXLOAD to a number to refuse a run above
+# that 1-minute load, knowingly; unset, nothing is refused for load.
 #
 # SP_SIZE_FACTOR IS HARNESS SETUP, NOT A LEVER, and belongs in every arm. At
 # the shipped -3 (gGame.cpp, exponent(i)=2^(i/2), so a 0.35x arena) a round is
@@ -106,17 +111,19 @@ if pgrep -f 'node .*drive-browser[.]mjs' >/dev/null 2>&1; then
   fail "another drive-browser.mjs is running; a measurement beside it is invalid. Wait for it."
 fi
 LOAD1=$(uptime | sed -e 's/.*load averages*: *//' -e 's/[, ].*//')
-MAXLOAD=${AA_PERF_MAXLOAD:-6}
-if awk -v l="$LOAD1" -v m="$MAXLOAD" 'BEGIN { exit !(l + 0 > m + 0) }'; then
-  fail "1-minute load average is $LOAD1 (> $MAXLOAD); wait, or set AA_PERF_MAXLOAD knowingly"
+if [ -n "$AA_PERF_MAXLOAD" ] && awk -v l="$LOAD1" -v m="$AA_PERF_MAXLOAD" 'BEGIN { exit !(l + 0 > m + 0) }'; then
+  fail "1-minute load average is $LOAD1 (> AA_PERF_MAXLOAD=$AA_PERF_MAXLOAD)"
 fi
 curl -sf -o /dev/null "http://localhost:$PORT/armagetronad.html" \
   || fail "nothing serving web/dist-m1 on port $PORT (python3 -m http.server $PORT --directory web/dist-m1 &)"
 echo "run-arm.sh: arm=$ARM cpu=$RATE port=$PORT load1=$LOAD1 cfg='$CFG' template=$TMPL"
 
 # ---- drive ---------------------------------------------------------------
+echo "before: $(uptime)" > "$OUT/uptime.txt"
 node web/tools/drive-browser.mjs --headed --mobile 915,412,3 --out "$OUT" --url "$URL" \
      --script-file "$OUT/steps.txt" > "$SET/$ARM-driver.txt" 2>&1 || true
+echo "after:  $(uptime)" >> "$OUT/uptime.txt"
+cat "$OUT/uptime.txt"
 
 # ---- report --------------------------------------------------------------
 grep -h '\[PERF\] '"$ARM"' {' "$OUT/console.log" | tail -1 | sed -e 's/.*\(\[PERF\] [^{]*{\)/\1/' | cut -c1-200 \
