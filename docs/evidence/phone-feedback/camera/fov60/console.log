@@ -1,0 +1,74 @@
+[    753ms] [harness] mobile emulation: 915x350 CSS px dpr 3 (= 2745x1050 device px), touch on
+[    758ms] [harness] chrome: Chrome/152.0.7977.75
+[    758ms] [harness] navigating to http://localhost:8000/armagetronad.html?autostart=0&touch=1&cam=1
+[     46ms] [console.log] [DISPLAY] at load: viewport 915x350 dpr 3 -> canvas 2745x1050 aspect 2.6143 gpu-axis-limit 16384
+[     46ms] [console.log] [TOUCH] enabled=true (?touch=1) maxTouchPoints=5
+[     48ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     58ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     59ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     61ms] [page] load event fired
+[     62ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    110ms] [console.log] [PERSIST] populate ok in 32ms
+[    328ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    328ms] [console.log] [CAMERA] stock camera (factor 1, from ?cam)
+[    328ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[    826ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# probe\nSTART_FOV_1 60\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})() => "autoexec.cfg patched: \"\\n# probe\\nSTART_FOV_1 60\\n\""
+[    827ms] [harness] eval (()=>{window.AA_FOOT=function(){var cv=document.getElementById('canvas');var r=[0.42,0.50,0.16,0.20];var x=Math.round(r[0]*cv.width),y=Math.round(r[1]*cv.height),w=Math.round(r[2]*cv.width),h=Math.round(r[3]*cv.height);var c=document.createElement('canvas');c.width=w;c.height=h;var cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(cv,x,y,w,h,0,0,w,h);var d=cx.getImageData(0,0,w,h).data;var x0=w,y0=h,x1=-1,y1=-1,n=0;for(var j=0;j<h;j++)for(var i=0;i<w;i++){var o=(j*w+i)*4,R=d[o],G=d[o+1],B=d[o+2];var s=Math.max(R,G,B)-Math.min(R,G,B);if(s>40){n++;if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j;}}return {canvas:cv.width+'x'+cv.height,saturated_px:n,bbox:x1<0?null:(x1-x0+1)+'x'+(y1-y0+1),w_pct_of_screen_h:x1<0?null:Math.round((x1-x0+1)/cv.height*10000)/100,h_pct_of_screen_h:y1<0?null:Math.round((y1-y0+1)/cv.height*10000)/100};};return 'footprint probe installed'})() => "footprint probe installed"
+[    828ms] [console.log] [BOOT] autostart: calling main
+[    831ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    831ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    831ms] [console.error] 
+[    832ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    832ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    832ms] [console.log] 
+[    955ms] [console.log] [L] ENCODING latin1
+[    962ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    964ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    984ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    987ms] [console.error] TODO: glShadeModel
+[    990ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1026ms] [harness] eval window.AA_START() => undefined
+[   1026ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1027ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10097ms] [harness] tap #touchpad button[data-aakey="Enter"] at 488,30 (1/1)
+[  10110ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  13471ms] [harness] tap #touchpad button[data-aakey="Enter"] at 488,30 (1/1)
+[  13499ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  17342ms] [harness] tap #touchpad button[data-aakey="Enter"] at 488,30 (1/1)
+[  17352ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  17354ms] [console.log] [L] TEAM_CREATED web_user
+[  17354ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  17356ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  17358ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  17358ms] [console.log] [L] NEW_ROUND 2026-09-03 13:30:00 UTC+0200
+[  17376ms] [console.log] [L] TEAM_CREATED ai_team
+[  17376ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  17376ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  17377ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  17377ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  17401ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  17402ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  17402ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  17657ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[  19645ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[  23829ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  24209ms] [console.log] [L] DEATH_FRAG web_user excel
+[  24210ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  25442ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  29513ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  29513ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  29513ms] [console.log] [L] NEW_ROUND 2026-09-03 13:30:12 UTC+0200
+[  29516ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  29516ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  29545ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  31469ms] [harness] screenshot -> docs/evidence/phone-feedback/camera/fov60/f01-round2-countdown.png
+[  31475ms] [harness] eval '[FOVPROBE] fov60-r2 '+JSON.stringify(window.AA_FOOT()) => "[FOVPROBE] fov60-r2 {\"canvas\":\"2745x1050\",\"saturated_px\":1313,\"bbox\":\"40x58\",\"w_pct_of_screen_h\":3.81,\"h_pct_of_screen_h\":5.52}"
+[  31475ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 120000ms, have 2)
+[  36345ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  37626ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  41693ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  41693ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  41694ms] [console.log] [L] NEW_ROUND 2026-09-03 13:30:24 UTC+0200
+[  41782ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  43708ms] [harness] screenshot -> docs/evidence/phone-feedback/camera/fov60/f02-round3-countdown.png
+[  43712ms] [harness] eval '[FOVPROBE] fov60-r3 '+JSON.stringify(window.AA_FOOT()) => "[FOVPROBE] fov60-r3 {\"canvas\":\"2745x1050\",\"saturated_px\":1313,\"bbox\":\"40x58\",\"w_pct_of_screen_h\":3.81,\"h_pct_of_screen_h\":5.52}"

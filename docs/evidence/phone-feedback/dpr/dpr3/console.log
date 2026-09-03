@@ -1,0 +1,71 @@
+[   1048ms] [harness] mobile emulation: 915x350 CSS px dpr 3 (= 2745x1050 device px), touch on
+[   1051ms] [harness] chrome: Chrome/152.0.7977.75
+[   1051ms] [harness] navigating to http://localhost:8000/armagetronad.html?dpr=3
+[     62ms] [console.log] [DISPLAY] at load: viewport 915x350 dpr 3 (?dpr override) -> canvas 2745x1050 aspect 2.6143 gpu-axis-limit 16384
+[     62ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     62ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     72ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     72ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     83ms] [page] load event fired
+[     92ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    149ms] [console.log] [PERSIST] populate ok in 48ms
+[    382ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    383ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    384ms] [console.log] [BOOT] autostart: calling main
+[    387ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    387ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    387ms] [console.error] 
+[    388ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    388ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    388ms] [console.log] 
+[    515ms] [console.log] [L] ENCODING latin1
+[    524ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    527ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    551ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    555ms] [console.error] TODO: glShadeModel
+[    559ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[    609ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    609ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    610ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    611ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    611ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    611ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    611ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1009ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1009ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1010ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1011ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height+' screen '+screen.width+'x'+screen.height+' dpr '+devicePixelRatio})() => "canvas 2745x1050 screen 915x350 dpr 3"
+[   7083ms] [harness] screenshot -> docs/evidence/phone-feedback/dpr/dpr3/01-language-menu.png
+[   7106ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[   7116ms] [harness] key Enter (1/1)
+[  10452ms] [harness] key Escape (1/1)
+[  10455ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13374ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  13376ms] [console.log] [L] TEAM_CREATED web_user
+[  13376ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  13377ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  13380ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  13381ms] [console.log] [L] NEW_ROUND 2026-09-03 13:25:04 UTC+0200
+[  13399ms] [console.log] [L] TEAM_CREATED ai_team
+[  13399ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  13399ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  13399ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  13400ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  14940ms] [harness] screenshot -> docs/evidence/phone-feedback/dpr/dpr3/02-welcome-message.png
+[  14972ms] [harness] key Enter (1/1)
+[  15274ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  15274ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  15275ms] [harness] === ROUND-1-STARTED ===
+[  19854ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  19885ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  20218ms] [console.log] [L] DEATH_FRAG web_user excel
+[  20220ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  20983ms] [harness] screenshot -> docs/evidence/phone-feedback/dpr/dpr3/03-round1-driving.png
+[  21018ms] [harness] key Left (1/1)
+[  21468ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  22555ms] [harness] key Right (1/1)
+[  22856ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
+[  22857ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
+[  22857ms] [harness] === ROUND-1-COMPLETE ===
+[  23071ms] [harness] screenshot -> docs/evidence/phone-feedback/dpr/dpr3/04-round1-ended.png
+[  23074ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => "{\"total_frames_sampled\":1321,\"rounds_started\":1,\"rounds_won\":1,\"overall\":{\"span_s\":8.09,\"frames\":483,\"mean_fps\":59.72,\"frame_ms\":{\"p50\":16.7,\"p90\":17.8,\"p99\":19,\"max\":35.5},\"inst_fps\":{\"median\":59.88,\"p10\":56.18,\"p01\":52.63,\"min\":28.17},\"fps_per_second\":[58,60,60,60,60,60,60,60],\"fps_per_second_min\":58,\"fps_per_second_median\":60},\"per_round\":[{\"span_s\":8.09,\"frames\":483,\"mean_fps\":59.72,\"frame_ms\":{\"p50\":16.7,\"p90\":17.8,\"p99\":19,\"max\":35.5},\"inst_fps\":{\"median\":59.88,\"p10\":56.18,\"p01\":52.63,\"min\":28.17},\"fps_per_second\":[58,60,60,60,60,60,60,60],\"fps_per_second_min\":58,\"fps_per_second_median\":60}]}"

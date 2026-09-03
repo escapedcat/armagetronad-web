@@ -1,0 +1,273 @@
+[    698ms] [harness] chrome: Chrome/152.0.7977.75
+[    698ms] [harness] navigating to http://localhost:8000/armagetronad.html?autostart=0
+[      8ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     33ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     33ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     35ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     40ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     40ms] [page] load event fired
+[     42ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    102ms] [console.log] [PERSIST] populate ok in 38ms
+[    109ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    110ms] [harness] === BOOT-1-POPULATED ===
+[    327ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    327ms] [console.log] [CAMERA] stock camera (factor 1)
+[    328ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[   1113ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.keys=(t)=>t===null?[]:t.split('\n').filter(l=>l.trim().indexOf('KEYBOARD')===0).map(l=>l.trim().replace(/\s+/g,' '));S.binds=(K,a)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+a+' 1')>0).map(l=>l.split(' ')[1]);S.dump=(phase)=>{const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const K=S.keys(c);console.log('[MILE] '+JSON.stringify({phase:phase,canvas_w:cv.width,canvas_h:cv.height,present:c!==null,bytes:c===null?null:c.length,first_use:S.line(c,'FIRST_USE'),fullscreen:S.line(c,'FULLSCREEN'),screenmode:S.line(c,'ARMAGETRON_SCREENMODE'),screenmode_w:S.line(c,'ARMAGETRON_SCREENMODE_W'),screenmode_h:S.line(c,'ARMAGETRON_SCREENMODE_H'),windowsize_w:S.line(c,'ARMAGETRON_WINDOWSIZE_W'),windowsize_h:S.line(c,'ARMAGETRON_WINDOWSIZE_H'),n_keyboard:K.length,left_binds:S.binds(K,'CYCLE_TURN_LEFT'),right_binds:S.binds(K,'CYCLE_TURN_RIGHT'),tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__mile=S;return 'probe installed'})() => "probe installed"
+[   1116ms] [console.log] [MILE] {"phase":"boot1-before-play","canvas_w":1024,"canvas_h":768,"present":false,"bytes":null,"first_use":null,"fullscreen":null,"screenmode":null,"screenmode_w":null,"screenmode_h":null,"windowsize_w":null,"windowsize_h":null,"n_keyboard":0,"left_binds":[],"right_binds":[],"tip_left":null,"tip_right":null}
+[   1116ms] [harness] eval window.__mile.dump('boot1-before-play') => "boot1-before-play"
+[   1118ms] [console.log] [BOOT] autostart: calling main
+[   1122ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1122ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1122ms] [console.error] 
+[   1123ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1123ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1124ms] [console.log] 
+[   1252ms] [console.log] [L] ENCODING latin1
+[   1260ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1261ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1280ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1283ms] [console.error] TODO: glShadeModel
+[   1286ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1321ms] [harness] eval window.AA_START() => undefined
+[   1323ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1323ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1324ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1324ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1324ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10374ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/00-boot1-language-menu.png
+[  10405ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10407ms] [harness] key Enter (1/1)
+[  10708ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10708ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13259ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/01-boot1-first-setup.png
+[  13289ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13292ms] [harness] key Escape (1/1)
+[  13593ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13593ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16637ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/02-boot1-after-first-setup.png
+[  16638ms] [console.log] [MILE] {"phase":"boot1-after-first-setup","canvas_w":1024,"canvas_h":768,"present":true,"bytes":21950,"first_use":"1","fullscreen":"1","screenmode":"0","screenmode_w":"0","screenmode_h":"0","windowsize_w":"640","windowsize_h":"480","n_keyboard":59,"left_binds":[],"right_binds":[],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  16638ms] [harness] eval window.__mile.dump('boot1-after-first-setup') => "boot1-after-first-setup"
+[  16639ms] [harness] === RELOAD-1-REQUESTED ===
+[  16642ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16643ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16643ms] [harness] eval location.reload() => undefined
+[  16643ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16661ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  16662ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  16664ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16664ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16668ms] [page] load event fired
+[  16679ms] [console.log] [PERSIST] populate ok in 5ms
+[  16726ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  16726ms] [console.log] [CAMERA] stock camera (factor 1)
+[  16726ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[  16744ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  16744ms] [harness] === BOOT-2-POPULATED ===
+[  18246ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.keys=(t)=>t===null?[]:t.split('\n').filter(l=>l.trim().indexOf('KEYBOARD')===0).map(l=>l.trim().replace(/\s+/g,' '));S.binds=(K,a)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+a+' 1')>0).map(l=>l.split(' ')[1]);S.dump=(phase)=>{const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const K=S.keys(c);console.log('[MILE] '+JSON.stringify({phase:phase,canvas_w:cv.width,canvas_h:cv.height,present:c!==null,bytes:c===null?null:c.length,first_use:S.line(c,'FIRST_USE'),fullscreen:S.line(c,'FULLSCREEN'),screenmode:S.line(c,'ARMAGETRON_SCREENMODE'),screenmode_w:S.line(c,'ARMAGETRON_SCREENMODE_W'),screenmode_h:S.line(c,'ARMAGETRON_SCREENMODE_H'),windowsize_w:S.line(c,'ARMAGETRON_WINDOWSIZE_W'),windowsize_h:S.line(c,'ARMAGETRON_WINDOWSIZE_H'),n_keyboard:K.length,left_binds:S.binds(K,'CYCLE_TURN_LEFT'),right_binds:S.binds(K,'CYCLE_TURN_RIGHT'),tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__mile=S;return 'probe installed'})() => "probe installed"
+[  18250ms] [console.log] [MILE] {"phase":"boot2-before-play","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22758,"first_use":"0","fullscreen":"1","screenmode":"0","screenmode_w":"0","screenmode_h":"0","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  18250ms] [harness] eval window.__mile.dump('boot2-before-play') => "boot2-before-play"
+[  18252ms] [console.log] [BOOT] autostart: calling main
+[  18253ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  18254ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  18254ms] [console.error] 
+[  18254ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  18255ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  18255ms] [console.log] 
+[  18386ms] [console.log] [L] ENCODING latin1
+[  18389ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18404ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18406ms] [console.error] TODO: glShadeModel
+[  18409ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  18416ms] [harness] eval window.AA_START() => undefined
+[  28476ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/03-boot2-main-menu.png
+[  28478ms] [console.log] [MILE] {"phase":"boot2-after-boot","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22758,"first_use":"0","fullscreen":"1","screenmode":"0","screenmode_w":"0","screenmode_h":"0","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  28478ms] [harness] eval window.__mile.dump('boot2-after-boot') => "boot2-after-boot"
+[  28511ms] [harness] key Down (1/2)
+[  28845ms] [harness] key Down (2/2)
+[  30082ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/04-boot2-cursor-on-system-setup.png
+[  30114ms] [harness] key Enter (1/1)
+[  32268ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/05-boot2-system-setup.png
+[  32300ms] [harness] key Enter (1/1)
+[  34454ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/06-boot2-display-settings.png
+[  34487ms] [harness] key Enter (1/1)
+[  37343ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/07-boot2-screen-mode.png
+[  37376ms] [harness] key Down (1/1)
+[  38917ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/08-boot2-cursor-on-screen-resolution.png
+[  38917ms] [harness] === THE-PLAYER-PICKS-320x200 ===
+[  38950ms] [harness] key Left (1/20)
+[  39283ms] [harness] key Left (2/20)
+[  39619ms] [harness] key Left (3/20)
+[  39954ms] [harness] key Left (4/20)
+[  40287ms] [harness] key Left (5/20)
+[  40622ms] [harness] key Left (6/20)
+[  40958ms] [harness] key Left (7/20)
+[  41294ms] [harness] key Left (8/20)
+[  41628ms] [harness] key Left (9/20)
+[  41962ms] [harness] key Left (10/20)
+[  42303ms] [harness] key Left (11/20)
+[  42637ms] [harness] key Left (12/20)
+[  42971ms] [harness] key Left (13/20)
+[  43306ms] [harness] key Left (14/20)
+[  43643ms] [harness] key Left (15/20)
+[  43979ms] [harness] key Left (16/20)
+[  44317ms] [harness] key Left (17/20)
+[  44652ms] [harness] key Left (18/20)
+[  44985ms] [harness] key Left (19/20)
+[  45322ms] [harness] key Left (20/20)
+[  47174ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/09-boot2-resolution-now-320x200.png
+[  47176ms] [console.log] [MILE] {"phase":"boot2-chosen-menu-still-open","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22758,"first_use":"0","fullscreen":"1","screenmode":"0","screenmode_w":"0","screenmode_h":"0","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  47176ms] [harness] eval window.__mile.dump('boot2-chosen-menu-still-open') => "boot2-chosen-menu-still-open"
+[  47176ms] [harness] === ESCAPE-LEAVES-SCREEN-MODE ===
+[  47201ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  47207ms] [harness] key Escape (1/1)
+[  47508ms] [harness] until 3x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 3)
+[  47509ms] [harness] until SATISFIED: saw 3x <<[PERSISTSAVE] menu-leave>>
+[  49056ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/10-boot2-back-in-display-settings.png
+[  49058ms] [console.log] [MILE] {"phase":"boot2-after-menu-leave","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22763,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  49058ms] [harness] eval window.__mile.dump('boot2-after-menu-leave') => "boot2-after-menu-leave"
+[  49085ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  49091ms] [harness] key Escape (1/1)
+[  49392ms] [harness] until 4x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 4)
+[  49393ms] [harness] until SATISFIED: saw 4x <<[PERSISTSAVE] menu-leave>>
+[  50617ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  50628ms] [harness] key Escape (1/1)
+[  50929ms] [harness] until 5x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 5)
+[  50929ms] [harness] until SATISFIED: saw 5x <<[PERSISTSAVE] menu-leave>>
+[  52480ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/11-boot2-back-at-main-menu.png
+[  52513ms] [harness] key Up (1/2)
+[  52848ms] [harness] key Up (2/2)
+[  54084ms] [harness] key Enter (1/1)
+[  56436ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/12-boot2-play-game-submenu.png
+[  56468ms] [harness] key Down (1/1)
+[  58001ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/13-boot2-cursor-on-start-new-game.png
+[  58001ms] [harness] === START-NEW-GAME ===
+[  58017ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  58018ms] [console.log] [L] TEAM_CREATED web_user
+[  58018ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  58020ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  58022ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  58023ms] [console.log] [L] NEW_ROUND 2026-09-03 13:42:03 UTC+0200
+[  58039ms] [console.log] [L] TEAM_CREATED ai_team
+[  58039ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  58039ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  58040ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  58041ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  58053ms] [harness] key Enter (1/1)
+[  58054ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  58054ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  58055ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  58317ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[  61355ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 1)
+[  61355ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  61355ms] [harness] === ROUND-1-STARTED ===
+[  62634ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/14-boot2-round1-driving.png
+[  62634ms] [harness] === ROUND-1-STEERING ===
+[  62651ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  62669ms] [harness] key Left (1/2)
+[  63004ms] [harness] key Left (2/2)
+[  63339ms] [harness] key Right (1/3)
+[  63672ms] [harness] key Right (2/3)
+[  64006ms] [harness] key Right (3/3)
+[  65629ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/15-boot2-round1-after-steering.png
+[  65630ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[  67471ms] [console.log] [L] DEATH_SUICIDE web_user
+[  67472ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  69201ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  72106ms] [console.log] [L] DEATH_FRAG word web_user
+[  75293ms] [console.log] [L] ROUND_SCORE -1 web_user web_user
+[  75294ms] [console.log] [L] ROUND_SCORE_TEAM -1 web_user
+[  75294ms] [console.log] [L] NEW_ROUND 2026-09-03 13:42:21 UTC+0200
+[  75296ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  75297ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  75333ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  75333ms] [harness] === ROUND-2-STARTED ===
+[  76535ms] [harness] === ROUND-2-STEERING ===
+[  76574ms] [harness] key Left (1/2)
+[  76909ms] [harness] key Left (2/2)
+[  77242ms] [harness] key Right (1/3)
+[  77576ms] [harness] key Right (2/3)
+[  77909ms] [harness] key Right (3/3)
+[  79492ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/16-boot2-round2-after-steering.png
+[  79492ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 120000ms, have 2)
+[  81823ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  83406ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  87456ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  87462ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  87462ms] [console.log] [L] NEW_ROUND 2026-09-03 13:42:33 UTC+0200
+[  87561ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  87562ms] [harness] === ROUND-3-STARTED ===
+[  88763ms] [harness] === ROUND-3-STEERING ===
+[  88795ms] [harness] key Left (1/2)
+[  89127ms] [harness] key Left (2/2)
+[  89461ms] [harness] key Right (1/3)
+[  89795ms] [harness] key Right (2/3)
+[  90128ms] [harness] key Right (3/3)
+[  92010ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/17-boot2-round3-after-steering.png
+[  92011ms] [harness] === INGAME-MENU-OPENED ===
+[  92043ms] [harness] key Escape (1/1)
+[  94925ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/18-boot2-ingame-menu.png
+[  94957ms] [console.log] [PERSISTSAVE] menu-leave n=4
+[  94958ms] [harness] key Escape (1/1)
+[  95259ms] [harness] until 6x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 6)
+[  95260ms] [harness] until SATISFIED: saw 6x <<[PERSISTSAVE] menu-leave>>
+[  95260ms] [harness] === INGAME-MENU-LEFT ===
+[  96762ms] [console.log] [MILE] {"phase":"boot2-after-steering","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22768,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  96763ms] [harness] eval window.__mile.dump('boot2-after-steering') => "boot2-after-steering"
+[  96763ms] [harness] === RELOAD-2-REQUESTED ===
+[  96766ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  96767ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  96767ms] [harness] eval location.reload() => undefined
+[  96767ms] [harness] until 3x <<[PERSIST] populate ok>> (timeout 90000ms, have 2)
+[  96786ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  96786ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  96788ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  96788ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  96790ms] [page] load event fired
+[  96801ms] [console.log] [PERSIST] populate ok in 5ms
+[  96846ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  96847ms] [console.log] [CAMERA] stock camera (factor 1)
+[  96847ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[  96869ms] [harness] until SATISFIED: saw 3x <<[PERSIST] populate ok>>
+[  96869ms] [harness] === BOOT-3-POPULATED ===
+[  98371ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.keys=(t)=>t===null?[]:t.split('\n').filter(l=>l.trim().indexOf('KEYBOARD')===0).map(l=>l.trim().replace(/\s+/g,' '));S.binds=(K,a)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+a+' 1')>0).map(l=>l.split(' ')[1]);S.dump=(phase)=>{const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const K=S.keys(c);console.log('[MILE] '+JSON.stringify({phase:phase,canvas_w:cv.width,canvas_h:cv.height,present:c!==null,bytes:c===null?null:c.length,first_use:S.line(c,'FIRST_USE'),fullscreen:S.line(c,'FULLSCREEN'),screenmode:S.line(c,'ARMAGETRON_SCREENMODE'),screenmode_w:S.line(c,'ARMAGETRON_SCREENMODE_W'),screenmode_h:S.line(c,'ARMAGETRON_SCREENMODE_H'),windowsize_w:S.line(c,'ARMAGETRON_WINDOWSIZE_W'),windowsize_h:S.line(c,'ARMAGETRON_WINDOWSIZE_H'),n_keyboard:K.length,left_binds:S.binds(K,'CYCLE_TURN_LEFT'),right_binds:S.binds(K,'CYCLE_TURN_RIGHT'),tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__mile=S;return 'probe installed'})() => "probe installed"
+[  98373ms] [console.log] [MILE] {"phase":"boot3-before-play","canvas_w":1024,"canvas_h":768,"present":true,"bytes":22768,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  98373ms] [harness] eval window.__mile.dump('boot3-before-play') => "boot3-before-play"
+[  98405ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/19-boot3-before-play.png
+[  98406ms] [console.log] [BOOT] autostart: calling main
+[  98406ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  98407ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  98407ms] [console.error] 
+[  98407ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  98407ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  98407ms] [console.log] 
+[  98522ms] [console.log] [L] ENCODING latin1
+[  98525ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  98540ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  98542ms] [console.error] TODO: glShadeModel
+[  98545ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  98553ms] [harness] eval window.AA_START() => undefined
+[ 108558ms] [console.log] [MILE] {"phase":"boot3-after-boot","canvas_w":320,"canvas_h":200,"present":true,"bytes":22773,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[ 108558ms] [harness] eval window.__mile.dump('boot3-after-boot') => "boot3-after-boot"
+[ 108633ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/20-boot3-main-menu-at-320x200.png
+[ 108665ms] [harness] key Enter (1/1)
+[ 111022ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/21-boot3-play-game-submenu.png
+[ 111022ms] [harness] === ESCAPE-LEAVES-PLAY-GAME-SUBMENU ===
+[ 111056ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[ 111056ms] [harness] key Escape (1/1)
+[ 111357ms] [harness] until 7x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 7)
+[ 111357ms] [harness] until SATISFIED: saw 7x <<[PERSISTSAVE] menu-leave>>
+[ 111358ms] [harness] === BOOT-3-SAVED-FROM-MEMORY ===
+[ 112861ms] [console.log] [MILE] {"phase":"boot3-after-save","canvas_w":320,"canvas_h":200,"present":true,"bytes":22773,"first_use":"0","fullscreen":"1","screenmode":"14","screenmode_w":"320","screenmode_h":"200","windowsize_w":"640","windowsize_h":"480","n_keyboard":79,"left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[ 112861ms] [harness] eval window.__mile.dump('boot3-after-save') => "boot3-after-save"
+[ 112934ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/22-boot3-final.png
+[ 112934ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[ 112935ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 2000
+[ 112935ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[ 112936ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[ 112936ms] [EXCEPTION] structured stack, 1 frames:
+[ 112936ms]     <anonymous> @ :0:27
+[ 114996ms] [harness] screenshot -> docs/evidence/phone-feedback/gates/m4-milestone-chrome/23-after-deliberate-uncaught-error.png
+
+Transcript: docs/evidence/phone-feedback/gates/m4-milestone-chrome/console.log

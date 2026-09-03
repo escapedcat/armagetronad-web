@@ -630,6 +630,25 @@
     // the game has not read the canvas. It is NOT a resize handler and must not
     // become one -- the long paragraph above about sr_ReinitDisplay still
     // stands.
+    // WHICH WAY UP IS THE VIEWPORT? Asked of innerWidth/innerHeight FIRST and
+    // of the media query only as a fallback, and the order is a bug fix rather
+    // than a preference. innerWidth/innerHeight is the quantity that actually
+    // matters -- it is what sizeCanvas() reads and therefore what the game's
+    // projection is built from -- and '(orientation: portrait)' is a second
+    // opinion about it. Measured: under Chrome's device emulation, on a page
+    // that is holding its own boot and therefore painting nothing, a metrics
+    // override updated innerWidth/innerHeight immediately while the media
+    // query's change event did not arrive for SIXTY-NINE SECONDS, apparently
+    // waiting for a paint that an idle page never produced
+    // (docs/evidence/phone-feedback/README.md has the transcript). Trusting the
+    // query alone made the release of the boot hold depend on something else
+    // repainting the page.
+    const viewportIsPortrait = () => {
+      const w = window.innerWidth, h = window.innerHeight;
+      if (w > 0 && h > 0) return h > w;
+      try { return window.matchMedia('(orientation: portrait)').matches; }
+      catch (e) { return false; }
+    };
     let sizedForPortrait = null;   // the orientation the backing store is FOR
     function sizeCanvas(why) {
       const canvas = document.getElementById('canvas');
@@ -638,9 +657,7 @@
       const publishAspect = () => document.documentElement.style
         .setProperty('--aa-aspect', String(canvas.width / canvas.height));
       try {
-        try {
-          sizedForPortrait = window.matchMedia('(orientation: portrait)').matches;
-        } catch (e) { sizedForPortrait = null; }
+        sizedForPortrait = viewportIsPortrait();
         const forced = window.AA_CANVAS_SIZE;
         if (Array.isArray(forced) && forced.length === 2 &&
             forced[0] > 0 && forced[1] > 0) {
@@ -877,27 +894,29 @@
       // as "differs from the one at load" now that the measurement can happen
       // after a rotation. sizedForPortrait is written by sizeCanvas() itself,
       // so the two cannot drift apart.
-      let mq;
-      try { mq = window.matchMedia('(orientation: portrait)'); }
-      catch (e) { return; }
+      let mq = null;
+      try { mq = window.matchMedia('(orientation: portrait)'); } catch (e) { mq = null; }
       let chipDismissed = false;
       const applyOrientation = () => {
+        const portrait = viewportIsPortrait();
         // The prompt stays up only while the hold is on. Once the game has been
         // released to start, a later rotation into portrait is the player's own
         // doing and gets the chip, not a full-screen takeover.
-        rotateEl.hidden = !(mq.matches && window.AA_BOOT_HELD_FOR_PORTRAIT);
-        if (!chipDismissed) chipEl.hidden = (mq.matches === sizedForPortrait);
-        console.log('[TOUCH] orientation portrait=' + mq.matches +
+        rotateEl.hidden = !(portrait && window.AA_BOOT_HELD_FOR_PORTRAIT);
+        if (!chipDismissed) chipEl.hidden = (portrait === sizedForPortrait);
+        console.log('[TOUCH] orientation portrait=' + portrait +
                     ' (sized for portrait: ' + sizedForPortrait +
                     ', boot held: ' + !!window.AA_BOOT_HELD_FOR_PORTRAIT + ')');
       };
       // The hold lives on window rather than in this closure because its other
       // half -- startGame(), defined far below and outside this IIFE -- has to
       // read it, and because a gate should be able to assert on it.
-      window.AA_BOOT_HELD_FOR_PORTRAIT = mq.matches;
+      window.AA_BOOT_HELD_FOR_PORTRAIT = viewportIsPortrait();
+      let holdPoll = 0;
       window.AA_RELEASE_PORTRAIT_HOLD = (why) => {
         if (!window.AA_BOOT_HELD_FOR_PORTRAIT) return;
         window.AA_BOOT_HELD_FOR_PORTRAIT = false;
+        if (holdPoll) { clearInterval(holdPoll); holdPoll = 0; }
         // Re-measure for the orientation the phone is in NOW. Safe only because
         // main() has not run: see the header on sizeCanvas().
         sizeCanvas('portrait hold released by ' + why);
@@ -907,6 +926,19 @@
       };
       if (window.AA_BOOT_HELD_FOR_PORTRAIT) {
         console.log('[BOOT] portrait at load: HOLDING main() until landscape');
+        // FOUR TRIGGERS FOR ONE EVENT, AND THE POLL IS THE ONE THAT IS ALLOWED
+        // TO BE UGLY. A held page paints nothing, and a rotation that is never
+        // noticed is a game that never starts -- the worst failure this change
+        // can have, and strictly worse than the defect it fixes. Chrome's
+        // device emulation demonstrated it: a metrics override moved
+        // innerWidth/innerHeight at once and the media query's change event did
+        // not arrive for sixty-nine seconds. A 250 ms poll on a page whose only
+        // other job is downloading costs nothing measurable, and it stops the
+        // moment the hold is released, so it does not exist while the game is
+        // running.
+        holdPoll = setInterval(() => {
+          if (!viewportIsPortrait()) window.AA_RELEASE_PORTRAIT_HOLD('poll');
+        }, 250);
       }
       document.getElementById('rotate-anyway')
         .addEventListener('click', () => window.AA_RELEASE_PORTRAIT_HOLD('button'));
@@ -914,18 +946,22 @@
         .addEventListener('click', () => location.reload());
       document.getElementById('reloadchip-x')
         .addEventListener('click', () => { chipDismissed = true; chipEl.hidden = true; });
-      const onOrientationChange = () => {
-        if (window.AA_BOOT_HELD_FOR_PORTRAIT && !mq.matches) {
-          window.AA_RELEASE_PORTRAIT_HOLD('rotation to landscape');
+      const onOrientationChange = (why) => {
+        if (window.AA_BOOT_HELD_FOR_PORTRAIT && !viewportIsPortrait()) {
+          window.AA_RELEASE_PORTRAIT_HOLD(why || 'rotation to landscape');
           return;
         }
         applyOrientation();
       };
       // addListener is the pre-2019 spelling; Safari needed it until 14. Both
       // are tried because the cost is one line and the failure mode of neither
-      // firing is a prompt that never appears.
-      if (mq.addEventListener) mq.addEventListener('change', onOrientationChange);
-      else if (mq.addListener) mq.addListener(onOrientationChange);
+      // firing is a prompt that never appears. resize and orientationchange are
+      // here for the same reason the poll is: no single one of these is
+      // trustworthy on every device, and they are all idempotent.
+      if (mq && mq.addEventListener) mq.addEventListener('change', () => onOrientationChange('media query'));
+      else if (mq && mq.addListener) mq.addListener(() => onOrientationChange('media query'));
+      window.addEventListener('resize', () => onOrientationChange('resize'));
+      window.addEventListener('orientationchange', () => onOrientationChange('orientationchange'));
       applyOrientation();
     })();
 
