@@ -121,10 +121,12 @@ engines, arbitrated by M2's unmodified checker; and the whole set is
 **reproducible on one machine** — all five published files come back byte-identical
 from a clean rebuild at the exit commit on the maintainer's Mac. **Not across
 platforms:** the first CI build on a Linux runner produced a `.wasm` of 4,333,077
-bytes against the Mac's 4,333,093 — 16 bytes apart, same emsdk 6.0.8 — while the
-`.js`, `.data` and both pages matched in size. Same source, same toolchain, two
-correct builds; the pin that matters (the dedicated server's) is checked by md5
-on the machine that made it.
+bytes against the Mac's 4,333,093 — 16 bytes apart, same emsdk 6.0.8. The first
+automated deploy showed `armagetronad.js` differs too, in content rather than
+size — same 357,632 bytes, different sha256 — while `armagetronad.data`,
+`armagetronad.html` and `index.html` came back byte-identical across the two
+platforms. Same source, same toolchain, two correct builds; the pin that
+matters (the dedicated server's) is checked by md5 on the machine that made it.
 
 Frame rate clears the ≥30 fps bar roughly twice over and **is not stable enough to
 quote as a single number**. Three runs of the same script against the same build
