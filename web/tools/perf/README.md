@@ -30,7 +30,7 @@ it is the result), `<set-dir>/<arm>/*.png` (screenshots) and
 `<set-dir>/<arm>-driver.txt`, then prints the `[PERF]` line and
 `check-arm.mjs`'s verdict, and exits 0 only for `VALID`.
 
-Round 1 is never measured: it is where the tutorial is cleared and the
+Round 1 is never measured: it is where the two key presses go and the
 throttle is switched on. Rounds 2 and 3 are the measurement. `SP_SIZE_FACTOR 6`
 is harness setup, not a lever — at the shipped arena a round is over in eight
 seconds, too short to show any growth curve; `run-arm.sh`'s header has the
@@ -41,12 +41,33 @@ arithmetic.
 Each is a rule because a measurement without it produced a number that was
 not one.
 
-1. **Drive.** After the first `[L] NEW_ROUND`, the template presses `Right`
-   then `Left` (real key events through CDP). Without them the tutorial
-   overlay stays up and the arena stays *empty* for the whole match — the
-   first perf sweep lacked them and reported 6.4–8.2 ms flat in all six arms,
-   from six screenshots of nothing. `check-arm.mjs` counts the two presses in
-   the transcript.
+1. **Drive.** After the first `[L] NEW_ROUND`, the template dispatches
+   `Right` then `Left` through CDP `Input.dispatchKeyEvent`, and
+   `check-arm.mjs` counts the two presses in the transcript. The plan made
+   this a global constraint on the strength of the first sweep, whose six
+   arms had no presses and reported 6.4–8.2 ms flat from an arena read as
+   empty. **This rig's own negative control did not reproduce that premise.**
+   `docs/evidence/m6-lag/task1-rig/negative-no-keys/` is the same arm with
+   the two `key:` lines deleted: the match started and ran anyway — rounds 2
+   and 3 of 60.9 s against 61.0/60.8 s with the keys, per-second draws/frame
+   identical to within one call for the first 45 s of each measured round
+   (both runs sit at exactly 107 from second 15 to second 44), and its
+   `r2-50s.png` is indistinguishable from the base run's. The one difference
+   was round 1: 19.2 s with the presses, 47.5 s without — one sample each.
+   The presses do reach the page: `task1-rig/key-delivery/console.log` shows
+   a `keydown` listener on the page receiving `ArrowRight` and `ArrowLeft`
+   with `isTrusted` true. Whether the game turned on them is not shown by
+   anything the transcript records.
+
+   So the invariant, stated honestly: the gate proves the input was *sent*,
+   and the measured rounds are **AI-driven with an idle human** — in every
+   round of both runs the human cycle drives straight at speed 15.0 under a
+   re-armed "Press <right> or <o> to turn right" hint until it dies at the
+   far side of the arena at ~61 s, which is what ends rounds 2 and 3. That is
+   the condition every `base` number describes. The maintainer's *"the more
+   I drive"* is a human turning; measuring that is a different template
+   (Task 3), and the key requirement stays in the gate as the plan's
+   constraint and as the hook such a template extends.
 
 2. **Throttle.** `cpu:RATE` (CDP `Emulation.setCPUThrottlingRate`) is switched
    on after round 1 and before round 2. Unthrottled, this desktop has roughly
@@ -68,7 +89,12 @@ not one.
    second half of each measured round on disk, so a reader can *see* the
    trails the draw count claims. A gate that cannot fail is not a gate:
    `docs/evidence/m6-lag/task1-rig/negative-no-keys/` is the same arm with the
-   two `key:` lines deleted, and it is `INVALID`.
+   two `key:` lines deleted, and it is `INVALID: only 0 tutorial key presses
+   logged` (plus `round 3: no screenshot from its second half on disk`, a
+   consequence of keeping only one of its screenshots in the tree). Note
+   which check caught it: the key count. Its late windows read
+   116.4 draws/frame against the floor's 46.2 — the floor rejects a scene
+   with no game in it, not an AI-only round.
 
 ## The `[PERF]` schema
 
@@ -131,7 +157,45 @@ excluded and how long the capture took.
 The 30 s shot in each measured round exists so `check-arm.mjs` can always find
 a second-half picture even when a round ends before its 50 s shot.
 
-CALIBRATION-AND-PROOF-SECTION
+Measured, it did not bite — and neither did the exclusion. In the `base` run
+every `late_5s` window reports `frames_excluded: 0`: the 50 s shots fell at
+50.5 s of 61 s rounds, outside the last five seconds. And where a shot did
+land, the page's frame loop did not notice: in the second of the `r2-30s`
+capture (30.32 s into round 2, a 175 ms bracket) per-second `raw_ms_max` is
+30.2 ms against 31.2 and 27.3 in the neighbouring seconds, and `ms_p50` for
+that second is 24.9 beside 26.3 and 25.0. `Page.captureScreenshot` with
+`fromSurface: true` reads the compositor's surface and did not stall the
+renderer's main thread. The exclusion stays as insurance — it costs about
+19–20 frames per shot (`frames_excluded` 56 and 60 over three shots in rounds
+2 and 3) — and a round that ends at 52 s would still have its 50 s shot
+excluded from the late window rather than measured.
+
+## Calibration and proof — `docs/evidence/m6-lag/task1-rig/`
+
+**The floor.** `EMPTY_ARENA_DRAWS_PER_FRAME = 36.99` in `check-arm.mjs` is
+the `base` run's round-1 first-second draws/frame
+(`rounds[0].per_second.draws_per_frame[0]`): cycles spawned, no key pressed
+yet. The next three seconds of that round read 61, 80, 80 — the AIs launch
+at `NEW_ROUND` and their first walls are drawn before any input — so 36.99
+is the lowest figure a live arena shows, and the ×1.25 margin (46.2) rejects
+a scene with no game in it (a held boot, a menu, a frozen canvas), not an
+AI-only round. The negative control's late windows read 116.4 and 116.4 and
+passed the floor; its key count failed it. Re-measure the floor if the HUD,
+the hint text or the spawn layout changes; the value carries its provenance
+in the comment beside it.
+
+**The base run** (cpu 6, `SP_SIZE_FACTOR 6`, `SP_NUM_AIS 7`, `MAX_FPS 1000`,
+this worktree's `web/dist-m1` on port 8006, 2026-09-03):
+
+| round | len s | early ms p50 | late ms p50 | ratio_ms | early draws | late draws | ratio_draws | late KB/frame | hitches >50 ms |
+|---|---|---|---|---|---|---|---|---|---|
+| 2 | 61.0 | 23.7 | 32.3 | 1.36 | 70.7 | 174.9 | 2.47 | 201.8 | 19 |
+| 3 | 60.8 | 22.8 | 28.6 | 1.25 | 66.5 | 135.7 | 2.04 | 186.1 | 9 |
+
+Desktop costs at a phone's pixel count under a 6× CPU throttle; the ratios
+are what travels. Load 9.21 before, 9.03 after (`base/uptime.txt`). The
+evidence README in that directory has the per-second series, the negative
+control's table and the key-delivery check.
 
 ## Serving and ports
 

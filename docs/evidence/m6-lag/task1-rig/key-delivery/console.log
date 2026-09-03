@@ -1,0 +1,20 @@
+[    801ms] [harness] mobile emulation: 915x412 CSS px dpr 3 (= 2745x1236 device px), touch on
+[    803ms] [harness] chrome: Chrome/152.0.7977.75
+[    803ms] [harness] navigating to http://localhost:8006/armagetronad.html?autostart=0&touch=1
+[     52ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[     65ms] [console.log] [TOUCH] enabled=true (?touch=1) maxTouchPoints=5
+[     70ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     71ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     74ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     75ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     75ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     76ms] [page] load event fired
+[     76ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8006/favicon.ico
+[    130ms] [console.log] [PERSIST] populate ok in 33ms
+[    343ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    344ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    344ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[   1513ms] [harness] eval (()=>{window.__k=[];addEventListener('keydown',e=>{__k.push(e.key+'/'+e.code+'/'+(e.isTrusted?'trusted':'untrusted'))},true);return 'keydown listener installed on window'})() => "keydown listener installed on window"
+[   1549ms] [harness] key Right (1/1)
+[   1885ms] [harness] key Left (1/1)
+[   2187ms] [harness] eval 'keys seen by the page: '+JSON.stringify(window.__k) => "keys seen by the page: [\"ArrowRight/ArrowRight/trusted\",\"ArrowLeft/ArrowLeft/trusted\"]"

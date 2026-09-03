@@ -116,7 +116,8 @@ if [ -n "$AA_PERF_MAXLOAD" ] && awk -v l="$LOAD1" -v m="$AA_PERF_MAXLOAD" 'BEGIN
 fi
 curl -sf -o /dev/null "http://localhost:$PORT/armagetronad.html" \
   || fail "nothing serving web/dist-m1 on port $PORT (python3 -m http.server $PORT --directory web/dist-m1 &)"
-echo "run-arm.sh: arm=$ARM cpu=$RATE port=$PORT load1=$LOAD1 cfg='$CFG' template=$TMPL"
+# printf, not echo: /bin/sh's echo expands the \n in $CFG and prints two lines.
+printf 'run-arm.sh: arm=%s cpu=%s port=%s load1=%s cfg=%s template=%s\n' "$ARM" "$RATE" "$PORT" "$LOAD1" "'$CFG'" "$TMPL"
 
 # ---- drive ---------------------------------------------------------------
 echo "before: $(uptime)" > "$OUT/uptime.txt"

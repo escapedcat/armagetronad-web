@@ -1,0 +1,141 @@
+[    853ms] [harness] mobile emulation: 915x412 CSS px dpr 3 (= 2745x1236 device px), touch on
+[    855ms] [harness] chrome: Chrome/152.0.7977.75
+[    855ms] [harness] navigating to http://localhost:8006/armagetronad.html?autostart=0&touch=1
+[     39ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[     41ms] [console.log] [TOUCH] enabled=true (?touch=1) maxTouchPoints=5
+[     42ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     56ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     63ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     64ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     65ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     69ms] [page] load event fired
+[     70ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8006/favicon.ico
+[    135ms] [console.log] [PERSIST] populate ok in 37ms
+[    349ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    350ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    351ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[    831ms] [harness] eval (() => {  /* One frame = one flush/finish from rSysDep::SwapGL (swapMode_ defaults to     rSwap_glFlush, so it is exactly one glFlush per swap). Per frame we keep     the timestamp, the number of drawArrays/drawElements calls, and the bytes     that went through bufferData/bufferSubData: draw calls and bytes are the     direct measure of "geometry re-submitted through the emulation this     frame", which is mechanism 1 -- so a frame that gets slower while its draw     calls stay flat is NOT the renderer. */  /* THIS FILE IS ONE EXPRESSION WITH BLOCK COMMENTS ONLY: run-arm.sh strips     every newline to fit it into a single eval: step of drive-browser.mjs, so     a // comment would swallow the rest of the program. */  const N = 600000;  const S = { t: new Float64Array(N), draws: new Uint32Array(N), bytes: new Float64Array(N), n: 0,              marks: [], shots: [], cur: { draws: 0, bytes: 0 } };  window.__fps = S;  /* Screenshot bracket. Page.captureScreenshot spends real time on the page     and can put a hitch INTO a measured window; the driver's own     "[harness] screenshot" line is on the driver's clock, in the driver's     transcript, where report.js cannot see it. The template therefore wraps     every shot: step in eval:__fps.shot('name','begin') and     eval:__fps.shot('name','end'), on the page's clock, and report.js drops     the frames between the two (plus a pad) from every statistic. */  S.shot = (name, edge) => { S.shots.push([performance.now(), name, edge]); return 'shot ' + edge + ' ' + name; };  const wrap = (C) => {    if (!C) return; const P = C.prototype;    for (const m of ['flush', 'finish']) { const o = P[m]; if (!o) continue;      P[m] = function () {        if (S.n < N) { S.t[S.n] = performance.now(); S.draws[S.n] = S.cur.draws; S.bytes[S.n] = S.cur.bytes; S.n++; }        S.cur.draws = 0; S.cur.bytes = 0; return o.apply(this, arguments); }; }    for (const m of ['drawArrays', 'drawElements']) { const o = P[m]; if (!o) continue;      P[m] = function () { S.cur.draws++; return o.apply(this, arguments); }; }    for (const m of ['bufferData', 'bufferSubData']) { const o = P[m]; if (!o) continue;      P[m] = function () { const d = (m === 'bufferData') ? arguments[1] : arguments[2];        S.cur.bytes += (d && d.byteLength) ? d.byteLength : (typeof d === 'number' ? d : 0);        return o.apply(this, arguments); }; }  };  wrap(window.WebGLRenderingContext); wrap(window.WebGL2RenderingContext);  const cl = console.log.bind(console);  console.log = function () { const s = (arguments.length && typeof arguments[0] === 'string') ? arguments[0] : '';    if (s.indexOf('[L] ') === 0) S.marks.push([performance.now(), s]); return cl.apply(null, arguments); };  return 'sampler armed: frames, draw calls, buffer bytes, shot brackets';})() => "sampler armed: frames, draw calls, buffer bytes, shot brackets"
+[    832ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# perf arm negative-no-keys\nMAX_FPS 1000\nSP_SIZE_FACTOR 6\nSP_NUM_AIS 7\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})() => "autoexec.cfg patched: \"\\n# perf arm negative-no-keys\\nMAX_FPS 1000\\nSP_SIZE_FACTOR 6\\nSP_NUM_AIS 7\\n\""
+[    833ms] [console.log] [BOOT] autostart: calling main
+[    838ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    839ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    839ms] [console.error] 
+[    839ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    839ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    840ms] [console.log] 
+[    981ms] [console.log] [L] ENCODING latin1
+[    989ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    990ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1014ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1018ms] [console.error] TODO: glShadeModel
+[   1022ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8006/armagetronad.js
+[   1061ms] [harness] eval window.AA_START() => undefined
+[   1062ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1062ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1063ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1064ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1065ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1065ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1065ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1068ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  10070ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[  10136ms] [harness] tap #tapzone at 458,206 (1/1)
+[  10143ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  13508ms] [harness] tap #tapzone at 458,206 (1/1)
+[  13517ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13539ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  17384ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  17386ms] [console.log] [L] TEAM_CREATED web_user
+[  17386ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  17388ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  17389ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  17390ms] [console.log] [L] NEW_ROUND 2026-09-03 19:38:48 UTC+0200
+[  17407ms] [console.log] [L] TEAM_CREATED ai_team
+[  17408ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  17408ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  17408ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  17408ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gcc
+[  17410ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  17428ms] [harness] tap #tapzone at 458,206 (1/1)
+[  17431ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  17431ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  17432ms] [console.log] [SND] live voices peaked at 11 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  17535ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  17706ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8006/favicon.ico
+[  19730ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[  19730ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  19731ms] [harness] === ROUND-1-SETUP-NOT-MEASURED ===
+[  22734ms] [harness] eval __fps.shot('r1-after-tutorial-keys','begin') => "shot begin r1-after-tutorial-keys"
+[  22884ms] [harness] screenshot -> docs/evidence/m6-lag/task1-rig/negative-no-keys/r1-after-tutorial-keys.png
+[  22885ms] [harness] eval __fps.shot('r1-after-tutorial-keys','end') => "shot end r1-after-tutorial-keys"
+[  22886ms] [harness] CPU throttling rate 6x
+[  22886ms] [harness] === THROTTLE-ON ===
+[  22886ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 260000ms, have 1)
+[  63175ms] [console.log] [L] DEATH_FRAG web_user gcc
+[  63185ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  63299ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  64880ms] [console.log] [L] ROUND_WINNER ai_team gcc notepad excel word
+[  68929ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  68945ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  68948ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  68949ms] [console.log] [L] NEW_ROUND 2026-09-03 19:39:39 UTC+0200
+[  68968ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  68971ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team latex
+[  68975ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gdb
+[  68998ms] [console.log] [SND] live voices peaked at 16 (SOUND_SOURCES 10, loudness_thresh 0.0110)
+[  68999ms] [console.log] [SND] voice limiter STARTED cutting: 16 live voices, SOUND_SOURCES 10, loudness_thresh 0.0110
+[  69044ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  69047ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  69047ms] [harness] === ROUND-2-MEASURED ===
+[  69398ms] [console.log] [SND] voice limiter stopped cutting: 4 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  69438ms] [console.log] [SND] voice limiter STARTED cutting: 15 live voices, SOUND_SOURCES 10, loudness_thresh 0.0110
+[  69903ms] [console.log] [SND] voice limiter stopped cutting: 4 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  69948ms] [console.log] [SND] voice limiter STARTED cutting: 15 live voices, SOUND_SOURCES 10, loudness_thresh 0.0110
+[  70420ms] [console.log] [SND] voice limiter stopped cutting: 4 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  70467ms] [console.log] [SND] voice limiter STARTED cutting: 14 live voices, SOUND_SOURCES 10, loudness_thresh 0.0010
+[  70506ms] [console.log] [SND] voice limiter stopped cutting: 5 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  70553ms] [console.log] [SND] voice limiter STARTED cutting: 14 live voices, SOUND_SOURCES 10, loudness_thresh 0.0010
+[  70597ms] [console.log] [SND] voice limiter stopped cutting: 5 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  70646ms] [console.log] [SND] voice limiter STARTED cutting: 14 live voices, SOUND_SOURCES 10, loudness_thresh 0.0010
+[  70693ms] [console.log] [SND] voice limiter stopped cutting: 5 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  75068ms] [harness] eval __fps.shot('r2-06s','begin') => "shot begin r2-06s"
+[  75258ms] [harness] screenshot -> docs/evidence/m6-lag/task1-rig/negative-no-keys/r2-06s.png
+[  75266ms] [harness] eval __fps.shot('r2-06s','end') => "shot end r2-06s"
+[  99278ms] [harness] eval __fps.shot('r2-30s','begin') => "shot begin r2-30s"
+[  99448ms] [harness] screenshot -> docs/evidence/m6-lag/task1-rig/negative-no-keys/r2-30s.png
+[  99452ms] [harness] eval __fps.shot('r2-30s','end') => "shot end r2-30s"
+[ 114427ms] [console.log] [SND] voice limiter STARTED cutting: 12 live voices, SOUND_SOURCES 10, loudness_thresh 0.0010
+[ 116266ms] [console.log] [SND] voice limiter stopped cutting: 8 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[ 119464ms] [harness] eval __fps.shot('r2-50s','begin') => "shot begin r2-50s"
+[ 119678ms] [harness] screenshot -> docs/evidence/m6-lag/task1-rig/negative-no-keys/r2-50s.png
+[ 119689ms] [harness] eval __fps.shot('r2-50s','end') => "shot end r2-50s"
+[ 119689ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 260000ms, have 2)
+[ 127801ms] [console.log] [SND] voice limiter STARTED cutting: 12 live voices, SOUND_SOURCES 10, loudness_thresh 0.0010
+[ 128062ms] [console.log] [L] DEATH_FRAG web_user notepad
+[ 128309ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[ 129264ms] [console.log] [SND] voice limiter stopped cutting: 7 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[ 129863ms] [console.log] [L] ROUND_WINNER ai_team gdb latex outlook gcc notepad excel word
+[ 133969ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[ 133971ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[ 133974ms] [console.log] [L] NEW_ROUND 2026-09-03 19:40:44 UTC+0200
+[ 134012ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[ 134013ms] [harness] === ROUND-3-MEASURED ===
+[ 134042ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[ 140037ms] [harness] eval __fps.shot('r3-06s','begin') => "shot begin r3-06s"
+[ 140180ms] [harness] screenshot -> docs/evidence/m6-lag/task1-rig/negative-no-keys/r3-06s.png
+[ 140192ms] [harness] eval __fps.shot('r3-06s','end') => "shot end r3-06s"
+[ 164201ms] [harness] eval __fps.shot('r3-30s','begin') => "shot begin r3-30s"
+[ 164380ms] [harness] screenshot -> docs/evidence/m6-lag/task1-rig/negative-no-keys/r3-30s.png
+[ 164383ms] [harness] eval __fps.shot('r3-30s','end') => "shot end r3-30s"
+[ 184398ms] [harness] eval __fps.shot('r3-50s','begin') => "shot begin r3-50s"
+[ 184576ms] [harness] screenshot -> docs/evidence/m6-lag/task1-rig/negative-no-keys/r3-50s.png
+[ 184594ms] [harness] eval __fps.shot('r3-50s','end') => "shot end r3-50s"
+[ 184594ms] [harness] until 3x <<[L] ROUND_WINNER>> (timeout 260000ms, have 2)
+[ 193097ms] [console.log] [L] DEATH_FRAG web_user notepad
+[ 193319ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[ 194879ms] [console.log] [L] ROUND_WINNER ai_team gdb latex outlook gcc notepad excel word
+[ 194979ms] [harness] until SATISFIED: saw 3x <<[L] ROUND_WINNER>>
+[ 194979ms] [harness] === MATCH-OVER ===
+[ 196069ms] [harness] eval (() => {  /* ONE EXPRESSION, BLOCK COMMENTS ONLY: run-arm.sh strips newlines to make     this a single eval: step (see sampler.js). negative-no-keys and 6 are     substituted by run-arm.sh. The object this prints after "[PERF] <arm> " is     the schema Tasks 2-4 read; web/tools/perf/README.md documents it. */  const S = window.__fps, n = S.n;  const PAD_BEFORE = 100, PAD_AFTER = 250;  const nr = S.marks.filter(m => m[1].indexOf('[L] NEW_ROUND') === 0).map(m => m[0]);  const rw = S.marks.filter(m => m[1].indexOf('[L] ROUND_WINNER') === 0).map(m => m[0]);  /* Screenshot exclusions: [begin - PAD_BEFORE, end + PAD_AFTER] for every     bracketed shot (sampler.js S.shot); a begin with no end -- the driver died     mid-shot -- excludes two seconds. */  const ex = []; const open = {};  for (const [t, name, edge] of S.shots) {    if (edge === 'begin') open[name] = t;    else if (edge === 'end' && open[name] != null) { ex.push({ a: open[name] - PAD_BEFORE, b: t + PAD_AFTER, name: name, dur: t - open[name] }); delete open[name]; } }  for (const name in open) ex.push({ a: open[name] - PAD_BEFORE, b: open[name] + 2000, name: name, dur: null });  const excluded = (t) => ex.some(e => t >= e.a && t <= e.b);  const q = (a, p) => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y);    return s[Math.min(s.length - 1, Math.max(0, Math.round(p * (s.length - 1))))]; };  const r2 = (x) => (x == null) ? null : Math.round(x * 100) / 100;  /* A window's statistics use only frames outside every exclusion, and only     deltas between frames that were ADJACENT samples, so a gap that straddles     an exclusion is never counted as a frame time. raw_ms_max ignores the     exclusions on purpose: it is where a screenshot hitch stays visible, so a     reader can see what was excluded and that it did not leak into ms_p50. */  const win = (t0, t1) => {    const ix = []; let dropped = 0, rawMax = 0, prev = -1;    for (let i = 0; i < n; i++) { const t = S.t[i]; if (t < t0 || t > t1) continue;      if (prev >= 0) rawMax = Math.max(rawMax, t - S.t[prev]); prev = i;      if (excluded(t)) dropped++; else ix.push(i); }    const d = []; let dr = 0, by = 0;    for (let k = 1; k < ix.length; k++) if (ix[k] === ix[k - 1] + 1) d.push(S.t[ix[k]] - S.t[ix[k - 1]]);    for (const i of ix) { dr += S.draws[i]; by += S.bytes[i]; }    const f = ix.length || 1;    let exms = 0; for (const e of ex) exms += Math.max(0, Math.min(t1, e.b) - Math.max(t0, e.a));    const span = Math.max(1, (t1 - t0) - exms);    return { frames: ix.length, frames_excluded: dropped, ms_p50: r2(q(d, .5)), ms_p90: r2(q(d, .9)),             fps: r2(ix.length / (span / 1000)), draws_per_frame: r2(dr / f),             kb_per_frame: r2(by / f / 1024), hitches_over_50ms: d.filter(x => x > 50).length,             raw_ms_max: r2(rawMax) }; };  const perSec = (t0, t1) => { const ms = [], dr = [], mx = [];    for (let k = 0; k * 1000 < t1 - t0; k++) { const w = win(t0 + k * 1000, Math.min(t1, t0 + (k + 1) * 1000));      ms.push(w.ms_p50); dr.push(w.draws_per_frame); mx.push(w.raw_ms_max); }    return { ms_p50: ms, draws_per_frame: dr, raw_ms_max: mx }; };  const rounds = [];  for (let i = 0; i < Math.min(nr.length, rw.length); i++) {    const t0 = nr[i], t1 = rw[i], len = (t1 - t0) / 1000; if (len < 8) continue;    const e = win(t0, t0 + 5000), l = win(t1 - 5000, t1), all = win(t0, t1);    const shots = ex.filter(x => x.a >= t0 && x.a <= t1).map(x => ({ name: x.name, at_s: r2((x.a + PAD_BEFORE - t0) / 1000), dur_ms: r2(x.dur) }));    rounds.push({ round: i + 1, length_s: r2(len), early_5s: e, late_5s: l,      ratio_ms: e.ms_p50 ? r2(l.ms_p50 / e.ms_p50) : null,      ratio_draws: e.draws_per_frame ? r2(l.draws_per_frame / e.draws_per_frame) : null,      hitches_over_50ms: all.hitches_over_50ms, frames: all.frames, frames_excluded: all.frames_excluded,      raw_ms_max: all.raw_ms_max, shots: shots, per_second: perSec(t0, t1) }); }  return '[PERF] negative-no-keys ' + JSON.stringify({ arm: 'negative-no-keys', cpu_rate: 6, frames: n,    rounds_started: nr.length, rounds_won: rw.length,    shots_bracketed: ex.filter(x => x.dur != null).length, shot_pad_ms: [PAD_BEFORE, PAD_AFTER], rounds });})() => "[PERF] negative-no-keys {\"arm\":\"negative-no-keys\",\"cpu_rate\":6,\"frames\":11283,\"rounds_started\":3,\"rounds_won\":3,\"shots_bracketed\":7,\"shot_pad_ms\":[100,250],\"rounds\":[{\"round\":1,\"length_s\":47.49,\"early_5s\":{\"frames\":730,\"frames_excluded\":0,\"ms_p50\":7,\"ms_p90\":7.6,\"fps\":146,\"draws_per_frame\":68.89,\"kb_per_frame\":107.02,\"hitches_over_50ms\":0,\"raw_ms_max\":18.4},\"late_5s\":{\"frames\":259,\"frames_excluded\":0,\"ms_p50\":18.9,\"ms_p90\":21.8,\"fps\":51.8,\"draws_per_frame\":84.24,\"kb_per_frame\":116.24,\"hitches_over_50ms\":0,\"raw_ms_max\":41.7},\"ratio_ms\":2.7,\"ratio_draws\":1.22,\"hitches_over_50ms\":0,\"frames\":2906,\"frames_excluded\":46,\"raw_ms_max\":41.7,\"shots\":[{\"name\":\"r1-after-tutorial-keys\",\"at_s\":5.34,\"dur_ms\":151.2}],\"per_second\":{\"ms_p50\":[5.6,6.7,7.2,7.1,7.4,7.4,20.5,20.3,20.8,18.4,19.7,19.2,19.7,17.8,18.6,19.1,18.5,19.6,20.3,21,21.4,19.8,19.6,19.3,19.2,18.2,18.5,18.9,20.1,18.7,18.3,18,18.3,19.6,21.1,19.7,18.5,19.1,19.7,20.4,19.5,18.8,18.7,19.9,19.1,21,17.5,16.8],\"draws_per_frame\":[37.07,61,79.62,80,93.01,96.5,92.19,92,88.26,88,85.29,85,84.1,84,83.09,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,83,85.81,84.77,86],\"raw_ms_max\":[18.4,7.6,8.4,8.1,12.8,27.8,25.2,23.2,25.9,24,21.7,22.6,22.4,22.6,22.9,21.1,20.9,23.4,26.2,27.3,26.3,29.5,24,23.5,24,21.3,21.5,21.5,24.8,22.4,20.1,20.7,21.8,36.9,27.8,25.1,21.9,27.6,25.1,25.3,22.7,21.1,21.8,25.7,30.2,41.7,22.2,21.2]}},{\"round\":2,\"length_s\":60.91,\"early_5s\":{\"frames\":262,\"frames_excluded\":0,\"ms_p50\":21.8,\"ms_p90\":25.8,\"fps\":52.4,\"draws_per_frame\":71.35,\"kb_per_frame\":135.83,\"hitches_over_50ms\":0,\"raw_ms_max\":33.2},\"late_5s\":{\"frames\":181,\"frames_excluded\":0,\"ms_p50\":26.5,\"ms_p90\":33.5,\"fps\":36.2,\"draws_per_frame\":116.45,\"kb_per_frame\":179.24,\"hitches_over_50ms\":0,\"raw_ms_max\":47.7},\"ratio_ms\":1.22,\"ratio_draws\":1.63,\"hitches_over_50ms\":6,\"frames\":2303,\"frames_excluded\":58,\"raw_ms_max\":106,\"shots\":[{\"name\":\"r2-06s\",\"at_s\":6.12,\"dur_ms\":198.2},{\"name\":\"r2-30s\",\"at_s\":30.33,\"dur_ms\":174.8},{\"name\":\"r2-50s\",\"at_s\":50.51,\"dur_ms\":224.5}],\"per_second\":{\"ms_p50\":[6.8,22.1,23.2,22,26.4,25.6,25.6,25.1,26.5,26.2,24.5,24.7,24.6,24.4,23.7,25.3,23.4,24,24,24.5,24.4,24.8,25.7,26.6,27,25.9,26,25.3,23.6,25.3,25.8,29.1,28.9,24.9,23.3,25.4,24.7,25.1,24.6,27.7,26,25.4,23.5,25.6,26.9,31.1,33.4,29.9,28.9,34.1,37.7,29.5,30,27.6,27.5,29,24.9,24.6,26.4,29.4,28.7],\"draws_per_frame\":[29.26,74.98,93.6,94,117.53,121.77,117.06,117,114.39,114,111.37,111,108.44,108,107.14,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,108.86,108,109,109,109,109.17,110.88,111,111,111,111,113.56,115,116.86,118.65,119.7],\"raw_ms_max\":[25,27,27.3,25.1,33.2,29.6,38,28.9,29.9,32.6,30.6,27.2,44.1,27.1,29.2,30.4,25.7,26.7,28,27.6,27.2,29.5,28.9,31.9,32.1,30.4,29.2,30.8,27,28.8,28.6,33.6,34.1,27.7,25.5,30.1,28.9,29.8,29.3,35.2,33.7,28.4,28.5,28.6,29.7,106,56.6,43.1,50.1,47.8,46.6,50.4,46.7,39.8,37.8,41.2,34.4,39.2,47.7,44.6,46.8]}},{\"round\":3,\"length_s\":60.9,\"early_5s\":{\"frames\":262,\"frames_excluded\":0,\"ms_p50\":22.1,\"ms_p90\":26.3,\"fps\":52.4,\"draws_per_frame\":65.92,\"kb_per_frame\":138,\"hitches_over_50ms\":0,\"raw_ms_max\":31.4},\"late_5s\":{\"frames\":185,\"frames_excluded\":0,\"ms_p50\":25.8,\"ms_p90\":32.9,\"fps\":37,\"draws_per_frame\":116.38,\"kb_per_frame\":177.8,\"hitches_over_50ms\":3,\"raw_ms_max\":53.3},\"ratio_ms\":1.17,\"ratio_draws\":1.77,\"hitches_over_50ms\":5,\"frames\":2395,\"frames_excluded\":60,\"raw_ms_max\":72,\"shots\":[{\"name\":\"r3-06s\",\"at_s\":6.06,\"dur_ms\":155.9},{\"name\":\"r3-30s\",\"at_s\":30.23,\"dur_ms\":182.2},{\"name\":\"r3-50s\",\"at_s\":50.42,\"dur_ms\":196.5}],\"per_second\":{\"ms_p50\":[6.8,21.8,24.2,23.6,26,24.6,23,24,23.8,24.4,25.5,25.7,25.5,25,24.2,23.8,23.1,23,23.6,23.6,23.5,23.1,23.7,23.8,23.8,24,23.8,23.7,23.8,25.2,25.1,24.9,23.5,23.1,24.7,26.4,26.1,25.5,26.5,24.8,24.7,23.4,23.4,23.9,24,27.9,28.5,28.8,29,30.4,27.7,27.7,28.8,28.1,30.2,26.2,24.4,24,24.8,27,27.9],\"draws_per_frame\":[25.19,70.98,88.56,89,112.89,116.77,111,111,110.05,110,109.08,109,108.1,108,107.12,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,107,109.17,108.12,110.03,111,111,111,111,111,111,111,111.61,113,114.38,117.51,119.03,119.45],\"raw_ms_max\":[23.6,25.3,28.4,27.5,31.4,30.4,27.7,27,27.3,29.4,29.6,30.9,29.5,45.5,26.9,26.1,26.1,26,28.2,26.9,27,27.2,30.9,26.1,26.7,26.5,27,26.7,26.9,29.2,28.1,28.5,26.4,26.1,29.4,30.4,31.6,31.2,29.3,29.7,27.8,26,25.3,43.3,29.2,72,41.7,45.4,34.3,52,33.3,42.3,35.9,41.8,41.8,42.2,35.2,35.9,52.9,50.3,53.3]}}]}"
+
+Transcript: docs/evidence/m6-lag/task1-rig/negative-no-keys/console.log

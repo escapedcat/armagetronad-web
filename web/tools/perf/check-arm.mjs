@@ -6,8 +6,13 @@
 // empty arena and reported 6.4-8.2 ms flat in every arm. Each check below is
 // one way that sweep, or a run since, produced a number that was not one.
 //
-//   keys      two real key presses after the first NEW_ROUND. Without them the
-//             tutorial overlay stays up and the arena stays empty all match.
+//   keys      two key presses (Right, Left) dispatched after the first
+//             NEW_ROUND. The plan makes them a global constraint; the rig's
+//             own negative control (docs/evidence/m6-lag/task1-rig/
+//             negative-no-keys) showed a match that ran the same WITHOUT them
+//             -- rounds 2 and 3 of 60.9 s, the same draws/frame, the same
+//             screenshot -- so this check proves the input was sent, not that
+//             the human drove. README.md, "Drive", has the numbers.
 //   throttle  the driver's own "[harness] CPU throttling rate Nx" line, BEFORE
 //             the second NEW_ROUND, at the rate the [PERF] line claims.
 //   rounds    rounds 2 and 3 exist and each ran >= 30 s. (Round 1 is setup.)

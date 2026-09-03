@@ -64,7 +64,7 @@ def num(x, w, p):
 arms = [a for a in sorted(os.listdir(root))
         if os.path.isdir(os.path.join(root, a))]
 
-print('round 1 (tutorial cleared, throttle switched on) is not measured and is not listed; '
+print('round 1 (the two key presses sent, throttle switched on) is not measured and is not listed; '
       'early/late = first/last 5 s of the round; ms are frame COSTS at MAX_FPS 1000.')
 print(f'{"arm":14s} {"rd":>2s} {"len_s":>5s} {"early_ms":>8s} {"late_ms":>7s} {"ratio_ms":>8s} '
       f'{"early_draws":>11s} {"late_draws":>10s} {"ratio_draws":>11s} {"late_kb":>7s} '
