@@ -1,0 +1,53 @@
+# IS THE STARTUP TITLE PICTURE DRAWN AT ITS OWN SHAPE? One number, two screens.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --mobile 915,350,3 \
+#        --out docs/evidence/phone-round2/logo/after-phone \
+#        --url 'http://localhost:8000/armagetronad.html?touch=1' \
+#        --script-file web/tools/logo-aspect-probe.steps
+#   node web/tools/drive-browser.mjs --headed --width 1024 --height 768 \
+#        --out docs/evidence/phone-round2/logo/after-desktop \
+#        --url http://localhost:8000/armagetronad.html \
+#        --script-file web/tools/logo-aspect-probe.steps
+#   kill %1
+#
+# WHAT IS BEING TESTED. gLogo::Display() draws textures/title.jpg -- 800x600,
+# i.e. exactly 4:3 -- with the full-screen menu viewport selected and no
+# projection. Before this round both of its quads ran from (-1,-1) to (1,1), so
+# the picture was scaled onto the WHOLE viewport whatever shape that was and
+# every feature of it was widened by screenAspect/(4/3): 1.96x on a phone in
+# landscape. That is the "still stretched" the maintainer reported, and it is
+# the image at the START rather than the 3D view.
+#
+# THE NUMBER IS sx_frac: the standard deviation of the picture's own blue
+# content along x, AS A FRACTION OF THE SCREEN WIDTH.
+#
+#   before the fix   sx_frac is the SAME at both aspects (the picture fills the
+#                    width whatever the width is)
+#   after the fix    sx_frac on a 2.61 screen is (4/3)/2.61 = 0.51 of what it
+#                    is on a 4:3 screen, because the picture now occupies 51 %
+#                    of the width and letterboxes the rest
+#
+# WHY A MOMENT AND NOT A BOUNDING BOX. The title fades over the first couple of
+# seconds (gLogo's sg_DisplayStatus is the quad's alpha), so any threshold test
+# measures the fade as much as the shape -- two runs that boot 200 ms apart
+# disagree by 10 %. A spread weighted by max(0, B - max(R,G)) is invariant
+# under a uniform scaling of all the weights, which is exactly what a fade is.
+#
+# THAT WEIGHT ALSO ISOLATES THE PICTURE FROM THE PAGE. Blue DOMINANCE, not
+# brightness: the animated menu grid behind the title is grey and the menu text
+# is red and white, so all three weigh zero. The touch overlay is HTML and is
+# not in the canvas at all.
+#
+# SAMPLED TWICE, EARLY AND CLOSE TOGETHER. The title is at full alpha for
+# seconds after main() and gone by the third, so both samples are taken inside
+# that window; a third sample later would measure an empty frame.
+wait:600
+eval:(()=>{window.AA_LOGO=function(){var cv=document.getElementById('canvas');var W=cv.width,H=cv.height;var c=document.createElement('canvas');c.width=W;c.height=H;var cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(cv,0,0);var d=cx.getImageData(0,0,W,H).data;var s=0,sx=0,sy=0,sxx=0,syy=0;for(var j=0;j<H;j++){for(var i=0;i<W;i++){var o=(j*W+i)*4,R=d[o],G=d[o+1],B=d[o+2];var w=B-(R>G?R:G);if(w<=0)continue;var u=i/W,v=j/H;s+=w;sx+=w*u;sy+=w*v;sxx+=w*u*u;syy+=w*v*v;}}if(s<=0)return {canvas:W+'x'+H,mass:0};var mx=sx/s,my=sy/s;var vx=sxx/s-mx*mx,vy=syy/s-my*my;var r=function(x){return Math.round(x*100000)/100000;};return {canvas:W+'x'+H,aspect:Math.round(W/H*10000)/10000,mass_M:Math.round(s/1e4)/100,cx:r(mx),cy:r(my),sx_frac:r(Math.sqrt(vx>0?vx:0)),sy_frac:r(Math.sqrt(vy>0?vy:0))};};return 'logo moment probe installed'})()
+until:1:90000:[BOOT] autostart
+wait:300
+shot:l01-title-early
+eval:'[LOGOPROBE] early '+JSON.stringify(window.AA_LOGO())
+wait:300
+shot:l02-title-late
+eval:'[LOGOPROBE] late '+JSON.stringify(window.AA_LOGO())

@@ -38,6 +38,71 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // static rFileTexture sg_LogoTexture(rTextureGroups::TEX_FONT, "textures/KGN_logo.png",0,0,1);
 static rISurfaceTexture* sg_LogoMPTitle = NULL;
 
+#ifdef __EMSCRIPTEN__
+// ---- PHONE FEEDBACK ROUND 2: the title picture is drawn at ITS shape -------
+//
+// THE DEFECT, WHICH IS "the image in the beginning" AND NOT THE 3D VIEW. Both
+// quads below run from (-1,-1) to (1,1) with the full-screen menu viewport
+// selected and no projection, i.e. the picture is scaled onto the WHOLE
+// viewport whatever shape that is. textures/title.jpg is 800x600 -- exactly
+// 4:3 -- so the horizontal magnification is the screen's aspect ratio divided
+// by 4/3, and every feature of the picture is widened by that factor:
+//
+//     desktop 4:3  1.333 / 1.333 = 1.00x   the shape the artwork was drawn at
+//     desktop 16:9 1.778 / 1.333 = 1.33x   upstream has always looked like this
+//     phone 915x350 landscape, dpr 3
+//                  2.614 / 1.333 = 1.96x   the two lightcycles are twice as wide
+//
+// Measured rather than reasoned: docs/evidence/phone-round2/logo/ renders the
+// same first menu at both shapes and reports the horizontal spread of the
+// picture's own blue content as a FRACTION of the screen width. Before this
+// change that fraction is the same number at both aspects (0.229 against
+// 0.231, i.e. the picture fills the width whatever the width is), which is the
+// signature of a quad with no aspect correction in it.
+//
+// THIS FILE'S OWN NEIGHBOUR ALREADY DOES IT PROPERLY, and that is the argument
+// for the shape of the fix rather than an invention of mine. gFloor.cpp's
+// MenuBackground -- the animated grid drawn immediately before the call to
+// Display() below -- scales its texture matrix by
+// (sr_screenWidth*3.0)/(sr_screenHeight*4.0) precisely so the grid cells stay
+// square on a widescreen. The grid was corrected for widescreen and the
+// picture on top of it was not.
+//
+// PILLARBOX, NOT CROP. The other way to keep the aspect is to fill the width
+// and let the top and bottom fall outside the viewport; at 2.61 that keeps the
+// middle 51 % of the image and throws away both the "ARMAGETRON ADVANCED"
+// title and the "PRESS ANY KEY TO START" line, which is worse than the defect.
+// Fitting inside costs screen area and keeps the whole picture.
+//
+// WHY 4/3 IS HARD-CODED. rISurfaceTexture publishes no size accessor, so the
+// texture cannot be asked. 4:3 is the shipped textures/title.jpg and it is the
+// same constant MenuBackground hard-codes four lines away for the same reason.
+// A moviepack that ships a differently-shaped moviepack/title.jpg would be
+// pillarboxed to 4:3 as well -- no worse than the stretch it gets today, and
+// there is no moviepack in this repository to measure.
+//
+// NATIVE IS UNTOUCHED. The #else gives the two halves the value 1, which is
+// the literal the four Vertex() calls used before this block existed.
+//
+// IF THIS IS EVER SENT UPSTREAM, SEND IT UNGUARDED. Nothing here is
+// browser-specific: a native 16:9 or 21:9 desktop has exactly the same defect
+// to exactly the same formula. The guard is this repository's rule for
+// touching a file outside src/emscripten/, not a statement about the bug.
+static void sg_LogoQuadHalfExtents( REAL & hx, REAL & hy )
+{
+    hx = 1;
+    hy = 1;
+    if ( sr_screenWidth <= 0 || sr_screenHeight <= 0 )
+        return;                                  // before SDL_SetVideoMode
+    REAL const logoAspect   = REAL(4)/REAL(3);   // textures/title.jpg is 800x600
+    REAL const screenAspect = REAL(sr_screenWidth)/REAL(sr_screenHeight);
+    if ( screenAspect > logoAspect )
+        hx = logoAspect/screenAspect;            // screen wider than the picture
+    else if ( screenAspect < logoAspect )
+        hy = screenAspect/logoAspect;            // screen taller than the picture
+}
+#endif
+
 static gLogo logo;
 
 static bool sg_Displayed = true;
@@ -129,18 +194,29 @@ void gLogo::Display()
 
         Color(1,1,1, sg_DisplayStatus);
 
+        // The half-extents of the quad. 1 and 1 -- the literals this used to
+        // draw -- everywhere except the browser client, where they fit the
+        // picture to its own 4:3 instead of to the window. See the long
+        // comment on sg_LogoQuadHalfExtents.
+#ifdef __EMSCRIPTEN__
+        REAL hx, hy;
+        sg_LogoQuadHalfExtents( hx, hy );
+#else
+        REAL const hx = 1, hy = 1;
+#endif
+
         BeginQuads();
         TexCoord(0,0);
-        Vertex(-1, 1);
+        Vertex(-hx, hy);
 
         TexCoord(0,1);
-        Vertex(-1, -1);
+        Vertex(-hx, -hy);
 
         TexCoord(1,1);
-        Vertex(1, -1);
+        Vertex(hx, -hy);
 
         TexCoord(1,0);
-        Vertex(1, 1);
+        Vertex(hx, hy);
 
         RenderEnd();
     }
@@ -176,18 +252,29 @@ void gLogo::Display()
 
         Color(1,1,1, sg_DisplayStatus);
 
+        // The half-extents of the quad. 1 and 1 -- the literals this used to
+        // draw -- everywhere except the browser client, where they fit the
+        // picture to its own 4:3 instead of to the window. See the long
+        // comment on sg_LogoQuadHalfExtents.
+#ifdef __EMSCRIPTEN__
+        REAL hx, hy;
+        sg_LogoQuadHalfExtents( hx, hy );
+#else
+        REAL const hx = 1, hy = 1;
+#endif
+
         BeginQuads();
         TexCoord(0,0);
-        Vertex(-1, 1);
+        Vertex(-hx, hy);
 
         TexCoord(0,1);
-        Vertex(-1, -1);
+        Vertex(-hx, -hy);
 
         TexCoord(1,1);
-        Vertex(1, -1);
+        Vertex(hx, -hy);
 
         TexCoord(1,0);
-        Vertex(1, 1);
+        Vertex(hx, hy);
 
         RenderEnd();
 #endif	  

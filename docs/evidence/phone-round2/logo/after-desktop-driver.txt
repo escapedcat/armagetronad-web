@@ -1,0 +1,38 @@
+[    546ms] [harness] chrome: Chrome/152.0.7977.75
+[    546ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     25ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     25ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     33ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     34ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     36ms] [page] load event fired
+[     41ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[     89ms] [console.log] [PERSIST] populate ok in 37ms
+[    261ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    261ms] [console.log] [CAMERA] stock camera (factor 1)
+[    262ms] [console.log] [BOOT] autostart: calling main
+[    264ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    264ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    264ms] [console.error] 
+[    264ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    265ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    265ms] [console.log] 
+[    388ms] [console.log] [L] ENCODING latin1
+[    395ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    396ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    415ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    418ms] [console.error] TODO: glShadeModel
+[    421ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[    458ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    458ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    458ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    458ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    459ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    609ms] [harness] eval (()=>{window.AA_LOGO=function(){var cv=document.getElementById('canvas');var W=cv.width,H=cv.height;var c=document.createElement('canvas');c.width=W;c.height=H;var cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(cv,0,0);var d=cx.getImageData(0,0,W,H).data;var s=0,sx=0,sy=0,sxx=0,syy=0;for(var j=0;j<H;j++){for(var i=0;i<W;i++){var o=(j*W+i)*4,R=d[o],G=d[o+1],B=d[o+2];var w=B-(R>G?R:G);if(w<=0)continue;var u=i/W,v=j/H;s+=w;sx+=w*u;sy+=w*v;sxx+=w*u*u;syy+=w*v*v;}}if(s<=0)return {canvas:W+'x'+H,mass:0};var mx=sx/s,my=sy/s;var vx=sxx/s-mx*mx,vy=syy/s-my*my;var r=function(x){return Math.round(x*100000)/100000;};return {canvas:W+'x'+H,aspect:Math.round(W/H*10000)/10000,mass_M:Math.round(s/1e4)/100,cx:r(mx),cy:r(my),sx_frac:r(Math.sqrt(vx>0?vx:0)),sy_frac:r(Math.sqrt(vy>0?vy:0))};};return 'logo moment probe installed'})() => "logo moment probe installed"
+[    609ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[    609ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1230ms] [harness] screenshot -> docs/evidence/phone-round2/logo/after-desktop/l01-title-early.png
+[   1243ms] [harness] eval '[LOGOPROBE] early '+JSON.stringify(window.AA_LOGO()) => "[LOGOPROBE] early {\"canvas\":\"1024x768\",\"aspect\":1.3333,\"mass_M\":1.65,\"cx\":0.30511,\"cy\":0.55148,\"sx_frac\":0.22793,\"sy_frac\":0.23074}"
+[   1674ms] [harness] screenshot -> docs/evidence/phone-round2/logo/after-desktop/l02-title-late.png
+[   1681ms] [harness] eval '[LOGOPROBE] late '+JSON.stringify(window.AA_LOGO()) => "[LOGOPROBE] late {\"canvas\":\"1024x768\",\"mass\":0}"
+
+Transcript: docs/evidence/phone-round2/logo/after-desktop/console.log

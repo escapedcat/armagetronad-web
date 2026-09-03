@@ -1,0 +1,48 @@
+[    665ms] [harness] chrome: Chrome/152.0.7977.75
+[    666ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     33ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     34ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     43ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     46ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     46ms] [page] load event fired
+[     49ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    104ms] [console.log] [PERSIST] populate ok in 33ms
+[    308ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    308ms] [console.log] [CAMERA] stock camera (factor 1)
+[    308ms] [console.log] [BOOT] autostart: calling main
+[    311ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    311ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    311ms] [console.error] 
+[    312ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    312ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    312ms] [console.log] 
+[    431ms] [console.log] [L] ENCODING latin1
+[    440ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    441ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    458ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    460ms] [console.error] TODO: glShadeModel
+[    464ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[    497ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    498ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    498ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    499ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    499ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    610ms] [harness] eval (()=>{window.__grab=(tag)=>{const c=document.getElementById('canvas');const s=document.createElement('canvas');s.width=c.width;s.height=c.height;return {bs:c.width+'x'+c.height,a:Math.round((c.width/c.height)*1000)/1000};};return 'ok'})() => "ok"
+[    610ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[    610ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[    730ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s00-at-boot.png
+[   1263ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s01.png
+[   1710ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s02.png
+[   2139ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s03.png
+[   2571ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s04.png
+[   3009ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s05.png
+[   3644ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s06.png
+[   4280ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s07.png
+[   5136ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s08.png
+[   5338ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   5339ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   6180ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s09.png
+[   7733ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s10.png
+[   9785ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s11.png
+[  12806ms] [harness] screenshot -> docs/evidence/phone-round2/startup/desktop-4x3/s12-settled.png
+[  12807ms] [harness] eval window.__grab('settled') => {"bs":"1024x768","a":1.333}
