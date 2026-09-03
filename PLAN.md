@@ -191,11 +191,14 @@ Estimates are relative effort, not calendar commitments.
 >   own `check-transcript.mjs` — unmodified, and pointed at the deployment with `--url` and nothing else, because every
 >   asset path is relative.
 > - **The bar is >=30 fps and it is cleared with margin, but the number is not stable across runs and should not be
->   quoted as if it were.** M5 task 5's committed run recorded a per-whole-second median of 60 in both engines. The
->   exit re-run, same build, same script, same URL, recorded **Chrome 60 median / 57 minimum** over 39.58 s and 2372
->   frames, and **Firefox 57 median / 53 minimum** over 39.36 s and 2220 frames. Both pass; Firefox's median moved by 3
->   fps between two runs of the same thing. Worst single frames were 41.9 ms and 50.0 ms — below 30 fps instantaneously,
->   as they have been since M2, and still nobody has looked for the cause.
+>   quoted as if it were.** **Three runs of the same script, same build, same public URL**, each ~39.5 s of real rounds,
+>   as per-whole-second median / minimum: M5 task 5's committed run **60 / 58 (Chrome), 60 / 58 (Firefox)**; this exit
+>   before the redeploy **60 / 57** and **57 / 53**; this exit after it **60 / 58** and **59 / 57**.
+>   Chrome's median was 60 in all three. **Firefox's moved across 57, 59 and 60** — so the honest statement is "comfortably
+>   above 30 in both engines", and **"60 fps" is not a property of this port.** Worst *single* frames in these two exit runs
+>   were 41.9-46.3 ms (Chrome) and 37.0-50.0 ms (Firefox), i.e. below 30 fps instantaneously, as they have been since M2 and
+>   still with nobody having looked for the cause. Browsers: Chrome 152.0.7977.75, and **Firefox 155.0 — one major version
+>   newer than the 154 the milestone was built against, with no change needed to pass.**
 > - **The dedicated wasm is still 2,488,298 bytes and md5 `9718a2a64978cb6e9b95ea2f0454cca5`**, from a rebuild after
 >   `rm -rf web/build-m0 web/dist-m0 web/build-m1 web/dist-m1`. Quote both halves, always.
 > - **The deployment is reproducible from source.** At the exit commit, all five published files — `armagetronad.wasm`,
@@ -210,7 +213,12 @@ Estimates are relative effort, not calendar commitments.
 >
 > ### What M5 disproved, in this document and elsewhere. Annotated in place above; collected here
 >
-> Every item was settled by a measurement, and several had survived three or four milestones as prose.
+> **Ten items, counted from the numbered list immediately below.** Every one was settled by a measurement, and several
+> had survived three or four milestones as prose. Two bases worth stating, because a bare count here would be exactly
+> the defect this project keeps catching: items 1 and 2 were annotated in place by *earlier* M5 tasks, not by this
+> exit, and item 10 is a process finding rather than a claim in this document being false — so "places `PLAN.md`
+> itself was wrong and this exit corrected inline" is **seven**, not ten. The commit that landed these annotations
+> says "eight" in its subject line and is wrong; it is immutable, and this is the correction.
 >
 > 1. **The `-O` ban was really an ASSERTIONS ban, and the two are separable.** Four milestones forbade `-O` at link.
 >    Proven by *firing* the assert, not by reading flags: with a section 10 defect deliberately reintroduced,
@@ -330,7 +338,7 @@ Every clause of the definition, read as written:
 |---|---|
 | publicly hosted on GitHub Pages | **met** — Pages enabled itself on the first push to `gh-pages`; `https_enforced: true` |
 | anyone can play single-player vs AI | **met** — three complete rounds against three AI opponents, played off the public URL, arbitrated by M2's unmodified `check-transcript.mjs` |
-| desktop Chrome + Firefox | **met** — Chrome 152, Firefox 154 at the deploy and Firefox **155** at this exit; the gate passed on both Firefox builds without a change |
+| desktop Chrome + Firefox | **met** — Chrome 152.0.7977.75, and Firefox 154 at the deploy and **155.0** at this exit; the gate passed on both Firefox majors with no change, which is the only evidence this port has that it is not pinned to one browser build |
 | keyboard required | **met**, and it is *required* in a way the definition did not anticipate — see open item 1 |
 | >=30 fps on the maintainer's machine | **met with margin, and the margin moves** — see below |
 | Safari a non-target | **held** — never tested, never claimed |
@@ -398,9 +406,26 @@ effort.
    `[PERSISTBACKSTOP]`/`[PERSISTSAVE]` lines in it; present in every re-recording since). It
    is not `-O2`: a control link with both flags removed reproduces the pre-`-O2` client
    byte-for-byte and fails identically, twice. **The check is now stricter than the shipped
-   behaviour.** Two honest options: re-scope P11 to assert what the backstop makes true, or
-   re-record M4's transcript against a current build. Someone has to choose; nothing here
-   chose for them.
+   behaviour.**
+
+   **This exit re-ran the checker over the committed transcripts and found something sharper
+   than "P11 is red": the two committed transcripts in `docs/evidence/m4-persist/` are of
+   different vintages, against different pages, and only one of them can pass.**
+   `chrome-console.log` was re-recorded at M5 task 5 (`d7214876`) against the autostart page
+   — it carries **1 `[PERSISTBACKSTOP]` line and 2 `autostart` lines**, and the checker exits
+   **1** on it, failing exactly P11 and nothing else. `firefox-console.log` has not been
+   touched since M4 task 1 (`e3c93e72`) — **0 backstop lines, 0 autostart lines** — and exits
+   **0**. So the Firefox half of that gate certifies a page that no longer exists (it still
+   has the Play button), and it passes *because* it is stale. Re-recording it would turn it
+   red too.
+
+   Three honest options, and someone has to choose — nothing here chose for them: re-scope
+   P11 to assert what the backstop actually makes true; re-record **both** transcripts and
+   accept a red P11 until it is re-scoped; or delete P11 as superseded by
+   `m4-persist-settings`, which tests the same property with a control build and is green on
+   both engines. **What is not acceptable is leaving a mismatched pair where one engine
+   passes only by being older than the build.** Counted by running the checker on both files
+   and by `grep -c` on the two markers.
 7. **Anisotropic filtering is offered and undecided.** It is supported here (max 16) and
    never requested; turning it on is measurably crisper — on the cycle's own saturated
    pixels **21.9% of pixels change and 13.1% change by more than 8**, against a **noise

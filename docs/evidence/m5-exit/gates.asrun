@@ -1,0 +1,87 @@
+M5 exit — every gate re-run, and how. Recorded verbatim from the commands below.
+
+BROWSER-VERIFIED IN THIS SESSION (real Chrome + real Firefox, against the PUBLIC URL):
+
+  sh web/tools/live-gate.sh --out docs/evidence/m5-exit/live-gate
+    wire facts                   PASS      (W1-W13 + WZ, 13 declared / 13 executed)
+    gameplay chrome              PASS      (M2's gate, unmodified; 3/3 rounds, 3 AIs)
+    gameplay firefox             PASS      (M2's gate, unmodified; 3/3 rounds, 3 AIs)
+    multiplayer chrome           PASS      (X1-X11 + XZ, 11 declared / 11 executed)
+    multiplayer firefox          PASS      (X1-X11 + XZ, 11 declared / 11 executed)
+    LIVE GATE PASSED   exit 0
+
+    Chrome  152.0.7977.75  median 60 / min 58 fps over 39.56 s, 2370 frames, worst frame 46.3 ms
+    Firefox 155.0          median 59 / min 57 fps over 39.41 s, 2326 frames, worst frame 37.0 ms
+    (Firefox reaches *.github.io only through docs/evidence/m5-deploy/tunnel-proxy.mjs on
+     this machine; TLS is end to end and the document origin is the deployment's.)
+
+CHECKED FROM COMMITTED TRANSCRIPTS (no browser; checker exit status only):
+
+  node docs/evidence/m2-gate/check-transcript.mjs        chrome-console.log        exit 0
+  node docs/evidence/m2-gate/check-transcript.mjs        firefox-console.log       exit 0
+  node docs/evidence/m3-audio/check-audio-transcript.mjs chrome-console.log        exit 0
+  node docs/evidence/m3-audio/check-audio-transcript.mjs firefox-console.log       exit 0
+  node docs/evidence/m3-audio/check-audio-transcript.mjs negative-control-chrome   exit 1  (expected)
+  node docs/evidence/m4-persistence/check-milestone-transcript.mjs chrome          exit 0
+  node docs/evidence/m4-persistence/check-milestone-transcript.mjs firefox         exit 0
+  node docs/evidence/m4-persistence/check-milestone-transcript.mjs negative-chrome exit 1  (expected)
+  node docs/evidence/m4-persist-settings/check-settings-transcript.mjs chrome      exit 0
+  node docs/evidence/m4-persist-settings/check-settings-transcript.mjs firefox     exit 0
+  node docs/evidence/m4-config-precedence/check-maxfps-transcript.mjs  chrome      exit 0
+  node docs/evidence/m4-config-precedence/check-maxfps-transcript.mjs  firefox     exit 0
+  node docs/evidence/m4-persist/check-persist-transcript.mjs           chrome      exit 1  *** RED
+  node docs/evidence/m4-persist/check-persist-transcript.mjs           firefox     exit 0
+
+  *** The one red gate, and it is the known one -- P11, alone:
+      "boot 2 read user.cfg back with the SAME content hash (6913c09e -> 49dca93d)"
+      The checker's own annotation explains it: the transcript contains
+      "[PERSISTBACKSTOP] beforeunload", so boot 1 rewrote user.cfg during unload AFTER
+      the hash was sampled. M4's own task 2 added that writer and never re-ran this gate.
+
+      SHARPER THAN "P11 IS RED", and found by running both files rather than one:
+        chrome-console.log   1 [PERSISTBACKSTOP] line, 2 autostart lines,
+                             last written by d7214876 (M5 task 5, re-recorded)   -> exit 1
+        firefox-console.log  0 [PERSISTBACKSTOP] lines, 0 autostart lines,
+                             last written by e3c93e72 (M4 task 1)                -> exit 0
+      The pair is internally inconsistent. The Firefox half passes only because it is
+      older than the build -- it certifies a page that still has a Play button.
+      Owner: whoever decides. See PLAN.md, "Phase 1 -- closed", open item 6.
+
+PROVERS (every new assertion shown capable of failing, set equality):
+
+  node docs/evidence/m5-launch/prove-live-checks-can-fail.mjs
+    RESULT: PASS -- all 53 cases flipped exactly the checks they declared   exit 0
+
+  sh web/tools/prove-publish-set-check-can-fail.sh
+    9 passed, 0 failed -- EVERY CASE BEHAVED AS DECLARED                    exit 0
+
+INVARIANT, from a clean rebuild (rm -rf web/build-m0 web/dist-m0 web/build-m1 web/dist-m1):
+
+  web/dist-m0/armagetronad-dedicated.wasm
+    2488298 bytes
+    md5 9718a2a64978cb6e9b95ea2f0454cca5
+  Both halves. Rebuilt, not read off an artefact that was already there.
+
+REPRODUCIBILITY -- the published bytes come back from that same clean rebuild:
+
+  armagetronad.wasm  6f835c849bbef4c77896030394cda7a5  IDENTICAL to origin/gh-pages blob
+  armagetronad.js    65a49a216a58cc05c9c0c6622e677033  IDENTICAL
+  armagetronad.data  59d5aeadf06cc5ca956551250bd740c3  IDENTICAL
+  armagetronad.html  c4384f76efc244155b513bdaabbc3b6d  IDENTICAL
+  index.html         17e8535ca4170b561d2ba7813ef3ada8  IDENTICAL
+
+  And no input to either link changed after that rebuild:
+    git diff --stat dfaecdc8..HEAD -- src/ web/Makefile web/shell.html web/webdefaults/ \
+        config/ language/ textures/ models/ sound/ resource/ deps/     -> empty
+
+NOT RE-RUN IN A BROWSER, and named so the gap is visible rather than implied.
+Eight steps files were edited at M5 task 5 to drop "click:#start" and were re-read
+but never driven:
+
+  persist-negative, persistence-milestone-gate, persistence-milestone-negative,
+  persist-settings-gate, persist-settings-menu, persist-backstop, menu-gate,
+  maxfps-precedence
+
+Task 5 reported NINE. https-multiplayer.steps has since been driven live in both
+engines by the live gate above, so the standing figure is eight. Counted by name
+from task 5's own list minus the one since exercised.

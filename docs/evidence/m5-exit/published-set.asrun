@@ -1,0 +1,90 @@
+The published set, before and after the M5 exit cleanup.
+
+Pages serves no directory index, so `git ls-tree -r origin/gh-pages` is the ONLY
+way to see what is published. Browsing the site cannot tell you.
+
+BEFORE (gh-pages tip 8fafc556, "Deploy a0aad048") -- 23 entries, 16,185,514 B:
+
+  .nojekyll
+  armagetronad-fstoggle.data      <- probe build: fullscreen-key CONTROL, deliberately broken
+  armagetronad-fstoggle.html      <-
+  armagetronad-fstoggle.js        <-
+  armagetronad-fstoggle.wasm      <-
+  armagetronad-oldyield.data      <- probe build: the FLICKERING-HUD build
+  armagetronad-oldyield.html      <-
+  armagetronad-oldyield.js        <-
+  armagetronad-oldyield.wasm      <-
+  armagetronad.data               <- release
+  armagetronad.html               <- release
+  armagetronad.js                 <- release
+  armagetronad.wasm               <- release
+  index.html                      <- release
+  res-1024x768.html               <- resolution probe page
+  res-1280x720.html               <-
+  res-1600x900.html               <-
+  res-1920x1080.html              <-
+  res-2560x1440.html              <-
+  res-3360x1890.html              <-
+  res-3840x2160.html              <-
+  res-5120x2880.html              <-
+  res-7680x4320.html              <-
+
+  17 unintended entries, counted as 23 total minus the 6 release entries.
+  Both stray wasms answered 200 with content-type application/wasm.
+
+AFTER (gh-pages tip 60433d16, "Deploy dd42ce68") -- 6 entries, 5,382,608 B:
+
+        0  .nojekyll
+   687094  armagetronad.data
+     4395  armagetronad.html
+   357282  armagetronad.js
+  4331484  armagetronad.wasm
+     2353  index.html
+
+  Removed: 17 entries, 10,802,906 B (16,185,514 - 5,382,608).
+
+  Derivation of every number above:
+    git ls-tree -r origin/gh-pages --name-only | wc -l
+    git ls-tree -r -l origin/gh-pages | awk '{s+=$4} END {print s}'
+
+VERIFIED GONE. All 17 removed names fetched by hand after the deploy:
+
+  17 x 404
+
+  One caveat worth carrying: armagetronad-oldyield.wasm answered 200 for a few
+  minutes AFTER the deploy, from a stale edge cache -- x-cache HIT. A HEAD moments
+  later and a cache-busting query string both returned 404, and so did all 17 on
+  the re-check. REMOVAL FROM THE BRANCH IS NOT INSTANTLY REMOVAL FROM THE CDN.
+  Do not read a 200 immediately after a deploy as the deploy having failed; check
+  git ls-tree, then re-fetch with a cache buster.
+
+RELEASE FILES STILL SERVED (the negative control for the above):
+
+  armagetronad.wasm   200 application/wasm
+  armagetronad.html   200 text/html; charset=utf-8
+  index.html          200 text/html; charset=utf-8
+
+HOW THIS IS PREVENTED FROM RECURRING:
+
+  `npm run deploy` now runs web/tools/check-publish-set.mjs between the `cp` and
+  `npx gh-pages`. It asserts SET EQUALITY against a declared release list and
+  exits 1 on a stray OR a missing file, so a bad set never reaches the remote.
+  Its output at the exit deploy:
+
+    publish set: dist-m1
+                  687094  armagetronad.data
+                    4395  armagetronad.html
+                  357282  armagetronad.js
+                 4331484  armagetronad.wasm
+                    2353  index.html
+      5 file(s), 5382608 bytes
+
+    PASS  the set equals the 5 declared release files
+
+  (.nojekyll is not in that list on purpose: gh-pages writes it into the branch
+  from the --nojekyll flag; it is never in dist-m1. The published set is therefore
+  6 entries where the checked set is 5 files.)
+
+  Proven capable of failing: web/tools/prove-publish-set-check-can-fail.sh, 9 cases,
+  including a stray in a SUBDIRECTORY and a stray DOTFILE -- both of which gh-pages'
+  own -v "{**/*,**/.*}" pattern would have published.
