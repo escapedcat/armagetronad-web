@@ -1,0 +1,70 @@
+# Watch upstream Armagetron for commits that would cost this port something.
+#
+# WHY THIS EXISTS NOW. PLAN.md froze upstream tracking until the Demo shipped:
+# mid-port merges would have landed rebase noise on exactly the files being
+# patched. The Demo has shipped, so tracking resumes -- and the stated reason
+# for tracking at all is that the port "could one day be offered upstream as a
+# merge request", which only stays true if the drift is known.
+#
+# WHY IT REPORTS CONFLICTS RATHER THAN COUNTS. A bare "N commits behind" on a
+# maintenance branch is noise nobody reads. web/tools/check-upstream.mjs
+# classifies: it recomputes which files this port has patched (18 shared with
+# upstream today, plus 4 of our own under src/emscripten/ that cannot conflict)
+# and reports only the upstream commits landing on the shared ones.
+#
+# NOTE ON FILE PLACEMENT. This repo's convention is that new files live under
+# src/emscripten/, web/, deps/ or docs/. A GitHub Actions workflow has to live
+# in .github/workflows/ and cannot honour that; the logic it calls does live in
+# web/tools/ and runs locally with no arguments, so the exception is the
+# scheduler, not the substance.
+
+name: upstream-watch
+
+on:
+  schedule:
+    # Weekly, Mondays 06:00 UTC. Not daily: legacy_0.2.9 is a maintenance
+    # branch, and a job that cries wolf weekly gets muted, which is worse than
+    # no job. Manual dispatch is there for when someone actually wants to know.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # merge-base against upstream needs real history, not a shallow clone.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Compare against upstream
+        id: check
+        run: |
+          set +e
+          node web/tools/check-upstream.mjs --json > /tmp/upstream.json
+          echo "conflicts=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          node web/tools/check-upstream.mjs > /tmp/upstream.txt || true
+          cat /tmp/upstream.txt
+
+      - name: Open or update the drift issue
+        if: steps.check.outputs.conflicts == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BODY=$(printf 'Upstream has commits touching files this port has patched.\n\n```\n%s\n```\n\nRun `node web/tools/check-upstream.mjs` locally for the same report.\n\nThis is not automatically a problem — it is the set of commits a merge would\nmake someone read. Files under `src/emscripten/` are ours alone and never appear here.\n' "$(cat /tmp/upstream.txt)")
+          EXISTING=$(gh issue list --label upstream-drift --state open --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh label create upstream-drift --description "Upstream commits touching patched files" --color FBCA04 2>/dev/null || true
+            gh issue create --title "Upstream drift: commits touching patched files" --label upstream-drift --body "$BODY"
+          fi
