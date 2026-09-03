@@ -98,7 +98,11 @@ done || fail "an eval: step is not valid JavaScript (shown above)"
 [ -n "$AA_PERF_DRY" ] && { echo "dry run: wrote $OUT/steps.txt"; exit 0; }
 
 # ---- hygiene -------------------------------------------------------------
-if pgrep -f drive-browser.mjs >/dev/null 2>&1; then
+# Matches only a real `node .../drive-browser.mjs` process. A plain
+# `pgrep -f drive-browser.mjs` also matches any shell whose argv merely QUOTES
+# that name -- an agent wrapper, a heredoc, this script pasted into `sh -c` --
+# and reported a phantom driver once.
+if pgrep -f 'node .*drive-browser[.]mjs' >/dev/null 2>&1; then
   fail "another drive-browser.mjs is running; a measurement beside it is invalid. Wait for it."
 fi
 LOAD1=$(uptime | sed -e 's/.*load averages*: *//' -e 's/[, ].*//')
