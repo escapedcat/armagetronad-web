@@ -156,12 +156,20 @@ jobs:
           # This workflow's own first run answered the question web/README.md
           # asks (does a Linux runner reproduce the Mac pin?) with "no": same
           # source, same emsdk 6.0.8, a wasm 16 bytes SMALLER with a different
-          # md5. That run is where these two numbers come from --
+          # md5. That run (warm cache, shared with deploy-pages.yml's client
+          # build on the same PR event) is where these two numbers first came
+          # from --
           # https://github.com/escapedcat/armagetronad-web/actions/runs/33772244626/job/100705140914
-          # -- recorded here rather than silently adopted, per
-          # web/README.md's "Deploying to GitHub Pages" note on why there are
-          # now two platform pins. The Mac pin above stays the local
-          # invariant; this is what CI actually asserts.
+          # -- and a second run, after the cache keys below were bumped to
+          # -v2 specifically to force a COLD build (log confirms "Cache not
+          # found for input keys: emsdk-6.0.8-Linux-v2" and the libxml2
+          # equivalent), reproduced the IDENTICAL pin from scratch --
+          # https://github.com/escapedcat/armagetronad-web/actions/runs/33781875180/job/100737268664
+          # -- so this is not an artifact of a shared, pre-warmed cache.
+          # Recorded here rather than silently adopted, per web/README.md's
+          # "Deploying to GitHub Pages" note on why there are now two
+          # platform pins. The Mac pin above stays the local invariant; this
+          # is what CI actually asserts.
           LINUX_PIN_BYTES=2488282
           LINUX_PIN_MD5=ecb69e501f47c1a35cfe544ec0fe4e15
           echo "Linux pin (this workflow, ubuntu-latest, emsdk $AA_EMSDK_VERSION): $LINUX_PIN_BYTES bytes, md5 $LINUX_PIN_MD5"
