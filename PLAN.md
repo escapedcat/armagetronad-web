@@ -339,7 +339,7 @@ Every clause of the definition, read as written:
 | publicly hosted on GitHub Pages | **met** — Pages enabled itself on the first push to `gh-pages`; `https_enforced: true` |
 | anyone can play single-player vs AI | **met** — three complete rounds against three AI opponents, played off the public URL, arbitrated by M2's unmodified `check-transcript.mjs` |
 | desktop Chrome + Firefox | **met** — Chrome 152.0.7977.75, and Firefox 154 at the deploy and **155.0** at this exit; the gate passed on both Firefox majors with no change, which is the only evidence this port has that it is not pinned to one browser build |
-| keyboard required | **met**, and it is *required* in a way the definition did not anticipate — see open item 1 |
+| keyboard required | **met**, and it is *required* in a way the definition did not anticipate — see open item 1. *(Phase 3 removed the requirement on a touch device: the same six keys are now reachable by tapping. On a desktop, unchanged.)* |
 | >=30 fps on the maintainer's machine | **met with margin, and the margin moves** — see below |
 | Safari a non-target | **held** — never tested, never claimed |
 
@@ -364,11 +364,17 @@ without anyone having to choose an optimisation level.
 several are visible to a first-time visitor. They are ordered by who is hurt, not by
 effort.
 
-1. **The touch-device "needs a keyboard" note was never built.** M4's own milestone entry
+1. ~~**The touch-device "needs a keyboard" note was never built.** M4's own milestone entry
    promised it and M4 recorded it as not done; M5 did not do it either. It is not deferred
    to Phase 3 by any decision — it was simply never built. **A visitor on a phone gets a
    canvas they cannot play and no explanation.** This is the only open item that harms
-   someone who did nothing wrong, and it is a change to `web/shell.html` with no C++ in it.
+   someone who did nothing wrong, and it is a change to `web/shell.html` with no C++ in it.~~
+   *(**Closed by Phase 3, and closed better than it was written.** A phone visitor does not
+   get a note saying to go and find a keyboard; they get controls. `web/shell.html` now
+   detects `(hover: none) and (pointer: coarse)` and shows two half-screen turn zones and a
+   four-button menu strip that synthesize the game's existing key bindings — no C++, and
+   the desktop page is byte-for-byte the same experience it was, asserted at 22/22 in both
+   engines. `docs/evidence/phase3-touch/`.)*
 2. **The multiplayer menu shows ~20 s of solid black canvas** before the game's own "Sorry,
    no server found :-(". Reachable in three keystrokes from the main menu. The *failure* is
    graceful and is gated (X1-X11 against the live site, both engines); the **black canvas is
@@ -589,6 +595,11 @@ Neither phase below is part of "done." Each gets its own go/no-go decision after
 >    above). Whoever starts Phase 3 will find it sitting there; whoever does *not* start
 >    Phase 3 should still build it, because a phone visitor today gets a canvas and no
 >    explanation.
+>
+>    *(**Phase 3 did it, and skipped the note.** Once step 1 below came back positive there
+>    was no reason to ship an apology instead of controls: the note and the overlay are the
+>    same file, the same detection, and the overlay is maybe forty lines more. The note was
+>    never written.)*
 > 8. **Canvas sizing is solved and the solution is the constraint.** `web/shell.html` sizes
 >    the backing store once, before boot, from `innerWidth`/`innerHeight` x
 >    `devicePixelRatio`, capped by *area* at 3840x2160 — and the cap is an **allocation**
@@ -598,22 +609,70 @@ Neither phase below is part of "done." Each gets its own go/no-go decision after
 >    question and not an answer to it. A later window resize deliberately does **not** move
 >    the backing store — following it means `sr_ReinitDisplay` — so CSS scales and a reload is
 >    crisp. An orientation change on a phone is exactly that case, and it is unhandled.
+>
+>    *(**Phase 3: the sizing block is right at a phone aspect, and two things around it were
+>    not.** Measured at 915x412 CSS px dpr 3 it produced a 2745x1236 = 3.39 Mpx backing store
+>    at a 1:1 CSS fit. But (a) the page had **no `<meta name="viewport">`**, so Android
+>    Chrome would have laid it out against a ~980 px virtual viewport and the block would
+>    have sized a window that does not exist; and (b) `#canvas`'s `100vh` is the phone's
+>    LARGE viewport while the block reads `window.innerHeight`, the small one — a second
+>    `100dvh` declaration now solves the contain-fit against the box that exists. The
+>    orientation change is handled as a **prompt**: portrait raises a full-screen "turn your
+>    phone sideways", and a rotation after load raises a chip that says the picture is being
+>    stretched from the size it loaded at and offers a reload. Measured: a portrait-loaded
+>    page rotated to landscape is a 186x412 sliver.)*
 > 9. **`sr_ReinitDisplay` works, which reopens the resize question Phase 3 will need.**
 >    Measured at M5 task 4c: the canvas resizes live, `isContextLost()` stays false, no
 >    `webglcontextlost` fires, 0 GL errors in 3832 polls, and the game then plays two full
 >    rounds at the new size. Emscripten's `SDL_SetVideoMode` never creates or destroys a GL
 >    context. So a resize-and-reinit listener is *available* to Phase 3; it was deliberately
->    not built at Phase 1.
+>    not built at Phase 1. *(**Phase 3 declined it too, on the same grounds.** A live
+>    re-init on every orientation flip is a much larger claim than a sentence of honest text,
+>    and the honest text is what shipped. It is still available.)*
 > 10. **The keyboard surface a touch overlay has to synthesize is smaller than the plan
 >    assumes in one place and larger in another.** Four keys and arrows+enter is right for
 >    play and menus. But `f` does not work today even from a real keyboard (open item 4), and
 >    three camera actions have no binding at all (open item 8) — so an overlay that
 >    synthesizes keystrokes inherits both, and should not be blamed for either.
+>
+>    *(**Phase 3 measured it and the "smaller" half is confirmed while the "larger" half
+>    moved.** Arrows+enter is exactly right for getting IN: the first-run flow is Enter,
+>    Enter, Enter, because "Accept" is First Setup's pre-selected top item, and every menu on
+>    the route to a round carries its own Exit/Back item. The gap is getting OUT — `Escape`
+>    is `INGAME_MENU` and there is no other way to leave a running match — so the shipped
+>    overlay is six keys, not five: the four arrows, Enter and Escape. `f` and the camera
+>    were left alone exactly as instructed.)*
 
 
-### Phase 3 — minimal touch support (likely first: days of JS, not weeks of Go)
+### Phase 3 — minimal touch support — **BUILT, and unverified on a real device**
 
 Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mobile play needs **zero C++ changes**: a JavaScript overlay in the shell page synthesizes the game's existing keyboard controls from touch input (tap zones for turn/brake, a simple D-pad for menus). Unknowns priced into this phase, not the Demo: phone GPU performance under the emulation layers, canvas sizing, and iOS — where every browser is WebKit underneath, reopening the Safari question deliberately skipped on desktop.
+
+> **What shipped, and what the estimate got right.** "Zero C++ changes" held exactly: the
+> whole of it is `web/shell.html`, plus new gates in `web/tools/`. It is six keys — two
+> half-screen turn zones (`ArrowLeft`/`ArrowRight`) and a four-button strip at the top
+> centre (`ArrowUp`, `ArrowDown`, `Enter`, `Escape`). **No brake and no camera**: the plan
+> line above says "turn/brake", and brake was dropped as not minimal. Evidence:
+> `docs/evidence/phase3-touch/`.
+>
+> **The gate the whole phase rested on was the trust question, and nobody had tested it.**
+> A synthesized `KeyboardEvent` carries `isTrusted: false`, and trust demonstrably matters
+> elsewhere in this port. It does **not** matter for key delivery: Emscripten's SDL shim
+> registers on `document`, `SDL.receiveEvent` never reads `isTrusted`, and the only property
+> on the path is `event.keyCode`. Measured with the game's own `uActionTooltip` counters:
+> `web/tools/synthetic-key-gate.steps`. Had it failed, this phase would have needed a C++
+> input path instead.
+>
+> **What is measured and what is not.** Everything above was driven under Chrome device
+> emulation at 915x412 CSS px dpr 3 with *real* taps (`Input.dispatchTouchEvent`), and it
+> plays: the entire first-run flow reached `[L] NEW_ROUND` by tapping alone, and the turn
+> counters were spent by tapping the two halves. **Emulation is not a device.** The
+> 60 fps median at 3.39 Mpx is an M1 Max's number at a phone's pixel count — and since this
+> port's per-frame cost is the CPU side of `-sLEGACY_GL_EMULATION`, a phone's single-thread
+> CPU is exactly the axis still unmeasured. Memory at dpr 3 (~27 MB of drawing buffer on a
+> device that kills tabs), palm rejection, Android's edge gestures, the URL bar, Firefox for
+> Android and iOS Safari are all untested. The list is at the end of
+> `docs/evidence/phase3-touch/README-overlay.md`.
 
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 

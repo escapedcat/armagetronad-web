@@ -37,7 +37,10 @@ but reaches no servers. Safari is not a target.
 - The multiplayer menu shows about **20 seconds of black canvas** before the game's
   own "Sorry, no server found". It fails gracefully; the black canvas is undiagnosed.
 - **On a phone you get a canvas you cannot play and no explanation.** A "needs a
-  keyboard" notice was promised and never built. Touch controls are Phase 3.
+  keyboard" notice was promised and never built. **Phase 3 has since built the
+  real thing — tap zones and a menu strip, in `web/shell.html`, no C++ — but it
+  is committed, not deployed**, so this remains true of the URL above until the
+  maintainer decides to publish. `docs/evidence/phase3-touch/`.
 
 ## Why
 
@@ -73,7 +76,10 @@ Beyond the Demo, two follow-ups are designed but deliberately **not
 committed** — each gets its own go/no-go decision once the Demo ships:
 
 - **Touch controls** — minimal mobile play via a JavaScript overlay that maps
-  taps to the game's existing keyboard controls (no C++ changes).
+  taps to the game's existing keyboard controls (no C++ changes). **Built, and
+  not deployed**: six keys from two half-screen turn zones and a four-button
+  menu strip, measured playable under Chrome phone emulation with real taps, and
+  never run on an actual phone. `docs/evidence/phase3-touch/`.
 - **Multiplayer on real community servers** — a small UDP-over-WebSocket
   bridge lets the browser client speak the game's native protocol to today's
   unmodified public servers, including the in-game server browser.
