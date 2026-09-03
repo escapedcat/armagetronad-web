@@ -1,0 +1,70 @@
+[    703ms] [harness] mobile emulation: 412x915 CSS px dpr 3 (= 1236x2745 device px), touch on
+[    705ms] [harness] chrome: Chrome/152.0.7977.75
+[    705ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     18ms] [console.log] [DISPLAY] viewport 412x915 dpr 3 -> canvas 1236x2745
+[     20ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     20ms] [console.log] [TOUCH] orientation portrait=true (at load: true)
+[     32ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     33ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     46ms] [page] load event fired
+[     55ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    111ms] [console.log] [PERSIST] populate ok in 44ms
+[    312ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    313ms] [console.log] [BOOT] autostart: calling main
+[    314ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    315ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    315ms] [console.error] 
+[    315ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    316ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    316ms] [console.log] 
+[    438ms] [console.log] [L] ENCODING latin1
+[    446ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    447ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    470ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    473ms] [console.error] TODO: glShadeModel
+[    477ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[    514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    514ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    515ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   2583ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/portrait/00-portrait-at-load-while-downloading.png
+[   2583ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   2583ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  11664ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/portrait/01-portrait-at-load-after-boot.png
+[  11666ms] [harness] eval (()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();return JSON.stringify({canvas:c.width+'x'+c.height,css:Math.round(b.width)+'x'+Math.round(b.height),inner:innerWidth+'x'+innerHeight,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden})})() => "{\"canvas\":\"1236x2745\",\"css\":\"412x915\",\"inner\":\"412x915\",\"rotate_hidden\":false,\"chip_hidden\":true}"
+[  11666ms] [harness] === ROTATE-TO-LANDSCAPE ===
+[  11667ms] [harness] metrics -> 915x412 dpr 3
+[  11674ms] [console.log] [TOUCH] orientation portrait=false (at load: true)
+[  14276ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/portrait/02-rotated-to-landscape-after-loading-in-portrait.png
+[  14277ms] [harness] eval (()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();return JSON.stringify({canvas:c.width+'x'+c.height,css:Math.round(b.width)+'x'+Math.round(b.height),inner:innerWidth+'x'+innerHeight,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden})})() => "{\"canvas\":\"1236x2745\",\"css\":\"186x412\",\"inner\":\"915x412\",\"rotate_hidden\":true,\"chip_hidden\":false}"
+[  14277ms] [harness] === TAP-THE-RELOAD-CHIP ===
+[  14284ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  14354ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  14354ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  14357ms] [harness] tap #reloadchip-go at 604,377 (1/1)
+[  14373ms] [console.log] [DISPLAY] viewport 915x412 dpr 3 -> canvas 2745x1236
+[  14373ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  14373ms] [console.log] [TOUCH] orientation portrait=false (at load: false)
+[  14375ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  14375ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  14377ms] [page] load event fired
+[  14387ms] [console.log] [PERSIST] populate ok in 4ms
+[  14446ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  14446ms] [console.log] [BOOT] autostart: calling main
+[  14446ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  14446ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  14447ms] [console.error] 
+[  14447ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  14447ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  14447ms] [console.log] 
+[  14560ms] [console.log] [L] ENCODING latin1
+[  14565ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[  14565ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  14583ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  14585ms] [console.error] TODO: glShadeModel
+[  14588ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  14659ms] [harness] until 2x <<[BOOT] autostart>> (timeout 90000ms, have 2)
+[  14660ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  24731ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/portrait/03-after-tapping-reload.png
+[  24732ms] [harness] eval (()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();return JSON.stringify({canvas:c.width+'x'+c.height,css:Math.round(b.width)+'x'+Math.round(b.height),inner:innerWidth+'x'+innerHeight,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden})})() => "{\"canvas\":\"2745x1236\",\"css\":\"915x412\",\"inner\":\"915x412\",\"rotate_hidden\":true,\"chip_hidden\":true}"

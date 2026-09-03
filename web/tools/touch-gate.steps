@@ -1,0 +1,138 @@
+# PHASE 3: the touch overlay, driven by REAL TOUCH under phone emulation.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --mobile 915,412,3 \
+#        --out /tmp/touch-chrome \
+#        --url http://localhost:8000/armagetronad.html \
+#        --script-file web/tools/touch-gate.steps
+#   kill %1
+#
+# 915x412 at dpr 3 is a Pixel-class Android phone held in LANDSCAPE (412x915 is
+# its portrait CSS viewport), and 915*3 x 412*3 = 2745x1236 = 3.39 Mpx is the
+# backing store the shell's sizing block should compute from it.
+#
+# WHAT IS REAL HERE AND WHAT IS NOT. The taps are real: Input.dispatchTouchEvent
+# goes through the browser's own input pipeline and the page receives
+# touchstart/pointerdown with isTrusted TRUE. What is synthetic is the thing
+# under test -- the KeyboardEvent the overlay builds in response. That is the
+# right way round; a test that synthesized the tap too would be watching the
+# page talk to itself.
+#
+# EMULATION IS NOT A DEVICE. It supplies the viewport, the device pixel ratio
+# and touch events, and nothing about phone GPU throughput, memory or thermals.
+# The frame-rate dump at the end is THIS MACHINE's frame rate at a phone's pixel
+# count, which is a different quantity from a phone's. Read the header of
+# web/tools/drive-browser.mjs before quoting it.
+#
+# THE ROUTE IS THE FIRST-RUN FLOW, ON PURPOSE. A fresh profile lands on the
+# language menu, then First Setup, then a welcome message, then the tutorial
+# match -- and every one of those is dismissed here by TAPPING the on-screen
+# pad. A visitor who cannot get past the language menu has not been given mobile
+# support, so "the menus are reachable" is a gate condition and not a nicety.
+#
+# --headed is REQUIRED, for the reason in drive-browser.mjs's header.
+
+wait:1000
+
+# The frame sampler, copied verbatim from web/tools/fps-resolution-probe.steps
+# so the numbers are the same quantity M2 and M5 measured. It counts the game's
+# own glFlush/glFinish calls, i.e. buffer swaps.
+eval:(()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})()
+
+# The tooltip-counter probe, as in web/tools/synthetic-key-gate.steps.
+eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})()
+
+until:1:90000:[BOOT] autostart
+mark:GAME-STARTED
+wait:9000
+
+# T1: the page decided this is a touch device, sized the canvas from the phone
+# viewport, and is showing the controls but not the rotate prompt.
+eval:window.__tg.dump('landscape-at-language-menu')
+shot:00-language-menu-with-touch-controls
+
+# ===========================================================================
+# T2: THE MENUS, BY TAPPING ONLY. No key: step appears anywhere below.
+# ===========================================================================
+mark:TAP-ENTER-ACCEPTS-LANGUAGE
+tap:#touchpad button[data-aakey="Enter"]
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2500
+shot:01-first-setup-reached-by-tapping
+
+# "Accept" is the top item of First Setup and is already selected on arrival
+# (see docs/evidence/phase3-touch/synkey-... screenshots), so one Enter leaves.
+mark:TAP-ENTER-ACCEPTS-FIRST-SETUP
+tap:#touchpad button[data-aakey="Enter"]
+until:2:30000:[PERSISTSAVE] menu-leave
+wait:3000
+shot:02-welcome-message-reached-by-tapping
+
+# uMenu::Message has its own event loop and is dismissed by a keypress.
+mark:TAP-ENTER-DISMISSES-WELCOME
+tap:#touchpad button[data-aakey="Enter"]
+wait:2000
+
+until:1:90000:[L] NEW_ROUND
+mark:ROUND-1-STARTED-WITHOUT-A-SINGLE-KEYSTROKE
+wait:2000
+shot:03-round1-driving
+eval:window.__tg.dump('round1-before-steering')
+
+# ===========================================================================
+# T3: STEERING, BY TAPPING THE TWO HALVES OF THE SCREEN.
+# The witness is the game's own uActionTooltip counters, which start at
+# "0 2 1 1 1" and "0 3 1 1 1" and are decremented only by a turn the player's
+# cycle object accepted and executed.
+# ===========================================================================
+mark:TAP-LEFT-HALF
+tap:#tz-left:3
+wait:800
+shot:04-after-tapping-left-half
+eval:window.__tg.dump('after-tapping-left-half')
+
+mark:TAP-RIGHT-HALF
+tap:#tz-right:4
+wait:800
+shot:05-after-tapping-right-half
+eval:window.__tg.dump('after-tapping-right-half')
+
+# A second round, for the same reason the synthetic-key gate has one: a press
+# only counts while the player has a live cycle, and the human dies to the AI
+# in a few seconds.
+until:2:150000:[L] NEW_ROUND
+mark:ROUND-2-STARTED
+wait:2000
+tap:#tz-left:3
+tap:#tz-right:4
+wait:800
+shot:06-after-round2-taps
+eval:window.__tg.dump('after-round2-taps')
+
+# ===========================================================================
+# T4: ORIENTATION. Rotating the emulated phone to portrait MID-GAME.
+# ===========================================================================
+until:1:150000:[L] ROUND_WINNER
+mark:ROTATE-TO-PORTRAIT
+metrics:412:915:3
+wait:1500
+shot:07-portrait-shows-rotate-prompt
+eval:window.__tg.dump('rotated-to-portrait')
+
+mark:ROTATE-BACK-TO-LANDSCAPE
+metrics:915:412:3
+wait:1500
+shot:08-back-in-landscape
+eval:window.__tg.dump('rotated-back-to-landscape')
+
+# ===========================================================================
+# T5: the frame rate, dumped exactly as fps-resolution-probe.steps dumps it.
+# ===========================================================================
+mark:FRAME-RATE
+eval:(()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length,gl_errors:S.gl.length,gl_polls:S.polls};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})()
+
+# CONTROL: can this transcript see a browser-reported JS error at all?
+mark:positive-control-deliberate-uncaught-error-follows
+eval:setTimeout(function(){null.thisIsADeliberateUncaughtError;},0)
+wait:2000
+shot:09-after-deliberate-uncaught-error

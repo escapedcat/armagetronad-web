@@ -27,9 +27,31 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <!-- PHASE 3. WITHOUT THIS LINE THE PAGE IS NOT A MOBILE PAGE AT ALL, and
+       nothing else in this file can compensate. A page with no viewport meta is
+       laid out by Android Chrome against a ~980 CSS-px virtual viewport and
+       then scaled down to fit the screen -- so window.innerWidth reports ~980,
+       the sizing block below computes a backing store for a window that does
+       not exist, and the whole page renders zoomed out. Every desktop browser
+       ignores this element entirely, so it cannot affect the shipped Demo.
+
+       user-scalable=no is deliberate and is not the usual accessibility
+       mistake: this page is a single fixed-aspect canvas that fills the
+       viewport with no text to enlarge and nothing to pan to, and the touch
+       overlay below turns taps into game input, so a pinch-zoom leaves the
+       player looking at a corner of a game they can no longer aim at. iOS
+       Safari ignores it anyway. -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Armagetron Advanced</title>
   <style>
     html, body { height:100%; }
+    /* The touch overlay's elements carry the `hidden` attribute when they are
+       off. The UA rule for [hidden] is display:none at the lowest specificity,
+       which every `display:` below would beat -- so it is restated here with
+       !important. Without it, `hidden` is decorative and a desktop visitor gets
+       the phone controls. */
+    [hidden] { display:none !important; }
     /* Centred with flexbox, and the page never scrolls. The canvas is sized to
        the viewport, so a stray scrollbar would shrink the viewport, which would
        have made the very number the sizing block reads depend on the layout it
@@ -85,6 +107,23 @@
        i.e. what a browser that never ran the sizing block gets. */
     #canvas { display:block; flex:0 0 auto; background:#000;
               width: min(100vw, calc(100vh * var(--aa-aspect, 1.3333)));
+              /* PHASE 3: THE SECOND DECLARATION IS FOR PHONES AND IS INERT ON A
+                 DESKTOP, where dvh and vh are the same number. On a phone they
+                 are not: 100vh is the LARGE viewport (the one you get with the
+                 URL bar scrolled away) while the sizing block below reads
+                 window.innerHeight, which is the SMALL viewport (URL bar
+                 showing). Left as vh alone, the contain-fit above is solved
+                 against a taller box than exists and the canvas is cropped top
+                 and bottom by body's overflow:hidden.
+
+                 It is written as a SECOND width rather than as an edit to the
+                 first because a browser without dvh drops the whole
+                 declaration, not just the unit -- and dropping the only width
+                 would fall back to the canvas's width ATTRIBUTE, i.e. the
+                 backing store in CSS pixels, which is exactly the sea-of-black
+                 layout the rule above exists to remove. Two declarations
+                 degrade; one does not. */
+              width: min(100vw, calc(100dvh * var(--aa-aspect, 1.3333)));
               height: auto; }
     /* The canvas takes focus so it can receive keys, and the browser then draws
        its focus ring around the entire play area. Removing a focus indicator is
@@ -95,9 +134,100 @@
        the game. Do not "restore" this without also giving the page something
        to tab between. */
     #canvas:focus, #canvas:focus-visible { outline: none; }
-    #overlay { position:fixed; inset:0; display:grid; place-content:center;
+    #overlay { position:fixed; inset:0; z-index:20; display:grid; place-content:center;
                gap:1rem; text-align:center; background:#111; }
     #status.error { color:#f77; max-width:32rem; }
+
+    /* ---- PHASE 3: the touch overlay ------------------------------------
+       Every rule below is dead on a desktop: #touch and #rotate are `hidden`
+       in the markup and only the touch-detection block in the script removes
+       that attribute. The z-order is the one thing worth stating up front,
+       because three fixed layers now share the page:
+
+           30  #rotate      the portrait prompt -- over everything, including
+                            the loading overlay, because a phone visitor who
+                            loads in portrait should be told to turn the phone
+                            while the 5 MB of wasm is still downloading.
+           25  #reloadchip  the "you rotated after load" notice.
+           20  #overlay     the loading indicator (removed when main() runs).
+           10  #touch       the controls themselves, above the canvas.
+
+       touch-action:none on the whole overlay is load-bearing, not tidiness. It
+       is what stops Android Chrome treating a steering tap as the start of a
+       pan or a double-tap-to-zoom, which otherwise swallows the second tap of
+       any quick left-right-left and inserts a ~300 ms delay before the first. */
+    #touch { position:fixed; inset:0; z-index:10; touch-action:none;
+             -webkit-user-select:none; user-select:none;
+             -webkit-tap-highlight-color:transparent; }
+
+    /* THE TURN ZONES ARE HALF THE SCREEN EACH, and the size is the point. The
+       whole game is two actions, so the correct target size is "as large as it
+       can possibly be": a player steering at 30 units/s should never have to
+       look at, or aim for, a control. Discrete buttons would be smaller targets
+       bought with nothing. Held in landscape the two thumbs already rest on the
+       lower-left and lower-right, so each half is under a thumb without moving
+       the grip, and the mapping (left half turns left) needs no explaining. */
+    .tz { position:absolute; top:0; bottom:0; width:50%;
+          display:flex; align-items:center; }
+    #tz-left  { left:0;  justify-content:flex-start; padding-left:2.5vw; }
+    #tz-right { right:0; justify-content:flex-end;   padding-right:2.5vw; }
+    /* The zones are invisible except for one faint chevron each, because a
+       player who is given no hint at all taps nothing. It stays permanently
+       rather than fading on a timer: a timer is state, and the chevron at 0.16
+       is already below the threshold at which it competes with the game. */
+    .tz::after { content:'';
+                 width:5vmin; height:5vmin; opacity:.16;
+                 border-left:.9vmin solid #fff; border-bottom:.9vmin solid #fff; }
+    #tz-left::after  { transform:rotate(45deg); }
+    #tz-right::after { transform:rotate(-135deg); }
+    .tz.aa-down::after { opacity:.55; }
+
+    /* THE MENU PAD IS AT THE TOP CENTRE, and that is the deliberate part.
+       In landscape both thumbs live in the lower corners, so the top centre is
+       the one region a steering hand cannot reach by accident -- and it is the
+       one region of this game's screen that never holds anything the player has
+       to act on: the menus put their title there and the in-game HUD puts the
+       scores, speed and rubber gauges along the BOTTOM edge (see
+       docs/evidence/phase3-touch/synkey-05-boot2-round1-driving.png). It is
+       also symmetric, so it does not favour one hand. */
+    /* The strip has its own dark backdrop rather than four floating
+       translucent buttons, and that is legibility rather than decoration:
+       without it the buttons sit ON the menu title and neither is readable
+       (measured -- the first run of web/tools/touch-gate.steps put four ghost
+       rectangles across the words "Language Settings"). Occluding the title is
+       fine; smearing it is not. */
+    #touchpad { position:absolute; top:0; left:50%; transform:translateX(-50%);
+                display:flex; gap:.4rem; padding:.4rem;
+                background:rgba(0,0,0,.5); border-radius:0 0 .7rem .7rem; }
+    /* 3.4rem x 2.9rem is 54 x 46 CSS px, i.e. past the 44 px minimum touch
+       target on both axes. On a 412 px-tall landscape phone the strip is 11%
+       of the height, which is the price of the menus being usable at all. */
+    #touchpad button {
+      width:3.4rem; height:2.9rem; font:600 1.1rem/1 system-ui, sans-serif;
+      color:#eee; background:rgba(255,255,255,.13);
+      border:1px solid rgba(255,255,255,.32); border-radius:.5rem;
+      touch-action:none; -webkit-tap-highlight-color:transparent;
+    }
+    #touchpad button.aa-down { background:rgba(255,255,255,.34); }
+
+    /* The portrait prompt. It is a PROMPT and not a resize implementation --
+       see the long comment at the orientation block in the script. */
+    #rotate { position:fixed; inset:0; z-index:30; background:#111; color:#eee;
+              display:grid; place-content:center; gap:1rem; text-align:center;
+              padding:2rem; font:15px/1.5 system-ui, sans-serif; }
+    #rotate .glyph { font-size:3rem; }
+    #rotate p { max-width:26rem; margin:0 auto; }
+    #rotate .dim { color:#999; font-size:13px; }
+
+    #reloadchip { position:fixed; z-index:25; left:50%; bottom:.6rem;
+                  transform:translateX(-50%);
+                  display:flex; align-items:center; gap:.6rem;
+                  padding:.5rem .7rem; border-radius:.6rem;
+                  background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.25);
+                  color:#eee; font:13px/1.3 system-ui, sans-serif; }
+    #reloadchip button { color:#eee; background:rgba(255,255,255,.14);
+                         border:1px solid rgba(255,255,255,.3);
+                         border-radius:.4rem; padding:.35rem .6rem; font:13px system-ui, sans-serif; }
   </style>
 </head>
 <body>
@@ -133,6 +263,52 @@
   -->
   <canvas id="canvas" width="1024" height="768"
           tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+
+  <!--
+    ---- PHASE 3: MINIMAL TOUCH SUPPORT --------------------------------------
+
+    THE WHOLE THING IS SIX KEYS AND NO C++. Everything below turns a tap into a
+    KeyboardEvent dispatched at `document` and lets the game's existing keyboard
+    bindings do the rest. That this works at all is a measured fact, not an
+    assumption -- see docs/evidence/phase3-touch/README.md: an event with
+    isTrusted:false spends the game's own uActionTooltip counters exactly as a
+    real key press does, and the menus were walked to a running round by
+    dispatched events alone.
+
+    IT STARTS HIDDEN AND STAYS HIDDEN ON A DESKTOP. `hidden` is on both roots
+    here; only the touch-detection block in the script removes it. Nothing on
+    this page changes for the browsers the Demo currently runs on.
+
+    WHAT IS DELIBERATELY NOT HERE: brake, camera, chat, settings, and any way to
+    rebind. Minimal means playable. Two of those would also inherit open input
+    defects that are not this page's to fix -- `f` does not work even from a
+    real keyboard, and three camera actions have no binding at all (PLAN.md's
+    open items 4 and 8).
+  -->
+  <div id="touch" hidden>
+    <div class="tz" id="tz-left"  data-aakey="ArrowLeft"  aria-hidden="true"></div>
+    <div class="tz" id="tz-right" data-aakey="ArrowRight" aria-hidden="true"></div>
+    <div id="touchpad">
+      <button type="button" data-aakey="ArrowUp"   aria-label="Menu up">&#9650;</button>
+      <button type="button" data-aakey="ArrowDown" aria-label="Menu down">&#9660;</button>
+      <button type="button" data-aakey="Enter"     aria-label="Select">&#9166;</button>
+      <button type="button" data-aakey="Escape"    aria-label="Back or in-game menu">Esc</button>
+    </div>
+  </div>
+
+  <div id="rotate" hidden>
+    <div class="glyph">&#128241;&#8635;</div>
+    <p><strong>Turn your phone sideways.</strong></p>
+    <p class="dim">Armagetron draws a wide 3D view and has never been rendered
+       at a phone's portrait shape. Landscape is the only orientation this demo
+       is known to work at.</p>
+  </div>
+
+  <div id="reloadchip" hidden>
+    <span>Rotated &mdash; the picture is being stretched from the size it loaded at.</span>
+    <button type="button" id="reloadchip-go">Reload</button>
+    <button type="button" id="reloadchip-x" aria-label="Dismiss">&times;</button>
+  </div>
 
 
   <script>
@@ -352,6 +528,180 @@
         console.log('[DISPLAY] sizing failed, keeping canvas ' +
                     canvas.width + 'x' + canvas.height + ': ' + e);
       }
+    })();
+
+    // ---- PHASE 3: TOUCH INPUT ------------------------------------------
+    //
+    // THE MECHANISM, AND WHY IT IS ALLOWED TO BE THIS SMALL. Emscripten's SDL 1.2
+    // shim registers keydown/keyup/keypress on `document` (its SDL_Init sets
+    // keyboardListeningElement = document) and SDL.receiveEvent pushes whatever
+    // it is handed straight into SDL.events. It NEVER reads event.isTrusted. The
+    // only property on the delivery path that carries meaning is event.keyCode,
+    // which SDL.lookupKeyCodeForEvent maps through SDL.keyCodes -- 37 -> 1104 and
+    // 39 -> 1103, which are exactly the keysyms this game's user.cfg binds
+    // CYCLE_TURN_LEFT and CYCLE_TURN_RIGHT to. So a hand-built KeyboardEvent is
+    // indistinguishable from a real key press to everything downstream.
+    //
+    // THAT IS MEASURED, NOT REASONED. It was the gate for this whole phase,
+    // because trust demonstrably matters elsewhere in this port (a synthetic
+    // click is not a user gesture, which is why M4's audio work routed around
+    // it). web/tools/synthetic-key-gate.steps spends the game's own
+    // uActionTooltip counters with dispatched events -- CYCLE_TURN_LEFT_TOOLTIP
+    // 2 -> 0 from three synthetic ArrowLefts, CYCLE_TURN_RIGHT_TOOLTIP 3 -> 0
+    // from four synthetic ArrowRights -- and uBindPlayer::DoActivate decrements
+    // those ONLY when the player's cycle object accepted and executed the turn.
+    // docs/evidence/phase3-touch/README.md has the transcript and the caveats.
+    //
+    // DISPATCHED AT `document`, NOT AT THE CANVAS. Both work (the gate measured
+    // both), but the canvas only works by BUBBLING to document, so it depends on
+    // where in the tree the target sits. Aiming at the listener's own element
+    // removes that dependency entirely.
+    //
+    // NO ARTIFICIAL MINIMUM HOLD BETWEEN keydown AND keyup, and this was a
+    // deliberate decision rather than an omission. It looks like a race -- a
+    // flick tap could produce both within a few milliseconds, faster than the
+    // game's Asyncify-chopped loop yields -- and it is not one: receiveEvent
+    // only ever pushes onto the SDL.events array, and SDL_PollEvent drains that
+    // array in order whenever the game next asks. The turn fires on the queued
+    // keydown regardless of how long ago it was queued. A timer here would add a
+    // real hazard (a deferred keyup overtaking the next press of the same key)
+    // to remove an imaginary one.
+    (() => {
+      const KEYCODES = { ArrowLeft:37, ArrowRight:39, ArrowUp:38, ArrowDown:40,
+                         Enter:13, Escape:27 };
+      // `key` and `code` are the same string for all six of these, which is a
+      // property of the six and not a general rule. They are set because they
+      // cost nothing and because receiveEvent does consult event.key (only to
+      // decide whether to preventDefault on Backspace and Tab); keyCode is the
+      // one that decides which action the game performs.
+      const sendKey = (type, name) => {
+        const kc = KEYCODES[name];
+        document.dispatchEvent(new KeyboardEvent(type, {
+          key: name, code: name, keyCode: kc, which: kc,
+          bubbles: true, cancelable: true,
+        }));
+      };
+
+      // ---- is this a touch device? ------------------------------------
+      //
+      // '(hover: none) and (pointer: coarse)' is the media query for "the
+      // primary input is a finger", which is the question being asked -- a
+      // touchscreen laptop answers `true` to navigator.maxTouchPoints > 0 and
+      // must NOT get an overlay over its keyboard-driven game.
+      //
+      // ?touch=1 / ?touch=0 override it, for two reasons that are not the same:
+      // a harness needs to force the overlay on under device emulation (whose
+      // media features are not guaranteed to track the metrics override), and a
+      // visitor on a device this query gets wrong needs a way out. Nothing in
+      // the shipped flow sets either.
+      const decideTouch = () => {
+        try {
+          const q = new URLSearchParams(location.search).get('touch');
+          if (q === '1') return { on:true,  why:'?touch=1' };
+          if (q === '0') return { on:false, why:'?touch=0' };
+        } catch (e) { /* a browser without URLSearchParams falls through */ }
+        try {
+          const m = window.matchMedia('(hover: none) and (pointer: coarse)');
+          return { on: m.matches, why: 'media query -> ' + m.matches };
+        } catch (e) { return { on:false, why:'matchMedia threw: ' + e }; }
+      };
+
+      const touchEl = document.getElementById('touch');
+      const rotateEl = document.getElementById('rotate');
+      const chipEl = document.getElementById('reloadchip');
+      const decision = decideTouch();
+      // One machine-readable line, so a gate can assert which branch ran rather
+      // than inferring it from a screenshot.
+      console.log('[TOUCH] enabled=' + decision.on + ' (' + decision.why + ')' +
+                  ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
+      if (!decision.on) return;
+      touchEl.hidden = false;
+
+      // ---- wiring ------------------------------------------------------
+      //
+      // Pointer events rather than touch events: they are what Chrome emits for
+      // a finger AND for a mouse, so the same three handlers cover a real phone
+      // and a device-emulation run, and setPointerCapture guarantees the keyup
+      // even when the finger slides off the element it started on -- which on a
+      // half-screen steering zone it constantly does.
+      //
+      // The map is keyed by pointerId so two thumbs work: pressing both halves
+      // holds both turn keys, and lifting one releases only that one.
+      const active = new Map();
+      const down = (ev) => {
+        const el = ev.currentTarget;
+        const name = el.dataset.aakey;
+        if (!name || active.has(ev.pointerId)) return;
+        // preventDefault suppresses the compatibility mouse events and the
+        // double-tap-zoom gesture. It does NOT stop propagation, which matters:
+        // Emscripten's $autoResumeAudioContext listens for a real pointerdown/
+        // touchstart on document to resume the AudioContext, and that gesture
+        // has to keep reaching it or a phone visitor gets a silent game.
+        ev.preventDefault();
+        active.set(ev.pointerId, { name, el });
+        el.classList.add('aa-down');
+        try { el.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
+        sendKey('keydown', name);
+      };
+      const up = (ev) => {
+        const a = active.get(ev.pointerId);
+        if (!a) return;
+        active.delete(ev.pointerId);
+        a.el.classList.remove('aa-down');
+        sendKey('keyup', a.name);
+      };
+      for (const el of touchEl.querySelectorAll('[data-aakey]')) {
+        el.addEventListener('pointerdown', down);
+        el.addEventListener('pointerup', up);
+        el.addEventListener('pointercancel', up);
+      }
+
+      // ---- orientation, minimally --------------------------------------
+      //
+      // THIS IS A PROMPT, NOT A RESIZE. The backing store is sized ONCE, before
+      // boot, from innerWidth/innerHeight (see the long block above), and a
+      // rotation after that point does not move it: the game's viewport,
+      // projection and HUD layout were all computed from what it read at boot,
+      // so following the rotation properly means calling SDL_SetVideoMode again
+      // -- sr_ReinitDisplay. That path is now known to WORK (M5 task 4c measured
+      // the canvas resizing live with no context loss and two full rounds
+      // afterwards), so a real resize listener is available to whoever wants it.
+      // It is not being built here, for the reason it was not built at M5: a
+      // live re-init on every orientation flip is a much larger claim than a
+      // sentence of honest text.
+      //
+      // SO THE HONEST TEXT IS THE FEATURE. Portrait at 9:19.5 is an aspect this
+      // game has never rendered and is not worth discovering on a phone, so
+      // portrait gets a full-screen "turn it sideways" -- shown over the loading
+      // overlay too, because the useful moment to say it is while the 5 MB of
+      // wasm is still downloading. And a rotation AFTER load gets a chip that
+      // says exactly what is wrong (the picture is being stretched from the size
+      // it loaded at) and offers the one thing that fixes it.
+      //
+      // The chip's condition is "the orientation differs from the one at load",
+      // not "the orientation changed" -- rotating back really does restore the
+      // crisp picture, because the backing store never moved.
+      let mq;
+      try { mq = window.matchMedia('(orientation: portrait)'); }
+      catch (e) { return; }
+      const portraitAtLoad = mq.matches;
+      let chipDismissed = false;
+      const applyOrientation = () => {
+        rotateEl.hidden = !mq.matches;
+        if (!chipDismissed) chipEl.hidden = (mq.matches === portraitAtLoad);
+        console.log('[TOUCH] orientation portrait=' + mq.matches +
+                    ' (at load: ' + portraitAtLoad + ')');
+      };
+      document.getElementById('reloadchip-go')
+        .addEventListener('click', () => location.reload());
+      document.getElementById('reloadchip-x')
+        .addEventListener('click', () => { chipDismissed = true; chipEl.hidden = true; });
+      // addListener is the pre-2019 spelling; Safari needed it until 14. Both
+      // are tried because the cost is one line and the failure mode of neither
+      // firing is a prompt that never appears.
+      if (mq.addEventListener) mq.addEventListener('change', applyOrientation);
+      else if (mq.addListener) mq.addListener(applyOrientation);
+      applyOrientation();
     })();
 
     var Module = {

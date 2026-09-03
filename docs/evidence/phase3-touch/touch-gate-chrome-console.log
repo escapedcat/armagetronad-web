@@ -1,0 +1,142 @@
+[    698ms] [harness] mobile emulation: 915x412 CSS px dpr 3 (= 2745x1236 device px), touch on
+[    699ms] [harness] chrome: Chrome/152.0.7977.75
+[    699ms] [harness] navigating to http://localhost:8000/armagetronad.html
+[     25ms] [console.log] [DISPLAY] viewport 915x412 dpr 3 -> canvas 2745x1236
+[     25ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     26ms] [console.log] [TOUCH] orientation portrait=false (at load: false)
+[     37ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     40ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     41ms] [page] load event fired
+[     46ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[     99ms] [console.log] [PERSIST] populate ok in 37ms
+[    292ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    292ms] [console.log] [BOOT] autostart: calling main
+[    294ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    295ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    295ms] [console.error] 
+[    297ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    297ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    298ms] [console.log] 
+[    419ms] [console.log] [L] ENCODING latin1
+[    426ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    427ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    446ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    450ms] [console.error] TODO: glShadeModel
+[    453ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[    488ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    488ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    489ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    489ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    489ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1016ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1020ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})() => "probe installed"
+[   1020ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1020ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1020ms] [harness] === GAME-STARTED ===
+[  10035ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  10036ms] [console.log] [TOUCHGATE] {"phase":"landscape-at-language-menu","save":"saved","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  10037ms] [harness] eval window.__tg.dump('landscape-at-language-menu') => "landscape-at-language-menu"
+[  10135ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/00-language-menu-with-touch-controls.png
+[  10135ms] [harness] === TAP-ENTER-ACCEPTS-LANGUAGE ===
+[  10138ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10138ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10201ms] [harness] tap #touchpad button[data-aakey="Enter"] at 488,30 (1/1)
+[  10226ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10503ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10504ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13106ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/01-first-setup-reached-by-tapping.png
+[  13106ms] [harness] === TAP-ENTER-ACCEPTS-FIRST-SETUP ===
+[  13175ms] [harness] tap #touchpad button[data-aakey="Enter"] at 488,30 (1/1)
+[  13187ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  13477ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13477ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16576ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/02-welcome-message-reached-by-tapping.png
+[  16576ms] [harness] === TAP-ENTER-DISMISSES-WELCOME ===
+[  16642ms] [harness] tap #touchpad button[data-aakey="Enter"] at 488,30 (1/1)
+[  16650ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  16651ms] [console.log] [L] TEAM_CREATED web_user
+[  16651ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  16653ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  16656ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  16656ms] [console.log] [L] NEW_ROUND 2026-09-03 10:48:18 UTC+0200
+[  16673ms] [console.log] [L] TEAM_CREATED ai_team
+[  16674ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  16674ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  16674ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  16675ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  18945ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 1)
+[  18945ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  18945ms] [harness] === ROUND-1-STARTED-WITHOUT-A-SINGLE-KEYSTROKE ===
+[  21215ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/03-round1-driving.png
+[  21219ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  21219ms] [console.log] [TOUCHGATE] {"phase":"round1-before-steering","save":"saved","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  21219ms] [harness] eval window.__tg.dump('round1-before-steering') => "round1-before-steering"
+[  21219ms] [harness] === TAP-LEFT-HALF ===
+[  21292ms] [harness] tap #tz-left at 240,206 (1/3)
+[  21297ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  21660ms] [harness] tap #tz-left at 240,206 (2/3)
+[  22027ms] [harness] tap #tz-left at 240,206 (3/3)
+[  22668ms] [console.log] [L] DEATH_SUICIDE web_user
+[  22669ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  23503ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/04-after-tapping-left-half.png
+[  23507ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  23508ms] [console.log] [TOUCHGATE] {"phase":"after-tapping-left-half","save":"saved","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 3 1 1 1"}
+[  23508ms] [harness] eval window.__tg.dump('after-tapping-left-half') => "after-tapping-left-half"
+[  23508ms] [harness] === TAP-RIGHT-HALF ===
+[  23574ms] [harness] tap #tz-right at 675,206 (1/4)
+[  23723ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  23942ms] [harness] tap #tz-right at 675,206 (2/4)
+[  24310ms] [harness] tap #tz-right at 675,206 (3/4)
+[  24686ms] [harness] tap #tz-right at 675,206 (4/4)
+[  26193ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/05-after-tapping-right-half.png
+[  26197ms] [console.log] [PERSISTSAVE] js-backstop n=6
+[  26197ms] [console.log] [TOUCHGATE] {"phase":"after-tapping-right-half","save":"saved","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  26198ms] [harness] eval window.__tg.dump('after-tapping-right-half') => "after-tapping-right-half"
+[  26198ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 150000ms, have 1)
+[  27806ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  27807ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  27808ms] [console.log] [L] NEW_ROUND 2026-09-03 10:48:30 UTC+0200
+[  27810ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  27811ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  27812ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  27813ms] [harness] === ROUND-2-STARTED ===
+[  29878ms] [harness] tap #tz-left at 240,206 (1/3)
+[  30246ms] [harness] tap #tz-left at 240,206 (2/3)
+[  30614ms] [harness] tap #tz-left at 240,206 (3/3)
+[  30989ms] [harness] tap #tz-right at 675,206 (1/4)
+[  31356ms] [harness] tap #tz-right at 675,206 (2/4)
+[  31728ms] [harness] tap #tz-right at 675,206 (3/4)
+[  32100ms] [harness] tap #tz-right at 675,206 (4/4)
+[  33556ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/06-after-round2-taps.png
+[  33559ms] [console.log] [PERSISTSAVE] js-backstop n=7
+[  33560ms] [console.log] [TOUCHGATE] {"phase":"after-round2-taps","save":"saved","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  33560ms] [harness] eval window.__tg.dump('after-round2-taps') => "after-round2-taps"
+[  33560ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 1)
+[  33560ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
+[  33560ms] [harness] === ROTATE-TO-PORTRAIT ===
+[  33561ms] [harness] metrics -> 412x915 dpr 3
+[  33562ms] [console.log] [TOUCH] orientation portrait=true (at load: false)
+[  34934ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  35131ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/07-portrait-shows-rotate-prompt.png
+[  35136ms] [console.log] [PERSISTSAVE] js-backstop n=8
+[  35137ms] [console.log] [TOUCHGATE] {"phase":"rotated-to-portrait","save":"saved","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":412,"css_h":186,"inner":"412x915","dpr":3,"touch_hidden":false,"rotate_hidden":false,"chip_hidden":false,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  35137ms] [harness] eval window.__tg.dump('rotated-to-portrait') => "rotated-to-portrait"
+[  35137ms] [harness] === ROTATE-BACK-TO-LANDSCAPE ===
+[  35138ms] [harness] metrics -> 915x412 dpr 3
+[  35146ms] [console.log] [TOUCH] orientation portrait=false (at load: false)
+[  35284ms] [console.log] [L] DEATH_SUICIDE web_user
+[  36800ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/08-back-in-landscape.png
+[  36803ms] [console.log] [PERSISTSAVE] js-backstop n=9
+[  36804ms] [console.log] [TOUCHGATE] {"phase":"rotated-back-to-landscape","save":"saved","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  36804ms] [harness] eval window.__tg.dump('rotated-back-to-landscape') => "rotated-back-to-landscape"
+[  36804ms] [harness] === FRAME-RATE ===
+[  36806ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length,gl_errors:S.gl.length,gl_polls:S.polls};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => "{\"total_frames_sampled\":2089,\"rounds_started\":2,\"rounds_won\":1,\"gl_errors\":0,\"gl_polls\":69,\"overall\":{\"span_s\":7.07,\"frames\":408,\"mean_fps\":57.74,\"frame_ms\":{\"p50\":16.6,\"p90\":18,\"p99\":44.5,\"max\":83.2},\"inst_fps\":{\"median\":60.24,\"p10\":55.56,\"p01\":22.47,\"min\":12.02},\"fps_per_second\":[58,60,60,60,53,57,56],\"fps_per_second_min\":53,\"fps_per_second_median\":58},\"per_round\":[{\"span_s\":7.07,\"frames\":408,\"mean_fps\":57.74,\"frame_ms\":{\"p50\":16.6,\"p90\":18,\"p99\":44.5,\"max\":83.2},\"inst_fps\":{\"median\":60.24,\"p10\":55.56,\"p01\":22.47,\"min\":12.02},\"fps_per_second\":[58,60,60,60,53,57,56],\"fps_per_second_min\":53,\"fps_per_second_median\":58}]}"
+[  36806ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  36807ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 5383
+[  36807ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  36807ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  36807ms] [EXCEPTION] structured stack, 1 frames:
+[  36807ms]     <anonymous> @ :0:27
+[  36983ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  39129ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/touch2/09-after-deliberate-uncaught-error.png
