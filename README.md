@@ -10,10 +10,26 @@ protocol, compiled to WebAssembly with [Emscripten](https://emscripten.org/).
 
 **<https://escapedcat.github.io/armagetronad-web/>**
 
-Desktop Chrome or Firefox, keyboard required. Click **Play**, then arrow keys to
-steer. A first visit downloads **~1.67 MiB** (the edge serves the 4.33 MB wasm
-gzipped to 1.27 MB); after that it is cached, and your settings and key bindings
-persist in IndexedDB.
+<img src="docs/demo-qr.png" alt="QR code linking to https://escapedcat.github.io/armagetronad-web/" width="180" align="right">
+
+Scan the code to open it on a phone. Regenerate it with `sh web/tools/make-qr.sh`,
+which decodes what it just wrote and fails if the result does not match the URL —
+a QR pointing at a stale address looks identical to a correct one.
+
+The game starts on load — there is no Play button. A first visit downloads
+**~1.67 MiB** (the edge serves the 4.33 MB wasm gzipped to 1.27 MB); after that
+it is cached, and your settings and key bindings persist in IndexedDB.
+
+**On a desktop** (Chrome or Firefox): arrow keys steer, Escape opens the in-game
+menu, `n` toggles the browser's fullscreen.
+
+**On a phone** (Android Chrome): tap the left or right half of the screen to
+turn; a strip of four buttons at the top centre covers Up, Down, Enter and Esc
+for the menus. **Rotate to landscape before loading**, or reload after rotating.
+Touch is minimal and new — it has been driven in Chrome's device emulation but
+**not yet on real hardware**, so frame rate and memory on an actual phone are
+unmeasured. iOS is untested; every browser there is WebKit, which this port does
+not target.
 
 Single-player against AI is the committed scope. The multiplayer menu is present
 but reaches no servers — it fails to the game's own "Sorry, no server found",
