@@ -30,6 +30,21 @@
 # pad. A visitor who cannot get past the language menu has not been given mobile
 # support, so "the menus are reachable" is a gate condition and not a nicety.
 #
+# ROUND 2 MOVED THE CONTROLS AND THIS FILE MOVED WITH THEM. The Enter button is
+# gone: Enter is now a tap anywhere on the screen, so every step that used to
+# tap the pad's Enter button now taps the tap layer instead. Escape moved to a
+# button in the top-left corner. The transcript therefore differs from Phase
+# 3's line for line by design; what has NOT changed is what is asserted -- the
+# menus are reachable by taps alone, both halves steer, and the game's own
+# tooltip counters are the witness.
+#
+# AND IT GAINED THE ONE CHECK THE NEW LAYOUT NEEDS: that a tap can never mean
+# both things at once. T2b and T3b assert it STRUCTURALLY rather than by
+# sampling behaviour -- in a menu the two turn zones have no box at all, and
+# during a round the tap layer has none, because .aa-driving on the container
+# display:none's whichever the game is not asking for. Two controls that are
+# never in the box tree at the same time cannot collide.
+#
 # --headed is REQUIRED, for the reason in drive-browser.mjs's header.
 
 wait:1000
@@ -40,7 +55,7 @@ wait:1000
 eval:(()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})()
 
 # The tooltip-counter probe, as in web/tools/synthetic-key-gate.steps.
-eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})()
+eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})()
 
 until:1:90000:[BOOT] autostart
 mark:GAME-STARTED
@@ -54,8 +69,15 @@ shot:00-language-menu-with-touch-controls
 # ===========================================================================
 # T2: THE MENUS, BY TAPPING ONLY. No key: step appears anywhere below.
 # ===========================================================================
+# T2b: THE COLLISION CHECK, MENU SIDE. Before the first tap, while a menu is on
+# screen: the game reports no cycle, the container does not carry .aa-driving,
+# and BOTH turn zones have a zero box -- so the tap below cannot also be a turn,
+# and (new in round 2) a tap in a settings menu can no longer send
+# SDLK_LEFT/SDLK_RIGHT into items[selected]->LeftRight().
+eval:(()=>{const t=document.getElementById('touch');const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const p=document.getElementById('tapzone').getBoundingClientRect();const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T2b menu-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),turn_zones_have_no_box:z.every(r=>r.width===0&&r.height===0),tap_layer_area:Math.round(p.width*p.height),PASS:!t.classList.contains('aa-driving')&&z.every(r=>r.width===0&&r.height===0)&&p.width>0})})()
+
 mark:TAP-ENTER-ACCEPTS-LANGUAGE
-tap:#touchpad button[data-aakey="Enter"]
+tap:#tapzone
 until:1:30000:[PERSISTSAVE] menu-leave
 wait:2500
 shot:01-first-setup-reached-by-tapping
@@ -63,14 +85,14 @@ shot:01-first-setup-reached-by-tapping
 # "Accept" is the top item of First Setup and is already selected on arrival
 # (see docs/evidence/phase3-touch/synkey-... screenshots), so one Enter leaves.
 mark:TAP-ENTER-ACCEPTS-FIRST-SETUP
-tap:#touchpad button[data-aakey="Enter"]
+tap:#tapzone
 until:2:30000:[PERSISTSAVE] menu-leave
 wait:3000
 shot:02-welcome-message-reached-by-tapping
 
 # uMenu::Message has its own event loop and is dismissed by a keypress.
 mark:TAP-ENTER-DISMISSES-WELCOME
-tap:#touchpad button[data-aakey="Enter"]
+tap:#tapzone
 wait:2000
 
 until:1:90000:[L] NEW_ROUND
@@ -85,6 +107,12 @@ eval:window.__tg.dump('round1-before-steering')
 # "0 2 1 1 1" and "0 3 1 1 1" and are decremented only by a turn the player's
 # cycle object accepted and executed.
 # ===========================================================================
+# T3b: THE COLLISION CHECK, ROUND SIDE. The mirror of T2b: the game reports a
+# live cycle and no menu, the container carries .aa-driving, and the tap layer
+# has a zero box -- so a tap on the screen during a round steers and cannot
+# confirm anything.
+eval:(()=>{const t=document.getElementById('touch');const p=document.getElementById('tapzone').getBoundingClientRect();const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T3b round-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),tap_layer_has_no_box:p.width===0&&p.height===0,turn_zone_areas:z.map(r=>Math.round(r.width*r.height)),PASS:t.classList.contains('aa-driving')&&p.width===0&&p.height===0&&z.every(r=>r.width>0)})})()
+
 mark:TAP-LEFT-HALF
 tap:#tz-left:3
 wait:800
@@ -104,10 +132,27 @@ until:2:150000:[L] NEW_ROUND
 mark:ROUND-2-STARTED
 wait:2000
 tap:#tz-left:3
+wait:700
 tap:#tz-right:4
 wait:800
 shot:06-after-round2-taps
 eval:window.__tg.dump('after-round2-taps')
+
+# A THIRD ROUND, RIGHT ONLY, BECAUSE THE RIGHT COUNTER STARTS AT 3 AND THE
+# HUMAN DIES IN A FEW SECONDS. Phase 3 spent all four counters; the round-2
+# sequence above regularly spends only one or two of the right-hand three
+# because the cycle is already dead by the third tap -- which is a property of
+# how long the AI takes to win, not of the overlay. Round 3 exists so
+# CYCLE_TURN_RIGHT_TOOLTIP reaches 0 the way it did in Phase 3's transcript.
+until:3:150000:[L] NEW_ROUND
+mark:ROUND-3-STARTED-RIGHT-TAPS-ONLY
+wait:2000
+tap:#tz-right:2
+wait:700
+tap:#tz-right:2
+wait:800
+shot:06b-after-round3-right-taps
+eval:window.__tg.dump('after-round3-right-taps')
 
 # ===========================================================================
 # T4: ORIENTATION. Rotating the emulated phone to portrait MID-GAME.
@@ -130,6 +175,21 @@ eval:window.__tg.dump('rotated-back-to-landscape')
 # ===========================================================================
 mark:FRAME-RATE
 eval:(()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length,gl_errors:S.gl.length,gl_polls:S.polls};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})()
+
+# ===========================================================================
+# T6: ESCAPE IN THE TOP-LEFT CORNER. Last, so whatever menu it opens cannot
+# disturb the round-timing checks above. What is asserted is that the corner
+# button is where it is supposed to be, is big enough to hit, and dispatches
+# Escape -- the [TOUCH] lines and the menu that appears are the witness.
+# Whether the corner fights Android's back gesture is NOT testable here and is
+# not claimed; see the comment on the button's CSS in web/shell.html.
+# ===========================================================================
+mark:TAP-ESCAPE-IN-THE-CORNER
+eval:(()=>{const r=document.getElementById('escbtn').getBoundingClientRect();return '[TOUCHGATE] T6 escape corner '+JSON.stringify({rect:Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top),at_least_44px:r.width>=44&&r.height>=44,inset_from_left_px:Math.round(r.left),inset_from_top_px:Math.round(r.top),centre_x_px:Math.round(r.left+r.width/2)})})()
+tap:#escbtn
+wait:2500
+shot:10-after-tapping-escape-in-the-corner
+eval:window.__tg.dump('after-escape-corner-tap')
 
 # CONTROL: can this transcript see a browser-reported JS error at all?
 mark:positive-control-deliberate-uncaught-error-follows

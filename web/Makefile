@@ -159,12 +159,16 @@ CLIENT_OBJDIR := web/build-m1
 #   src/emscripten/eWebPersist.cpp M4 task 2: saves the config when the player
 #                                  leaves a menu, and exports the one function
 #                                  web/shell.html's unload backstop calls.
+#   src/emscripten/eWebInput.cpp   phone feedback round 2: exports
+#                                  aa_web_input_context(), the two bits
+#                                  web/shell.html's touch overlay reads to
+#                                  decide whether a tap means Enter or a turn.
 #
 # They have to be named here because $(SRCS) above wildcards the six game
 # source directories only, and src/emscripten/ is not one of them (it holds
 # the hand-written config.h, not game source). No extra compile rule is needed
-# for either: the $(CLIENT_OBJDIR)/%.o: src/%.cpp rule below already matches,
-# with a stem of "emscripten/eCompat" -- pattern stems may contain slashes.
+# for any of them: the $(CLIENT_OBJDIR)/%.o: src/%.cpp rule below already
+# matches, with a stem of "emscripten/eCompat" -- stems may contain slashes.
 #
 # Naming eWebPersist.cpp HERE rather than moving it into $(SRCS) is what keeps
 # the dedicated build's wasm byte-identical: $(SRCS) feeds BOTH targets, so a
@@ -175,7 +179,8 @@ CLIENT_OBJDIR := web/build-m1
 # non-existent one.)
 CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eCompat.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebPersist.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebPersist.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebInput.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1

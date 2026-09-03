@@ -183,6 +183,34 @@
              -webkit-user-select:none; user-select:none;
              -webkit-tap-highlight-color:transparent; }
 
+    /* ---- PHONE FEEDBACK ROUND 2: FOUR BUTTONS BECOME ONE ----------------
+       The maintainer asked for it in one line: "instead of showing 4 buttons,
+       return can just be 'tap the screen'? esc can be top left?". So:
+
+           Enter   a tap anywhere -- but ONLY when the game is not asking for
+                   steering, because during a round the whole screen is already
+                   the two turn zones.
+           Escape  a button in the top-left corner, always.
+           Up/Down kept, because the menus are lists and a list needs them; now
+                   two buttons in the top strip instead of four, and gone
+                   entirely while a round is running.
+
+       WHICH OF THE TWO FULL-SCREEN LAYERS IS LIVE IS THE GAME'S ANSWER, NOT
+       THE PAGE'S. #touch carries .aa-driving exactly while
+       aa_web_input_context() (src/emscripten/eWebInput.cpp) reports a live
+       local cycle and no menu on screen. Everything below is that one class
+       switching two layers; there is no second source of truth.
+
+       IT ALSO CLOSES A DEFECT PHASE 3 SHIPPED. The turn zones used to be live
+       in menus too, and uMenu::HandleEvent routes SDLK_LEFT/SDLK_RIGHT to
+       items[selected]->LeftRight() -- so on the build the maintainer is
+       playing, a tap anywhere in a settings menu silently CHANGES the value of
+       whatever row is selected. Making the zones round-only removes that. */
+    #tapzone { position:absolute; inset:0; }
+    #touch:not(.aa-driving) .tz      { display:none; }
+    #touch.aa-driving      #tapzone  { display:none; }
+    #touch.aa-driving      #touchpad { display:none; }
+
     /* THE TURN ZONES ARE HALF THE SCREEN EACH, and the size is the point. The
        whole game is two actions, so the correct target size is "as large as it
        can possibly be": a player steering at 30 units/s should never have to
@@ -225,13 +253,33 @@
     /* 3.4rem x 2.9rem is 54 x 46 CSS px, i.e. past the 44 px minimum touch
        target on both axes. On a 412 px-tall landscape phone the strip is 11%
        of the height, which is the price of the menus being usable at all. */
-    #touchpad button {
+    #touchpad button, #escbtn {
       width:3.4rem; height:2.9rem; font:600 1.1rem/1 system-ui, sans-serif;
       color:#eee; background:rgba(255,255,255,.13);
       border:1px solid rgba(255,255,255,.32); border-radius:.5rem;
       touch-action:none; -webkit-tap-highlight-color:transparent;
     }
-    #touchpad button.aa-down { background:rgba(255,255,255,.34); }
+    #touchpad button.aa-down, #escbtn.aa-down { background:rgba(255,255,255,.34); }
+
+    /* ESCAPE IN THE TOP-LEFT CORNER -- INSET FROM IT, WHICH IS THE WHOLE
+       CARE HERE. Android's back gesture is an edge swipe: a drag that STARTS
+       inside a system gesture strip running down the left and right edges,
+       typically 20-40 dp wide. A stationary tap does not trigger it, and this
+       button is inset far enough that even a sloppy one starts outside the
+       strip -- .6rem of margin puts its left edge at ~10 px and its centre,
+       which is where a thumb actually lands, at ~37 px. The notification shade
+       is the same shape of gesture from the top edge and the same .6rem
+       applies. env(safe-area-inset-*) moves it clear of a notch, which in
+       landscape is on one of the short edges and therefore exactly here.
+
+       NOT VERIFIED ON A DEVICE, and it cannot be: Chrome's device emulation
+       has no Android system gestures to collide with. What is stated above is
+       the geometry and Android's documented gesture insets, not a measurement.
+       If the corner turns out to fight the back gesture, the fix is to raise
+       this one number. */
+    #escbtn { position:absolute;
+              top:calc(.6rem + env(safe-area-inset-top, 0px));
+              left:calc(.6rem + env(safe-area-inset-left, 0px)); }
 
     /* The portrait prompt. It is a PROMPT and not a resize implementation --
        see the long comment at the orientation block in the script. */
@@ -322,15 +370,30 @@
     defects that are not this page's to fix -- `f` does not work even from a
     real keyboard, and three camera actions have no binding at all (PLAN.md's
     open items 4 and 8).
+
+    ROUND 2 CHANGED THE LAYOUT AND NOT THE MECHANISM. Six keys still, still
+    dispatched as KeyboardEvents at `document`; what moved is which surface
+    sends which key and when. See the .aa-driving comment in the stylesheet.
   -->
   <div id="touch" hidden>
+    <!--
+      The tapzone below is Enter and nothing else. It is a LAYER rather than a
+      button because "tap the screen" is what was asked for, and it is a
+      SIBLING of
+      the two turn zones rather than their parent, because the two are never
+      live at the same time: .aa-driving on the container hides whichever the
+      game is not asking for. The three controls below it come later in the
+      document and therefore paint on top of it, which is what makes a tap on
+      one of them not also count as a tap on the screen.
+    -->
+    <div id="tapzone" aria-hidden="true"></div>
     <div class="tz" id="tz-left"  data-aakey="ArrowLeft"  aria-hidden="true"></div>
     <div class="tz" id="tz-right" data-aakey="ArrowRight" aria-hidden="true"></div>
+    <button type="button" id="escbtn" data-aakey="Escape"
+            aria-label="Back or in-game menu">Esc</button>
     <div id="touchpad">
       <button type="button" data-aakey="ArrowUp"   aria-label="Menu up">&#9650;</button>
       <button type="button" data-aakey="ArrowDown" aria-label="Menu down">&#9660;</button>
-      <button type="button" data-aakey="Enter"     aria-label="Select">&#9166;</button>
-      <button type="button" data-aakey="Escape"    aria-label="Back or in-game menu">Esc</button>
     </div>
   </div>
 
@@ -853,6 +916,136 @@
         el.addEventListener('pointerup', up);
         el.addEventListener('pointercancel', up);
       }
+
+      // ---- PHONE FEEDBACK ROUND 2: which key does a tap on the screen mean?
+      //
+      // THE GAME ANSWERS, NOT THE PAGE. src/emscripten/eWebInput.cpp exports
+      // aa_web_input_context(), two bits: a uMenu is on screen, and a local
+      // player has a cycle that is Alive(). The page cannot derive either --
+      // a menu item can start the game, a round can end by itself, and Escape
+      // mid-round opens the in-game menu, none of which reaches this script.
+      //
+      // THE POLICY IS HERE AND THE FACTS ARE THERE, deliberately. "Driving"
+      // means a live cycle AND no menu: the in-game menu is reached with
+      // Escape in the middle of a round, so the cycle is still alive while a
+      // menu is asking for Enter, and a rule that looked only at the cycle
+      // would put the turn zones over the top of that menu.
+      //
+      // CALLING INTO WASM FROM HERE IS SAFE FOR ONE SPECIFIC REASON, not as a
+      // general licence: aa_web_input_context() reads a static bool and walks
+      // at most four pointers, so it cannot reach emscripten_sleep, so
+      // Asyncify does not instrument it and there is no second stack unwind to
+      // start on top of the one the game is nearly always parked in. The same
+      // argument the unload backstop stands on, and this one is weaker still
+      // because it writes nothing. Before main() has run the export is a
+      // makeInvalidEarlyAccess stub whose body is abort(), which is what the
+      // gameStarted test guards -- `typeof` would report it as a function.
+      const AA_CTX_MENU = 1, AA_CTX_DRIVING = 2;    // src/emscripten/eWebInput.cpp
+      const readContext = () => {
+        try {
+          // gameStarted IS INSIDE THE try ON PURPOSE. It is a `let` declared
+          // further down this same script, so the first applyContext() below
+          // -- which runs while this IIFE is still executing -- reads it
+          // inside its temporal dead zone and throws a ReferenceError. That
+          // is a correct answer, not an error: before main() there is no
+          // context, and 0 is what this returns. Moving the test outside the
+          // try would make the page fail to load.
+          if (!gameStarted) return 0;
+          return Module._aa_web_input_context() | 0;
+        } catch (e) { return 0; }
+      };
+      // 0 is the honest answer for "the game has not started" and for any
+      // throw, and 0 means NOT driving, i.e. a tap is Enter. That is the safe
+      // side of the failure: a tap that confirms nothing during a round the
+      // player is not in costs a tap, while a tap that TURNS THEM inside a
+      // menu changes a setting they never chose.
+      const isDriving = (ctx) => (ctx & AA_CTX_DRIVING) !== 0 &&
+                                 (ctx & AA_CTX_MENU) === 0;
+
+      // RELEASING THE HELD KEYS ON EVERY CHANGE IS A BUG FIX, NOT TIDINESS. A
+      // player holding a turn when their cycle dies would otherwise have the
+      // zone go display:none under their thumb, and a pointerup on an element
+      // with no box is not guaranteed to arrive -- so ArrowLeft would stay
+      // down for ever, from the game's point of view, and steer the next
+      // round. Pointer capture does not save this: the specification releases
+      // it implicitly on removal from the document, and browsers differ on
+      // whether display:none counts.
+      const releaseAllKeys = (why) => {
+        if (!active.size) return;
+        for (const [, a] of active) {
+          a.el.classList.remove('aa-down');
+          sendKey('keyup', a.name);
+        }
+        console.log('[TOUCH] released ' + active.size + ' held key(s): ' + why);
+        active.clear();
+      };
+
+      let lastCtx = -1;
+      const applyContext = () => {
+        const ctx = readContext();
+        if (ctx === lastCtx) return;
+        const wasDriving = lastCtx >= 0 && isDriving(lastCtx);
+        lastCtx = ctx;
+        const driving = isDriving(ctx);
+        if (driving !== wasDriving) releaseAllKeys('input context changed');
+        touchEl.classList.toggle('aa-driving', driving);
+        // One machine-readable line per transition, so the touch gate can
+        // assert the state the game was in rather than inferring it from a
+        // screenshot. It is per TRANSITION, not per poll: at 4 Hz for a whole
+        // round the latter would bury the transcript it is meant to explain.
+        console.log('[TOUCH] context ' + ctx +
+                    ' (menu ' + ((ctx & AA_CTX_MENU) ? 'yes' : 'no') +
+                    ', cycle ' + ((ctx & AA_CTX_DRIVING) ? 'alive' : 'no') +
+                    ') -> ' + (driving ? 'STEERING' : 'TAP=ENTER'));
+      };
+      window.AA_INPUT_CONTEXT = readContext;   // for the gate, not for the page
+      // 250 ms is the appearance only -- a control that is a quarter-second
+      // late to appear is invisible to a player, and every tap re-reads the
+      // context itself, so nothing acts on a stale value.
+      setInterval(applyContext, 250);
+      applyContext();
+
+      // ---- the tap-anywhere layer ---------------------------------------
+      //
+      // ON pointerup AND NOT ON pointerdown, and after a movement and time
+      // test, because "tap the screen" has to mean a tap. Enter is a
+      // destructive key in a menu -- it commits whatever row is selected --
+      // and a layer that fired on first contact would commit on a thumb
+      // brushing the glass while the player is reading. 24 px and 700 ms are
+      // the usual click-slop shape; anything longer or further is a drag and
+      // is ignored rather than treated as a press.
+      //
+      // THE CONTEXT IS RE-READ AT pointerup, not trusted from the poll. The
+      // 250 ms timer above only decides what is on screen; a round that ended
+      // between a finger landing and lifting must not send a turn.
+      const TAP_SLOP_PX = 24, TAP_MS = 700;
+      const taps = new Map();
+      const tapzone = document.getElementById('tapzone');
+      tapzone.addEventListener('pointerdown', (ev) => {
+        ev.preventDefault();   // the same reason as `down` above; see it
+        taps.set(ev.pointerId, { x: ev.clientX, y: ev.clientY, t: Date.now() });
+      });
+      const endTap = (ev, fire) => {
+        const t = taps.get(ev.pointerId);
+        if (!t) return;
+        taps.delete(ev.pointerId);
+        if (!fire) return;
+        const moved = Math.hypot(ev.clientX - t.x, ev.clientY - t.y);
+        const held = Date.now() - t.t;
+        if (moved > TAP_SLOP_PX || held > TAP_MS) {
+          console.log('[TOUCH] tap ignored (moved ' + Math.round(moved) +
+                      'px, held ' + held + 'ms)');
+          return;
+        }
+        if (isDriving(readContext())) {
+          console.log('[TOUCH] tap ignored: the game is asking for steering');
+          return;
+        }
+        sendKey('keydown', 'Enter');
+        sendKey('keyup', 'Enter');
+      };
+      tapzone.addEventListener('pointerup',     (ev) => endTap(ev, true));
+      tapzone.addEventListener('pointercancel', (ev) => endTap(ev, false));
 
       // ---- orientation: now a BOOT HOLD, not only a prompt ---------------
       //
@@ -1486,7 +1679,17 @@
                            (dbOK ? '  MATCH' : '  CLAMPED') : '(no context yet)'),
             'fps ' + swapsPerSec + ' swaps/s' +
               '   cam x' + (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1) +
-              '   touch ' + (window.AA_TOUCH ? 'on' : 'off')
+              '   touch ' + (window.AA_TOUCH ? 'on' : 'off'),
+            // The two bits src/emscripten/eWebInput.cpp reports and the one
+            // decision the overlay makes from them. On a phone this is the
+            // only way to see WHY a tap did what it did.
+            'ctx ' + (window.AA_INPUT_CONTEXT ?
+                        (() => { const c = window.AA_INPUT_CONTEXT();
+                                 return c + ' menu ' + ((c & 1) ? 'y' : 'n') +
+                                        ' cycle ' + ((c & 2) ? 'y' : 'n') +
+                                        ' -> ' + (((c & 2) && !(c & 1)) ?
+                                                  'STEER' : 'TAP=ENTER'); })()
+                      : 'n/a (desktop)')
           ];
           el.textContent = rows.join('\n');
           el.className = (gl && !dbOK) || Math.abs(err) > 0.5 ? 'bad' : '';
