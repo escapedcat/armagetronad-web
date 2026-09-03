@@ -21,8 +21,9 @@ own — **the user decides**.
 
 ## What is here
 
-Everything below is one run of `web/tools/touch-gate.steps` (its new **T7**
-section), plus one run of the **unchanged** desktop `web/tools/menu-gate.steps`.
+One run of `web/tools/touch-gate.steps` (its new **T7** section, P1–P6), plus one
+run of the **unchanged** desktop `web/tools/menu-gate.steps`, both against the
+same build.
 
     python3 -m http.server 8001 --directory web/dist-m1 &
     node web/tools/drive-browser.mjs --headed --mobile 915,412,3 \
@@ -37,77 +38,81 @@ while an overlay is over a running game.
 
 | file | what it proves |
 |---|---|
-| `touch-gate-console.log` | the whole run, 15 screenshots' worth of transcript. The four `[PORTRAITGATE]` lines are the checks; everything before them is the touch gate as it already was, still passing (`T2b`, `T3b`, `T6`). |
+| `touch-gate-console.log` | the whole run: four boots, six `[PORTRAITGATE]` checks, and the touch gate as it already was still passing around them (`T2b`, `T3b`, `T6`). Two `[EXCEPTION]` lines, both the script's own positive control; one 404, and it is `/favicon.ico`. |
 | `00-language-menu-with-touch-controls.png` | the landscape boot, unchanged. No prompt, controls up, canvas 2745x1236. |
-| `11-portrait-prompt-after-boot-has-the-button.png` | **P1.** The phone turned to portrait with the game already running. The prompt is up and **the button is on it** — this is exactly the state the maintainer could not get out of. |
-| `12-portrait-boot-after-choosing-play-in-portrait.png` | **P2/P3.** One tap later: the page reloaded and booted in portrait. No prompt, no chip, touch controls up, and the canvas is 1236x2745 — the game is drawn **for** portrait, not letterboxed into it. |
+| `11-portrait-prompt-after-boot-has-the-button.png` | **P1.** The phone turned to portrait with the game already running. The prompt is up, **the button is on it**, and it says the game will restart — this is exactly the state the maintainer could not get out of. |
+| `12-portrait-boot-after-choosing-play-in-portrait.png` | **P2/P3.** One tap later: the page reloaded and booted in portrait. No prompt, no chip, touch controls up, canvas 1236x2745 — the game is drawn **for** portrait, not letterboxed into it. |
+| `12b-landscape-with-the-choice-stored.png` | **P5.** With the answer stored, turning the phone back to landscape: the prompt stays down and the **chip comes up**, offering the reload that would redraw for landscape. The chip is about the orientation the player is *not* in, which is the half P3 cannot show. |
 | `13-portrait-ask-restores-the-prompt.png` | **P4.** `?portrait=ask` cleared the stored answer; the prompt is back, the boot is held again, and the "the game starts by itself" line is showing again because it is true again. |
+| `13b-portrait-prompt-with-ask-still-in-the-url.png` | **P6, precondition.** The game booted from that `?portrait=ask` page and the phone was turned back to portrait. Byte-identical to `11` — the page looks the same; what differs is the URL, and therefore what the tap used to do. |
+| `14-ask-dropped-and-portrait-kept.png` | **P6.** The tap from that URL: the reload dropped `?portrait=ask`, kept the answer, and booted portrait unheld. |
 | `desktop-menu-gate-console.log` | the desktop gate, **unchanged**, against the same build: ten screenshots, zero `[EXCEPTION]`s, one 404 and it is `/favicon.ico`. Its one relevant line is `[TOUCH] enabled=false (media query -> false)` — the touch block returns before any of this exists, so the transcript contains no `play in portrait`, no `aa.portrait` and no `portrait at load` line at all. A desktop visitor sees no change, by construction rather than by inspection. |
 
-## The four checks, as the transcript records them
+## The six checks, as the transcript records them
 
-    [PORTRAITGATE] P1 prompt-after-boot {"rotate_hidden":false,"button":"128x44@142,536",
-      "label":"Play in portrait","held_note_hidden":true,"boot_held":false,
-      "stored":null,"PASS":true}
+    [PORTRAITGATE] P1 prompt-after-boot {"rotate_hidden":false,"button":"128x44@142,528",
+      "label":"Play in portrait","held_note_hidden":true,"restart_note_hidden":false,
+      "boot_held":false,"stored":null,"PASS":true}
 
     [PORTRAITGATE] P2/P3 portrait-boot {"stored":"play","boot_held":false,
       "rotate_hidden":true,"chip_hidden":true,"inner":"412x915","canvas":"1236x2745",
-      "canvas_portrait":true,"aspect":0.45,"css":"412x915","touch_hidden":false,
-      "PASS":true}
+      "canvas_portrait":true,"aspect":0.45,"css":"412x915","touch_hidden":false,"PASS":true}
 
-    [PORTRAITGATE] P4 portrait=ask {"search":"?portrait=ask","stored":null,
-      "boot_held":true,"rotate_hidden":false,"held_note_hidden":false,
+    [PORTRAITGATE] P5 rotated-to-landscape {"stored":"play","rotate_hidden":true,
+      "chip_hidden":false,"inner":"915x412","canvas":"1236x2745","PASS":true}
+
+    [PORTRAITGATE] P4 portrait=ask {"search":"?portrait=ask","stored":null,"boot_held":true,
+      "rotate_hidden":false,"held_note_hidden":false,"restart_note_hidden":true,
       "button_present":true,"PASS":true}
+
+    [PORTRAITGATE] P6 precondition {"search":"?portrait=ask","rotate_hidden":false,
+      "boot_held":false,"PASS":true}
+
+    [PORTRAITGATE] P6 ask-dropped {"search":"","stored":"play","boot_held":false,
+      "rotate_hidden":true,"canvas":"1236x2745","canvas_portrait":true,"PASS":true}
 
 **P1** is the regression test for the defect itself: the prompt raised *after*
 the boot carries the button, at 128x44 CSS px — past the 44 px touch-target
-minimum on both axes, which it was **not** when this gate was first run. The
-first run measured it at **128x38** and failed; `min-height:44px` in the
-stylesheet is that failure, fixed. The `held_note_hidden:true` is the other half
-of the prompt being state-aware: "the game starts by itself the moment you turn
-the phone" is true only while the boot is held, and the game is already running
-behind this overlay.
+minimum on both axes, which it was **not** when this gate was first run. That run
+measured **128x38** and failed; `min-height:44px` in the stylesheet is that
+failure, fixed. `held_note_hidden:true` with `restart_note_hidden:false` is the
+prompt being state-aware in both directions: "the game starts by itself the
+moment you turn the phone" is true only while the boot is held, and "the game
+restarts to redraw at the new shape" is true only after it. P4 shows the same two
+flags the other way round.
 
-**P2** is the answer being honoured. The tap stored `aa.portrait=play` and
-reloaded; the reloaded page read the answer, held nothing, and sized the backing
-store for the viewport it was actually in. Two lines from the page say it:
+**P2** is the answer being honoured, in the page's own words:
 
-    [  55745ms] [TOUCH] play in portrait chosen (stored for next load: true)
-    [  55745ms] [BOOT] reloading to size the canvas for portrait
+    [  55747ms] [TOUCH] play in portrait chosen (stored for next load: true)
+    [  55747ms] [BOOT] reloading to size the canvas for portrait
     [  55774ms] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x2745 aspect 0.4503
     [  55776ms] [TOUCH] play in portrait: true (localStorage aa.portrait)
     [  55776ms] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
-    [  55836ms] [BOOT] autostart: calling main
+    [  55820ms] [BOOT] autostart: calling main
 
-**P3** is `chip_hidden:true` in the same line. The reload chip is not the prompt
-in miniature and was left alone: its sentence is "the backing store is for the
-other orientation, so this is letterboxed and soft" and its button is the reload
-that fixes exactly that. On the boot the stored answer produces, the orientation
-on screen and the one the canvas was measured for agree, so it stays hidden.
+**P3 and P5 are the same claim from both sides.** The reload chip was left alone
+on purpose: its sentence is "the backing store is for the other orientation, so
+this is letterboxed and soft" and its button is the reload that fixes exactly
+that. P3 says it stays hidden when the orientation on screen and the one the
+canvas was measured for agree; P5 says it appears when they do not. P3 on its own
+would also pass if the chip were simply broken.
+
+**P6 is a defect the review found before a player did.** The post-boot path ends
+in a reload, and a bare `location.reload()` re-runs the query string — so a page
+entered at `?portrait=ask` would, on that reload, re-run the clear and delete the
+answer the tap had just stored, landing HELD with the prompt up. Two taps for one
+decision. P6 walks that path end to end: release the hold so the game boots with
+the parameter still in the URL (`13b`), turn back to portrait, tap, and check what
+comes back. `"search":""` is the parameter gone, `"stored":"play"` is the answer
+intact, `"boot_held":false` is the page **not** held, and `1236x2745` is portrait.
 
 **The absence is proved by a counter, not by an assertion.** A gate cannot wait
-for a line that never comes, so `until:` is used the other way round:
+for a line that never comes, so `until:` is used the other way round.
 `[BOOT] portrait at load: HOLDING main()` appears **exactly once** in the whole
-transcript, and it is at 65180 ms — *after* the `P4-PORTRAIT-ASK` mark at
-65157 ms. The portrait boot at 55836 ms therefore held nothing, which is the
-claim. `[BOOT] autostart: calling main` appears twice, at 342 ms and 55836 ms:
-one boot before the tap and one after.
-
-## One driver run, not two
-
-The mid-script `location.reload()` did **not** need splitting. `drive-browser.mjs`
-attaches to a *target*, not to a document, so the console stream and
-`Runtime.evaluate` carry on into the new page (`touch-portrait-probe.steps` has
-reloaded mid-script since Phase 3). Two consequences are written into the steps
-file because they are easy to get wrong:
-
-1. `until:` counts the **whole** transcript and does not reset at a navigation,
-   so the second boot is `until:2:...:[BOOT] autostart`. That same property is
-   what makes the absence proof above work.
-2. The page globals do not survive. `window.__fps` and `window.__tg` — the frame
-   sampler and the dump probe the rest of the gate uses — are gone after the
-   reload, which is why T7 is the **last** section and why its own checks are
-   self-contained one-liners.
+transcript, at 68772 ms — after the `P4-PORTRAIT-ASK` mark at 68727 ms and before
+P6 releases it. The four boots are at 319 ms (the first load), 55820 ms (P2's
+reload), 71918 ms (P6's release) and 82222 ms (P6's reload), and only the page
+between P4 and P6 was ever held.
 
 ## What is NOT claimed
 
