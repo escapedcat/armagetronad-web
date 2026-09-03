@@ -10,11 +10,29 @@ protocol, compiled to WebAssembly with [Emscripten](https://emscripten.org/).
 
 **<https://escapedcat.github.io/armagetronad-web/>**
 
-Desktop Chrome or Firefox, keyboard required. It starts on its own — arrow keys
-steer. A first visit transfers **1.668 MiB** (the edge serves the 4.33 MB wasm
-gzipped to 1.27 MB); after that it is cached, and your settings and key bindings
-persist in IndexedDB. The canvas is sized from your window at page load, so
-maximise before reloading if you want the sharpest image.
+<img src="docs/demo-qr.png" alt="QR code linking to https://escapedcat.github.io/armagetronad-web/" width="180" align="right">
+
+Scan the code to open it on a phone. Regenerate it with `sh web/tools/make-qr.sh`,
+which decodes what it just wrote and fails if the result does not match the URL —
+a QR pointing at a stale address looks identical to a correct one.
+
+The game starts on load — there is no Play button. A first visit downloads
+**~1.67 MiB** (the edge serves the 4.33 MB wasm gzipped to 1.27 MB); after that
+it is cached, and your settings and key bindings persist in IndexedDB. The canvas
+is sized from your window at page load, so maximise before reloading if you want
+the sharpest image.
+
+**On a desktop** (Chrome or Firefox): arrow keys steer, Escape opens the in-game
+menu, `n` toggles the browser's fullscreen.
+
+**On a phone** (Android Chrome): tap the left or right half of the screen to
+turn. In the menus a tap anywhere is Enter, Up and Down are the two buttons at
+the top centre, and Escape is the button in the top-left corner; the game tells
+the page whether a menu is open or a round is running, so a tap never means two
+things at once. **Rotate to landscape before loading**, or reload after rotating.
+It has been played on a real phone and it plays; the frame rate on a phone is the
+open item. iOS is untested; every browser there is WebKit, which this port does
+not target.
 
 Single-player against AI is the committed scope: the multiplayer menu is present
 but reaches no servers. Safari is not a target.
