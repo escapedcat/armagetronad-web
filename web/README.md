@@ -1058,3 +1058,14 @@ the recording contains none — the divergence risk in the plan's register is
 untested, not retired. Also note that `Uptime: 0 seconds.` only appears when
 `tRecorder::IsRunning()` (`gGame.cpp:163`), so a recording or playback run is
 one line longer than a plain one; that is the recorder, not a divergence.
+
+## Repository settings, kept as code
+
+The one live finding of the 2026-09-03 security audit was that `main` had no
+protection while CI deploys on merge. Protection is a GitHub *setting*, which a
+pull request cannot carry, so the setting lives here as `.github/rulesets/main.json`
+and `sh web/tools/apply-repo-settings.sh` makes the repository match it (idempotent;
+read its header). It requires a pull request and a green PR build check to change
+`main`, forbids force-push and deletion, binds the admin too, and turns Dependabot
+vulnerability alerts on. The three GitHub actions in use are pinned by commit SHA
+with the version as a comment; Dependabot keeps both current.

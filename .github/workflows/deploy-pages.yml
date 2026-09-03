@@ -56,12 +56,12 @@ on:
       - '**.md'
       - 'docs/**'
       - '.github/workflows/upstream-watch.yml'
+  # No paths filter here, on purpose. This job is a REQUIRED status check on
+  # main (.github/rulesets/main.json), and a required check that never runs on
+  # a docs-only PR leaves that PR unmergeable forever. Two minutes of build on
+  # a README change is the price of a rule that cannot wedge.
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.github/workflows/upstream-watch.yml'
   workflow_dispatch:
 
 # gh-pages is force-pushed as a single parentless commit; two deploys racing
@@ -98,7 +98,7 @@ jobs:
       # the first link compiles -- the network-bound half of a first build.
       - name: Restore emsdk
         id: emsdk-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: deps/emsdk
           key: emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
@@ -119,7 +119,7 @@ jobs:
 
       - name: Restore libxml2
         id: libxml2-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: deps/build/libxml2-install
           key: libxml2-${{ hashFiles('deps/build-libxml2.sh') }}-emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
