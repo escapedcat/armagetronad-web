@@ -97,7 +97,16 @@ which would end the byte-identity check that guards the source files
 both builds share — 2,488,298 bytes **and** md5 `9718a2a64978cb6e9b95ea2f0454cca5`.
 It is worth naming both halves: M4 task 3 measured an unguarded change that links
 to exactly the right size with the wrong md5, so a size-only reading of this
-tripwire would have passed it.
+tripwire would have passed it. **There are now two platform pins, not one.**
+That figure is the Mac pin, measured on the maintainer's machine; `checks.yml`'s
+own first run showed a Linux runner on the identical emsdk 6.0.8 does not
+reproduce it — same source, same toolchain, a dedicated wasm 16 bytes smaller
+at 2,488,282 bytes, md5 `ecb69e501f47c1a35cfe544ec0fe4e15` — so CI asserts
+whichever of the two pins the platform it runs on actually produces (see the
+comment above `LINUX_PIN_BYTES` in `checks.yml` for the run that established
+the second number) rather than weakening the check to size alone or
+overwriting this one with a number nobody measured on this machine. The Mac
+pin above stays the invariant a local rebuild is judged against.
 
 **`--daemon < /dev/null` is mandatory, and dropping it is the one real trap.**
 Without it the process sits at ~0% CPU with a shorter log, looking calm — but
@@ -709,9 +718,11 @@ is exactly what the workflow runs.
 2026-09-03) add two things the build-and-gate above does not cover. The
 `dedicated-pin` job builds the *other* wasm — the M0 dedicated server, which
 `deploy-pages.yml` never touches — and asserts the byte invariant this file
-states above under *Known limitations*: 2,488,298 bytes **and** md5
-`9718a2a64978cb6e9b95ea2f0454cca5`, both halves, the way size alone once
-matched a build with the wrong md5. The `scripts` job runs `shellcheck` over
+states above under *Known limitations*, both halves (size and md5), the way
+size alone once matched a build with the wrong md5. It asserts whichever of
+the *two platform pins* (see above) the runner it built on actually produces,
+printing both measured values first so a failing log needs no re-run to
+explain itself. The `scripts` job runs `shellcheck` over
 `web/tools/*.sh` and `deps/*.sh` and `node --check` over every
 `web/tools/*.mjs`, so a script that cannot parse or has a real quoting bug
 fails the PR instead of the next person to run it. There is deliberately no

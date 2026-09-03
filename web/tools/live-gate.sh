@@ -136,8 +136,9 @@ fi
 # which is why they are fed through "$@" rather than interpolated.
 # shellcheck disable=SC2329 # invoked indirectly: drive() below calls it via "$@"
 firefox_run() { # firefox_run <outdir> <steps>
-  # shellcheck disable=SC2090,SC2086 # unquoted on purpose, see FF_PREFS above
+  # shellcheck disable=SC2090,SC2086,SC2317 # unquoted on purpose (FF_PREFS above); reachable via drive(), see above
   set -- --out "$1" --url "$URL/$PAGE" --script-file "$2" $FF_PREFS
+  # shellcheck disable=SC2317 # reachable via drive(), see above
   node "$ROOT/web/tools/drive-firefox.mjs" "$@"
 }
 

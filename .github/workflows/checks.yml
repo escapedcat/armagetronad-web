@@ -10,7 +10,13 @@
 #                  9718a2a64978cb6e9b95ea2f0454cca5". Size alone has already
 #                  passed a build with the wrong md5 once (M4 task 3); this
 #                  asserts both halves, the way every milestone since has had
-#                  to remember to do by hand.
+#                  to remember to do by hand. TWO PINS, NOT ONE: this
+#                  workflow's own first run showed a Linux build of the same
+#                  source under the same emsdk 6.0.8 does not reproduce the
+#                  Mac pin -- see the comment above LINUX_PIN_BYTES below for
+#                  the run that established the second number, and
+#                  web/README.md for why the Mac pin still stands as the
+#                  local invariant.
 #
 #   scripts        shellcheck on the shell scripts and `node --check` on the
 #                  ES modules under web/tools/ and deps/. Nothing here runs
@@ -49,9 +55,9 @@ jobs:
     name: dedicated server byte pin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22'
 
@@ -60,7 +66,7 @@ jobs:
       # run share the same cache entries instead of each keeping a cold copy.
       - name: Restore emsdk
         id: emsdk-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: deps/emsdk
           key: emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
@@ -81,7 +87,7 @@ jobs:
 
       - name: Restore libxml2
         id: libxml2-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: deps/build/libxml2-install
           key: libxml2-${{ hashFiles('deps/build-libxml2.sh') }}-emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
@@ -114,17 +120,30 @@ jobs:
           echo "measured: $BYTES bytes, md5 $MD5"
 
           # The local invariant (web/README.md), established on the
-          # maintainer's macOS. Asserted here first: if a Linux runner
-          # reproduces it, one pin covers both platforms and nothing else is
-          # needed.
+          # maintainer's macOS.
           MAC_PIN_BYTES=2488298
           MAC_PIN_MD5=9718a2a64978cb6e9b95ea2f0454cca5
           echo "Mac pin (web/README.md, local invariant): $MAC_PIN_BYTES bytes, md5 $MAC_PIN_MD5"
 
+          # This workflow's own first run answered the question web/README.md
+          # asks (does a Linux runner reproduce the Mac pin?) with "no": same
+          # source, same emsdk 6.0.8, a wasm 16 bytes SMALLER with a different
+          # md5. That run is where these two numbers come from --
+          # https://github.com/escapedcat/armagetronad-web/actions/runs/33772244626/job/100705140914
+          # -- recorded here rather than silently adopted, per
+          # web/README.md's "Deploying to GitHub Pages" note on why there are
+          # now two platform pins. The Mac pin above stays the local
+          # invariant; this is what CI actually asserts.
+          LINUX_PIN_BYTES=2488282
+          LINUX_PIN_MD5=ecb69e501f47c1a35cfe544ec0fe4e15
+          echo "Linux pin (this workflow, ubuntu-latest, emsdk $AA_EMSDK_VERSION): $LINUX_PIN_BYTES bytes, md5 $LINUX_PIN_MD5"
+
           if [ "$BYTES" = "$MAC_PIN_BYTES" ] && [ "$MD5" = "$MAC_PIN_MD5" ]; then
             echo "PASS: matches the Mac pin"
+          elif [ "$BYTES" = "$LINUX_PIN_BYTES" ] && [ "$MD5" = "$LINUX_PIN_MD5" ]; then
+            echo "PASS: matches the Linux pin"
           else
-            echo "FAIL: measured $BYTES bytes / md5 $MD5 does not match the Mac pin $MAC_PIN_BYTES / $MAC_PIN_MD5" >&2
+            echo "FAIL: measured $BYTES bytes / md5 $MD5 matches NEITHER the Mac pin ($MAC_PIN_BYTES / $MAC_PIN_MD5) NOR the Linux pin ($LINUX_PIN_BYTES / $LINUX_PIN_MD5)" >&2
             exit 1
           fi
 
@@ -132,9 +151,9 @@ jobs:
     name: shellcheck + node --check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22'
 
