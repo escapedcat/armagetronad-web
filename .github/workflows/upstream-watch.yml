@@ -41,7 +41,7 @@ jobs:
           # merge-base against upstream needs real history, not a shallow clone.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
 
