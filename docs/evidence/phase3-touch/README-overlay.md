@@ -222,3 +222,38 @@ Everything below is *not measured* by anything in this directory:
    reopens the WebKit question this port has deliberately never answered.
 7. **Whether the left/right halves are the right ergonomics** for someone
    actually holding a phone, as opposed to someone reasoning about one.
+
+## The desktop Demo is unchanged, and that was checked rather than assumed
+
+`web/shell.html` is the page the live Demo serves, so a touch overlay in it is a
+change to a working product. The M4 **milestone** gate — three page loads, real
+CDP key presses, a resolution chosen through the menus, three rounds of
+steering, and a reload-survival check — was re-run against the rebuilt page in
+both target browsers:
+
+```
+Chrome   PASS 22/22 checks   docs/evidence/phase3-touch/desktop-regression-milestone-chrome-console.log
+Firefox  PASS 22/22 checks   docs/evidence/phase3-touch/desktop-regression-milestone-firefox-console.log
+```
+
+Both transcripts open with `[TOUCH] enabled=false (media query -> false)
+maxTouchPoints=0`, which is the branch assertion: on a desktop the overlay's
+roots keep their `hidden` attribute and none of its listeners are ever
+registered.
+
+(The checker prints a NOTE saying the transcript "is NOT the product page"
+because the URL carries `?autostart=0`. That fires on every correct run of this
+gate — its own header states that URL "is not optional" — and it is a
+pre-existing quirk of the checker, not a fact about this run.)
+
+Re-run either with:
+
+```sh
+node web/tools/drive-browser.mjs --headed --out /tmp/mile-chrome \
+     --url 'http://localhost:8000/armagetronad.html?autostart=0' \
+     --script-file web/tools/persistence-milestone-gate.steps
+node web/tools/drive-firefox.mjs --out /tmp/mile-firefox \
+     --url 'http://localhost:8000/armagetronad.html?autostart=0' \
+     --script-file web/tools/persistence-milestone-gate.steps
+node docs/evidence/m4-persistence/check-milestone-transcript.mjs /tmp/mile-chrome/console.log
+```
