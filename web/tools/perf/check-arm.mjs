@@ -20,15 +20,21 @@
 //             exists on disk, so a reader can SEE the trails the draws count.
 //
 // THE FLOOR. EMPTY_ARENA_DRAWS_PER_FRAME is round 1's first-second
-// draws/frame -- cycles spawned, tutorial overlay up, no keys pressed yet, no
+// draws/frame -- cycles spawned, tutorial hint up, no keys pressed yet, no
 // trail longer than a second -- measured by Task 1 Step 8 in
 // docs/evidence/m6-lag/task1-rig/base (console.log, [PERF] rounds[0].
-// per_second.draws_per_frame[0]). It is calibration with provenance, not a
-// guess; re-measure it if the HUD or the tutorial changes.
+// per_second.draws_per_frame[0] = 36.99, 2026-09-03, cpu 6, SP_SIZE_FACTOR 6,
+// SP_NUM_AIS 7). The next three seconds of that round read 61, 80, 80 before
+// any key: the AIs launch at NEW_ROUND and their first walls are drawn at
+// once, so this is the LOWEST figure a live arena shows, and the x1.25 margin
+// (46.2) rejects a scene with no game in it -- a menu, a held boot, a frozen
+// canvas -- not an AI-only round. The key count and the screenshot carry that
+// weight. It is calibration with provenance, not a guess; re-measure it if
+// the HUD, the hint text or the spawn layout changes.
 import fs from 'node:fs';
 import path from 'node:path';
 
-const EMPTY_ARENA_DRAWS_PER_FRAME = 0;   // Task 1 Step 8 replaces this with the measured round-1-idle figure
+const EMPTY_ARENA_DRAWS_PER_FRAME = 36.99;   // docs/evidence/m6-lag/task1-rig/base, round 1 second 0; see THE FLOOR above
 
 const file = process.argv[2];
 if (!file) { console.log('usage: node check-arm.mjs <console.log>'); process.exit(2); }
