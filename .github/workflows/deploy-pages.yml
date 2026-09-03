@@ -42,7 +42,12 @@
 # The logic -- the Makefile, the deploy script, the gate -- all does. The
 # exception is the scheduler, not the substance.
 
-name: deploy-pages
+# The DISPLAY name, deliberately not "deploy": this workflow shows up as a check
+# on every pull request, and a check called "deploy-pages" on a PR reads as if
+# the PR were being published. It is not -- see the job name below, which says
+# per event what actually ran. The FILE is still deploy-pages.yml, which is what
+# `gh workflow run` and the docs refer to.
+name: web client
 
 on:
   push:
@@ -74,6 +79,8 @@ env:
 
 jobs:
   build-and-deploy:
+    # What a reader of the checks list sees. On a PR it says so in as many words.
+    name: ${{ github.event_name == 'pull_request' && 'build + gate (no deploy on PRs)' || 'build + deploy' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write   # the gh-pages push; read-only anyway on PRs from forks
