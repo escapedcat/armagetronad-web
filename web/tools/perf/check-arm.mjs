@@ -18,28 +18,44 @@
 //   rounds    rounds 2 and 3 exist and each ran >= 30 s. (Round 1 is setup.)
 //   frames    >= 30 frames in each late window; fewer means the window
 //             straddled a hang or the sampler was not armed.
-//   geometry  draws/frame in the late window is above the empty-arena floor
+//   geometry  draws/frame in the late window is above the no-geometry floor
 //             by a quarter. Draw calls are the direct measure of wall geometry
-//             pushed through the GL emulation; an idle tutorial arena has few.
+//             pushed through the GL emulation; a scene with no arena has few.
 //   shot      a screenshot taken in the second half of each measured round
 //             exists on disk, so a reader can SEE the trails the draws count.
 //
-// THE FLOOR. EMPTY_ARENA_DRAWS_PER_FRAME is round 1's first-second
-// draws/frame -- cycles spawned, tutorial hint up, no keys pressed yet, no
-// trail longer than a second -- measured by Task 1 Step 8 in
-// docs/evidence/m6-lag/task1-rig/base (console.log, [PERF] rounds[0].
-// per_second.draws_per_frame[0] = 36.99, 2026-09-03, cpu 6, SP_SIZE_FACTOR 6,
-// SP_NUM_AIS 7). The next three seconds of that round read 61, 80, 80 before
-// any key: the AIs launch at NEW_ROUND and their first walls are drawn at
-// once, so this is the LOWEST figure a live arena shows, and the x1.25 margin
-// (46.2) rejects a scene with no game in it -- a menu, a held boot, a frozen
-// canvas -- not an AI-only round. The key count and the screenshot carry that
-// weight. It is calibration with provenance, not a guess; re-measure it if
-// the HUD, the hint text or the spawn layout changes.
+// THE FLOOR. Two figures, and the check uses the larger:
+//   1. This round's own overlay-only frames. For the first half second of
+//      game time after NEW_ROUND, gGame.cpp's GameLoop clears and swaps
+//      without calling Render (the gtime <= -PREPARE_TIME + .5 branch):
+//      HUD and centre text only, no arena. report.js finds them by their
+//      draw count and reports them as pre_round.draws_per_frame. They are the
+//      genuine no-geometry scene, measured in every run under that run's
+//      own HUD.
+//   2. EMPTY_ARENA_DRAWS_PER_FRAME, the constant below: the base run's
+//      round-1 pre_round.draws_per_frame, 18.05 over 91 frames (docs/
+//      evidence/m6-lag/task1-rig/base, 2026-09-03, unthrottled; rounds 2 and
+//      3 of the same run read 16.18 and 11.06 -- the HUD text differs per
+//      round). It is the fallback for a round whose overlay frames were not
+//      found, and it pins the bar so a HUD that draws LESS one day does not
+//      lower it. x1.25 = 22.6; a live late window draws about 114.
+// What else a no-game scene draws was measured, not inferred
+// (docs/evidence/m6-lag/task1-rig/no-game-scenes): a held boot has no GL
+// context and no frames; the Language Settings menu draws exactly 6 calls
+// per frame, the First Setup menu 13-14. All are below the floor, so the
+// x1.25 margin rejects every no-game scene this rig has seen. What the
+// margin does NOT reject is an AI-only round with an idle human: the
+// negative control's late windows draw over a hundred calls per frame with
+// no key pressed. That is what the key count and the screenshot are for.
+// Earlier versions of this file used round 1's FIRST-SECOND mean (36.99),
+// which mixed overlay frames with world frames and was not a bound on
+// anything: throttled rounds 2 and 3 read 25-29 in their first second.
+// Re-measure the constant if the HUD, the centre text or the spawn layout
+// changes; it carries its provenance in the comment beside it.
 import fs from 'node:fs';
 import path from 'node:path';
 
-const EMPTY_ARENA_DRAWS_PER_FRAME = 36.99;   // docs/evidence/m6-lag/task1-rig/base, round 1 second 0; see THE FLOOR above
+const EMPTY_ARENA_DRAWS_PER_FRAME = 18.05;   // docs/evidence/m6-lag/task1-rig/base (2026-09-03 20:39), rounds[0].pre_round.draws_per_frame over 91 overlay-only frames; see THE FLOOR above
 
 const file = process.argv[2];
 if (!file) { console.log('usage: node check-arm.mjs <console.log>'); process.exit(2); }
