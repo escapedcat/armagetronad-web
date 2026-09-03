@@ -222,7 +222,68 @@ Firefox**, including A7c (the menus are exactly silent before round 1) and A9
 (every buffer in the measured window was handed to a `running` AudioContext).
 The page still loads with `noInitialRun` and `callMain` is still exported and
 still required; it now runs from `onRuntimeInitialized`. `?autostart=0` restores
-the old wait-for-a-call behaviour and is the only new public surface on the page.
+the old wait-for-a-call behaviour.
+
+### The page's query parameters
+
+Nothing in the shipped flow sets any of these and none is linked from anywhere.
+They exist because **this port cannot measure a phone** — there is no device in
+this repo's loop — so the only way to ask a phone a question is to hand the
+person holding it a switch and a readout.
+
+| parameter | default | what it does |
+|---|---|---|
+| `?autostart=0` | off | holds `main()` until `AA_START()`. A harness hook; four M4 checks need the window between "runtime ready" and "main has run". |
+| `?touch=1` / `?touch=0` | media query | forces the touch overlay on or off. |
+| `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
+| `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
+| `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
+
+**`?dpr=1` is the experiment that decides the performance question, and it
+decides it in one comparison.** On a desktop this port is CPU-bound, not
+fill-bound: `docs/evidence/m5-startup` swept nine backing-store sizes and the
+frame-time distribution did not move — 60 fps median at 0.79 Mpx and at 33.2
+Mpx, p50 pinned at 16.7 ms throughout. Whether that also holds on a phone GPU is
+**unknown**. So: play a round normally, then play one at `?dpr=1`. If it feels
+smoother, the phone is fill-bound and resolution is the lever. If it feels
+identical, it is CPU-bound and cutting pixels buys nothing but blur.
+
+**In `?diag=1`, the row to read is `gl`.** `bs` is the backing store the page
+asked for — the number the game reads back through `SDL_GetVideoInfo` and builds
+`glViewport` and `glFrustum` from. `gl` is what the driver actually allocated. A
+WebGL drawing buffer over the driver's limit is **silently clamped**, and if the
+clamp is not proportional the browser scales a wrong-shaped buffer over the
+element box, which is a genuinely stretched picture. The row says `MATCH` or
+`CLAMPED`. Desktop GPUs report a 16384-pixel axis limit and never come near it,
+which is exactly why no desktop test in this repo can find that fault.
+
+The frame rate is also drawn by the game itself, in the top right, and always
+has been (`sr_FPSOut` defaults to `true` in `src/render/rScreen.cpp`) — so an
+in-page frame-rate readout costs nothing to *have*, and `?diag=1`'s `swaps/s`
+row exists only because that text is small on a phone. The two agree; where they
+ever disagree, the game's is right.
+
+### On a phone
+
+The page detects a touch device with `(hover: none) and (pointer: coarse)` and
+then differs from the desktop page in three ways, all of them in
+`web/shell.html`:
+
+- **the touch overlay** — two half-screen steering zones and a four-button menu
+  pad (Phase 3, `docs/evidence/phase3-touch/`);
+- **portrait holds the boot.** A page opened in portrait shows "turn your phone
+  sideways" and does **not** start the game; the wasm keeps downloading, and the
+  moment the phone is turned the backing store is measured for the real
+  orientation and the game starts. Before this, a portrait load built the
+  projection for an aspect near 0.45 — a vertical field of view near 131° — and
+  no amount of CSS afterwards could undo a frame drawn at the wrong shape.
+  "Start in portrait anyway" is there for a device whose orientation this page
+  reads wrongly.
+- **the camera sits at half the stock distance.** At a phone's landscape
+  geometry the player's own cycle measures 23 × 63 backing-store pixels stock
+  and 47 × 122 at `?cam=0.5`. `?cam=1` restores stock;
+  `docs/evidence/phone-feedback/camera/` is the sweep, including why narrowing
+  the field of view was the worse lever.
 
 A successful run shows the game's language menu on the canvas within a few
 seconds of the page load. Enter chooses a language, the first-run setup menu
