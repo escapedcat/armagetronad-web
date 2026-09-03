@@ -162,3 +162,44 @@ jobs:
             -r "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
             -u "github-actions <github-actions@users.noreply.github.com>"
           echo "Deployed $(git rev-parse --short HEAD) from ${GITHUB_REF_NAME}"
+
+      # gh-pages reports "Published" the instant the push succeeds; the Pages
+      # BUILD that actually serves it takes about 20 s more (web/README.md
+      # "Deploying to GitHub Pages"). A wire check run against the still-old
+      # edge would fail for a reason that has nothing to do with this deploy,
+      # so wait for the edge to agree with what was just pushed before judging
+      # it. 20 s between polls, matching that build time; 10 minutes is far
+      # longer than any observed Pages build, so a real timeout here means
+      # something is actually wrong, not just slow.
+      - name: Wait for Pages to serve the new build
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          WANT=$(sha256sum web/dist-m1/armagetronad.wasm | cut -d' ' -f1)
+          echo "waiting for https://escapedcat.github.io/armagetronad-web/armagetronad.wasm to match sha256 $WANT"
+          END=$((SECONDS + 600))
+          while true; do
+            GOT=$(curl -sL https://escapedcat.github.io/armagetronad-web/armagetronad.wasm | sha256sum | cut -d' ' -f1)
+            if [ "$GOT" = "$WANT" ]; then
+              echo "Pages is serving the new build (sha256 $GOT)"
+              break
+            fi
+            if [ "$SECONDS" -ge "$END" ]; then
+              echo "Pages did not start serving sha256 $WANT within 10 minutes (last saw sha256 $GOT)" >&2
+              exit 1
+            fi
+            sleep 20
+          done
+
+      # THE PROJECT'S OWN WIRE CHECK (web/tools/wire-facts.sh +
+      # docs/evidence/m5-launch/check-wire-facts.mjs, chained exactly as
+      # web/tools/live-gate.sh --only wire runs them), now aimed at a real
+      # deploy instead of a hand-run one. Its W7 compares the deployed bytes
+      # against a LOCAL build under web/dist-m1 -- here that is the build this
+      # very job just made and just published, which is exactly the
+      # comparison that matters. --no-proxy: the proxy live-gate.sh otherwise
+      # starts is only for a Firefox outbound restriction on one machine (see
+      # its header) and plays no part in a curl-only check.
+      - name: Wire check against the live deployment
+        if: github.event_name != 'pull_request'
+        run: sh web/tools/live-gate.sh --no-proxy --only wire
