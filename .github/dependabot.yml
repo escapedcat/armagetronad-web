@@ -1,0 +1,23 @@
+# Keep the three first-party actions this repo uses on their current major.
+#
+# WHY. GitHub Actions has no floating "latest" for an action: `@v6` follows
+# patches within a major, and a new major is a new tag nobody pulls in on its
+# own. The maintainer asked for "always latest"; this is the mechanism that
+# exists for it. When actions/checkout, actions/cache or actions/setup-node cut
+# a new major, Dependabot opens one PR with the bump, and that PR runs the
+# client build like any other before it can merge.
+#
+# WHAT PROMPTED IT. The runner began printing "Node 20 is being deprecated" on
+# every run: the @v4 majors declare `using: node20` in their action.yml and the
+# runner now executes them on Node 24. @v6 declares node24 (checked against the
+# action.yml of each tag on 2026-09-03). That notice is about the ACTIONS'
+# runtime, not about the Node 22 our steps run on.
+#
+# NOTE ON FILE PLACEMENT. Same exception as the workflows: this file has to live
+# under .github/, outside the repo's src/emscripten/, web/, deps/, docs/ rule.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
