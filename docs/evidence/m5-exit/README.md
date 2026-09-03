@@ -4,6 +4,7 @@ What this directory holds, and what each file is entitled to claim.
 
 | file | what it is |
 |---|---|
+| `REPORT.md` | the task's own report, mirrored out of the gitignored `.superpowers/` tree |
 | `gates.asrun` | every gate re-run at the exit, split into **browser-verified** and **checked from committed transcripts** — with the one red gate named and diagnosed |
 | `published-set.asrun` | the `gh-pages` tree before and after the cleanup, with the derivation of every number |
 | `prove-publish-set-check-can-fail.asrun` | the 9-case prover for the new deploy assertion |
