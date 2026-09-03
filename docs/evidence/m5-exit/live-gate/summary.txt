@@ -1,0 +1,5 @@
+wire facts                   PASS
+gameplay chrome              PASS
+gameplay firefox             PASS
+multiplayer chrome           PASS
+multiplayer firefox          PASS

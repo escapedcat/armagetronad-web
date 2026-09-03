@@ -1,0 +1,44 @@
+# THE PORTRAIT BOOT HOLD: a phone that loads the page in portrait must not
+# start the game until it is in landscape.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --mobile 412,782,3 \
+#        --out docs/evidence/phone-feedback/portrait \
+#        --url 'http://localhost:8000/armagetronad.html?diag=1' \
+#        --script-file web/tools/phone-portrait-hold.steps
+#   kill %1
+#
+# 412x782 at dpr 3 is the same Pixel-class device as the landscape probes, held
+# the way a phone is actually held when a link is tapped.
+#
+# WHAT IT IS CHECKING AND WHY THE DEFECT WAS REAL. Before this, the page sized
+# the backing store from the portrait viewport, started the game, and THEN asked
+# the player to rotate -- so the projection was built for an aspect near 0.45,
+# and rViewport::Perspective below 1.5 keeps the horizontal fov and divides the
+# vertical by the aspect, giving a vertical field of view near 131 degrees. That
+# is a distortion in the RENDER; the CSS that lays the result out afterwards is
+# correct and cannot undo it. docs/evidence/phase3-touch/portrait-02-*.png is
+# what it produced.
+#
+# The three facts this script pins, in order: the game is held (no [BOOT]
+# autostart line while portrait, canvas still portrait-shaped); the rotation
+# releases it AND re-measures the backing store for the new orientation; and the
+# reload chip stays hidden afterwards, because the backing store now IS for the
+# orientation on screen and there is nothing to warn about.
+#
+# ?diag=1 is not required for the hold; it is here so the run's last step
+# records the geometry the fix produces in one line.
+wait:2000
+shot:p00-portrait-holding
+eval:JSON.stringify({held:window.AA_BOOT_HELD_FOR_PORTRAIT,runtime_ready:!!window.AA_RUNTIME_READY,rotate_prompt_visible:!document.getElementById('rotate').hidden,viewport:innerWidth+'x'+innerHeight,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height})
+wait:10000
+eval:JSON.stringify({phase:'runtime-is-ready-and-it-is-STILL-held',held:window.AA_BOOT_HELD_FOR_PORTRAIT,runtime_ready:!!window.AA_RUNTIME_READY,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height})
+shot:p01-still-held-after-runtime-ready
+mark:ROTATE-TO-LANDSCAPE
+metrics:915:350:3
+wait:1000
+eval:JSON.stringify({phase:'after-rotation',held:window.AA_BOOT_HELD_FOR_PORTRAIT,viewport:innerWidth+'x'+innerHeight,canvas:document.getElementById('canvas').width+'x'+document.getElementById('canvas').height,rotate_prompt_visible:!document.getElementById('rotate').hidden,chip_visible:!document.getElementById('reloadchip').hidden})
+until:1:60000:[BOOT] autostart
+wait:9000
+shot:p02-started-in-landscape-at-the-right-shape
+eval:document.getElementById('diag').textContent

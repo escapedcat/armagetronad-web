@@ -23,14 +23,14 @@ This repo (`escapedcat/armagetronad-web`) is a clone of upstream GitLab (`https:
 | Decision | Choice |
 |---|---|
 | Build | New hand-written `web/Makefile` + hand-written `src/emscripten/config.h` (precedent: `src/config_ide.h`, `src/win32/config.h`). Autotools not used for wasm. `-std=gnu++14`, `-O2`. Documented in `web/README.md` so a non-C++ dev can drive it |
-| Main loop | Keep nested blocking loops; `-sASYNCIFY=1` with yield points in `rSysDep::SwapGL()` / `sr_LimitFPS()` / `tDelay()` — every blocking loop funnels through these. JSPI (`-sASYNCIFY=2`) as an M5 experiment only |
+| Main loop | Keep nested blocking loops; `-sASYNCIFY=1` with yield points in `rSysDep::SwapGL()` / `sr_LimitFPS()` / `tDelay()` — every blocking loop funnels through these. JSPI (`-sASYNCIFY=2`) as an M5 experiment only<br>**M5: WHERE the yield sits inside `SwapGL()` is a visible-quality decision, not an implementation detail.** M1 moved it to the top of the function for a correctness reason that still holds (`sr_glOut` returns early and would skip a yield placed at the end). But the top of `SwapGL()` is also **above** `rPerFrameTask::DoPerFrameTasks()`, which draws the entire overlay layer and nothing else — the HUD, the score panel, the FPS counter, the console. So every frame parked the tab in a `setTimeout` with the world in the drawing buffer and the HUD not yet in it, and the compositor took that window whenever its 60 Hz phase drifted into it. That was the visible flicker the maintainer reported. Moved below the swap block at M5 task 5: on the compositor's own clock over 40.5 s, separate HUD-gone runs **873 → 3** in Chrome and **824 → 3** in Firefox, with runs shorter than 300 ms going **870 → 0** and **822 → 0**. `glFlush()`, not a mutex, is the reason to prefer after-the-swap-block: `sr_netLock` is always NULL in this build. **JSPI was tried at M5 and declined** — see the M5 entry. |
 | GL | `-sLEGACY_GL_EMULATION=1` + ~~3 targeted patches (mipmaps, display-list stubs, alpha-test tolerance)~~. Defaults already avoid texgen/infinity-plane/display-lists/ARB-programs (all dead or off). Fallback chain in risk register.<br>**Corrected at M1 and M2.** The "alpha-test tolerance" patch was never needed — alpha test is fully implemented in the emulation and already ran every M1 menu frame. M1 landed two GL patches, not three (mipmaps and display-list stubs), plus `GL_QUAD_STRIP` → `GL_TRIANGLE_STRIP`. What M2 then found is not on this list at all and is larger than everything on it: **one `glBegin`/`glEnd` block gets one vertex format** (`browser-runtime-notes.md` § 10), plus a no-op `gluLookAt`, plus `glDrawElements` rejecting 32-bit indices, plus `SDL_ConvertSurface` failing on a GL surface. |
 | SDL | `-sUSE_SDL=1` (SDL 1.2 emulation) + `src/emscripten/eCompat.cpp` stub TU, driven by `-sERROR_ON_UNDEFINED_SYMBOLS=1` |
 | libxml2 | Build from source via `emconfigure`, **pin 2.12.x** (last with nanoHTTP), `--with-http` so `LIBXML_HTTP_ENABLED` avoids the `#error` in `tResourceManager.cpp`; runtime HTTP fails gracefully → bundled maps. Recorded fallback: `#ifdef` the `#error`/HTTP call sites and use current libxml2 |
 | Assets | `--preload-file` for data (~2 MB); IDBFS mounted at `/persist`; zero path patches via `--datadir /data --userdatadir /persist` (`tDirectories` runtime switches) |
 | Threads | None; leave `HAVE_PTHREAD`/`HAVE_LIBZTHREAD` undefined (auth falls back to synchronous in `nAuthentication.cpp`) |
 | Network | Compiles unchanged in all milestones (inherited obligation — costs nothing, keeps the Phase 2 door open); connects fail gracefully |
-| Hosting | **GitHub Pages.** Deploy = local clean `make` + `npx gh-pages` push; CI automation only once the local flow is boringly repeatable. Pre-approved fallback if M5 compression/size disappoints: Cloudflare Pages |
+| Hosting | **GitHub Pages.** Deploy = local clean `make` + `npx gh-pages` push; CI automation only once the local flow is boringly repeatable. Pre-approved fallback if M5 compression/size disappoints: Cloudflare Pages<br>**M5 task 4: this recipe, run exactly as written, published a site with no entry point — and reported success.** `npx gh-pages -d dist -f --nojekyll` printed `Published` and exited 0 while publishing the `.wasm`, the `.js`, the `.data`, fourteen stray dotfiles and **neither html file**; the only symptom was a 404 on the page itself. Three things compose to produce it: gh-pages clears the branch by globbing its own checkout and passes globby no `dot` option, so **no dotfile is ever removed**; with the branch absent it creates it with `git checkout --orphan` from the default branch, so the checkout starts as a full copy of `main` — **root `.gitignore` included**, which by the first point survives the clearing; and `git add .` then honours it, silently, and line 63 of that file is a bare `*.html`. The fix is `-v "{**/*,**/.*}"`, A/B'd on **both** gh-pages code paths (branch absent and branch present) because only the first is the first-deploy case: `docs/evidence/m5-deploy/gh-pages-remove-pattern.sh`. Two further things this row does not say and a reader needs. **The entry point is `armagetronad.html`, not `index.html`** — Pages serves a directory URL from `index.html` only, so `web/index.html` exists as a redirect and is copied in at deploy time. And **`local clean make` is load-bearing, not hygiene**: `deploy` publishes `web/dist-m1` as it finds it, that directory is gitignored, `make client` does not clear it, and the live branch accordingly carried 17 probe files nobody meant to ship. `npm run deploy` now asserts its own published set first (`web/tools/check-publish-set.mjs`). |
 
 All source patches `#ifdef __EMSCRIPTEN__`-guarded; native builds untouched. New code in `src/emscripten/` + `web/`.
 
@@ -58,7 +58,7 @@ Estimates are relative effort, not calendar commitments.
 - Patch `src/tools/tSysTime.cpp`: `tDelay` → `emscripten_sleep` (recorder-safe: inside the wrapped functions)
 - New `src/emscripten/eCompat.cpp`: stubs (SDL mutex/thread no-ops, `SDL_LoadWAV`/`SDL_BuildAudioCVT` if missing, display-list family `glNewList`… return 0 — lists default off)
 - Link: `-sUSE_SDL=1 -sUSE_LIBPNG=1 -sLEGACY_GL_EMULATION=1 -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 -fexceptions --use-preload-plugins --preload-file config@/data/config` (+ language/textures/models/sound/resource/included/webdefaults) `--shell-file web/shell.html`
-- New `web/shell.html` (start-overlay for audio unlock + `callMain`, canvas, progress bar) and `web/webdefaults/autoexec.cfg`; `Module.arguments = ['--datadir','/data','--userdatadir','/persist','--userconfigdir','/data/webdefaults']`. Note `-sEXPORTED_RUNTIME_METHODS=callMain` is required: Emscripten does not export `callMain`, and without it the start button aborts the runtime on click.
+- New `web/shell.html` (start-overlay for audio unlock + `callMain`, canvas, progress bar) and `web/webdefaults/autoexec.cfg`; `Module.arguments = ['--datadir','/data','--userdatadir','/persist','--userconfigdir','/data/webdefaults']`. Note `-sEXPORTED_RUNTIME_METHODS=callMain` is required: Emscripten does not export `callMain`, and without it the start button aborts the runtime on click. *(**The start overlay was removed at M5 task 5, and the reason this line gives for it did not hold.** The button was carried through four milestones as the user gesture that unlocks audio. It is not needed for that: Emscripten resumes the AudioContext on the first **keypress**, and this game cannot be played without one. Measured rather than argued — with the button gone, M3's audio gate is **25/25 in Chrome and in Firefox**, including A7c (the menus are exactly silent before round 1) and A9 (every buffer in the window was handed to a `running` AudioContext). `callMain` is still exported and still required; it is now called from `onRuntimeInitialized` instead of from a click. The page also sizes its canvas from the viewport before boot rather than shipping a fixed 1024x768. `?autostart=0` is new public surface that restores the old wait-for-a-call behaviour.)*
 - **Carried forward from M0 — two things this milestone must not re-derive:**
   1. `-fexceptions` is mandatory in **every** configuration, at compile *and* link (it is in the list above for that reason). Emscripten's default silently discards every `catch`, and this codebase uses exceptions as control flow, so the first `throw` aborts the process. Full argument in `web/Makefile`; it costs ~827 KB of wasm. *(Corrected at M5 task 2: **+827 KB is the DEDICATED, non-Asyncify figure** — `web/Makefile` says so in its own comment, and it is right about that build. On the **client** the cost is far higher, because Asyncify instruments the unwinder too and the two multiply: **+2,402,246 bytes (+37.09%)** at the pre-M5-task-2 link settings and **+1,231,132 (+39.71%)** at the shipped `-O2 -sASSERTIONS=1` settings. Measured by recompiling all 102 client translation units with `EXCEPTIONS` empty and relinking: `docs/evidence/m5-o2-assertions/measure-fexceptions-cost.sh`.)*
   2. **Asyncify is load-bearing for sockets, not just for frame pacing.** M0 found the server binds port 4534 and then nothing is reachable on it: the game loop runs synchronously inside `callMain()` and never returns to Node's event loop, so the socket never reaches its `listening` event. The yield point in `SwapGL()` is what lets *any* async I/O complete — not merely what keeps the tab responsive. (`web/README.md`, "Known limitations at this milestone".)
@@ -139,6 +139,11 @@ Estimates are relative effort, not calendar commitments.
 > 5. The binding-menu blank-key-names item this milestone inherited **was never true**; the fix landed in M2 task 6, 1h45m before `web/README.md` declared it outstanding. Struck through in place there.
 >
 > **Not done, and not claimed:** the fullscreen button, and the touch-device "needs a keyboard" note. Both are still open items of this entry.
+>
+> **M5 status of those two, at Phase 1's close. One is half done; the other was never built.**
+>
+> - **Fullscreen: half.** M5 task 5 made `TOGGLE_FULLSCREEN` ask the *browser* for fullscreen instead of resizing the canvas to a stored value, and the user gesture survives Asyncify — which was the open question. **`n` enters and leaves browser fullscreen and the canvas is unchanged**, against a control build (`client-fullscreentoggle`) that moves the canvas to 640x480 on the same keystroke, which is what makes the shipped result mean anything. **But `f` never reaches `toggle_fullscreen_func` at all**, and it is the key the maintainer named. Diagnosed as far as: DOM keyCode 70 → SDL keysym 102, `KEYBOARD 102 PLAYER_BIND TOGGLE_FULLSCREEN 0` **is** in the persisted `user.cfg`, and the function is not entered — not even with `x <= 0` — while keysym 110 on an identical line enters it twice. **Pre-existing**: the control build behaves the same. First suspects are `config/keys_cursor.cfg` and `keys_cursor_single.cfg`, which both rebind 102. Unresolved.
+> - **The touch-device "needs a keyboard" note was never built, in M4 or in M5.** It is not deferred to Phase 3 by anyone's decision; it was simply never done, and this entry promised it. A visitor on a phone today gets the canvas and no way to play it and no explanation. It is the cheapest open item in this document — it is a page change in `web/shell.html`, no C++ — and it is the only one that affects a visitor who did nothing wrong.
 
 >
 > **The resolution question is half answered, and the answered half is the one the gate needed.** Picking a resolution in Screen Mode and letting it take effect on the *next* page load works in both engines — `SDL_SetVideoMode` resizes the canvas to 320×200 and the game renders and plays there (`docs/evidence/m4-persistence/`, check M14). **"Apply Changes" was deliberately never pressed**, so `sr_ReinitDisplay` — `sr_ExitDisplay` followed by a second `SDL_SetVideoMode`, i.e. tearing down and rebuilding a live WebGL context mid-run — is still completely untested in this port. Do not read M14 as evidence that it works. That is the half that could still need hiding.
@@ -158,8 +163,97 @@ Estimates are relative effort, not calendar commitments.
 > 5. **Inherited from M3 — the cockpit HUD's first draw is erratic, and it is unexplained.** Screenshotting 5.5 s into a round finds the instrument panel present in anywhere from one round of three to three of three, and **in Chrome it varies between runs of the same script on the same build**: four runs scored 1/3, 1/3, 3/3, 1/3. It is not an M3 regression — the M3 build reaches 3/3. Measured with `docs/evidence/m3-audio/cockpit-band.mjs` over 39 committed driving frames.
 >
 >    **Record the refuted hypothesis beside it so nobody re-proposes it: M3's per-callback mixing *cost* is not the cause.** A silent bundle removes exactly that work — `eWavData::Mix` returns before its resampling loop when no WAV decodes — on a **byte-identical wasm**, and still scores 1/3. Read that narrowly: it refutes the mixing *cost*, not "audio work on the main thread", because the callback, the open device and `pushAudio` all still run at 21.5/s under that lesion. And it is one run against a stochastic phenomenon, so it excludes a *deterministic* mechanism only. Characterising this properly needs a **rebuilt M2-era client** to compare against, which M3 did not do — the M2-era 3/3 is itself a single run from committed evidence. This sits on M4/M5 rather than M4 alone; whoever gets to it first should do the rebuild before theorising.
+>
+> **M5 tasks 4c and 5: a flicker in this area was reproduced, mechanised and largely fixed — but read carefully, because it is probably NOT the same phenomenon as the paragraph above, and this entry must not be allowed to read as closed.** What M5 chased was the maintainer's own report that the HUD and the FPS counter blink during play. The cause is neither of the two hypotheses anyone had proposed — not § 10, not audio work on the main thread — and there is no GL error involved. `rSysDep::SwapGL()` yielded to the browser **above** `rPerFrameTask::DoPerFrameTasks()`, and `DoPerFrameTasks()` is the entire overlay layer and nothing else: `display_hud_subby_all` (`gHud.cpp`, including `display_fps_subby`), `sr_ConsolePerFrame` (`rConsoleGraph.cpp`) and `scores` (`ePlayer.cpp`). Every frame therefore parked the tab in a `setTimeout` with the world drawn and the HUD not drawn, and the compositor sampled that state whenever its phase drifted into the window. The world geometry never flickered because it is already in the buffer at the yield — which is exactly what the report said. **Moving the yield below the swap block fixed the short blinks: on the compositor's clock over 40.5 s, runs shorter than 300 ms went 870 → 0 in Chrome and 822 → 0 in Firefox.** *(`docs/evidence/m5-defect-b-hud-flicker/`, and M5 task 5.)*
+>
+> **Three ~1.5 s HUD-off stretches per 40 s remain, they were 3 before the fix and are 3 after it in both engines, and nobody has established what they are.** They begin ~515 ms after each `ROUND_SCORE`/`NEW_ROUND` triple, so "the game legitimately hides the HUD at a round transition" is the obvious reading and it is a hypothesis, not a measurement. **The maintainer has not reported back whether the flicker they were seeing is the short kind (fixed) or the long kind (untouched)**, and until they do, this is open. Note also that the M3 phenomenon this item was originally about is a *first-draw* question sampled once at 5.5 s, whereas M5 measured *continuous* presence over whole rounds; they may well be different things, and the rebuilt-M2-client comparison this entry asks for was still never done. Three of M5's own probes returned clean negatives before the right one worked, all three wrong for the same structural reason — they sampled at the game's swap, where the frame is always complete — and are kept as `docs/evidence/m5-defect-b-hud-flicker/negative-swap-time-only/` so nobody repeats them.
 
 **M5 — Validation, perf, packaging, launch (3–5 days).** Native-recorded demo playback in wasm build (best-effort diagnostic, not a gate); profile Asyncify overhead; try JSPI variant (check browser support at that time); brotli/size work (~8–15 MB wasm expected — note M0 measured `-fexceptions` alone at **+827 KB uncompressed, ~+50% of that build's wasm**, and it is mandatory in every configuration; JSPI would be the way to trade it back for `-fwasm-exceptions`) *(**Both halves of this line were overtaken at M5.** The +827 KB is M0's **dedicated** measurement and under-reports the client by 1.58 MB — see the corrected figures under M1 above. And the size work did not need brotli or JSPI: M5 task 2 put `-O2 -sASSERTIONS=1` on the client link and the wire total went **4,097,666 → 1,707,754 bytes gzipped**, 3.91 MiB → 1.63 MiB against a 15 MB budget. M5 recon dropped brotli — GitHub Pages serves gzip only, brotli buys 379 KB and needs a Cloudflare-proxied custom domain — and declined JSPI: it links and is 80% smaller, but Emscripten 6.0.8's `libsdl.js` pushes to `Asyncify.sleepCallbacks` under `#if ASYNCIFY` while that array exists only under `#if ASYNCIFY == 1`, which kills M3's audio.)*; confirm network menus fail gracefully *(**done at M5 task 3, over `https:` as well as `http:`** — the route is Play Game → Multiplayer → Online Multiplayer, and it ends at the game's own "Sorry, no server found :-(" on both schemes, in Chrome and Firefox, with the client alive afterwards. Over HTTPS every `ws://master*` attempt is blocked as mixed content and the game's 0.25 s login resend turns 4 attempts into ~98 in 20 s, but **nothing visible changes** — the wall clock is set by `sn_Connect`'s 5 s per-master timeout, not by how the socket fails. Examined and deliberately left unchanged, one working alternative included: `docs/porting/browser-runtime-notes.md` § 12, `docs/evidence/m5-https/`.)*. **Deploy: local clean `make` + `npx gh-pages` to GitHub Pages; verify wire size/compression on the live CDN (fallback: Cloudflare Pages); the Demo is publicly reachable.** CI automation deferred until the local build-and-deploy loop is proven.
+
+> **M5 — DONE (tasks 1, 2, 2b, 3, 4, 4c, 5, the live gate and the texture investigation). The Demo is live at
+> <https://escapedcat.github.io/armagetronad-web/>.** Merged as PRs #7, #8, #9 and #10.
+>
+> ### What shipped, stated as narrowly as the evidence supports
+>
+> **The Demo is publicly reachable and playable, in desktop Chrome and Firefox, on one maintainer's machine.** That is
+> the whole claim. It is not "done" in any broader sense, and four qualifiers belong inside the sentence rather than
+> after it: one machine (macOS 26.5, Apple M1 Max), one GPU, two browser builds (Chrome 152, Firefox 154), and no human
+> has yet played it for enjoyment rather than to satisfy a script. Every frame-rate number in this document is an M1
+> Max's.
+>
+> **Measured, from the deployment rather than from a local server:**
+>
+> - **A first visit transfers 1,748,947 B = 1.668 MiB** for the four game files (5,380,255 B unpacked), or 1,750,214 B
+>   including the `index.html` redirect — **8.6x under `PLAN.md`'s 15 MB budget**. The Pages edge gzips all five,
+>   including the 4,331,484-byte wasm, and serves it as `application/wasm`. That was the milestone's one genuinely
+>   unmeasured hosting fact and it cost one deploy and one `curl` to settle.
+> - **Three complete rounds against three AI opponents, in both engines, played off the public URL**, arbitrated by M2's
+>   own `check-transcript.mjs` — unmodified, and pointed at the deployment with `--url` and nothing else, because every
+>   asset path is relative.
+> - **The bar is >=30 fps and it is cleared with margin, but the number is not stable across runs and should not be
+>   quoted as if it were.** **Three runs of the same script, same build, same public URL**, each ~39.5 s of real rounds,
+>   as per-whole-second median / minimum: M5 task 5's committed run **60 / 58 (Chrome), 60 / 58 (Firefox)**; this exit
+>   before the redeploy **60 / 57** and **57 / 53**; this exit after it **60 / 58** and **59 / 57**.
+>   Chrome's median was 60 in all three. **Firefox's moved across 57, 59 and 60** — so the honest statement is "comfortably
+>   above 30 in both engines", and **"60 fps" is not a property of this port.** Worst *single* frames in these two exit runs
+>   were 41.9-46.3 ms (Chrome) and 37.0-50.0 ms (Firefox), i.e. below 30 fps instantaneously, as they have been since M2 and
+>   still with nobody having looked for the cause. Browsers: Chrome 152.0.7977.75, and **Firefox 155.0 — one major version
+>   newer than the 154 the milestone was built against, with no change needed to pass.**
+> - **The dedicated wasm is still 2,488,298 bytes and md5 `9718a2a64978cb6e9b95ea2f0454cca5`**, from a rebuild after
+>   `rm -rf web/build-m0 web/dist-m0 web/build-m1 web/dist-m1`. Quote both halves, always.
+> - **The deployment is reproducible from source.** At the exit commit, all five published files — `armagetronad.wasm`,
+>   `.js`, `.data`, `.html` and `index.html` — come back **byte-identical by md5** from that clean rebuild. This had
+>   never been checkable before M5: `PLAN.md` recorded that `armagetronad.js` was not byte-reproducible, and `-O2`
+>   changed that.
+>
+> **Re-runnable as one command:** `sh web/tools/live-gate.sh`, which runs the wire assertions (W1-W13 plus a WZ
+> self-guard), M2's gameplay gate in both engines, and the https multiplayer route in both (X1-X11 plus XZ).
+> `docs/evidence/m5-launch/prove-live-checks-can-fail.mjs` shows every new assertion can fail, 53 cases under **set
+> equality** — a case is green only when the observed failure set *equals* the ids it declared.
+>
+> ### What M5 disproved, in this document and elsewhere. Annotated in place above; collected here
+>
+> **Ten items, counted from the numbered list immediately below.** Every one was settled by a measurement, and several
+> had survived three or four milestones as prose. Two bases worth stating, because a bare count here would be exactly
+> the defect this project keeps catching: items 1 and 2 were annotated in place by *earlier* M5 tasks, not by this
+> exit, and item 10 is a process finding rather than a claim in this document being false — so "places `PLAN.md`
+> itself was wrong and this exit corrected inline" is **seven**, not ten. The commit that landed these annotations
+> says "eight" in its subject line and is wrong; it is immutable, and this is the correction.
+>
+> 1. **The `-O` ban was really an ASSERTIONS ban, and the two are separable.** Four milestones forbade `-O` at link.
+>    Proven by *firing* the assert, not by reading flags: with a section 10 defect deliberately reintroduced,
+>    `-O2 -sASSERTIONS=1` aborts on the same route with the same stack, while **bare `-O2` silently drops geometry
+>    instead of aborting** (716 border pixels to 0). The size work was never blocked by `-O`. See the M2-inherited item
+>    above.
+> 2. **`rViewport` was never "latent".** Four milestones called it that. It was a live crash **four keystrokes from the
+>    main menu** — Player Setup, then Down four times — reached through `RenderBackground()` from `uMenu::OnEnter`, so
+>    *highlighting* the row was enough; no selection required. It would have shipped. Section 10 had the caller wrong as
+>    well, naming `uMenu::Render`.
+> 3. **The brotli work was unnecessary.** GitHub Pages serves gzip only — `Accept-Encoding: br` alone returns identity,
+>    re-confirmed against the live deployment at 4.33 MB. Brotli buys 378,988 B and needs a custom domain proxied
+>    through Cloudflare. Dropped.
+> 4. **This document's `-fexceptions` figure was the wrong build's.** +827,185 B is the **dedicated, non-Asyncify**
+>    measurement, and `web/Makefile` says so in its own comment. On the client it is **+2,402,246 (+37.1%)** at the
+>    pre-`-O2` settings and +1,231,132 (+39.7%) at the shipped ones, because Asyncify instruments the unwinder and the
+>    two costs multiply. Corrected under M1 above.
+> 5. **This document's own deploy recipe published a site with no entry point, and exited 0 saying "Published".** See
+>    the Hosting row.
+> 6. **The camera bug was two bugs**, and fixing only the documented one would have produced a scene with no perspective
+>    divide. See the M2-inherited item 5.
+> 7. **The HUD flicker was neither suspected cause.** Not section 10, not audio on the main thread — the browser yield
+>    sat above the overlay draw. See the M4-inherited item 5.
+> 8. **The Play button's stated audio reason did not hold.** Emscripten resumes audio on the first keypress. See M1's
+>    `shell.html` line.
+> 9. **JSPI links, both target browsers support it, it is ~80% smaller — and it kills M3's audio.** Emscripten 6.0.8's
+>    `libsdl.js` pushes to `Asyncify.sleepCallbacks` under `#if ASYNCIFY`, while that array exists only under
+>    `#if ASYNCIFY == 1`. `-fexceptions` plus JSPI dies before `main`. **Recorded so nobody re-explores it**; it is the
+>    single most attractive-looking dead end left in this port.
+> 10. **The recurring defect of this project is stale evidence: a check verified before a later commit changed its
+>    subject.** It was caught three separate times inside M5 alone — M4's P11 (broken by M4's own second task, shipped
+>    green), task 3's socket counter (broken by task 3's own later commit, caught by the same task), and the nine steps
+>    files task 5 edited. It is not a discipline problem; a passing transcript simply stops being about the build once
+>    the build moves.
+
 
 > **M5 OPEN ITEM — one gate is knowingly red, and task 6 owns it.**
 >
@@ -217,13 +311,198 @@ Estimates are relative effort, not calendar commitments.
 > 2. ~~**`rViewport.cpp:246` is a live, reachable, unfixed instance of that class.**~~ **FIXED at M5 task 1** (`ef342734`) — a `RenderEnd()` before the `glColor3f`, exactly as this item prescribed. It was never latent: the route is main menu → Down → "Player Setup" → Enter → Down ×4, and the fourth Down killed the tab, because `uMenu::OnEnter` calls `RenderBackground()` on the *selected* item. Four keystrokes from the main menu of the build M5 was about to publish. Left in place below rather than deleted, because the word this entry's own body contradicted — "reachable in the shipped build right now … left unfixed only because nothing in M2 opens that screen" — is how it survived three milestones under the heading "latent". Original text follows. `rViewportConfiguration::DemonstrateViewport` opens a `GL_LINE_LOOP`, emits four `glVertex2f`, then a `glColor3f(1,1,1)` with the block *still open*, then `DisplayText()` whose `RenderEnd(true)` flushes it: 17 slots against a 20-byte stride. It would abort. It compiles, and it is reachable in the shipped build right now through the viewport-configuration screen in the settings menu. It was left because nothing in M2 opens that screen, so a fix could not be verified by the harness. The fix is a `RenderEnd(true)` before the `glColor3f`; verify it by actually opening the screen.
 > 3. **The two size line items, measured on this tree:** Asyncify **+5,888,604 bytes** (+197%, relinking the same objects with and without it) and `-fexceptions` **+827,185**. Asyncify displaces exceptions as the largest item by about a factor of seven. *(**Annotated at M5 task 2. The Asyncify number holds; the exceptions number is the wrong build's.** M5 recon re-measured Asyncify at +5,893,427 / +197.4%, which agrees with M2's +5,888,604. But +827,185 is `web/Makefile`'s **dedicated, non-Asyncify** figure, and it is quoted here inside a list about the CLIENT. Re-measured on the client at M5 task 2 by recompiling all 102 translation units with `EXCEPTIONS` empty: **+2,402,246 (+37.09%)** at the pre-task-2 link settings, **+1,231,132 (+39.71%)** at the shipped `-O2` settings. So exceptions are ~2.9× larger on the client than this line says, and Asyncify's lead over them is ~2.5×, not seven. `docs/evidence/m5-o2-assertions/measure-fexceptions-cost.sh`.)* `-sASYNCIFY_ADVISE` is the way to generate a defensible `ASYNCIFY_ONLY` list — do not hand-write one, a wrong list fails as a runtime `unreachable` trap rather than a build error. Details and the JSPI question in `browser-runtime-notes.md` § 7.
 > 4. **`web/dist-m1/armagetronad.js` is not byte-reproducible** across links: emcc embeds its own temp-file paths in comments. The `.wasm`, `.data` and `.html` are. Any release-artifact hashing has to account for that. *(**No longer true as of M5 task 2 — `-O2` fixed it as a side effect.** The minifier strips the comments that carried those paths. Measured both ways, two relinks each, same objects: at the pre-task-2 link settings the `.js` md5 moves (`4bbd92e6…` → `f18fb9b8…`), and at the shipped `-O2 -sASSERTIONS=1` settings it does not (`f8c5f94ca0dad2fc8b26e8233c118346` twice), with the `.wasm` stable in both. So release-artifact hashing over all four files is now viable, which matters for task 4's deploy.)*
-> 5. ~~**The camera is a correctness item, not a polish item.**~~ **CLOSED by M5 task 2b.** Emscripten's `gluLookAt` was a no-op, so the view was permanently top-down; `src/emscripten/eCompat.cpp` now implements it against the GLU specification. The floor grid converges, there is a horizon, and the bike is in frame at the default camera — measured before/after in `docs/evidence/m5-camera/`. **The related mouse-camera binds are deliberately still dead**, and the cost of that is now measured rather than assumed: `LOOK_LEFT`/`LOOK_RIGHT` and every `MOVE_*` are also bound to the numpad in the same `default.cfg` block and those binds are live, so the only actions with no binding at all are `BANK_UP`, `BANK_DOWN` and `ZOOM_IN`. Enabling the mouse ones converts raw mouse motion into camera rotation with no pointer lock (`SDL_WM_GrabInput` is called nowhere in the tree) and puts `ZOOM_IN` on the browser's middle click, so M5 did not turn them on at the deployment milestone. `docs/porting/browser-runtime-notes.md` § 11, "M5 TASK 2B DECISION".
+> 5. ~~**The camera is a correctness item, not a polish item.**~~ **CLOSED by M5 task 2b.** Emscripten's `gluLookAt` was a no-op, so the view was permanently top-down; `src/emscripten/eCompat.cpp` now implements it against the GLU specification. **It was two bugs, not one, and fixing only the documented one would have made things worse.** § 11 and every restatement of it since M2 described a single defect: gl-matrix's `mat4.lookAt` is declared `(eye, center, up, dest)` — destination **last** — while Emscripten passes destination **first**, so the current matrix arrived as `eye` and the result was written into a three-element array literal and discarded. That is real. But `mat4.lookAt` also **overwrites** its destination rather than post-multiplying into it, and `eCamera::Render` calls `gluLookAt` on the **projection** matrix immediately after `glFrustum`. So correcting the argument order alone would have discarded the frustum and produced a scene with no perspective divide at all. The shipped shim post-multiplies. A same-file lesson: this is the second time a § 11 line citation into an emsdk file had drifted, which is why this repo pairs emsdk citations with greppable tokens. The floor grid converges, there is a horizon, and the bike is in frame at the default camera — measured before/after in `docs/evidence/m5-camera/`. **The related mouse-camera binds are deliberately still dead**, and the cost of that is now measured rather than assumed: `LOOK_LEFT`/`LOOK_RIGHT` and every `MOVE_*` are also bound to the numpad in the same `default.cfg` block and those binds are live, so the only actions with no binding at all are `BANK_UP`, `BANK_DOWN` and `ZOOM_IN`. Enabling the mouse ones converts raw mouse motion into camera rotation with no pointer lock (`SDL_WM_GrabInput` is called nowhere in the tree) and puts `ZOOM_IN` on the browser's middle click, so M5 did not turn them on at the deployment milestone. `docs/porting/browser-runtime-notes.md` § 11, "M5 TASK 2B DECISION".
 >
 > **Inherited from M3 — two, both about the gate rather than the game.**
 >
 > 6. **The voice limiter has exactly one voice of margin.** `[SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)` in every run taken, reproduced exactly from a clean rebuild at M3 exit. It cuts nothing today and has therefore **never run against real voices**. Raising `SP_NUM_AIS`, or a player lowering `SOUND_SOURCES` in the sound menu, crosses it — and the first time it engages will be the first time that code path has ever executed with sound in it. If you change the AI count for any reason, including a busier packaging demo, you have changed this experiment.
 > 7. **`A14` can fail with nothing actually wrong.** `eSound.cpp` gives each diagnostic class a **16-line budget** and then falls silent, so a gate that counted log lines could pass *because a line stopped printing*. A14 therefore fails outright if any of the five budgets (`se_wavFailureBudget`, `se_wavSuccessBudget`, `se_wavRetireBudget`, `se_peakBudget`, `se_limiterBudget`) saturates. That is deliberately stricter than anything depending on it — no check reads a non-zero count today — but it means **a longer or busier match can fail the gate without a defect**: more rounds, more AIs, or a `SOUND_SOURCES` low enough to make the limiter oscillate will reach 16 lines legitimately. If M5 changes the match to something more representative, expect to raise the budgets or rework A14, and do not read that failure as a regression.
 > 8. **A9 is only load-bearing in Firefox.** "Every buffer went to a `running` AudioContext" discriminates only to the extent that a transcript contains pushes taken while the context was parked. Firefox makes 5 such pushes, all recorded `suspended`, so there the check is real. **Chrome makes zero pre-gesture pushes** — a parked context stops Emscripten asking for buffers at all — so every Chrome reading necessarily came from after the gesture and could not have been anything else. A9 passing in Chrome is close to vacuous, and the checker says which case it is in the A9 line itself.
+
+## Phase 1 — closed. What is met, and what is not
+
+Phase 1 ran M0 through M5 and ends here. This section is the honest accounting against
+the Demo's own definition at the top of this document, which is worth re-reading before
+anything below it: *a publicly hosted GitHub Pages page where anyone can play
+single-player Armagetron vs AI; desktop Chrome + Firefox; keyboard required; >=30 fps on
+the maintainer's machine; Safari a non-target.*
+
+**The Demo is live at <https://escapedcat.github.io/armagetronad-web/> and it is
+playable.** Nothing below retracts that. What follows is the boundary of it.
+
+### Met
+
+Every clause of the definition, read as written:
+
+| clause | status |
+|---|---|
+| publicly hosted on GitHub Pages | **met** — Pages enabled itself on the first push to `gh-pages`; `https_enforced: true` |
+| anyone can play single-player vs AI | **met** — three complete rounds against three AI opponents, played off the public URL, arbitrated by M2's unmodified `check-transcript.mjs` |
+| desktop Chrome + Firefox | **met** — Chrome 152.0.7977.75, and Firefox 154 at the deploy and **155.0** at this exit; the gate passed on both Firefox majors with no change, which is the only evidence this port has that it is not pinned to one browser build |
+| keyboard required | **met**, and it is *required* in a way the definition did not anticipate — see open item 1. *(Phase 3 removed the requirement on a touch device: the same six keys are now reachable by tapping. On a desktop, unchanged.)* |
+| >=30 fps on the maintainer's machine | **met with margin, and the margin moves** — see below |
+| Safari a non-target | **held** — never tested, never claimed |
+
+**On the frame rate, precisely.** Per-whole-second medians at this exit were **60
+(Chrome) / 57 (Firefox)** with minima of **57 / 53**, over 39.6 s and 39.4 s of real
+rounds against the public URL. M5 task 5's committed run of the same script against the
+same build recorded 60 in *both* engines. So the bar is cleared roughly twice over, and
+the number is not stable to better than about three frames between runs — **do not quote
+"60 fps" as a property of this port**. The worst *single* frame was 41.9 ms and 50.0 ms,
+i.e. below 30 fps instantaneously, which has been true since M2 and which nobody has ever
+investigated.
+
+**Two things are true beyond the definition and are worth recording** because they were
+not promised: the deployment is **reproducible** — all five published files come back
+byte-identical from a clean rebuild at the exit commit — and the wire cost is **1.668 MiB
+on a first visit**, 8.6x under the 15 MB budget, without brotli, without JSPI, and
+without anyone having to choose an optimisation level.
+
+### Not met, or open
+
+**Twelve items, counted from the list below.** None of them makes the Demo unplayable;
+several are visible to a first-time visitor. They are ordered by who is hurt, not by
+effort.
+
+1. ~~**The touch-device "needs a keyboard" note was never built.** M4's own milestone entry
+   promised it and M4 recorded it as not done; M5 did not do it either. It is not deferred
+   to Phase 3 by any decision — it was simply never built. **A visitor on a phone gets a
+   canvas they cannot play and no explanation.** This is the only open item that harms
+   someone who did nothing wrong, and it is a change to `web/shell.html` with no C++ in it.~~
+   *(**Closed by Phase 3, and closed better than it was written.** A phone visitor does not
+   get a note saying to go and find a keyboard; they get controls. `web/shell.html` now
+   detects `(hover: none) and (pointer: coarse)` and shows two half-screen turn zones and a
+   four-button menu strip that synthesize the game's existing key bindings — no C++, and
+   the desktop page is byte-for-byte the same experience it was, asserted at 22/22 in both
+   engines. `docs/evidence/phase3-touch/`.)*
+2. **The multiplayer menu shows ~20 s of solid black canvas** before the game's own "Sorry,
+   no server found :-(". Reachable in three keystrokes from the main menu. The *failure* is
+   graceful and is gated (X1-X11 against the live site, both engines); the **black canvas is
+   undiagnosed** — `BrowseSpecialMaster` enables the fullscreen console and nothing renders
+   anyway. Task 3 called it "the Demo's worst 20 seconds" and nobody has argued with that.
+3. **The video menu's top row, *Window Size*, does nothing.** `sg_ScreenModeMenu` builds it
+   last and `uMenu` renders in reverse, so it is the top row *and* the row the cursor lands
+   on; `lowlevel_sr_InitDisplay` reads `currentScreensetting.res` when fullscreen is set and
+   this build runs `FULLSCREEN 1`, so `windowSize` is never read. ***Screen Resolution*, the
+   row below it, is the live one** and `sr_ReinitDisplay` was tested at M5 task 4c and
+   works. Hiding the dead row is tidy, not urgent — but note that hiding it while keeping
+   the Fullscreen toggle creates a *new* silent no-op, because turning Fullscreen off makes
+   Screen Resolution the dead row instead. The two rows and the toggle have to move together.
+4. **`f` never reaches `toggle_fullscreen_func`, though `n` does.** The bind is in the
+   persisted `user.cfg` (`KEYBOARD 102 PLAYER_BIND TOGGLE_FULLSCREEN 0`), the keycode
+   translation is right, and the function is not entered at all — not even with `x <= 0` —
+   while keysym 110 on an identical line enters it twice. **Pre-existing**: a control build
+   from before the fullscreen work behaves the same. First suspects are
+   `config/keys_cursor.cfg` and `keys_cursor_single.cfg`, which both rebind 102.
+5. **Three ~1.5 s HUD-off stretches remain at round transitions, and it is NOT established
+   that they are what the maintainer was seeing.** The short blinks were fixed and the
+   numbers are unambiguous — separate gone-runs under 300 ms went **870 -> 0** in Chrome and
+   **822 -> 0** in Firefox over 40.5 s. The long ones went **3 -> 3** in both, i.e. the fix
+   did not touch them, and they are present in the control build too. They begin ~515 ms
+   after each `ROUND_SCORE`/`NEW_ROUND` triple, so "the game legitimately hides the HUD at a
+   round transition" is the obvious reading — **a hypothesis, not a measurement**. The
+   maintainer was asked specifically whether the remaining flicker is the long kind or the
+   short kind and **has not answered**. Until they do this is open, and it must not be
+   filed as fixed.
+6. **`m4-persist` P11 is red and needs a decision, not a re-run.** It compares boot 1's
+   `user.cfg` content hash against boot 2's; M4's *own second task* then added the
+   `beforeunload` backstop — a second `user.cfg` writer running after
+   `sr_LoadDefaultConfig()` — and P11's gate was never re-run afterwards. The committed M4
+   transcript still exits 0 **because it predates the backstop** (zero
+   `[PERSISTBACKSTOP]`/`[PERSISTSAVE]` lines in it; present in every re-recording since). It
+   is not `-O2`: a control link with both flags removed reproduces the pre-`-O2` client
+   byte-for-byte and fails identically, twice. **The check is now stricter than the shipped
+   behaviour.**
+
+   **This exit re-ran the checker over the committed transcripts and found something sharper
+   than "P11 is red": the two committed transcripts in `docs/evidence/m4-persist/` are of
+   different vintages, against different pages, and only one of them can pass.**
+   `chrome-console.log` was re-recorded at M5 task 5 (`d7214876`) against the autostart page
+   — it carries **1 `[PERSISTBACKSTOP]` line and 2 `autostart` lines**, and the checker exits
+   **1** on it, failing exactly P11 and nothing else. `firefox-console.log` has not been
+   touched since M4 task 1 (`e3c93e72`) — **0 backstop lines, 0 autostart lines** — and exits
+   **0**. So the Firefox half of that gate certifies a page that no longer exists (it still
+   has the Play button), and it passes *because* it is stale. Re-recording it would turn it
+   red too.
+
+   Three honest options, and someone has to choose — nothing here chose for them: re-scope
+   P11 to assert what the backstop actually makes true; re-record **both** transcripts and
+   accept a red P11 until it is re-scoped; or delete P11 as superseded by
+   `m4-persist-settings`, which tests the same property with a control build and is green on
+   both engines. **What is not acceptable is leaving a mismatched pair where one engine
+   passes only by being older than the build.** Counted by running the checker on both files
+   and by `grep -c` on the two markers.
+7. **Anisotropic filtering is offered and undecided.** It is supported here (max 16) and
+   never requested; turning it on is measurably crisper — on the cycle's own saturated
+   pixels **21.9% of pixels change and 13.1% change by more than 8**, against a **noise
+   floor measured at exactly zero** — with no measurable frame cost. **But `grep -rn
+   "ANISOTROP\|anisotrop" src/` returns 0 across the whole tree**: native never asks for it
+   either, and macOS has no driver panel to force it on. So adding it would make the port
+   *better than* native, which is a fine thing to want and is not a fix for the report that
+   prompted it. **The maintainer has not said yes or no.** If yes, the site is the existing
+   `#ifdef __EMSCRIPTEN__` block in `rISurfaceTexture::OnSelect`, gated on `minFilter` being
+   one of the four mipmapped values so it stays off the NPOT `title.jpg`.
+8. **Section 11's mouse-camera binds are deferred, with the cost measured rather than
+   assumed.** `default.cfg` binds five camera actions to keycodes 324-336, which were SDL
+   1.2's mouse pseudo-keys when `SDLK_LAST` was 323; in this build `SDLK_LAST` is 1536, so
+   those binds are dead. The numpad binds for the same actions **are live** — proved by
+   reading the game's own persisted keymap, where 1116/1118 sit beside the dead 324-332 —
+   so **the actions with no binding at all are exactly three: `BANK_UP`, `BANK_DOWN`,
+   `ZOOM_IN`.** Enabling the mouse ones means raw mouse motion driving the camera with no
+   pointer lock (`SDL_WM_GrabInput` is called nowhere in the tree) and `ZOOM_IN` on the
+   browser's middle click. Not at a launch milestone.
+9. **Eight gate steps files were updated for the autostart change but only re-read, never
+   re-run in a browser.** Task 5 reported nine; **`https-multiplayer.steps` has since been
+   run live in both engines** by the live gate, so the standing figure is eight:
+   `persist-negative`, `persistence-milestone-gate`, `persistence-milestone-negative`,
+   `persist-settings-gate`, `persist-settings-menu`, `persist-backstop`, `menu-gate`,
+   `maxfps-precedence`. Counted by name from task 5's list minus the one since exercised.
+   The edit was mechanical — removing `click:#start`, which no longer exists — and every
+   one of them still waits on `[BOOT] autostart`. It is still evidence that has not been
+   taken.
+10. **M4's two control-page generators have been broken since `-O2` landed**, and this exit
+   re-ran both to confirm rather than repeating the claim: `make-control-pages.mjs` and
+   `make-settings-control-pages.mjs`, **exit 2 each**. `-O2` minifies the generated HTML and
+   both match un-minified literals. They fail loudly, as designed. **Proven not to be caused
+   by the branch that found it** — the source line in `web/shell.html` is byte-identical to
+   that branch's base. They block M4's *control* pages only, not any primary gate; anyone
+   needing M4's control matrix must fix them first, without loosening the literal match.
+11. **Native-recorded demo playback in the wasm build was never run at M5.** It was written
+   into this document's M5 line and its verification item 5 as an explicit best-effort
+   diagnostic and explicitly not a gate, and M5's time went elsewhere. So **M0's open
+   question — whether native and wasm compute identical results *during play*, as opposed to
+   during boot and idle — is still open at Phase 1's close.**
+12. **Nobody has played this for fun.** Every run of this port in five milestones has been
+   scripted. A script that presses Left and Right on a timer cannot tell a good game from a
+   bad one: cycle feel, rubber, AI difficulty, whether the camera *reads* well in motion,
+   whether the audio mix is right — all unassessed. M3 said the same thing about sound and
+   it is still true: the harness guarantees the output end is silent. This is not a bug and
+   it cannot be closed by a machine.
+
+**Closed during this exit, and recorded so it is not re-found as open:** the published
+`gh-pages` branch carried **17 files nobody meant to ship** — 23 entries and 16,185,514 B
+against a release of 6 entries and 5,382,608 B — including two probe *builds* that were
+publicly fetchable, one with the flickering HUD and one with a deliberately broken
+fullscreen key. The texture work had left five more in `web/dist-m1` that the next deploy
+would have published the same way. The cause is structural rather than careless:
+`npm run deploy` publishes `web/dist-m1` as it finds it, that directory is gitignored, and
+`make client` does not clear it. `npm run deploy` now runs
+`web/tools/check-publish-set.mjs` first, which asserts **set equality** against a declared
+release list and refuses to publish a stray or a missing file
+(`web/tools/prove-publish-set-check-can-fail.sh`, 9 cases).
+
+### The one process finding worth carrying out of Phase 1
+
+**Stale evidence is this project's recurring defect, and it is structural rather than a
+discipline problem.** A gate that is not re-run after a *later* task changes its subject
+certifies a build that has stopped existing. It was caught three separate times inside M5
+alone: M4's P11, which shipped green and was broken by M4's own second task; task 3's
+socket counter, which its own later commit falsified inside the same task; and the eight
+steps files above. The related defect is the same shape in prose — a claim restated
+across milestones without being re-derived. `rViewport` survived four milestones under
+the word "latent" while being a crash four keystrokes from the main menu, and the `-O`
+ban survived four while being a ban on something else. **Both were settled in minutes,
+the moment somebody ran the thing instead of reading about it.**
 
 ## Risk register (top items)
 
@@ -244,16 +523,202 @@ Estimates are relative effort, not calendar commitments.
 2. M2 gate: 3 complete single-player rounds vs AI in Chrome + Firefox at ≥30 fps on the maintainer's machine; tab stays responsive. **✅ done** — `docs/evidence/m2-gate/`, re-runnable as `web/tools/gameplay-gate.steps`, arbitrated by `docs/evidence/m2-gate/check-transcript.mjs` (exit status, not prose). Read the four caveats under the M2 milestone entry before quoting any of it.
 3. M3 gate: non-zero PCM reaches `SDL.audio.pushAudio` in every round of a three-round match, Chrome + Firefox. **✅ done** — `docs/evidence/m3-audio/`, re-runnable as `web/tools/audio-gate.steps`, arbitrated by `docs/evidence/m3-audio/check-audio-transcript.mjs` (24 checks, exit status). Two controls: `prove-checks-can-fail.mjs` shows each of the 24 can fail, and a silent bundle on a byte-identical wasm reads 0/1020. Read the four caveats under the M3 milestone entry first — in particular, this is **not** a claim that anything was rendered to a device or that the mix is correct.
 4. M4 gate: settings persist across reload (IndexedDB). **✅ done** — `docs/evidence/m4-persistence/`, re-runnable as `web/tools/persistence-milestone-gate.steps`, arbitrated by `check-milestone-transcript.mjs` (21 checks plus a self-guard, exit status). Three assertions across three boots: the canvas comes back at the resolution the player picked (measured on the DOM, outside the wasm), the later boots skip the first-use path, and the game still steers. Two controls: `prove-milestone-checks-can-fail.mjs` flips all 21 with 25 mutations under set equality, and `persistence-milestone-negative.steps` — the same script with IndexedDB destroyed between two boots, one executable line different — takes down exactly one check per assertion. Chrome 152 headed and Firefox 154 headless both 22/22. Read "What is not claimed" in that README first: it does **not** separate the menu-leave save from the `beforeunload` backstop (that is task 2's gate, which does it with a control build), and it covers one resolution, one keyboard template and one player.
-5. M5: native demo playback survives >1 round in wasm build (best-effort); packaged page loads <15 MB over the wire.
-6. **Launch: the Demo is publicly reachable on GitHub Pages.**
+5. M5: native demo playback survives >1 round in wasm build (best-effort); packaged page loads <15 MB over the wire. **Half done, and the half that was a gate is done.** The size half is met with room to spare: a first visit transfers **1,748,947 B = 1.668 MiB**, 8.6x under the 15 MB budget, measured against the live deployment with `%{size_download}` from real GETs and each gzip body gunzipped and hashed back to the built artefact (`web/tools/wire-facts.sh`, arbitrated by `docs/evidence/m5-launch/check-wire-facts.mjs`). **The native-demo-playback half was never run at M5 and is not claimed** — it was written as best-effort and explicitly not a gate, and M5's time went to the crash, the camera, the deploy and the two defects the maintainer found by playing. So the question M0 left open — whether native and wasm compute identical results *during play*, as opposed to during boot and idle — is still open at Phase 1's close.
+6. **Launch: the Demo is publicly reachable on GitHub Pages. ✅ done** — <https://escapedcat.github.io/armagetronad-web/>, re-runnable as `sh web/tools/live-gate.sh`, which asserts the wire facts (W1-W13 + WZ), plays M2's gate in both engines against the public URL, and drives the https multiplayer route in both (X1-X11 + XZ). `prove-live-checks-can-fail.mjs` shows all 53 new-assertion cases can fail under set equality. Evidence: `docs/evidence/m5-launch/`. **Read item 5's caveat and the M5 milestone entry's "what is NOT met" list before quoting this as Phase 1 being finished** — reachable and playable is exactly what is claimed and it is less than done.
 
 ## Future work (explicitly not committed)
 
 Neither phase below is part of "done." Each gets its own go/no-go decision after the Demo ships, informed by real Phase 1 data. Phase 1 carries exactly two obligations to keep these doors open, both free: network code compiles unchanged, and all patches stay `#ifdef __EMSCRIPTEN__`-guarded.
 
-### Phase 3 — minimal touch support (likely first: days of JS, not weeks of Go)
+> **What Phase 1 actually established for these two phases, now that it has shipped.** Both
+> obligations were kept: `git diff` over `src/network/` against upstream is confined to
+> nothing that would obstruct the bridge, and every patch outside `src/emscripten/` is
+> guarded. Beyond that, five things are now measured rather than assumed, and a sixth is a
+> warning.
+>
+> **For Phase 2 (the multiplayer bridge):**
+>
+> 1. **Single-player really does open no sockets, and the Demo is behavioural evidence for
+>    it — though read the form of the evidence, because it is an absence.** The architecture
+>    note at the top of this document establishes it from source (`nSTANDALONE`). What the
+>    live gate adds is this: in both three-round gameplay transcripts taken against the
+>    public URL, the strings `ws://` and `websocket` appear **0 times each** — while the
+>    *same driver, same session, same build*, walked into the multiplayer menu and produced
+>    **98 `ws://` lines in Chrome and 97 in Firefox**. So the channel that would report a
+>    socket demonstrably works and printed nothing for the whole match. **Stated exactly:
+>    `gameplay-gate.steps` installs no WebSocket counter** — the counter belongs to
+>    `https-multiplayer.steps` — so this is "the browser logged no socket activity", not
+>    "an instrument counted zero". It is enough to say a bridge is genuinely additive:
+>    nothing in the committed scope has to change to accommodate one.
+> 2. **The one-UDP-socket claim held all the way through.** `nBasicNetworkSystem::controlSocket_`
+>    remains the client's only socket and peers are still demultiplexed by source address —
+>    which is exactly why one WebSocket per browser client reproduces native behaviour, and
+>    why the server browser's concurrent master pings work through the same shim. Nothing in
+>    M0-M5 disturbed this, and the design below still rests on it.
+> 3. **The master query's shape is now measured against a real deployment, and a bridge has
+>    to fit inside it.** Four masters, **24 or 25 attempts to each**, **96-100 total**, over
+>    **20.0 s** — and the 20 s is `sn_Connect`'s 5 s-per-master timeout, not a property of how
+>    the socket fails. Nine transcripts and 36 per-master observations, all from one machine
+>    on one network path. A bridge that answers faster shortens this; a bridge that answers
+>    *slower than 5 s per master* is indistinguishable from no bridge at all.
+> 4. **The HTTPS finding is a hard constraint on the bridge host, not a preference.** Pages
+>    is HTTPS-only and `https_enforced: true`, so **every `ws://` the client opens is blocked
+>    as mixed content** — measured live, 96-100 blocked attempts per master query. The bridge
+>    must therefore be **`wss://` with a real certificate**; a plain-`ws` bridge cannot be
+>    reached from the Demo's origin at all, on any browser, regardless of what the bridge
+>    does. That makes Caddy-or-equivalent TLS a day-one requirement rather than the M-C item
+>    the plan below files it as. A **working `wss://` rewrite already exists and was
+>    deliberately declined at M5 task 3** — it takes the attempt count from 98 to 19 and
+>    removes every mixed-content error — and the four reasons it was declined are recorded in
+>    `docs/porting/browser-runtime-notes.md` § 12. Phase 2 should read that decision before
+>    re-implementing it: it is the same code, wanted for a different reason.
+> 5. **Firefox on the maintainer's machine cannot open a connection to any `*.github.io`
+>    host** — including GitHub's own `pages.github.io` — while Chrome and `curl` reach the
+>    same URL in the same second. It is a local outbound restriction, not a fact about the
+>    deployment, and every Firefox number in this project came through a CONNECT proxy that
+>    tunnels bytes and never sees plaintext. **Any Phase 2 work that measures Firefox against
+>    a remote bridge will hit this**, and should reach for
+>    `docs/evidence/m5-deploy/tunnel-proxy.mjs` rather than re-diagnosing it.
+> 6. **The warning: Asyncify is the constraint that shapes the JS side of the bridge, and
+>    JSPI is not an escape from it.** The design below is already right about this — the
+>    `onmessage` handler must only *enqueue*, never re-enter C++ — and Phase 1 supplies the
+>    reason it must stay right: JSPI links, is ~80% smaller, and is supported by both target
+>    browsers, but **it kills audio** through Emscripten 6.0.8's `libsdl.js`
+>    (`Asyncify.sleepCallbacks` pushed under `#if ASYNCIFY`, the array defined only under
+>    `#if ASYNCIFY == 1`). So a bridge cannot assume it will one day be freed from Asyncify's
+>    reentrancy rules by switching main-loop strategies.
+>
+> **For Phase 3 (touch):**
+>
+> 7. **Its cheapest piece is already overdue and belongs to Phase 1, not Phase 3.** The
+>    touch-device "needs a keyboard" note was promised by M4 and never built (open item 1
+>    above). Whoever starts Phase 3 will find it sitting there; whoever does *not* start
+>    Phase 3 should still build it, because a phone visitor today gets a canvas and no
+>    explanation.
+>
+>    *(**Phase 3 did it, and skipped the note.** Once step 1 below came back positive there
+>    was no reason to ship an apology instead of controls: the note and the overlay are the
+>    same file, the same detection, and the overlay is maybe forty lines more. The note was
+>    never written.)*
+> 8. **Canvas sizing is solved and the solution is the constraint.** `web/shell.html` sizes
+>    the backing store once, before boot, from `innerWidth`/`innerHeight` x
+>    `devicePixelRatio`, capped by *area* at 3840x2160 — and the cap is an **allocation**
+>    bound, not a frame-rate one: nine backing-store sizes through M2's sampler held a 60 fps
+>    median from 0.79 Mpx **to 33.2 Mpx**, with p50 frame time pinned at 16.7 ms throughout.
+>    **This port is not fill-bound on an M1 Max**, which is a real datum for the phone-GPU
+>    question and not an answer to it. A later window resize deliberately does **not** move
+>    the backing store — following it means `sr_ReinitDisplay` — so CSS scales and a reload is
+>    crisp. An orientation change on a phone is exactly that case, and it is unhandled.
+>
+>    *(**Phase 3: the sizing block is right at a phone aspect, and two things around it were
+>    not.** Measured at 915x412 CSS px dpr 3 it produced a 2745x1236 = 3.39 Mpx backing store
+>    at a 1:1 CSS fit. But (a) the page had **no `<meta name="viewport">`**, so Android
+>    Chrome would have laid it out against a ~980 px virtual viewport and the block would
+>    have sized a window that does not exist; and (b) `#canvas`'s `100vh` is the phone's
+>    LARGE viewport while the block reads `window.innerHeight`, the small one — a second
+>    `100dvh` declaration now solves the contain-fit against the box that exists. The
+>    orientation change is handled as a **prompt**: portrait raises a full-screen "turn your
+>    phone sideways", and a rotation after load raises a chip that says the picture is being
+>    stretched from the size it loaded at and offers a reload. Measured: a portrait-loaded
+>    page rotated to landscape is a 186x412 sliver.)*
+> 9. **`sr_ReinitDisplay` works, which reopens the resize question Phase 3 will need.**
+>    Measured at M5 task 4c: the canvas resizes live, `isContextLost()` stays false, no
+>    `webglcontextlost` fires, 0 GL errors in 3832 polls, and the game then plays two full
+>    rounds at the new size. Emscripten's `SDL_SetVideoMode` never creates or destroys a GL
+>    context. So a resize-and-reinit listener is *available* to Phase 3; it was deliberately
+>    not built at Phase 1. *(**Phase 3 declined it too, on the same grounds.** A live
+>    re-init on every orientation flip is a much larger claim than a sentence of honest text,
+>    and the honest text is what shipped. It is still available.)*
+> 10. **The keyboard surface a touch overlay has to synthesize is smaller than the plan
+>    assumes in one place and larger in another.** Four keys and arrows+enter is right for
+>    play and menus. But `f` does not work today even from a real keyboard (open item 4), and
+>    three camera actions have no binding at all (open item 8) — so an overlay that
+>    synthesizes keystrokes inherits both, and should not be blamed for either.
+>
+>    *(**Phase 3 measured it and the "smaller" half is confirmed while the "larger" half
+>    moved.** Arrows+enter is exactly right for getting IN: the first-run flow is Enter,
+>    Enter, Enter, because "Accept" is First Setup's pre-selected top item, and every menu on
+>    the route to a round carries its own Exit/Back item. The gap is getting OUT — `Escape`
+>    is `INGAME_MENU` and there is no other way to leave a running match — so the shipped
+>    overlay is six keys, not five: the four arrows, Enter and Escape. `f` and the camera
+>    were left alone exactly as instructed.)*
+
+
+### Phase 3 — minimal touch support — **BUILT, ~~and unverified on a real device~~ deployed, and played on a real phone**
 
 Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mobile play needs **zero C++ changes**: a JavaScript overlay in the shell page synthesizes the game's existing keyboard controls from touch input (tap zones for turn/brake, a simple D-pad for menus). Unknowns priced into this phase, not the Demo: phone GPU performance under the emulation layers, canvas sizing, and iOS — where every browser is WebKit underneath, reopening the Safari question deliberately skipped on desktop.
+
+> **What shipped, and what the estimate got right.** "Zero C++ changes" held exactly: the
+> whole of it is `web/shell.html`, plus new gates in `web/tools/`. It is six keys — two
+> half-screen turn zones (`ArrowLeft`/`ArrowRight`) and a four-button strip at the top
+> centre (`ArrowUp`, `ArrowDown`, `Enter`, `Escape`). **No brake and no camera**: the plan
+> line above says "turn/brake", and brake was dropped as not minimal. Evidence:
+> `docs/evidence/phase3-touch/`.
+>
+> **The gate the whole phase rested on was the trust question, and nobody had tested it.**
+> A synthesized `KeyboardEvent` carries `isTrusted: false`, and trust demonstrably matters
+> elsewhere in this port. It does **not** matter for key delivery: Emscripten's SDL shim
+> registers on `document`, `SDL.receiveEvent` never reads `isTrusted`, and the only property
+> on the path is `event.keyCode`. Measured with the game's own `uActionTooltip` counters:
+> `web/tools/synthetic-key-gate.steps`. Had it failed, this phase would have needed a C++
+> input path instead.
+>
+> **What is measured and what is not.** Everything above was driven under Chrome device
+> emulation at 915x412 CSS px dpr 3 with *real* taps (`Input.dispatchTouchEvent`), and it
+> plays: the entire first-run flow reached `[L] NEW_ROUND` by tapping alone, and the turn
+> counters were spent by tapping the two halves. **Emulation is not a device.** The
+> 60 fps median at 3.39 Mpx is an M1 Max's number at a phone's pixel count — and since this
+> port's per-frame cost is the CPU side of `-sLEGACY_GL_EMULATION`, a phone's single-thread
+> CPU is exactly the axis still unmeasured. Memory at dpr 3 (~27 MB of drawing buffer on a
+> device that kills tabs), palm rejection, Android's edge gestures, the URL bar, Firefox for
+> Android and iOS Safari are all untested. The list is at the end of
+> `docs/evidence/phase3-touch/README-overlay.md`.
+
+> **Then a real phone, 2026-09-03.** The maintainer played the deployed build on his Android
+> phone and reported four things. Each was measured before it was believed, and three of the
+> four measurements disagreed with the first explanation offered for them.
+>
+> - *"It works, very nice."* The trust question settled in emulation held on the device. The
+>   one control change he asked for shipped the same day: in menus a tap anywhere is Enter and
+>   Escape is a button in the top-left corner, Up/Down stay because menus are lists, and during
+>   a round only the two turn zones are live. `src/emscripten/eWebInput.cpp` exports
+>   `aa_web_input_context()` so the page knows which surface a tap belongs to; the gate asserts
+>   the two surfaces are never in the box tree together. `docs/evidence/phone-round2/touch/`.
+> - *"It looks stretched."* Not the 3D view — the **title picture**. `textures/title.jpg` is
+>   800x600 and `gLogo::Display()` drew it across the whole viewport: a measured **1.96x**
+>   horizontal stretch at the phone's landscape aspect, and 1.33x on every 16:9 desktop, which
+>   nobody had noticed. Fixed in `gLogo.cpp`, guarded `__EMSCRIPTEN__ && !DEDICATED` so the
+>   dedicated wasm stays byte-identical by construction (2,488,298 / `9718a2a6…`, rebuilt and
+>   checked). `docs/evidence/phone-round2/logo/`.
+> - *"The bike is tiny."* Real geometry, not a defect. `rViewport::Perspective` widens the
+>   horizontal FOV from 90° at 4:3 to ~111° at the phone's aspect while pinning the vertical at
+>   67.4°. The fix is a viewport *shape*, not a zoom setting: at a **square** viewport the FOV
+>   returns to 90° horizontal and 90° vertical. That is the arithmetic behind the maintainer's
+>   portrait "Game Boy" layout — square game, controls below — which is parked as the milestone
+>   after M6. `docs/evidence/phone-round2/fov/`.
+> - *"It lags — starts smooth, gets laggier the more I drive, and when I'm fast and close to a
+>   wall."* **CPU-bound, not fill-bound**: `?dpr=1`, a ninth of the pixels, felt identical to
+>   him. Two candidate mechanisms are in the source and **neither is measured yet**: unbounded
+>   wall trails (`wallsLength = -1`) re-submitted through the GL emulation every frame, because
+>   display lists are stubs here and `sr_useDisplayLists` only ever turns on for an NVIDIA
+>   vendor string; and the rubber path's recursive `TimestepCore` when grinding a wall. The
+>   first desktop sweep measured nothing — its harness never sent a steering input, so all six
+>   arms sampled an idle tutorial screen in an empty arena and read the same 6.4–8.2 ms, and
+>   the "control" arm designed to prove `WALLS_LENGTH` bites could not bite on trails that did
+>   not exist. Two fixes to the rig — actually drive, and throttle the CPU (`cpu:RATE` in
+>   `drive-browser.mjs`) so the desktop sits in a phone's regime instead of eight times above it
+>   — and one round reproduced the symptom: **20.0 → 27.7 ms p50 early-to-late, p90 23 → 41 ms,
+>   29 fps on screen**. The next round was flat (1.03x). That is an instrument, not a baseline.
+>
+> **This is M6.** Establish reproducibility first; then A/B the cheap levers (`WALLS_LENGTH`, a
+> frame cap, `FLOOR_MIRROR_INT 0`) against that baseline; then price real display lists in
+> `eCompat.cpp` against the *measured* growth. Nothing milestone-sized is built without the
+> maintainer's say. The invalid sweep and its tooling are in a git stash titled "M6 seed" for
+> the M6 branch to take up and fix, not to cite.
+>
+> The lesson this round adds to M4's P11 and M5's stale gate: **a gate must prove the condition
+> it measures actually held** — a late-round screenshot with trail geometry in it, a non-zero
+> "Rubber Used" for a grind arm — or its numbers are evidence of nothing.
 
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 

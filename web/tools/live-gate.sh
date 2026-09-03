@@ -79,6 +79,21 @@ run() { # run <name> <cmd...>; records PASS/FAIL from the exit status
   if "$@"; then record "$name" PASS; else record "$name" FAIL; fi
 }
 
+# drive <name> <cmd...> -- same, for the browser drivers.
+#
+# These used to be bare commands. Under `set -e` a driver that fails takes the
+# whole script with it: no summary line, no "LIVE GATE FAILED", no row for the
+# legs that never ran, and an exit status that looks the same as a real gate
+# failure. It happened -- a Firefox left running by the previous leg answered
+# `session not created: Maximum number of active sessions`, and the run died
+# after four of six rows with the reason only in a driver log nobody was told
+# to open. A harness fault and a product failure must not look alike, and a
+# gate that cannot finish reporting is not a gate.
+drive() {
+  name=$1; shift
+  if "$@"; then :; else record "$name driver" FAIL; fi
+}
+
 want() { [ "$ONLY" = all ] || [ "$ONLY" = "$1" ]; }
 
 FF_PREFS=""
@@ -130,14 +145,16 @@ fi
 
 if want play; then
   echo "=== gameplay, chrome"
-  node "$ROOT/web/tools/drive-browser.mjs" --headed --out "$OUT/play-chrome" \
+  drive "gameplay chrome" \
+    node "$ROOT/web/tools/drive-browser.mjs" --headed --out "$OUT/play-chrome" \
        --url "$URL/$PAGE" --script-file "$ROOT/web/tools/gameplay-gate.steps" \
        > "$OUT/play-chrome.driver.txt" 2>&1
   run "gameplay chrome"       node "$ROOT/docs/evidence/m2-gate/check-transcript.mjs" \
                                    "$OUT/play-chrome/console.log"
 
   echo "=== gameplay, firefox"
-  firefox_run "$OUT/play-firefox" "$ROOT/web/tools/gameplay-gate.steps" \
+  drive "gameplay firefox" \
+    firefox_run "$OUT/play-firefox" "$ROOT/web/tools/gameplay-gate.steps" \
        > "$OUT/play-firefox.driver.txt" 2>&1
   run "gameplay firefox"      node "$ROOT/docs/evidence/m2-gate/check-transcript.mjs" \
                                    "$OUT/play-firefox/console.log"
@@ -145,14 +162,16 @@ fi
 
 if want mp; then
   echo "=== multiplayer over https, chrome"
-  node "$ROOT/web/tools/drive-browser.mjs" --headed --out "$OUT/mp-chrome" \
+  drive "multiplayer chrome" \
+    node "$ROOT/web/tools/drive-browser.mjs" --headed --out "$OUT/mp-chrome" \
        --url "$URL/$PAGE" --script-file "$ROOT/web/tools/https-multiplayer.steps" \
        > "$OUT/mp-chrome.driver.txt" 2>&1
   run "multiplayer chrome"    node "$ROOT/docs/evidence/m5-launch/check-live-multiplayer.mjs" \
                                    "$OUT/mp-chrome/console.log"
 
   echo "=== multiplayer over https, firefox"
-  firefox_run "$OUT/mp-firefox" "$ROOT/web/tools/https-multiplayer.steps" \
+  drive "multiplayer firefox" \
+    firefox_run "$OUT/mp-firefox" "$ROOT/web/tools/https-multiplayer.steps" \
        > "$OUT/mp-firefox.driver.txt" 2>&1
   run "multiplayer firefox"   node "$ROOT/docs/evidence/m5-launch/check-live-multiplayer.mjs" \
                                    "$OUT/mp-firefox/console.log"

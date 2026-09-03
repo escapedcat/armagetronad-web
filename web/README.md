@@ -26,7 +26,7 @@ make -f web/Makefile client    -j8    # browser client -> web/dist-m1/
 make -f web/Makefile dedicated -j8    # M0 server      -> web/dist-m0/
 
 # 5a. Run the client. It MUST be served over HTTP; a file:// open cannot
-#     fetch .wasm/.data. Then open the URL and press Play.
+#     fetch .wasm/.data. Open the URL and the game starts on its own.
 python3 -m http.server 8000 --directory web/dist-m1
 #     -> http://localhost:8000/armagetronad.html
 
@@ -207,14 +207,86 @@ sitting on "Loading…" forever, but the fix is to serve it. Any static server
 will do; `python3 -m http.server` is used here only because it needs no
 install.
 
-The Play button is not decoration either: the page loads with
+~~The Play button is not decoration either: the page loads with
 `noInitialRun`, and `Module.callMain()` runs from the click. A browser will
 not let a page start audio without a user gesture, so something has to be
 clicked before the game starts; making that explicit is cheaper than debugging
-a muted, half-started runtime.
+a muted, half-started runtime.~~
+
+**REMOVED at M5, and the audio reason above did not hold.** The button was
+carried through four milestones as the user gesture that unlocks audio. It is
+not needed for that: **Emscripten resumes the AudioContext on the first
+keypress**, and this game cannot be played without one. Measured rather than
+argued — with the button gone, M3's audio gate is **25/25 in Chrome and in
+Firefox**, including A7c (the menus are exactly silent before round 1) and A9
+(every buffer in the measured window was handed to a `running` AudioContext).
+The page still loads with `noInitialRun` and `callMain` is still exported and
+still required; it now runs from `onRuntimeInitialized`. `?autostart=0` restores
+the old wait-for-a-call behaviour.
+
+### The page's query parameters
+
+Nothing in the shipped flow sets any of these and none is linked from anywhere.
+They exist because **this port cannot measure a phone** — there is no device in
+this repo's loop — so the only way to ask a phone a question is to hand the
+person holding it a switch and a readout.
+
+| parameter | default | what it does |
+|---|---|---|
+| `?autostart=0` | off | holds `main()` until `AA_START()`. A harness hook; four M4 checks need the window between "runtime ready" and "main has run". |
+| `?touch=1` / `?touch=0` | media query | forces the touch overlay on or off. |
+| `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
+| `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
+| `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
+
+**`?dpr=1` is the experiment that decides the performance question, and it
+decides it in one comparison.** On a desktop this port is CPU-bound, not
+fill-bound: `docs/evidence/m5-startup` swept nine backing-store sizes and the
+frame-time distribution did not move — 60 fps median at 0.79 Mpx and at 33.2
+Mpx, p50 pinned at 16.7 ms throughout. Whether that also holds on a phone GPU is
+**unknown**. So: play a round normally, then play one at `?dpr=1`. If it feels
+smoother, the phone is fill-bound and resolution is the lever. If it feels
+identical, it is CPU-bound and cutting pixels buys nothing but blur.
+
+**In `?diag=1`, the row to read is `gl`.** `bs` is the backing store the page
+asked for — the number the game reads back through `SDL_GetVideoInfo` and builds
+`glViewport` and `glFrustum` from. `gl` is what the driver actually allocated. A
+WebGL drawing buffer over the driver's limit is **silently clamped**, and if the
+clamp is not proportional the browser scales a wrong-shaped buffer over the
+element box, which is a genuinely stretched picture. The row says `MATCH` or
+`CLAMPED`. Desktop GPUs report a 16384-pixel axis limit and never come near it,
+which is exactly why no desktop test in this repo can find that fault.
+
+The frame rate is also drawn by the game itself, in the top right, and always
+has been (`sr_FPSOut` defaults to `true` in `src/render/rScreen.cpp`) — so an
+in-page frame-rate readout costs nothing to *have*, and `?diag=1`'s `swaps/s`
+row exists only because that text is small on a phone. The two agree; where they
+ever disagree, the game's is right.
+
+### On a phone
+
+The page detects a touch device with `(hover: none) and (pointer: coarse)` and
+then differs from the desktop page in three ways, all of them in
+`web/shell.html`:
+
+- **the touch overlay** — two half-screen steering zones and a four-button menu
+  pad (Phase 3, `docs/evidence/phase3-touch/`);
+- **portrait holds the boot.** A page opened in portrait shows "turn your phone
+  sideways" and does **not** start the game; the wasm keeps downloading, and the
+  moment the phone is turned the backing store is measured for the real
+  orientation and the game starts. Before this, a portrait load built the
+  projection for an aspect near 0.45 — a vertical field of view near 131° — and
+  no amount of CSS afterwards could undo a frame drawn at the wrong shape.
+  "Start in portrait anyway" is there for a device whose orientation this page
+  reads wrongly.
+- **the camera sits at half the stock distance.** At a phone's landscape
+  geometry the player's own cycle measures 23 × 63 backing-store pixels stock
+  and 47 × 122 at `?cam=0.5`. `?cam=1` restores stock;
+  `docs/evidence/phone-feedback/camera/` is the sweep, including why narrowing
+  the field of view was the worse lever.
 
 A successful run shows the game's language menu on the canvas within a few
-seconds of the click. Enter chooses a language, the first-run setup menu
+seconds of the page load. Enter chooses a language, the first-run setup menu
 follows, Escape leaves it, and a tutorial match against three AI opponents
 starts. The arrow keys steer. What that looks like, in both browsers, is
 committed under `docs/evidence/m1-task7/` (menus, M1),
@@ -263,7 +335,7 @@ including why a clean transcript is not by itself evidence of a clean run.
 ### The browser-driving harness
 
 `web/tools/` holds two Node scripts (444 and 368 lines) that open the page in a real
-browser, click Play, press keys, take screenshots and record everything the
+browser, wait for `[BOOT] autostart`, press keys, take screenshots and record everything the
 console says. They exist because the page cannot be checked with a plain
 screenshot — nothing runs until Play is clicked — and because retyping the
 browser flags each time is how evidence stops being reproducible.
@@ -673,16 +745,73 @@ files changed size. That is the whole argument for **re-measuring rather than
 quoting** — which is why the numbers are now recorded as JSON and arbitrated by
 a program instead of typed into this table.*
 
-**The published branch currently carries more than the six files listed above.**
+### What is deployed right now, and how to tell
+
+The `gh-pages` tip is **`60433d16`, "Deploy dd42ce68"** — the deploy script puts
+`git rev-parse --short HEAD` in the commit message, so the published commit names
+the source commit it came from.
+
+**Expect that name to be an ancestor of `main` rather than its tip.** Everything
+committed after a deploy that does not change an artefact — docs, evidence,
+tooling — moves `HEAD` without invalidating the deployment. The check that
+matters is not "does the tip match" but "do the published bytes come back from a
+build of this tree", and at the M5 exit they do: all five published files are
+**byte-identical by md5** to a clean rebuild, verified after
+`rm -rf web/build-m0 web/dist-m0 web/build-m1 web/dist-m1`. `check-wire-facts.mjs`
+W7 asserts exactly that against the live site, per file, by sha256.
+
+### The published set is asserted, not assumed
+
+`npm run deploy` runs `web/tools/check-publish-set.mjs` before it publishes
+anything. That check asserts **set equality** against a declared release list and
+exits 1 on a stray file *or* a missing one, so a bad set stops locally instead of
+being force-pushed. It checks names only — `check-wire-facts.mjs` W7 is the
+content check and runs against the deployment afterwards.
+
+```sh
+node web/tools/check-publish-set.mjs               # what would be published
+node web/tools/check-publish-set.mjs --list        # the declared release set
+sh web/tools/prove-publish-set-check-can-fail.sh   # 9 cases, all must behave as declared
+```
+
+**Verify what is actually published with `git ls-tree`, never by browsing** —
+Pages serves no directory index, so that tree is the only way to see the set:
+
+```sh
+git fetch origin gh-pages && git ls-tree -r -l origin/gh-pages
+```
+
+At the M5 exit deploy that is **6 entries, 5,382,608 B**: the four game files,
+`index.html` and `.nojekyll`.
+
+~~**The published branch currently carries more than the six files listed above.**
 `git ls-tree -r origin/gh-pages` shows 23 entries, 16,185,514 B; the four game
 files, `index.html` and `.nojekyll` are 5,382,608 B of that, and the remaining
 17 entries — `armagetronad-fstoggle.*`, `armagetronad-oldyield.*` and nine
 `res-*.html` — are probe builds from M5's startup/sizing work that were in
-`web/dist-m1` when the deploy ran. They are publicly fetchable (`200`,
-`application/wasm` for the stray wasms) and **a visitor never downloads them**,
-because nothing links to them; they cost repository storage, not wire bytes.
-`npm run deploy` publishes `web/dist-m1` exactly as it finds it, so
-`make -f web/Makefile clean` before a release build is what keeps them out.
+`web/dist-m1` when the deploy ran.~~
+
+**FIXED at the M5 exit, and worth reading rather than striking, because the cause
+was structural.** Those 17 files were published because `npm run deploy` publishes
+`web/dist-m1` **as it finds it**, that directory is gitignored, and
+`make -f web/Makefile client` does not clear it — so every probe build and
+generated control page any task wrote there was one deploy away from being public.
+Two of them were whole builds with known defects, publicly fetchable and served as
+`application/wasm`: `armagetronad-oldyield.*` is the build with the HUD flicker,
+and `armagetronad-fstoggle.*` is a control whose fullscreen key is deliberately
+broken. The texture work later left five more (`texprobe.html`,
+`aniso-{on,off}.html`, `fps-aniso-{on,off}.html`) that the next deploy would have
+published the same way — which is the tell that this was a process defect and not
+one person's oversight.
+
+A visitor never downloaded any of them, because nothing links to them; they cost
+repository storage, not wire bytes. All 17 now answer **404**, verified by name
+after the exit deploy. One of them returned 200 for a few minutes afterwards from
+a stale edge cache — **removal from the branch is not instantly removal from the
+CDN**, so re-check with a cache-busting query before concluding a deploy failed.
+
+`make -f web/Makefile clean` before a release build is still the cure; the check
+is what makes forgetting it non-silent.
 
 ### Re-running the live gate
 

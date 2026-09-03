@@ -1,0 +1,31 @@
+=== 1. baseline: the declared set alone passes
+ok    clean release set                              exit 0, matched: PASS  the set equals
+
+=== 2. a stray probe BUILD -- the defect live on gh-pages today
+ok    4 stray probe-build files                      exit 1, matched: armagetronad-oldyield.wasm
+
+=== 3. a stray generated PAGE -- what the texture work left in dist-m1
+ok    1 stray generated page                         exit 1, matched: aniso-on.html
+
+=== 4. a stray hidden in a SUBDIRECTORY (gh-pages -v descends)
+ok    stray one level down                           exit 1, matched: probes/res-1920x1080.html
+
+=== 5. a stray DOTFILE (gh-pages -v matches '**/.*')
+ok    stray dotfile                                  exit 1, matched: .DS_Store
+
+=== 6. missing release file: index.html, i.e. deploying without the cp
+ok    index.html absent                              exit 1, matched: release file(s) absent
+
+=== 7. missing release file: the engine itself
+ok    armagetronad.wasm absent                       exit 1, matched: armagetronad.wasm
+
+=== 8. both at once -- the shape a half-cleaned dist takes
+ok    stray and missing reported together      exit 1, both named
+
+=== 9. a directory that does not exist is exit 2, not a silent pass
+ok    absent directory                         exit 2
+
+=== summary
+9 passed, 0 failed
+EVERY CASE BEHAVED AS DECLARED
+exit=0

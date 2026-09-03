@@ -1,0 +1,25 @@
+# One arm of docs/evidence/phone-feedback/camera/run-camera-sweep.sh. Not
+# runnable on its own: CONFIGLINES and TAGHERE are substituted by that script.
+# Read its header for what the arm does, why autoexec.cfg is the right lever for
+# a PROBE and the wrong one for a shipped default, and what the printed
+# bounding box is a measurement of.
+wait:800
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# probe\nCONFIGLINES\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})()
+eval:(()=>{window.AA_FOOT=function(){var cv=document.getElementById('canvas');var r=[0.42,0.50,0.16,0.20];var x=Math.round(r[0]*cv.width),y=Math.round(r[1]*cv.height),w=Math.round(r[2]*cv.width),h=Math.round(r[3]*cv.height);var c=document.createElement('canvas');c.width=w;c.height=h;var cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(cv,x,y,w,h,0,0,w,h);var d=cx.getImageData(0,0,w,h).data;var x0=w,y0=h,x1=-1,y1=-1,n=0;for(var j=0;j<h;j++)for(var i=0;i<w;i++){var o=(j*w+i)*4,R=d[o],G=d[o+1],B=d[o+2];var s=Math.max(R,G,B)-Math.min(R,G,B);if(s>40){n++;if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j;}}return {canvas:cv.width+'x'+cv.height,saturated_px:n,bbox:x1<0?null:(x1-x0+1)+'x'+(y1-y0+1),w_pct_of_screen_h:x1<0?null:Math.round((x1-x0+1)/cv.height*10000)/100,h_pct_of_screen_h:y1<0?null:Math.round((y1-y0+1)/cv.height*10000)/100};};return 'footprint probe installed'})()
+eval:window.AA_START()
+until:1:90000:[BOOT] autostart
+wait:9000
+tap:#touchpad button[data-aakey="Enter"]
+wait:3000
+tap:#touchpad button[data-aakey="Enter"]
+wait:3500
+tap:#touchpad button[data-aakey="Enter"]
+wait:2000
+until:2:120000:[L] NEW_ROUND
+wait:1800
+shot:f01-round2-countdown
+eval:'[FOVPROBE] TAGHERE-r2 '+JSON.stringify(window.AA_FOOT())
+until:3:120000:[L] NEW_ROUND
+wait:1800
+shot:f02-round3-countdown
+eval:'[FOVPROBE] TAGHERE-r3 '+JSON.stringify(window.AA_FOOT())

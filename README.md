@@ -18,29 +18,48 @@ a QR pointing at a stale address looks identical to a correct one.
 
 The game starts on load — there is no Play button. A first visit downloads
 **~1.67 MiB** (the edge serves the 4.33 MB wasm gzipped to 1.27 MB); after that
-it is cached, and your settings and key bindings persist in IndexedDB.
+it is cached, and your settings and key bindings persist in IndexedDB. The canvas
+is sized from your window at page load, so maximise before reloading if you want
+the sharpest image.
 
 **On a desktop** (Chrome or Firefox): arrow keys steer, Escape opens the in-game
 menu, `n` toggles the browser's fullscreen.
 
 **On a phone** (Android Chrome): tap the left or right half of the screen to
-turn; a strip of four buttons at the top centre covers Up, Down, Enter and Esc
-for the menus. **Rotate to landscape before loading**, or reload after rotating.
-Touch is minimal and new — it has been driven in Chrome's device emulation but
-**not yet on real hardware**, so frame rate and memory on an actual phone are
-unmeasured. iOS is untested; every browser there is WebKit, which this port does
+turn. In the menus a tap anywhere is Enter, Up and Down are the two buttons at
+the top centre, and Escape is the button in the top-left corner; the game tells
+the page whether a menu is open or a round is running, so a tap never means two
+things at once. **Rotate to landscape before loading**, or reload after rotating.
+It has been played on a real phone and it plays; the frame rate on a phone is the
+open item. iOS is untested; every browser there is WebKit, which this port does
 not target.
 
-Single-player against AI is the committed scope. The multiplayer menu is present
-but reaches no servers — it fails to the game's own "Sorry, no server found",
-taking about 20 seconds of black canvas to get there. Safari is not a target.
+Single-player against AI is the committed scope: the multiplayer menu is present
+but reaches no servers. Safari is not a target.
 
-**Two known defects, both diagnosed, neither fixed yet:** the HUD and FPS counter
-blink roughly once a second (the frame yield sits above the overlay draw, so a
-frame is composited with the world present and the HUD not yet drawn); and in the
-video menu the top row, *Window Size*, does nothing — this build runs fullscreen,
-where that setting is never read. The row below it, *Screen Resolution*, is the
-live one.
+**Known rough edges, all diagnosed, stated as narrowly as they were measured:**
+
+- The HUD and FPS counter used to blink about once a second. **Fixed** — the frame
+  yield sat above the overlay draw, so a frame could be composited with the world
+  present and the HUD not yet drawn; moving it below the swap block took blinks
+  shorter than 300 ms from 870 to 0 in Chrome and 822 to 0 in Firefox over 40.5 s.
+  **Three ~1.5 s HUD-off stretches per 40 s remain**, unchanged by the fix and
+  present in the control build too, beginning just after each round ends. They are
+  probably the game legitimately hiding the HUD at a round transition — that is a
+  hypothesis, not a measurement.
+- In the video menu the top row, *Window Size*, **does nothing** — this build runs
+  fullscreen, where that setting is never read. The row below it, *Screen
+  Resolution*, is the live one and works.
+- **`n` toggles browser fullscreen; `f` does not**, though it is bound. Pre-existing
+  and unresolved.
+- The multiplayer menu shows about **20 seconds of black canvas** before the game's
+  own "Sorry, no server found". It fails gracefully; the black canvas is undiagnosed.
+- **On a phone it plays, and it slows down as a round goes on.** Touch controls are
+  deployed and have been played on a real Android phone. The frame rate falls the
+  longer you drive — **CPU-bound, not resolution-bound** (a ninth of the pixels felt
+  identical) — and that is the open performance item: it reproduces on a throttled
+  desktop rig and no fix is chosen yet. Portrait is not supported; you get a prompt
+  to rotate. `docs/evidence/phone-round2/`.
 
 ## Why
 
@@ -72,18 +91,62 @@ required. Client-side only; offline mode opens no sockets. Full milestones and
 risk analysis in **[PLAN.md](PLAN.md)**; shared vocabulary in
 [CONTEXT.md](CONTEXT.md); founding decisions in [docs/adr/](docs/adr/).
 
-Beyond the Demo, two follow-ups are designed but deliberately **not
-committed** — each gets its own go/no-go decision once the Demo ships:
+Beyond the Demo, two follow-ups were designed and deliberately **not committed**
+with it. One has since shipped; the other still awaits its own go/no-go:
 
 - **Touch controls** — minimal mobile play via a JavaScript overlay that maps
-  taps to the game's existing keyboard controls (no C++ changes).
+  taps to the game's existing keyboard controls (no C++ changes beyond a
+  one-function input-context export). **Built, deployed, and played on a real
+  phone**: two half-screen turn zones during a round; in menus a tap is Enter,
+  Up and Down are two buttons at the top, Escape is the top-left corner.
+  `docs/evidence/phase3-touch/`, `docs/evidence/phone-round2/touch/`.
 - **Multiplayer on real community servers** — a small UDP-over-WebSocket
   bridge lets the browser client speak the game's native protocol to today's
   unmodified public servers, including the in-game server browser.
 
 ## Status
 
-🚧 **M3 complete: the game produces sound — and nobody has heard it.**
+✅ **Phase 1 complete. The Demo is live, and "live" is the whole claim.**
+
+**<https://escapedcat.github.io/armagetronad-web/>** — publicly reachable and
+playable, in desktop Chrome and Firefox, on one maintainer's machine. That
+sentence is the deliverable and it is deliberately narrow: one machine (macOS
+26.5, Apple M1 Max), one GPU, two browser builds, and **no human has yet played
+this for enjoyment rather than to satisfy a script.**
+
+What is measured, against the deployment rather than a local server: a first
+visit transfers **1,753,578 B = 1.672 MiB** for the four game files, 8.6× under
+the 15 MB budget; three complete rounds against three AI opponents in both
+engines, arbitrated by M2's unmodified checker; and the whole set is
+**reproducible** — all five published files come back byte-identical from a clean
+rebuild at the exit commit.
+
+Frame rate clears the ≥30 fps bar roughly twice over and **is not stable enough to
+quote as a single number**. Three runs of the same script against the same build
+and the same URL gave per-second medians of 60/60, 60/57 and 60/59
+(Chrome/Firefox): Chrome was 60 every time, Firefox moved across 57, 59 and 60.
+Worst *single* frames ranged 41.9–46.3 ms in Chrome and 37.0–50.0 ms in Firefox —
+below 30 fps instantaneously, as they have been since M2, and still uninvestigated.
+Browsers: Chrome 152, and Firefox **155**, one major version newer than the 154
+this was built against, passing with no change.
+
+**What is not done** is written out honestly in [PLAN.md](PLAN.md) under
+"Phase 1 — closed": twelve open items, including a phone visitor getting no
+explanation, an undiagnosed 20-second black canvas in the multiplayer menu, a
+dead row in the video menu, a fullscreen key that does not fire, and a persistence
+check that has been red since M4 and needs a decision rather than a re-run. One
+command re-verifies everything that *is* claimed:
+
+```sh
+sh web/tools/live-gate.sh    # wire assertions, gameplay in both engines, multiplayer route
+```
+
+Re-runnable, arbitrated by exit status, with a prover that shows all 53 new
+assertions can fail under set equality. Evidence: `docs/evidence/m5-launch/`.
+
+---
+
+**M3 still holds: the game produces sound — and nobody has heard it.**
 
 Read the second clause as seriously as the first. What M3 established, and what
 its gate mechanically checks, is one narrow thing: **non-zero PCM reaches
@@ -243,7 +306,7 @@ compiles into *both* builds. What M0 did not prove about gameplay correctness is
 still open: its playback diagnostic covered boot and idle only, so whether native
 and wasm compute identical results *during play* remains untested.
 Full M0 boot log: [docs/m0/boot-evidence.log](docs/m0/boot-evidence.log).
-Next: M4 — persistence and shell polish.
+Next: nothing in Phase 1 — it is closed. Phase 2 (multiplayer through a UDP↔WebSocket bridge) and Phase 3 (touch) each get their own go/no-go decision, and what they inherit is written down in [PLAN.md](PLAN.md) under "Future work".
 
 ## Build and run it
 
@@ -261,9 +324,9 @@ source deps/emsdk/emsdk_env.sh
 # fetch the .wasm and .data, and the page says so instead of starting.
 make -f web/Makefile client -j8
 python3 -m http.server 8000 --directory web/dist-m1
-# then open http://localhost:8000/armagetronad.html and press Play.
+# then open http://localhost:8000/armagetronad.html -- it starts on its own.
 # Language menu -> first-run setup -> a tutorial match against three AIs.
-# Arrow keys steer; there is no sound yet (M3) and nothing is saved (M4).
+# Arrow keys steer, there is sound, and settings persist in IndexedDB.
 
 # The M0 dedicated server, under Node.
 make -f web/Makefile dedicated -j8

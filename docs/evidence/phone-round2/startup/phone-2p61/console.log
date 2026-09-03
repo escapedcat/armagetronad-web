@@ -1,0 +1,49 @@
+[   1057ms] [harness] mobile emulation: 915x350 CSS px dpr 3 (= 2745x1050 device px), touch on
+[   1059ms] [harness] chrome: Chrome/152.0.7977.75
+[   1059ms] [harness] navigating to http://localhost:8000/armagetronad.html?touch=1
+[     78ms] [console.log] [DISPLAY] at load: viewport 915x350 dpr 3 -> canvas 2745x1050 aspect 2.6143 gpu-axis-limit 16384
+[     81ms] [console.log] [TOUCH] enabled=true (?touch=1) maxTouchPoints=5
+[     82ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     82ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     83ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     83ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     87ms] [page] load event fired
+[    101ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    164ms] [console.log] [PERSIST] populate ok in 48ms
+[    383ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    384ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    384ms] [console.log] [BOOT] autostart: calling main
+[    387ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    388ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    388ms] [console.error] 
+[    388ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    389ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    389ms] [console.log] 
+[    514ms] [console.log] [L] ENCODING latin1
+[    523ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    526ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    546ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    550ms] [console.error] TODO: glShadeModel
+[    553ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[    598ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    599ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    599ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    599ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    599ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    607ms] [harness] eval (()=>{window.__grab=(tag)=>{const c=document.getElementById('canvas');const s=document.createElement('canvas');s.width=c.width;s.height=c.height;return {bs:c.width+'x'+c.height,a:Math.round((c.width/c.height)*1000)/1000};};return 'ok'})() => "ok"
+[    607ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[    607ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[    893ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s00-at-boot.png
+[   1576ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s01.png
+[   2061ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s02.png
+[   2543ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s03.png
+[   3027ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s04.png
+[   3513ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s05.png
+[   4192ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s06.png
+[   4879ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s07.png
+[   5769ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s08.png
+[   6858ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s09.png
+[   8458ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s10.png
+[  10546ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s11.png
+[  13636ms] [harness] screenshot -> docs/evidence/phone-round2/startup/phone-2p61/s12-settled.png
+[  13637ms] [harness] eval window.__grab('settled') => {"bs":"2745x1050","a":2.614}

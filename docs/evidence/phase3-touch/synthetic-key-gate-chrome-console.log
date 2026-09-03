@@ -1,0 +1,170 @@
+[   5579ms] [harness] chrome: Chrome/152.0.7977.75
+[   5579ms] [harness] navigating to http://localhost:8000/armagetronad.html?autostart=0
+[     12ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     27ms] [console.log] [DISPLAY] viewport 1024x768 dpr 1 -> canvas 1024x768
+[     42ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     43ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     44ms] [page] load event fired
+[     46ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    126ms] [console.log] [PERSIST] populate ok in 55ms
+[    213ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    213ms] [harness] === BOOT-1-POPULATED ===
+[    303ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    304ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[   1217ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.keys=(t)=>t===null?[]:t.split('\n').filter(l=>l.trim().indexOf('KEYBOARD')===0).map(l=>l.trim().replace(/\s+/g,' '));S.binds=(K,a)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+a+' 1')>0).map(l=>l.split(' ')[1]);S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const K=S.keys(c);console.log('[SYNKEY] '+JSON.stringify({phase:phase,save:sv,present:c!==null,bytes:c===null?null:c.length,first_use:S.line(c,'FIRST_USE'),left_binds:S.binds(K,'CYCLE_TURN_LEFT'),right_binds:S.binds(K,'CYCLE_TURN_RIGHT'),tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__syn=S;return 'probe installed'})() => "probe installed"
+[   1220ms] [harness] eval (()=>{window.__press=async function(where,n,keyCode,code,key){const t=(where==='document')?document:document.getElementById('canvas');const mk=(type)=>new KeyboardEvent(type,{key:key,code:code,keyCode:keyCode,which:keyCode,bubbles:true,cancelable:true});const nap=(ms)=>new Promise(r=>setTimeout(r,ms));const info=[];for(let i=0;i<n;i++){const d=mk('keydown');t.dispatchEvent(d);info.push('isTrusted='+d.isTrusted+' keyCode='+d.keyCode+' defaultPrevented='+d.defaultPrevented);await nap(40);t.dispatchEvent(mk('keyup'));await nap(320)}console.log('[SYNKEY] dispatched '+n+'x '+key+' at '+where+' :: '+info.join(' | '));return where+':'+n};return 'presser installed, SDL global is '+(typeof SDL)})() => "presser installed, SDL global is object"
+[   1227ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[   1228ms] [console.log] [SYNKEY] {"phase":"boot1-before-play","save":"saved","present":false,"bytes":null,"first_use":null,"left_binds":[],"right_binds":[],"tip_left":null,"tip_right":null}
+[   1228ms] [harness] eval window.__syn.dump('boot1-before-play') => "boot1-before-play"
+[   1229ms] [console.log] [BOOT] autostart: calling main
+[   1232ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1232ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1233ms] [console.error] 
+[   1233ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1233ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1233ms] [console.log] 
+[   1369ms] [console.log] [L] ENCODING latin1
+[   1375ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1377ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1397ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1400ms] [console.error] TODO: glShadeModel
+[   1403ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[   1438ms] [harness] eval window.AA_START() => undefined
+[   1439ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1440ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1440ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1440ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1441ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[  10482ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/00-boot1-language-menu.png
+[  10506ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10516ms] [harness] key Enter (1/1)
+[  10818ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10818ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13353ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/01-boot1-first-setup.png
+[  13390ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  13391ms] [harness] key Escape (1/1)
+[  13692ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13692ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16699ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  16700ms] [console.log] [SYNKEY] {"phase":"boot1-after-first-setup","save":"saved","present":true,"bytes":22758,"first_use":"0","left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  16701ms] [harness] eval window.__syn.dump('boot1-after-first-setup') => "boot1-after-first-setup"
+[  16701ms] [harness] === RELOAD-REQUESTED ===
+[  16706ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  16707ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16707ms] [harness] eval location.reload() => undefined
+[  16707ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16726ms] [console.log] [DISPLAY] viewport 1024x768 dpr 1 -> canvas 1024x768
+[  16728ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16728ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16732ms] [page] load event fired
+[  16742ms] [console.log] [PERSIST] populate ok in 4ms
+[  16790ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  16790ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[  16808ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  16808ms] [harness] === BOOT-2-POPULATED ===
+[  18311ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.keys=(t)=>t===null?[]:t.split('\n').filter(l=>l.trim().indexOf('KEYBOARD')===0).map(l=>l.trim().replace(/\s+/g,' '));S.binds=(K,a)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+a+' 1')>0).map(l=>l.split(' ')[1]);S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const K=S.keys(c);console.log('[SYNKEY] '+JSON.stringify({phase:phase,save:sv,present:c!==null,bytes:c===null?null:c.length,first_use:S.line(c,'FIRST_USE'),left_binds:S.binds(K,'CYCLE_TURN_LEFT'),right_binds:S.binds(K,'CYCLE_TURN_RIGHT'),tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__syn=S;return 'probe installed'})() => "probe installed"
+[  18312ms] [harness] eval (()=>{window.__press=async function(where,n,keyCode,code,key){const t=(where==='document')?document:document.getElementById('canvas');const mk=(type)=>new KeyboardEvent(type,{key:key,code:code,keyCode:keyCode,which:keyCode,bubbles:true,cancelable:true});const nap=(ms)=>new Promise(r=>setTimeout(r,ms));const info=[];for(let i=0;i<n;i++){const d=mk('keydown');t.dispatchEvent(d);info.push('isTrusted='+d.isTrusted+' keyCode='+d.keyCode+' defaultPrevented='+d.defaultPrevented);await nap(40);t.dispatchEvent(mk('keyup'));await nap(320)}console.log('[SYNKEY] dispatched '+n+'x '+key+' at '+where+' :: '+info.join(' | '));return where+':'+n};return 'presser installed, SDL global is '+(typeof SDL)})() => "presser installed, SDL global is object"
+[  18314ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  18315ms] [console.log] [SYNKEY] {"phase":"boot2-before-play","save":"saved","present":true,"bytes":22758,"first_use":"0","left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  18315ms] [harness] eval window.__syn.dump('boot2-before-play') => "boot2-before-play"
+[  18317ms] [console.log] [BOOT] autostart: calling main
+[  18318ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  18319ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  18319ms] [console.error] 
+[  18320ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  18320ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  18320ms] [console.log] 
+[  18444ms] [console.log] [L] ENCODING latin1
+[  18448ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  18463ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  18465ms] [console.error] TODO: glShadeModel
+[  18468ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[  18476ms] [harness] eval window.AA_START() => undefined
+[  28511ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/02-boot2-main-menu.png
+[  28512ms] [harness] === SYNTHETIC-MENU-NAVIGATION ===
+[  28880ms] [console.log] [SYNKEY] dispatched 1x Enter at document :: isTrusted=false keyCode=13 defaultPrevented=false
+[  28880ms] [harness] eval window.__press('document',1,13,'Enter','Enter') => "document:1"
+[  31437ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/03-boot2-play-game-submenu-via-synthetic-enter.png
+[  31811ms] [console.log] [SYNKEY] dispatched 1x ArrowDown at document :: isTrusted=false keyCode=40 defaultPrevented=false
+[  31813ms] [harness] eval window.__press('document',1,40,'ArrowDown','ArrowDown') => "document:1"
+[  33377ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/04-boot2-cursor-on-start-new-game-via-synthetic-down.png
+[  33396ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  33397ms] [console.log] [L] TEAM_CREATED web_user
+[  33398ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  33400ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  33402ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  33403ms] [console.log] [L] NEW_ROUND 2026-09-03 10:33:10 UTC+0200
+[  33421ms] [console.log] [L] TEAM_CREATED ai_team
+[  33422ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  33422ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  33422ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  33423ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  33438ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  33438ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  33438ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  33719ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[  33764ms] [console.log] [SYNKEY] dispatched 1x Enter at document :: isTrusted=false keyCode=13 defaultPrevented=false
+[  33765ms] [harness] eval window.__press('document',1,13,'Enter','Enter') => "document:1"
+[  36766ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 1)
+[  36767ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  36767ms] [harness] === ROUND-1-STARTED ===
+[  38363ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/05-boot2-round1-driving.png
+[  38364ms] [harness] === SYNTHETIC-LEFT-AT-DOCUMENT ===
+[  38375ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  39463ms] [console.log] [SYNKEY] dispatched 3x ArrowLeft at document :: isTrusted=false keyCode=37 defaultPrevented=false | isTrusted=false keyCode=37 defaultPrevented=false | isTrusted=false keyCode=37 defaultPrevented=false
+[  39463ms] [harness] eval window.__press('document',3,37,'ArrowLeft','ArrowLeft') => "document:3"
+[  39507ms] [console.log] [L] DEATH_SUICIDE web_user
+[  39508ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  40387ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/06-after-synthetic-left-at-document.png
+[  40390ms] [console.log] [PERSISTSAVE] js-backstop n=2
+[  40390ms] [console.log] [SYNKEY] {"phase":"after-synthetic-left-at-document","save":"saved","present":true,"bytes":22768,"first_use":"0","left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 3 1 1 1"}
+[  40391ms] [harness] eval window.__syn.dump('after-synthetic-left-at-document') => "after-synthetic-left-at-document"
+[  40391ms] [harness] === SYNTHETIC-RIGHT-AT-CANVAS ===
+[  41491ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  41877ms] [console.log] [SYNKEY] dispatched 4x ArrowRight at canvas :: isTrusted=false keyCode=39 defaultPrevented=false | isTrusted=false keyCode=39 defaultPrevented=false | isTrusted=false keyCode=39 defaultPrevented=false | isTrusted=false keyCode=39 defaultPrevented=false
+[  41877ms] [harness] eval window.__press('canvas',4,39,'ArrowRight','ArrowRight') => "canvas:4"
+[  42826ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/07-after-synthetic-right-at-canvas.png
+[  42829ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  42829ms] [console.log] [SYNKEY] {"phase":"after-synthetic-right-at-canvas","save":"saved","present":true,"bytes":22768,"first_use":"0","left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  42830ms] [harness] eval window.__syn.dump('after-synthetic-right-at-canvas') => "after-synthetic-right-at-canvas"
+[  42830ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[  45577ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  45578ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  45578ms] [console.log] [L] NEW_ROUND 2026-09-03 10:33:22 UTC+0200
+[  45580ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  45581ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  45660ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  45660ms] [harness] === ROUND-2-STARTED ===
+[  48262ms] [console.log] [SYNKEY] dispatched 3x ArrowLeft at document :: isTrusted=false keyCode=37 defaultPrevented=false | isTrusted=false keyCode=37 defaultPrevented=false | isTrusted=false keyCode=37 defaultPrevented=false
+[  48263ms] [harness] eval window.__press('document',3,37,'ArrowLeft','ArrowLeft') => "document:3"
+[  49730ms] [console.log] [SYNKEY] dispatched 4x ArrowRight at canvas :: isTrusted=false keyCode=39 defaultPrevented=false | isTrusted=false keyCode=39 defaultPrevented=false | isTrusted=false keyCode=39 defaultPrevented=false | isTrusted=false keyCode=39 defaultPrevented=false
+[  49730ms] [harness] eval window.__press('canvas',4,39,'ArrowRight','ArrowRight') => "canvas:4"
+[  50630ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/08-after-round2-synthetic.png
+[  50633ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  50633ms] [console.log] [SYNKEY] {"phase":"after-round2-synthetic","save":"saved","present":true,"bytes":22765,"first_use":"0","left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  50634ms] [harness] eval window.__syn.dump('after-round2-synthetic') => "after-round2-synthetic"
+[  50634ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 120000ms, have 2)
+[  52111ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  53676ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  57760ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  57760ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  57761ms] [console.log] [L] NEW_ROUND 2026-09-03 10:33:34 UTC+0200
+[  57809ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  57809ms] [harness] === ROUND-3-REAL-KEYS-POSITIVE-CONTROL ===
+[  59345ms] [harness] key Left (1/2)
+[  59679ms] [harness] key Left (2/2)
+[  60013ms] [harness] key Right (1/3)
+[  60348ms] [harness] key Right (2/3)
+[  60683ms] [harness] key Right (3/3)
+[  62064ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/09-after-real-keys.png
+[  62068ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  62068ms] [console.log] [SYNKEY] {"phase":"after-real-keys","save":"saved","present":true,"bytes":22765,"first_use":"0","left_binds":["1104","117"],"right_binds":["1103","111"],"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  62068ms] [harness] eval window.__syn.dump('after-real-keys') => "after-real-keys"
+[  62068ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  62069ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 6799
+[  62069ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  62070ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  62070ms] [EXCEPTION] structured stack, 1 frames:
+[  62070ms]     <anonymous> @ :0:27
+[  64173ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/synkey/10-after-deliberate-uncaught-error.png

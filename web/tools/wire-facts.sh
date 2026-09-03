@@ -79,12 +79,26 @@ for f in $FILES $EXTRA; do
   if gunzip -c "$TMP/gz" > "$TMP/ungz" 2>/dev/null; then decoded=true
   else cp "$TMP/gz" "$TMP/ungz"; decoded=false; fi
 
-  if [ -f "$DIST/$f" ]; then
-    local_bytes=$(wc -c < "$DIST/$f" | tr -d ' ')
-    local_sha=\"$(sha "$DIST/$f")\"
+  # WHERE THE LOCAL COPY LIVES, and why this is not just "$DIST/$f".
+  # Four of these five files are build outputs and land in $DIST. index.html is
+  # NOT built: web/Makefile never emits it, and the only thing that puts it in
+  # $DIST is the `cp` at the front of `npm run deploy`. So after a clean
+  # rebuild -- the exact state the M5 plan's exit step asks for -- $DIST holds
+  # no index.html and W7 fails on a deployment that is perfectly healthy. It
+  # was reading a side effect of the last deploy, not a property of the build.
+  # Fall back to the source of truth that `cp` copies FROM, and record which
+  # path was used so the JSON says what was compared rather than implying it.
+  local_path=$DIST/$f
+  [ -f "$local_path" ] || [ "$f" != index.html ] || local_path=web/$f
+
+  if [ -f "$local_path" ]; then
+    local_bytes=$(wc -c < "$local_path" | tr -d ' ')
+    local_sha=\"$(sha "$local_path")\"
+    local_path_j=\"$(j "$local_path")\"
   else
     local_bytes=null
     local_sha=null
+    local_path_j=null
   fi
 
   printf '    "%s": {\n' "$(j "$f")"
@@ -101,6 +115,7 @@ for f in $FILES $EXTRA; do
   printf '      "decoded_bytes": %s,\n'          "$(wc -c < "$TMP/ungz" | tr -d ' ')"
   printf '      "decoded_sha256": "%s",\n'       "$(sha "$TMP/ungz")"
   printf '      "local_bytes": %s,\n'            "$local_bytes"
+  printf '      "local_path": %s,\n'             "$local_path_j"
   printf '      "local_sha256": %s\n'            "$local_sha"
   printf '    }'
 done

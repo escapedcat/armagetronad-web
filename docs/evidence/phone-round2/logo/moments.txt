@@ -1,0 +1,5 @@
+image                                                      canvas       aspect       cx       cy  sx_frac  sy_frac
+docs/evidence/phone-round2/startup/desktop-4x3/s00-at-boot.png 1024x768     1.3333  0.30557  0.55333  0.22857  0.23134
+docs/evidence/phone-round2/startup/phone-2p61/s00-at-boot.png 2745x1050    2.6143  0.30219  0.56655  0.23050  0.22120
+docs/evidence/phone-round2/logo/after-desktop/l01-title-early.png 1024x768     1.3333  0.30606  0.55468  0.22956  0.22997
+docs/evidence/phone-round2/logo/after-phone/l01-title-early.png 2745x1050    2.6143  0.39833  0.56951  0.11736  0.21787

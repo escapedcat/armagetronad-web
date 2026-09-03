@@ -1,0 +1,63 @@
+# DOES THE PAGE EVER STRETCH THE PICTURE? Five configurations, one number.
+#
+#   python3 -m http.server 8000 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --mobile 915,350,3 \
+#        --out docs/evidence/phone-feedback/aspect \
+#        --url http://localhost:8000/armagetronad.html \
+#        --script-file web/tools/phone-aspect-probe.steps
+#   kill %1
+#
+# 915x350 at dpr 3 is a Pixel-class Android phone in LANDSCAPE WITH THE URL BAR
+# SHOWING -- 350 rather than the 412 the screen alone would give, which is the
+# shape a phone visitor actually gets and is wider (2.61) than the device's own
+# 2.22. --headed is not required by anything here, but the phone geometry is.
+#
+# THE NUMBER IS aspect_err_pct: the rendered box's width/height against the
+# BACKING STORE's width/height, as a percentage. Zero means the displayed image
+# is the drawn image's shape. Anything else is a stretch, and the maintainer's
+# phone report ("it looks stretched") is a claim that this number is not zero.
+#
+# PHASE D IS THE ONE THAT MAKES THE OTHER FOUR MEAN SOMETHING. It falsifies the
+# page's own state on purpose -- it sets the backing store to 1024x768 while
+# leaving --aa-aspect at the 2.61 the page published at load -- which is the
+# worst case any drift between the two could ever produce. If the CSS could
+# stretch, D is where it would. A probe that only ever measured healthy states
+# would report 0.00 % whether or not the mechanism it claims to test exists.
+#
+# WHAT THIS CANNOT DO. Chrome's device emulation reports vh == dvh == svh ==
+# lvh == innerHeight in every configuration, so the case a real phone has and
+# this does not -- a URL bar that changes the visible height without changing
+# the layout viewport -- is NOT covered here. Phase B moves the viewport after
+# load, which is the closest this rig gets, and it is not the same thing.
+wait:800
+eval:(()=>{const R=(x)=>Math.round(x*100)/100;window.__ap=(phase)=>{const c=document.getElementById('canvas');const r=c.getBoundingClientRect();let gl=null;try{gl=c.getContext('webgl')||c.getContext('experimental-webgl');}catch(e){}const p=document.createElement('div');p.style.cssText='position:absolute;left:-9999px;top:0;width:100vw;height:100vh';document.body.appendChild(p);const b1=p.getBoundingClientRect();const vw=R(b1.width),vh=R(b1.height);p.style.height='100dvh';const dvh=R(p.getBoundingClientRect().height);p.style.height='100svh';const svh=R(p.getBoundingClientRect().height);p.style.height='100lvh';const lvh=R(p.getBoundingClientRect().height);p.remove();const vv=window.visualViewport;const o={phase:phase,bs:c.width+'x'+c.height,bs_aspect:R((c.width/c.height)*1000)/1000,css:R(r.width)+'x'+R(r.height),css_aspect:R((r.width/r.height)*1000)/1000,aspect_err_pct:R(((r.width/r.height)/(c.width/c.height)-1)*10000)/100,drawbuf:gl?gl.drawingBufferWidth+'x'+gl.drawingBufferHeight:'no-gl',db_matches_bs:gl?(gl.drawingBufferWidth===c.width&&gl.drawingBufferHeight===c.height):null,inner:innerWidth+'x'+innerHeight,dpr:devicePixelRatio,vw:vw,vh:vh,dvh:dvh,svh:svh,lvh:lvh,vv:vv?R(vv.width)+'x'+R(vv.height)+'@'+R(vv.offsetTop):'none',body_h:document.body.clientHeight,root_h:document.documentElement.clientHeight,rect_top:R(r.top),rect_bottom:R(r.bottom),fully_visible:(r.top>=-0.5&&r.bottom<=(vv?vv.height:innerHeight)+0.5)};console.log('[ASPECT] '+JSON.stringify(o));return o.aspect_err_pct;};return 'aspect probe installed'})()
+until:1:90000:[BOOT] autostart
+wait:9000
+eval:window.__ap('A-load-915x350-urlbar-showing')
+shot:a1-load
+
+# The visible height grows under the running game -- what an Android URL bar
+# scrolling away does to innerHeight. The backing store does NOT move.
+mark:B-VIEWPORT-GROWS-TO-412-AFTER-LOAD
+metrics:915:412:3
+wait:1500
+eval:window.__ap('B-viewport-grew-to-412')
+shot:a2-viewport-grew
+
+mark:C-VIEWPORT-BACK-TO-350
+metrics:915:350:3
+wait:1500
+eval:window.__ap('C-viewport-back-to-350')
+
+# THE FALSIFIED CONTROL. --aa-aspect is deliberately left at 2.61 while the
+# backing store is moved to 4:3.
+mark:D-FORCED-MISMATCH-4-3-BACKING-STORE-AGAINST-A-STALE-2-61-CUSTOM-PROPERTY
+eval:(()=>{const c=document.getElementById('canvas');c.width=1024;c.height=768;return 'backing store now 1024x768, --aa-aspect deliberately left at '+getComputedStyle(document.documentElement).getPropertyValue('--aa-aspect')})()
+wait:500
+eval:window.__ap('D-forced-mismatch-4-3-backing-store')
+shot:a3-forced-mismatch
+
+mark:E-RESTORED
+eval:(()=>{const c=document.getElementById('canvas');c.width=2745;c.height=1050;return 'restored'})()
+wait:500
+eval:window.__ap('E-restored')

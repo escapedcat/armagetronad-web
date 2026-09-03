@@ -33,6 +33,9 @@
 //   --chrome-flag F    extra Chrome command-line flag; repeatable. Used by the
 //                      https rig for --ignore-certificate-errors-spki-list.
 //   --keep-open        leave the browser running after the script (for poking at it)
+//   --mobile W,H,DPR   emulate a phone: viewport W x H CSS px at device pixel
+//                      ratio DPR, mobile:true, and touch input enabled.
+//                      Added by Phase 3; read EMULATION IS NOT A DEVICE below.
 //
 // STEPS (executed in order)
 //   wait:MS               sleep
@@ -40,10 +43,25 @@
 //   click:SELECTOR        element.click() in page context
 //   key:NAME              dispatch a real key press (see KEYS below), e.g. key:Down
 //   key:NAME:N            press it N times, 150ms apart
+//   tap:SELECTOR          dispatch a real TOUCH tap at the centre of an element
+//   tap:SELECTOR:N        tap it N times
+//   metrics:W:H:DPR       re-apply the device metrics mid-run, i.e. rotate the
+//                         emulated phone. Needs --mobile to have set the rest.
 //   eval:EXPR             Runtime.evaluate an expression, print the result
 //   mark:TEXT             write a marker line into the console transcript
+//   cpu:RATE              throttle the CPU RATE times (CDP), 1 = full speed.
+//                         Use it AFTER the boot so only the measured part is slow.
 //   until:N:MS:TEXT       block until TEXT has appeared in N transcript lines,
 //                         or MS milliseconds elapse. Records which happened.
+//
+// EMULATION IS NOT A DEVICE, and --mobile must never be reported as if it were.
+// It gives three things and only three: the viewport geometry, the device pixel
+// ratio (so the page's own sizing block computes a phone-sized backing store),
+// and trusted touch events with mobile-shaped pointer/hover media features. It
+// tells you NOTHING about phone GPU throughput, phone memory limits, thermal
+// throttling, or Android Chrome's own compositor. A frame rate measured under
+// --mobile is this machine's frame rate at a phone's pixel count, which is a
+// different quantity from a phone's frame rate at a phone's pixel count.
 //
 // WHY `until` EXISTS (the only directive M2 added). A gameplay script cannot
 // be written in `wait:` alone the way a menu script can. A menu keystroke has
@@ -105,6 +123,8 @@ function parseArgs(argv) {
     chrome: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     keepOpen: false,
     chromeFlags: [],
+    // null = desktop, the behaviour every gate before Phase 3 measured.
+    mobile: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -127,6 +147,11 @@ function parseArgs(argv) {
     // change the flags above: those are argued for in the comment at the
     // spawn site and a run that overrides them is not the same measurement.
     else if (a === '--chrome-flag') opt.chromeFlags.push(next());
+    else if (a === '--mobile') {
+      const [w, h, dpr] = next().split(',').map(Number);
+      if (!(w > 0 && h > 0 && dpr > 0)) throw new Error('--mobile needs W,H,DPR');
+      opt.mobile = { width: w, height: h, deviceScaleFactor: dpr };
+    }
     else throw new Error(`unknown option: ${a}`);
   }
   return opt;
@@ -346,9 +371,33 @@ async function main() {
     await send('Runtime.setAsyncCallStackDepth', { maxDepth: 8 });
     // Pin the viewport so screenshots are the requested size regardless of
     // what the OS window manager did with --window-size.
-    await send('Emulation.setDeviceMetricsOverride', {
-      width: opt.width, height: opt.height, deviceScaleFactor: 1, mobile: false,
-    });
+    //
+    // THIS MUST HAPPEN BEFORE Page.navigate AND IT ALREADY DOES. web/shell.html
+    // sizes the canvas backing store from window.innerWidth/innerHeight x
+    // devicePixelRatio while the page is being parsed, so an override applied
+    // after navigation would produce a page sized for the desktop viewport and
+    // then squashed into the phone one -- which looks like a phone screenshot
+    // and is not one.
+    if (opt.mobile) {
+      await send('Emulation.setDeviceMetricsOverride', { ...opt.mobile, mobile: true });
+      // Two separate switches, because they do different jobs and the page
+      // needs both. setTouchEmulationEnabled is what makes navigator.
+      // maxTouchPoints non-zero and makes Input.dispatchTouchEvent land as
+      // trusted touch (and therefore pointer) events. setEmitTouchEventsForMouse
+      // with configuration 'mobile' is what flips the (hover:none) and
+      // (pointer:coarse) media features the shell's touch detection asks about
+      // -- without it a --mobile run is a narrow desktop with no controls.
+      await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+      await send('Emulation.setEmitTouchEventsForMouse', { enabled: true, configuration: 'mobile' });
+      record(`[harness] mobile emulation: ${opt.mobile.width}x${opt.mobile.height} CSS px ` +
+             `dpr ${opt.mobile.deviceScaleFactor} ` +
+             `(= ${opt.mobile.width * opt.mobile.deviceScaleFactor}x` +
+             `${opt.mobile.height * opt.mobile.deviceScaleFactor} device px), touch on`);
+    } else {
+      await send('Emulation.setDeviceMetricsOverride', {
+        width: opt.width, height: opt.height, deviceScaleFactor: 1, mobile: false,
+      });
+    }
 
     // V8 truncates Error.stack to 10 frames by default, which is useless for
     // telling a runaway recursion apart from one oversized stack frame.
@@ -372,6 +421,27 @@ async function main() {
         case 'mark':
           record(`[harness] === ${arg} ===`);
           break;
+        // CPU THROTTLING, and the perf sweep cannot say anything without it.
+        // Unthrottled, this desktop draws a frame in 6-8 ms against a 16.7 ms
+        // budget. A cost that grows by a tenth cannot stutter with that much
+        // headroom, so every arm of a sweep reads the same and no lever can
+        // show a benefit -- which is exactly what the first sweep produced.
+        // A rate near 6 puts the frame cost up against the budget, which is
+        // the regime a phone is in and the only one where the maintainer's
+        // "the more i drive the laggier it gets" can reproduce at all.
+        //
+        // It is a STEP and not a flag on purpose: the boot and the menu walk
+        // should run at full speed. Throttling those only burns wall-clock and
+        // drags the `until:` waits towards their timeouts.
+        case 'cpu': {
+          const rate = Number(arg);
+          if (!(rate >= 1)) {
+            throw new Error(`cpu:RATE needs a rate >= 1, got ${JSON.stringify(arg)}`);
+          }
+          await send('Emulation.setCPUThrottlingRate', { rate });
+          record(`[harness] CPU throttling rate ${rate}x`);
+          break;
+        }
         case 'shot': {
           // fromSurface:true captures the compositor surface, which is the
           // only way to get canvas pixels out of a headless window.
@@ -410,6 +480,59 @@ async function main() {
             // that loop yields on ~4ms setTimeout boundaries; give it room.
             await sleep(300);
           }
+          break;
+        }
+        // A REAL TOUCH, which is the whole point of this step existing.
+        //
+        // Phase 3's overlay turns a tap into a SYNTHESIZED KeyboardEvent, so a
+        // test that also synthesized the tap would be measuring a page talking
+        // to itself. Input.dispatchTouchEvent goes in through the browser's own
+        // input pipeline: the page receives touchstart/pointerdown with
+        // isTrusted TRUE, exactly as it would from a finger. What is synthetic
+        // in such a run is then only the thing under test.
+        //
+        // It needs Emulation.setTouchEmulationEnabled, i.e. --mobile; without
+        // it Chrome answers "Touch events not supported" and the step fails
+        // loudly rather than silently doing nothing.
+        case 'tap': {
+          const [selector, countStr] = (() => {
+            // SELECTOR may itself contain a colon (:nth-child, :hover). Only a
+            // trailing ":<digits>" is treated as the count.
+            const m = /^(.*?)(?::(\d+))?$/.exec(arg);
+            return [m[1], m[2]];
+          })();
+          const count = Number(countStr || 1);
+          for (let i = 0; i < count; i++) {
+            const r = await send('Runtime.evaluate', {
+              expression: `(() => { const e = document.querySelector(${JSON.stringify(selector)});
+                                    if (!e) return null;
+                                    const b = e.getBoundingClientRect();
+                                    return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; })()`,
+              returnByValue: true,
+            });
+            const at = r.result.value;
+            if (!at) throw new Error(`tap: no element matches ${selector}`);
+            const point = { x: Math.round(at.x), y: Math.round(at.y), radiusX: 12, radiusY: 12, force: 1 };
+            await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
+            await sleep(60);
+            await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+            record(`[harness] tap ${selector} at ${point.x},${point.y} (${i + 1}/${count})`);
+            // Same reasoning as the key: step -- the game only sees the input
+            // when its Asyncify-chopped loop next drains the SDL queue.
+            await sleep(300);
+          }
+          break;
+        }
+        // Rotate the emulated phone. Deliberately separate from --mobile rather
+        // than an option, because the INTERESTING case is a change that happens
+        // AFTER the page has sized its backing store.
+        case 'metrics': {
+          const [w, h, dpr] = arg.split(':').map(Number);
+          if (!(w > 0 && h > 0 && dpr > 0)) throw new Error(`metrics needs W:H:DPR, got: ${arg}`);
+          await send('Emulation.setDeviceMetricsOverride', {
+            width: w, height: h, deviceScaleFactor: dpr, mobile: !!opt.mobile,
+          });
+          record(`[harness] metrics -> ${w}x${h} dpr ${dpr}`);
           break;
         }
         case 'eval': {
