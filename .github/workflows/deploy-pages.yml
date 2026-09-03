@@ -65,8 +65,12 @@ concurrency:
   group: deploy-pages-${{ github.event_name == 'pull_request' && github.ref || 'live' }}
   cancel-in-progress: false
 
+# Not EMSDK_VERSION: sourcing deps/emsdk/emsdk_env.sh clears that name (the
+# first run of this workflow failed its own pin check against an empty string --
+# verified locally: [6.0.8] before the source, [] after). The AA_ prefix keeps it
+# out of emsdk's namespace.
 env:
-  EMSDK_VERSION: '6.0.8'
+  AA_EMSDK_VERSION: '6.0.8'
 
 jobs:
   build-and-deploy:
@@ -90,28 +94,28 @@ jobs:
         uses: actions/cache@v4
         with:
           path: deps/emsdk
-          key: emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-v1
+          key: emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
 
-      - name: Install emsdk ${{ env.EMSDK_VERSION }}
+      - name: Install emsdk ${{ env.AA_EMSDK_VERSION }}
         if: steps.emsdk-cache.outputs.cache-hit != 'true'
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git deps/emsdk
           cd deps/emsdk
-          ./emsdk install "$EMSDK_VERSION"
-          ./emsdk activate "$EMSDK_VERSION"
+          ./emsdk install "$AA_EMSDK_VERSION"
+          ./emsdk activate "$AA_EMSDK_VERSION"
 
       - name: Pin check
         run: |
           source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
           emcc --version | head -1
-          emcc --version | head -1 | grep -q " $EMSDK_VERSION " || { echo "emcc is not $EMSDK_VERSION"; exit 1; }
+          emcc --version | head -1 | grep -q " $AA_EMSDK_VERSION " || { echo "emcc is not $AA_EMSDK_VERSION"; exit 1; }
 
       - name: Restore libxml2
         id: libxml2-cache
         uses: actions/cache@v4
         with:
           path: deps/build/libxml2-install
-          key: libxml2-${{ hashFiles('deps/build-libxml2.sh') }}-emsdk-${{ env.EMSDK_VERSION }}-${{ runner.os }}-v1
+          key: libxml2-${{ hashFiles('deps/build-libxml2.sh') }}-emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
 
       - name: Build libxml2 (static wasm)
         if: steps.libxml2-cache.outputs.cache-hit != 'true'
