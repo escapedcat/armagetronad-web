@@ -1,0 +1,68 @@
+[   1210ms] [harness] chrome: Chrome/152.0.7977.75
+[   1211ms] [harness] navigating to http://localhost:8001/armagetronad.html
+[     24ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     24ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     33ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     34ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     37ms] [page] load event fired
+[     44ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8001/favicon.ico
+[    196ms] [console.log] [PERSIST] populate ok in 49ms
+[   6024ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => "canvas 1024x768"
+[   6025ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 0)
+[  10476ms] [console.error] still waiting on run dependencies:
+[  10478ms] [console.error] dependency: datafile_web/dist-m1/armagetronad.data
+[  10478ms] [console.error] dependency: cp /data/sound/cyclrun.wav
+[  10479ms] [console.error] (end of list)
+[  20173ms] [console.error] still waiting on run dependencies:
+[  20180ms] [console.error] dependency: datafile_web/dist-m1/armagetronad.data
+[  20181ms] [console.error] dependency: cp /data/sound/expl.wav
+[  20182ms] [console.error] (end of list)
+[  20823ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  20824ms] [console.log] [CAMERA] stock camera (factor 1)
+[  20825ms] [console.log] [BOOT] autostart: calling main
+[  20852ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  20854ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  20855ms] [console.error] 
+[  20856ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  20856ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  20856ms] [console.log] 
+[  20903ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  21677ms] [console.log] [L] ENCODING latin1
+[  21727ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[  21860ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  21883ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  21886ms] [console.error] TODO: glShadeModel
+[  21890ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8001/armagetronad.js
+[  21927ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[  21927ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[  21928ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[  21928ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[  21928ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8001/armagetronad.js
+[  25904ms] [harness] === should-be-the-language-menu ===
+[  25953ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/01-language-menu.png
+[  26007ms] [harness] key Down (1/1)
+[  27553ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/02-language-menu-british-english-selected.png
+[  27554ms] [harness] === enter-chooses-a-language-and-leaves-this-menu ===
+[  27585ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  27588ms] [harness] key Enter (1/1)
+[  30946ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/03-first-setup-cursor-on-accept.png
+[  30947ms] [harness] eval (()=>{window.__st=0;const o=window.setTimeout;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => "setTimeout counter installed"
+[  33952ms] [harness] eval (()=>{const dt=(performance.now()-window.__t0)/1000;return 'setTimeout calls/sec='+(window.__st/dt).toFixed(1)+' => ~'+(window.__st/dt/2).toFixed(1)+' FPS (MAX_FPS 60)'})() => "setTimeout calls/sec=138.2 => ~69.1 FPS (MAX_FPS 60)"
+[  33990ms] [harness] key Down (1/1)
+[  35538ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/04-first-setup-cursor-on-name.png
+[  35571ms] [harness] key Down (1/1)
+[  37131ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/05-first-setup-cursor-on-colour.png
+[  37131ms] [harness] === left-right-changes-a-selection-value ===
+[  37165ms] [harness] key Right (1/1)
+[  38714ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/06-first-setup-colour-value-changed.png
+[  38747ms] [harness] key Down (1/1)
+[  40321ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/07-first-setup-cursor-on-controls.png
+[  40354ms] [harness] key Right (1/1)
+[  41914ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/08-first-setup-controls-value-changed.png
+[  41947ms] [harness] key Up (1/1)
+[  43497ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/09-first-setup-cursor-back-on-colour.png
+[  43497ms] [harness] === escape-leaves-the-first-setup-menu-entirely ===
+[  43522ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  43530ms] [harness] key Escape (1/1)
+[  46868ms] [harness] screenshot -> /private/tmp/claude-502/-Users-user-data-src-armagetronad/8b714b4b-bf5d-42ff-83a1-cb627e3f3086/scratchpad/menu-gate/10-welcome-message.png
+[  46870ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})() => "{\"VENDOR\":\"WebKit\",\"RENDERER\":\"WebKit WebGL\",\"VERSION\":\"WebGL 1.0 (OpenGL ES 2.0 Chromium)\",\"UNMASKED_VENDOR\":\"Google Inc. (Apple)\",\"UNMASKED_RENDERER\":\"ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)\",\"preserveDrawingBuffer\":true}"
