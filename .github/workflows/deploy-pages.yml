@@ -146,6 +146,12 @@ jobs:
           cp index.html dist-m1/index.html
           node tools/check-publish-set.mjs dist-m1
 
+      # The committer string goes through gh-pages' strict RFC 5322 address
+      # parser, which rejects `[` and `]` unquoted -- so the conventional
+      # "github-actions[bot] <41898282+github-actions[bot]@...>" fails with
+      # "Could not parse name and email from user option". The first merge
+      # deploy died on exactly that line. A bracket-free name is all it needs;
+      # the author of an orphan deploy commit is cosmetic.
       - name: Deploy to gh-pages
         if: github.event_name != 'pull_request'
         working-directory: web
@@ -154,5 +160,5 @@ jobs:
         run: |
           npm run deploy -- -x \
             -r "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            -u "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+            -u "github-actions <github-actions@users.noreply.github.com>"
           echo "Deployed $(git rev-parse --short HEAD) from ${GITHUB_REF_NAME}"
