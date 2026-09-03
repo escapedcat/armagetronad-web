@@ -36,16 +36,25 @@
 # THE KILL SWITCH. A lone cycle ends no round: with one team there is no winner
 # (gGame.cpp Analysis: winner needs eTeam::teams.Len() > 1) and the round only
 # advances when alive == 0, so a cycle that cannot die at the rim would hold round 1
-# open for ever and round 2 would never start. The harness therefore kills it: a 1 s
-# busy loop on the main thread (an eval: step; CDP has no timeout on it) makes the
-# game's next timestep 1 s long, TIMESTEP_MAX 10 stops gGame::Timestep chopping it
-# into 0.2 s pieces (sg_timestepMax), and one 1 s step against a wall needs 15 units
-# of rubber where 5 are granted: death. A FREE cycle just moves 15 units and lives --
-# so the death that follows each stall is itself proof the cycle was pressed against
-# a wall. The stall is bracketed like a screenshot (sampler.js S.shot), so report.js
-# drops its frame from every statistic; the span ends at the DEATH_ mark anyway.
-# No ROUND_WINNER is written for a winnerless round; report.js closes a round at the
-# next NEW_ROUND (closed_by: next_round), which is what the until: steps wait for.
+# open for ever and round 2 would never start. The harness therefore kills it with a
+# 6 s busy loop on the main thread (an eval: step; CDP has no timeout on it), which
+# makes the game's next timestep 6 s long. Two choppers stand between that and the
+# cycle: gGame::Timestep cuts a step into pieces of TIMESTEP_MAX (0.2 s shipped; 10
+# here, so it passes the 6 s whole), then eGameObject::TimestepThis cuts it into
+# pieces of a HARDCODED 0.2 s, at most ten -- so 6 s reaches TimestepCore as ten
+# 0.6 s pieces. In each, the rubber path splits the piece at the moment the
+# reservoir would run out (0.233 s at 15.0 with 3.5 of 5 free), the reservoir decays
+# back to 1.5 at the end of that half, and the second half (0.367 s, 5.5 needed
+# against 3.5 free, the recursion guard forbidding a further split) moves the cycle
+# 2 units through the rim: Move() throws, and "prevent it if there is rubber left"
+# has none. A FREE cycle just moves 90 units and lives -- so the death that follows
+# each stall is itself proof the cycle was pressed against a wall. Measured on the
+# way here: a 1 s stall did NOT kill (ten 0.2 s pieces, 3 needed against 3.5 free,
+# twice, 22:10 run) -- a shorter stall is a no-op, not a gentler kill. The stall is
+# bracketed like a screenshot (sampler.js S.shot), so report.js drops its frame from
+# every statistic; the span ends at the DEATH_ mark anyway. No ROUND_WINNER is written
+# for a winnerless round; report.js closes a round at the next NEW_ROUND
+# (closed_by: next_round), which is what the until: steps wait for.
 #
 # ROUND 1 is setup and is NOT measured: the tutorial's two key presses after the
 # countdown (arm.steps.tmpl says why the 3 s), the throttle, the first kill.
@@ -74,7 +83,7 @@ cpu:CPURATE
 mark:THROTTLE-ON
 wait:7000
 eval:__fps.shot('kill-stall-r1','begin')
-eval:(()=>{const t0=performance.now();while(performance.now()-t0<1000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
+eval:(()=>{const t0=performance.now();while(performance.now()-t0<6000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
 eval:__fps.shot('kill-stall-r1','end')
 until:2:60000:[L] NEW_ROUND
 mark:ROUND-2-GRIND
@@ -100,7 +109,7 @@ shot:g-30s-grinding
 eval:__fps.shot('g-30s-grinding','end')
 wait:8000
 eval:__fps.shot('kill-stall-r2','begin')
-eval:(()=>{const t0=performance.now();while(performance.now()-t0<1000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
+eval:(()=>{const t0=performance.now();while(performance.now()-t0<6000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
 eval:__fps.shot('kill-stall-r2','end')
 until:3:60000:[L] NEW_ROUND
 mark:GRIND-OVER

@@ -166,7 +166,11 @@ logs it as the quoted result of the final `eval:` step. Tasks 2–4 read:
 arm, cpu_rate, frames, human, swaps {flush, finish}, rounds_started, rounds_won,
 shots_bracketed, shot_pad_ms
 rounds[]:
-  round, length_s                 NEW_ROUND → ROUND_WINNER
+  round, length_s                 NEW_ROUND → the round's close (see closed_by)
+  closed_by                       'round_winner' (the ROUND_WINNER mark), 'next_round' (no
+                                  ROUND_WINNER before the next NEW_ROUND: a winnerless
+                                  round, e.g. one cycle and no AI), or 'report' (still
+                                  running when the report ran)
   measured_from_s, measured_to_s  the measured span, seconds after NEW_ROUND
   human_death_s, ends_at          'human_death' or 'round_winner'
   pre_round:                      frames, ms_p50, draws_per_frame, span_ms, split_at_draws
@@ -242,6 +246,43 @@ together, per second, from `per_second`. For the record, the base run's two
 measured rounds both rose in the last quarter with draws flat at 107–111:
 `ms_to_first_draw` went from 7.5 to 10.5–15 ms for about eleven seconds while
 `ms_first_draw_to_swap` stayed at 16–20. One run; Task 2 says how often.
+
+## The grind arm — `grind.steps.tmpl`
+
+Mechanism 2 (the rubber path of `gCycleMovement::TimestepCore`: a
+`GetMaxSpaceAhead` sensor scan every step and recursive re-simulation when
+a wall is near) scales with walls *near* the cycle, so the template that
+measures it is the opposite of `base`: the shipped `SP_SIZE_FACTOR -3` (the
+tutorial lowers it to −5, a 0.177× arena), `SP_NUM_AIS 0`, and the idle
+human driving straight from its spawn into the rim, where it stays. The
+draw count is flat by construction; the reading is per-second
+`ms_to_first_draw` before contact against after it.
+
+Three facts of the tutorial match shape it, all in the template's header:
+`welcome()` assigns `sg_rubberCycle = 5` after `autoexec.cfg` is read, so
+`CYCLE_RUBBER` cannot be raised and is not in the arm; what keeps the cycle
+alive is `CYCLE_RUBBER_TIME 0.1` — `TimestepCore` decays the reservoir by
+`rubber /= (1 + ts/CYCLE_RUBBER_TIME)` every step, so pressed against a wall
+at 15.0 it settles at 1.5 of the 5 granted (the HUD's *Rubber Used* gauge
+shows exactly that, and 0 while free) and only a single step over about
+0.23 s can kill it. And a lone cycle ends no round (`gGame.cpp`'s
+`Analysis`: a winner needs more than one team; a winnerless round only
+advances when `alive == 0`), so the template kills it when the measurement
+is done: a 6 s main-thread stall, passed whole by `gGame::Timestep` under
+`TIMESTEP_MAX 10` and cut by `eGameObject::TimestepThis` into its
+hardcoded ten pieces, reaches `TimestepCore` as 0.6 s steps that the
+reservoir cannot absorb. A free cycle survives the same stall (it moves 90
+units), so each death after a stall is also the proof of contact. A 1 s
+stall does not kill — ten 0.2 s pieces, 3 needed against 3.5 free — and
+was the first attempt.
+
+`check-arm.mjs` reports the grind arm **INVALID** by design: it requires
+rounds 2 and 3, and the grind measures round 2 only (round 1 is the setup —
+keys, throttle, first kill). The arm's validity is stated in its evidence
+README from the screenshots (the cycle at the rim with the gauge at 1.5),
+the `DEATH_` mark after each stall, and the round length. A winnerless
+round writes no `ROUND_WINNER`, which is why `report.js` closes a round at
+the next `NEW_ROUND` (`closed_by`).
 
 ## Screenshots and the late window
 
@@ -349,6 +390,9 @@ runs are what quantify the noise.
 - `arm.steps.tmpl` — the driver script with `SAMPLER`, `REPORT`,
   `CONFIGLINES`, `TAGHERE`, `CPURATE` placeholders. A fifth argument to
   `run-arm.sh` names another template.
+- `grind.steps.tmpl` — the mechanism-2 template: one cycle, no AI, held
+  against the rim (see "The grind arm"). Its header carries the reasoning
+  for every config line and for the kill switch.
 - `run-arm.sh` — substitution (literal, never `gsub`: the sampler contains
   `&&`), tripwires on the generated script, hygiene checks, the drive, the
   verdict.
