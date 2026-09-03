@@ -1,0 +1,97 @@
+#!/usr/bin/env node
+// node web/tools/perf/check-arm.mjs <console.log>
+//
+// Exit 0 only if this arm's console.log PROVES the condition it measured held.
+// A [PERF] line alone is not proof: the first sweep had six of them from an
+// empty arena and reported 6.4-8.2 ms flat in every arm. Each check below is
+// one way that sweep, or a run since, produced a number that was not one.
+//
+//   keys      two real key presses after the first NEW_ROUND. Without them the
+//             tutorial overlay stays up and the arena stays empty all match.
+//   throttle  the driver's own "[harness] CPU throttling rate Nx" line, BEFORE
+//             the second NEW_ROUND, at the rate the [PERF] line claims.
+//   rounds    rounds 2 and 3 exist and each ran >= 30 s. (Round 1 is setup.)
+//   frames    >= 30 frames in each late window; fewer means the window
+//             straddled a hang or the sampler was not armed.
+//   geometry  draws/frame in the late window is above the empty-arena floor
+//             by a quarter. Draw calls are the direct measure of wall geometry
+//             pushed through the GL emulation; an idle tutorial arena has few.
+//   shot      a screenshot taken in the second half of each measured round
+//             exists on disk, so a reader can SEE the trails the draws count.
+//
+// THE FLOOR. EMPTY_ARENA_DRAWS_PER_FRAME is round 1's first-second
+// draws/frame -- cycles spawned, tutorial overlay up, no keys pressed yet, no
+// trail longer than a second -- measured by Task 1 Step 8 in
+// docs/evidence/m6-lag/task1-rig/base (console.log, [PERF] rounds[0].
+// per_second.draws_per_frame[0]). It is calibration with provenance, not a
+// guess; re-measure it if the HUD or the tutorial changes.
+import fs from 'node:fs';
+import path from 'node:path';
+
+const EMPTY_ARENA_DRAWS_PER_FRAME = 0;   // Task 1 Step 8 replaces this with the measured round-1-idle figure
+
+const file = process.argv[2];
+if (!file) { console.log('usage: node check-arm.mjs <console.log>'); process.exit(2); }
+const dir = path.dirname(file);
+const lines = fs.readFileSync(file, 'utf8').split('\n');
+const stamp = (l) => { const m = /^\[\s*(\d+)ms\]/.exec(l); return m ? Number(m[1]) : null; };
+const isHarness = (l) => l.includes('] [harness] ');
+const problems = [];
+
+// ---- the [PERF] result: the LAST eval whose returned string starts "[PERF] "
+// The driver logs `[harness] eval <source> => "<JSON-quoted result>"`; the
+// source itself contains "[PERF] " and arrow functions, so the result is taken
+// from the quoted string that ends the line, never by searching for "[PERF]".
+let d = null, perfNote = 'no [PERF] eval line at all (report never ran)';
+for (const l of lines) {
+  if (!l.includes('[harness] eval ') || !l.includes('[PERF] ')) continue;
+  const m = / => ("(?:[^"\\]|\\.)*")\s*$/.exec(l);
+  if (!m) { perfNote = 'the report eval returned nothing quotable (it threw?)'; continue; }
+  let s; try { s = JSON.parse(m[1]); } catch { perfNote = 'the report eval result is not a JSON string'; continue; }
+  if (typeof s !== 'string' || !s.startsWith('[PERF] ')) { perfNote = `the report eval returned: ${String(s).slice(0, 160)}`; continue; }
+  try { d = JSON.parse(s.slice(s.indexOf('{'))); } catch (e) { perfNote = `[PERF] JSON does not parse: ${e.message}`; d = null; }
+}
+if (!d) { console.log(`INVALID: ${perfNote}`); process.exit(1); }
+
+// ---- keys
+const keys = lines.filter((l) => /\[harness\] key (Right|Left) /.test(l)).length;
+if (keys < 2) problems.push(`only ${keys} tutorial key presses logged (need Right and Left)`);
+
+// ---- game events on the driver's clock (harness echoes excluded: an until:
+// step quotes the string it waits for)
+const game = (needle) => lines.map((l, i) => [l, i]).filter(([l]) => !isHarness(l) && l.includes(needle));
+const nr = game('[L] NEW_ROUND'), rw = game('[L] ROUND_WINNER');
+
+// ---- throttle: switched on, at the claimed rate, before round 2 began
+const thr = lines.map((l, i) => [/\[harness\] CPU throttling rate ([\d.]+)x/.exec(l), i]).filter(([m]) => m);
+if (!(d.cpu_rate >= 1)) problems.push('no cpu_rate in the [PERF] line');
+if (!thr.length) problems.push('the driver never logged "CPU throttling rate" (cpu: step missing)');
+else {
+  const [m, i] = thr[thr.length - 1];
+  if (Number(m[1]) !== Number(d.cpu_rate)) problems.push(`throttle logged at ${m[1]}x but [PERF] claims ${d.cpu_rate}`);
+  if (nr.length >= 2 && i > nr[1][1]) problems.push('throttle was switched on AFTER round 2 started');
+}
+
+// ---- measured rounds
+const measured = d.rounds.filter((r) => r.round >= 2 && r.length_s >= 30);
+if (measured.length < 2) problems.push(`${measured.length} measured round(s) >= 30 s (need rounds 2 and 3)`);
+const lateShots = [];
+for (const r of measured) {
+  if (!(r.late_5s.frames >= 30)) problems.push(`round ${r.round}: ${r.late_5s.frames} frames in the late window`);
+  if (!(r.late_5s.draws_per_frame > EMPTY_ARENA_DRAWS_PER_FRAME * 1.25))
+    problems.push(`round ${r.round}: ${r.late_5s.draws_per_frame} draws/frame late is not above an empty arena (${EMPTY_ARENA_DRAWS_PER_FRAME}) by a quarter`);
+  // a screenshot in the second half of this round, present on disk
+  const a = nr[r.round - 1], b = rw[r.round - 1];
+  if (!a || !b) { problems.push(`round ${r.round}: cannot locate NEW_ROUND/ROUND_WINNER in the transcript`); continue; }
+  const t0 = stamp(a[0]), t1 = stamp(b[0]);
+  const shots = lines.slice(a[1], b[1]).map((l) => /\[harness\] screenshot -> (.*\.png)\s*$/.exec(l)).filter(Boolean)
+    .map((m) => m[1]).filter((f) => { const i = lines.findIndex((l) => l.endsWith(f)); return stamp(lines[i]) >= t0 + (t1 - t0) / 2; });
+  const present = shots.filter((f) => fs.existsSync(path.join(dir, path.basename(f))));
+  if (!present.length) problems.push(`round ${r.round}: no screenshot from its second half on disk`);
+  else lateShots.push(present.map((f) => path.basename(f, '.png')).join(','));
+}
+
+if (problems.length) { console.log('INVALID: ' + problems.join('; ')); process.exit(1); }
+console.log(`VALID: ${measured.length} rounds at cpu ${d.cpu_rate}x; late ms p50 ${measured.map((r) => r.late_5s.ms_p50).join('/')}; `
+  + `late draws/frame ${measured.map((r) => r.late_5s.draws_per_frame).join('/')} (floor ${EMPTY_ARENA_DRAWS_PER_FRAME}); `
+  + `late shots ${lateShots.join(' / ')}`);
