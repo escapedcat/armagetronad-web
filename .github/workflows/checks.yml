@@ -1,0 +1,154 @@
+# Checks worth having on every pull request, beyond "does the client build"
+# (that proof already belongs to deploy-pages.yml, which runs the same event).
+#
+# TWO JOBS, TWO DIFFERENT KINDS OF REGRESSION.
+#
+#   dedicated-pin  Builds the OTHER wasm -- the M0 dedicated server -- which
+#                  deploy-pages.yml never touches, and asserts the byte
+#                  invariant this project has otherwise kept by hand since M0:
+#                  web/README.md "both builds share -- 2,488,298 bytes AND md5
+#                  9718a2a64978cb6e9b95ea2f0454cca5". Size alone has already
+#                  passed a build with the wrong md5 once (M4 task 3); this
+#                  asserts both halves, the way every milestone since has had
+#                  to remember to do by hand.
+#
+#   scripts        shellcheck on the shell scripts and `node --check` on the
+#                  ES modules under web/tools/ and deps/. Nothing here runs
+#                  the tools, so it catches a script that cannot parse or a
+#                  quoting bug, not a logic error -- cheap, and everything
+#                  cheap is worth having on every PR.
+#
+# WHY NOT A THIRD JOB FOR C++. This port carries ~114k lines of upstream
+# Armagetron source essentially unpatched; a linter or formatter run over it
+# would either drown in upstream's own style or rewrite files this project
+# does not own, fighting the upstream-watch.yml tracking that diffs against
+# real upstream commits. The C++ this project actually wrote is small,
+# reviewed by hand, and already gated by the byte-identity checks above and in
+# deploy-pages.yml -- there is no lint budget left for the other 114k lines.
+#
+# NOTE ON FILE PLACEMENT. Same exception as the other files under
+# .github/workflows/: this repo's convention keeps new files under
+# src/emscripten/, web/, deps/ or docs/, and a workflow cannot live there. The
+# logic invoked here -- the Makefile, the scripts under lint -- all does.
+
+name: checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Same variable, same reason as deploy-pages.yml: sourcing
+# deps/emsdk/emsdk_env.sh clears EMSDK_VERSION, so the pin check needs a name
+# outside emsdk's own namespace.
+env:
+  AA_EMSDK_VERSION: '6.0.8'
+
+jobs:
+  dedicated-pin:
+    name: dedicated server byte pin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      # Restore/install/pin-check and the libxml2 build below are the exact
+      # steps and cache keys from deploy-pages.yml, so a PR run and a deploy
+      # run share the same cache entries instead of each keeping a cold copy.
+      - name: Restore emsdk
+        id: emsdk-cache
+        uses: actions/cache@v6
+        with:
+          path: deps/emsdk
+          key: emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
+
+      - name: Install emsdk ${{ env.AA_EMSDK_VERSION }}
+        if: steps.emsdk-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git deps/emsdk
+          cd deps/emsdk
+          ./emsdk install "$AA_EMSDK_VERSION"
+          ./emsdk activate "$AA_EMSDK_VERSION"
+
+      - name: Pin check
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          emcc --version | head -1
+          emcc --version | head -1 | grep -q " $AA_EMSDK_VERSION " || { echo "emcc is not $AA_EMSDK_VERSION"; exit 1; }
+
+      - name: Restore libxml2
+        id: libxml2-cache
+        uses: actions/cache@v6
+        with:
+          path: deps/build/libxml2-install
+          key: libxml2-${{ hashFiles('deps/build-libxml2.sh') }}-emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
+
+      - name: Build libxml2 (static wasm)
+        if: steps.libxml2-cache.outputs.cache-hit != 'true'
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          ./deps/build-libxml2.sh
+
+      - name: Build the dedicated server
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          make -f web/Makefile dedicated -j"$(nproc)"
+          ls -l web/dist-m0/
+
+      # THE INVARIANT. web/README.md's 2,488,298 B / md5 9718a2a6... was
+      # measured on the maintainer's macOS. The first CI client build
+      # (deploy-pages.yml) showed the Linux .wasm differs from the Mac one by
+      # 16 bytes on the SAME emsdk 6.0.8, so whether the dedicated wasm
+      # reproduces here is a question this run answers, not one this file
+      # assumes -- see the comment above MAC_PIN_BYTES for what happens next
+      # depending on the answer. Both measured values are printed before the
+      # assertion, so a failing log needs no re-run to explain itself.
+      - name: Assert the dedicated wasm byte pin
+        run: |
+          WASM=web/dist-m0/armagetronad-dedicated.wasm
+          BYTES=$(wc -c < "$WASM" | tr -d ' ')
+          MD5=$(md5sum "$WASM" | cut -d' ' -f1)
+          echo "measured: $BYTES bytes, md5 $MD5"
+
+          # The local invariant (web/README.md), established on the
+          # maintainer's macOS. Asserted here first: if a Linux runner
+          # reproduces it, one pin covers both platforms and nothing else is
+          # needed.
+          MAC_PIN_BYTES=2488298
+          MAC_PIN_MD5=9718a2a64978cb6e9b95ea2f0454cca5
+          echo "Mac pin (web/README.md, local invariant): $MAC_PIN_BYTES bytes, md5 $MAC_PIN_MD5"
+
+          if [ "$BYTES" = "$MAC_PIN_BYTES" ] && [ "$MD5" = "$MAC_PIN_MD5" ]; then
+            echo "PASS: matches the Mac pin"
+          else
+            echo "FAIL: measured $BYTES bytes / md5 $MD5 does not match the Mac pin $MAC_PIN_BYTES / $MAC_PIN_MD5" >&2
+            exit 1
+          fi
+
+  scripts:
+    name: shellcheck + node --check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Verify shellcheck
+        run: |
+          command -v shellcheck >/dev/null || sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck --version
+
+      - name: shellcheck web/tools/*.sh and deps/*.sh
+        run: shellcheck web/tools/*.sh deps/*.sh
+
+      - name: node --check on web/tools/*.mjs
+        run: |
+          for f in web/tools/*.mjs; do
+            echo "-- $f"
+            node --check "$f"
+          done

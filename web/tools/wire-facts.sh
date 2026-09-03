@@ -42,6 +42,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 # Values that reach the JSON. Pages sends no quotes or backslashes in any of
 # these headers, but a header is remote input, so strip both rather than trust.
+# shellcheck disable=SC1003 # the trailing \\ deletes one literal backslash from tr's set; it is not an unterminated quote escape.
 j() { printf '%s' "$1" | tr -d '"\\' | tr -d '\n'; }
 
 hdr() { # hdr <file> <name>  -- last occurrence wins, value lowercased name match
