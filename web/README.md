@@ -35,7 +35,8 @@ node web/dist-m0/armagetronad-dedicated.js --doc | head -20
 node web/dist-m0/armagetronad-dedicated.js \
     --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
 
-# 6. Publish what step 4 built. See "Deploying to GitHub Pages" below --
+# 6. Publish what step 4 built -- or merge to main and let CI do 4 and 6.
+#    See "Deploying to GitHub Pages" below --
 #    it publishes, it does not build.
 (cd web && npm run deploy)
 #     -> https://escapedcat.github.io/armagetronad-web/
@@ -693,6 +694,16 @@ cd web && npm run deploy
 directory. It builds nothing: publish a stale `dist-m1` and you publish stale
 artefacts, which is a failure this port has already had once in another form
 (M4's leftover `dist-m0` had the right size and the wrong md5).
+
+**CI does this on every merge to `main`** (`.github/workflows/deploy-pages.yml`,
+since 2026-09-03): a clean checkout, the pinned emsdk and the static libxml2 (both
+cached), `make client`, then the *same* `npm run deploy` — publish-set gate
+included — with `-x -r -u` appended for the runner. Pull requests run the build
+and the gate but do not publish, so every PR proves the client still builds.
+`gh workflow run deploy-pages.yml --ref <branch>` publishes a branch — the way
+to get one onto a phone before it merges; `main` takes the site back on its next
+change. Docs-only pushes are skipped. The manual procedure above stays valid and
+is exactly what the workflow runs.
 
 **What it does to the repository.** It force-pushes the branch `gh-pages` as a
 single **parentless** commit containing only the six published files — the
