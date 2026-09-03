@@ -110,7 +110,8 @@ for arm in arms:
             e, l = r['early_5s'], r['late_5s']
             print(f'{"":14s}   round {r["round"]} frame split p50 (in swap / to first draw / first draw to swap) ms: '
                   f'early {e.get("ms_in_swap_p50")} / {e.get("ms_to_first_draw_p50")} / {e.get("ms_first_draw_to_swap_p50")}; '
-                  f'late {l.get("ms_in_swap_p50")} / {l.get("ms_to_first_draw_p50")} / {l.get("ms_first_draw_to_swap_p50")}')
+                  f'late {l.get("ms_in_swap_p50")} / {l.get("ms_to_first_draw_p50")} / {l.get("ms_first_draw_to_swap_p50")}; '
+                  f'in-swap p90/max early {e.get("ms_in_swap_p90")}/{e.get("ms_in_swap_max")}, late {l.get("ms_in_swap_p90")}/{l.get("ms_in_swap_max")}')
         print(f'{"":14s}   round {r["round"]} per-second ms_p50:        {ps["ms_p50"]}')
         print(f'{"":14s}   round {r["round"]} per-second draws/frame:   {ps["draws_per_frame"]}')
         if 'ms_to_first_draw_p50' in ps:

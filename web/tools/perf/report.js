@@ -33,7 +33,9 @@
      reader can see what was excluded and that it did not leak into ms_p50.
      Each frame interval t[i]-t[p] (p the previous sample) is also split into
      the three parts the sampler timestamps: ms_in_swap = the previous swap
-     call itself (glFinish's wait for the GPU), ms_to_first_draw = from that
+     call itself (p50, p90 and max: if glFinish waited for the GPU it would
+     show here, and the first measured run read 0 in every window -- so the
+     tail is reported too), ms_to_first_draw = from that
      call's return to this frame's first draw call (the emscripten_sleep(0)
      yield, input, the simulation, render setup), ms_first_draw_to_swap = from
      the first draw call to this frame's swap call (render submission). */
@@ -53,7 +55,7 @@
     return { frames: ix.length, frames_excluded: dropped, ms_p50: r2(q(d, .5)), ms_p90: r2(q(d, .9)),
              fps: r2(ix.length / (span / 1000)), draws_per_frame: r2(dr / f),
              kb_per_frame: r2(by / f / 1024), hitches_over_50ms: d.filter(x => x > 50).length,
-             raw_ms_max: r2(rawMax), ms_in_swap_p50: r2(q(sw, .5)),
+             raw_ms_max: r2(rawMax), ms_in_swap_p50: r2(q(sw, .5)), ms_in_swap_p90: r2(q(sw, .9)), ms_in_swap_max: r2(q(sw, 1)),
              ms_to_first_draw_p50: r2(q(pre, .5)), ms_first_draw_to_swap_p50: r2(q(ren, .5)) }; };
   const perSec = (t0, t1) => { const ms = [], dr = [], mx = [], pre = [], ren = [];
     for (let k = 0; k * 1000 < t1 - t0; k++) { const w = win(t0 + k * 1000, Math.min(t1, t0 + (k + 1) * 1000));
