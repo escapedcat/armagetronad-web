@@ -126,7 +126,10 @@ automated deploy showed `armagetronad.js` differs too, in content rather than
 size — same 357,632 bytes, different sha256 — while `armagetronad.data`,
 `armagetronad.html` and `index.html` came back byte-identical across the two
 platforms. Same source, same toolchain, two correct builds; the pin that
-matters (the dedicated server's) is checked by md5 on the machine that made it.
+matters (the dedicated server's) is checked by md5 on the machine that made it
+— and, since `checks.yml`, asserted automatically in CI against the pin for
+whichever platform built it (two pins now, one per platform; see
+web/README.md).
 
 Frame rate clears the ≥30 fps bar roughly twice over and **is not stable enough to
 quote as a single number**. Three runs of the same script against the same build

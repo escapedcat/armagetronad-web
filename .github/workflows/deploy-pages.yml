@@ -171,6 +171,17 @@ jobs:
       # it. 20 s between polls, matching that build time; 10 minutes is far
       # longer than any observed Pages build, so a real timeout here means
       # something is actually wrong, not just slow.
+      #
+      # THE FETCH IS ALLOWED TO FAIL. Under `set -e`, an unguarded
+      # `GOT=$(curl ... | sha256sum ...)` would take the whole step down on
+      # one transient network error -- with no message, AFTER gh-pages has
+      # already force-pushed, so a later step failing cannot undo the deploy
+      # anyway. `|| GOT=transient` turns a failed fetch into "not a match
+      # yet" instead of a crash, and the deadline below still bounds how long
+      # that can go on. `--connect-timeout`/`--max-time` bound a single
+      # fetch too: without them a hung connection can outlast the 10-minute
+      # deadline outright, since the deadline is only checked BETWEEN
+      # requests.
       - name: Wait for Pages to serve the new build
         if: github.event_name != 'pull_request'
         run: |
@@ -179,7 +190,7 @@ jobs:
           echo "waiting for https://escapedcat.github.io/armagetronad-web/armagetronad.wasm to match sha256 $WANT"
           END=$((SECONDS + 600))
           while true; do
-            GOT=$(curl -sL https://escapedcat.github.io/armagetronad-web/armagetronad.wasm | sha256sum | cut -d' ' -f1)
+            GOT=$(curl -sL --connect-timeout 15 --max-time 120 https://escapedcat.github.io/armagetronad-web/armagetronad.wasm | sha256sum | cut -d' ' -f1) || GOT=transient
             if [ "$GOT" = "$WANT" ]; then
               echo "Pages is serving the new build (sha256 $GOT)"
               break
@@ -188,6 +199,7 @@ jobs:
               echo "Pages did not start serving sha256 $WANT within 10 minutes (last saw sha256 $GOT)" >&2
               exit 1
             fi
+            if [ "$GOT" = transient ]; then echo "transient fetch error, retrying"; fi
             sleep 20
           done
 
@@ -200,6 +212,29 @@ jobs:
       # comparison that matters. --no-proxy: the proxy live-gate.sh otherwise
       # starts is only for a Firefox outbound restriction on one machine (see
       # its header) and plays no part in a curl-only check.
+      #
+      # wire-facts.sh hashes with `shasum -a 256`, which ships with Perl
+      # rather than coreutils. ubuntu-latest's runner image carries it, but
+      # that is verified here rather than assumed: a missing shasum gets a
+      # sha256sum-backed shim instead of turning into an opaque "command not
+      # found" inside every one of wire-facts.sh's checks.
+      #
+      # continue-on-error: TRUE, DELIBERATELY, FOR NOW. This step has never
+      # run against a real Linux deploy before this PR merges -- deploy never
+      # happens on a PR, so there is no way to exercise it for real first.
+      # gh-pages has already force-pushed by the time this step runs, and
+      # that push cannot be undone by a later step failing, so a red result
+      # here would only paint an otherwise-successful deploy red over its own
+      # brand-new check. REMOVE continue-on-error once the first real run on
+      # `main` comes back green (see the PR's Follow-up note).
       - name: Wire check against the live deployment
         if: github.event_name != 'pull_request'
-        run: sh web/tools/live-gate.sh --no-proxy --only wire
+        continue-on-error: true
+        run: |
+          if ! command -v shasum >/dev/null; then
+            echo "shasum not found; installing a sha256sum-backed shim (wire-facts.sh calls 'shasum -a 256')"
+            printf '#!/bin/sh\nshift; shift; exec sha256sum "$@"\n' | sudo tee /usr/local/bin/shasum >/dev/null
+            sudo chmod +x /usr/local/bin/shasum
+          fi
+          command -v shasum
+          sh web/tools/live-gate.sh --no-proxy --only wire
