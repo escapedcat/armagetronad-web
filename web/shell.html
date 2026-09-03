@@ -58,7 +58,30 @@
        produces. */
     body { margin:0; height:100%; overflow:hidden; background:#111; color:#eee;
            display:flex; align-items:center; justify-content:center;
-           font:14px/1.4 system-ui, sans-serif; }
+           font:14px/1.4 system-ui, sans-serif;
+           /* PHONE FEEDBACK, THE SECOND DECLARATION. `height:100%` resolves
+              against the initial containing block, and on a phone browser that
+              box is not guaranteed to be the part of the screen you can see.
+              The canvas is CENTRED in this box, so a box taller than the
+              visible area pushes the picture down and takes the bottom of it
+              -- which is where this game draws the entire HUD: scores, speed,
+              rubber, brakes -- under the fold, with the `overflow:hidden` on
+              this same element making it unreachable.
+
+              100dvh is by definition the height that is visible right now, so
+              the centring happens inside what the player can actually see. It
+              is a SECOND declaration for the same reason the two widths on
+              #canvas are (a browser without dvh drops the whole declaration,
+              not just the unit), and it is inert on every desktop, where the
+              two numbers are equal.
+
+              NOT MEASURED ON A DEVICE, and must not be quoted as if it were:
+              Chrome's device emulation reports vh == dvh == svh == lvh ==
+              innerHeight in every configuration this repo can drive (the table
+              in docs/evidence/phone-feedback/README.md), so the situation this
+              defends against cannot be reproduced here. Correct by
+              construction, not by experiment. */
+           height:100dvh; }
     /* THE GAME FILLS THE WINDOW. Before M5 this was `margin:0 auto` on a fixed
        1024x768 canvas, which on any large display drew the game as a small
        rectangle in a sea of black.
@@ -228,6 +251,21 @@
     #reloadchip button { color:#eee; background:rgba(255,255,255,.14);
                          border:1px solid rgba(255,255,255,.3);
                          border-radius:.4rem; padding:.35rem .6rem; font:13px system-ui, sans-serif; }
+    #rotate button { color:#eee; background:rgba(255,255,255,.14);
+                     border:1px solid rgba(255,255,255,.3); border-radius:.4rem;
+                     padding:.6rem 1rem; font:14px system-ui, sans-serif; }
+
+    /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
+       z-index 40 puts it above everything including the rotate prompt, because
+       the numbers are most interesting exactly when something has gone wrong
+       enough to be showing a prompt. pointer-events:none is load-bearing, not
+       tidiness: it sits over the left steering zone, and a panel that ate taps
+       would break the game it is there to measure. */
+    #diag { position:fixed; z-index:40; left:0; top:0; pointer-events:none;
+            padding:.35rem .5rem; background:rgba(0,0,0,.72);
+            color:#9f9; font:11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+            white-space:pre; border-radius:0 0 .4rem 0; }
+    #diag.bad { color:#f88; }
   </style>
 </head>
 <body>
@@ -296,19 +334,48 @@
     </div>
   </div>
 
+  <!--
+    PHONE FEEDBACK: this prompt now HOLDS THE START rather than just advising.
+    See the orientation block in the script for the whole argument; in one line,
+    a portrait boot does not merely look small, it builds the projection for a
+    0.45 aspect (a ~131 degree VERTICAL field of view) and no amount of later
+    CSS can undo that. The button is the escape hatch for a device whose
+    orientation media query this page reads wrong.
+  -->
   <div id="rotate" hidden>
     <div class="glyph">&#128241;&#8635;</div>
     <p><strong>Turn your phone sideways.</strong></p>
     <p class="dim">Armagetron draws a wide 3D view and has never been rendered
        at a phone's portrait shape. Landscape is the only orientation this demo
-       is known to work at.</p>
+       is known to work at. The game starts by itself the moment you turn the
+       phone.</p>
+    <p><button type="button" id="rotate-anyway">Start in portrait anyway</button></p>
   </div>
 
+  <!--
+    THE WORD "STRETCHED" WAS WRONG AND IS NOW GONE, which matters because it is
+    the only place this port ever used it and the maintainer's phone report used
+    it back. Measured (docs/evidence/phone-feedback/aspect/): the displayed box
+    keeps the backing store's aspect ratio to 0.00 % in every configuration,
+    including a deliberately falsified one -- `height:auto` on a replaced
+    element makes stretching unrepresentable. What a rotation after load
+    actually costs is SIZE and SHARPNESS: the picture is letterboxed into
+    whatever fits, at the pixel count the other orientation had.
+  -->
   <div id="reloadchip" hidden>
-    <span>Rotated &mdash; the picture is being stretched from the size it loaded at.</span>
+    <span>Rotated &mdash; still drawing at the shape and size it loaded at, so it
+          is letterboxed and soft. Reload to redraw for this orientation.</span>
     <button type="button" id="reloadchip-go">Reload</button>
     <button type="button" id="reloadchip-x" aria-label="Dismiss">&times;</button>
   </div>
+
+  <!--
+    ?diag=1 ONLY. Empty, display:none and untouched unless the query parameter is
+    present; the block that fills it is the last thing in the script. It exists
+    because this port has no way to measure a phone -- the maintainer is the
+    instrument, and an instrument needs a dial.
+  -->
+  <div id="diag" hidden></div>
 
 
   <script>
@@ -480,13 +547,100 @@
     // constant. Keep it: without it a resolution measurement has to be a
     // rebuild, and a rebuild is not the same binary.
     const MAX_CANVAS_PIXELS = 3840 * 2160;
-    (() => {
+
+    // ?dpr=N IS AN EXPERIMENT, AND IT IS THE ONLY WAY THIS PORT CAN ASK A PHONE
+    // A QUESTION. Nothing in the shipped flow sets it and it is not linked from
+    // anywhere; the default remains window.devicePixelRatio exactly as before.
+    //
+    // WHAT IT IS FOR, precisely. This port is CPU-bound on a desktop, not
+    // fill-bound: docs/evidence/m5-startup swept nine backing-store sizes and
+    // the frame-time distribution DID NOT MOVE -- 60 fps median at 0.79 Mpx and
+    // 60 fps median at 33.2 Mpx, p50 pinned at 16.7 ms throughout. Whether that
+    // also holds on a phone GPU is unknown and cannot be measured from here.
+    // ?dpr=1 loads the SAME BUILD at 1/dpr^2 of the pixels (1/9 on a dpr-3
+    // phone), so one A/B on the device decides it:
+    //
+    //     it feels smoother at ?dpr=1  -> fill-bound, resolution is the lever
+    //     it feels identical           -> CPU-bound, resolution is a red herring
+    //
+    // A value out of (0, 8] is ignored rather than clamped, because a typo that
+    // silently half-ran the experiment would be worse than one that visibly
+    // did nothing -- the [DISPLAY] line says which happened either way.
+    const readNumberParam = (name, min, max) => {
+      try {
+        const raw = new URLSearchParams(location.search).get(name);
+        if (raw === null) return null;
+        const v = parseFloat(raw);
+        if (!isFinite(v) || v < min || v > max) {
+          console.log('[DISPLAY] ?' + name + '=' + raw + ' ignored (want ' +
+                      min + '..' + max + ')');
+          return null;
+        }
+        return v;
+      } catch (e) { return null; }  // a browser without URLSearchParams
+    };
+
+    // THE PER-AXIS GPU LIMIT, AND WHY IT IS NOT THE SAME THING AS THE AREA CAP
+    // ABOVE. MAX_CANVAS_PIXELS is an allocation bound chosen by this page. This
+    // is the driver's own hard limit, and exceeding it does not fail loudly: a
+    // WebGL drawing buffer larger than MAX_RENDERBUFFER_SIZE / MAX_VIEWPORT_DIMS
+    // is silently CLAMPED, so gl.drawingBufferWidth/Height come back smaller
+    // than canvas.width/height while the attributes keep the numbers you asked
+    // for. Everything downstream then disagrees with the truth: the game reads
+    // canvas.width/height through SDL_GetVideoInfo and builds glViewport and
+    // glFrustum from them, and the browser scales the real, smaller buffer over
+    // the element box. If the clamp is not proportional, THAT is a genuinely
+    // stretched picture -- and it is the only mechanism left that can produce
+    // one on this page (docs/evidence/phone-feedback rules out both the CSS and
+    // the projection by measurement).
+    //
+    // Desktop GPUs report 16384 or 32768 here, so a 4K window never comes near
+    // it and this code is inert -- which is exactly why no desktop test could
+    // ever have found the problem. Phone GPUs commonly report 4096, and a
+    // 1440p phone in landscape at dpr 3.5 asks for 3122 -- close enough that
+    // the next phone is not.
+    //
+    // Measured on a THROWAWAY 1x1 canvas rather than on #canvas: creating a
+    // context on the real canvas here would hand SDL a context it did not make,
+    // with attributes it did not choose. A discarded context costs a few ms and
+    // tells the truth about the same driver.
+    const gpuAxisLimit = () => {
+      try {
+        const probe = document.createElement('canvas');
+        probe.width = probe.height = 1;
+        const gl = probe.getContext('webgl') ||
+                   probe.getContext('experimental-webgl');
+        if (!gl) return null;
+        const rb = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) || 0;
+        const vp = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+        const vpMin = (vp && vp.length === 2) ? Math.min(vp[0], vp[1]) : 0;
+        const lim = Math.min(rb || Infinity, vpMin || Infinity);
+        // Losing the context immediately keeps this from occupying one of the
+        // browser's small pool of live WebGL contexts for the session.
+        const lose = gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+        return isFinite(lim) && lim > 0 ? lim : null;
+      } catch (e) { return null; }
+    };
+
+    // sizeCanvas() IS CALLED TWICE AT MOST AND ONLY EVER BEFORE main(). It was
+    // an IIFE until the phone feedback; it is a function now because the
+    // portrait boot hold below needs to re-take the measurement after the
+    // player turns the phone, and re-taking it is safe for exactly as long as
+    // the game has not read the canvas. It is NOT a resize handler and must not
+    // become one -- the long paragraph above about sr_ReinitDisplay still
+    // stands.
+    let sizedForPortrait = null;   // the orientation the backing store is FOR
+    function sizeCanvas(why) {
       const canvas = document.getElementById('canvas');
       // Told to the stylesheet rather than derived by it, because CSS has no
       // way to read a canvas's width/height attributes. See the #canvas rule.
       const publishAspect = () => document.documentElement.style
         .setProperty('--aa-aspect', String(canvas.width / canvas.height));
       try {
+        try {
+          sizedForPortrait = window.matchMedia('(orientation: portrait)').matches;
+        } catch (e) { sizedForPortrait = null; }
         const forced = window.AA_CANVAS_SIZE;
         if (Array.isArray(forced) && forced.length === 2 &&
             forced[0] > 0 && forced[1] > 0) {
@@ -497,7 +651,9 @@
                       canvas.width + 'x' + canvas.height);
           return;
         }
-        const dpr = window.devicePixelRatio || 1;
+        const dprOverride = readNumberParam('dpr', 0.05, 8);
+        const dpr = dprOverride !== null ? dprOverride
+                                         : (window.devicePixelRatio || 1);
         const vw = window.innerWidth, vh = window.innerHeight;
         let w = Math.floor(vw * dpr);
         let h = Math.floor(vh * dpr);
@@ -515,12 +671,30 @@
           h = Math.max(1, Math.round(h * k));
           capped = true;
         }
+        // Both axes are scaled by the SAME factor, for the same reason the area
+        // cap is: the aspect ratio is what rViewport::Perspective builds the
+        // frustum from, so clamping the axes independently would hand the game
+        // a shape the window does not have -- i.e. it would CAUSE the defect
+        // this clamp exists to avoid.
+        const axisLimit = gpuAxisLimit();
+        let axisClamped = false;
+        if (axisLimit && (w > axisLimit || h > axisLimit)) {
+          const k = Math.min(axisLimit / w, axisLimit / h);
+          w = Math.max(1, Math.floor(w * k));
+          h = Math.max(1, Math.floor(h * k));
+          axisClamped = true;
+        }
         canvas.width  = w;
         canvas.height = h;
         publishAspect();
-        console.log('[DISPLAY] viewport ' + vw + 'x' + vh + ' dpr ' + dpr +
+        console.log('[DISPLAY] ' + why + ': viewport ' + vw + 'x' + vh +
+                    ' dpr ' + dpr +
+                    (dprOverride !== null ? ' (?dpr override)' : '') +
                     ' -> canvas ' + w + 'x' + h +
-                    (capped ? ' (capped at ' + MAX_CANVAS_PIXELS + ' px)' : ''));
+                    ' aspect ' + (w / h).toFixed(4) +
+                    (capped ? ' (capped at ' + MAX_CANVAS_PIXELS + ' px)' : '') +
+                    ' gpu-axis-limit ' + (axisLimit || 'unknown') +
+                    (axisClamped ? ' (CLAMPED to it)' : ''));
       } catch (e) {
         // Falling back to the attributes on the element is a working game at
         // 1024x768, so this must never be allowed to escape and turn into
@@ -528,7 +702,8 @@
         console.log('[DISPLAY] sizing failed, keeping canvas ' +
                     canvas.width + 'x' + canvas.height + ': ' + e);
       }
-    })();
+    }
+    sizeCanvas('at load');
 
     // ---- PHASE 3: TOUCH INPUT ------------------------------------------
     //
@@ -614,6 +789,10 @@
       // than inferring it from a screenshot.
       console.log('[TOUCH] enabled=' + decision.on + ' (' + decision.why + ')' +
                   ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
+      // Published so the two later blocks that need to know -- the camera
+      // tuning and the diagnostic readout -- ask this decision rather than
+      // re-deriving it and risking a different answer.
+      window.AA_TOUCH = decision.on;
       if (!decision.on) return;
       touchEl.hidden = false;
 
@@ -656,53 +835,190 @@
         el.addEventListener('pointercancel', up);
       }
 
-      // ---- orientation, minimally --------------------------------------
+      // ---- orientation: now a BOOT HOLD, not only a prompt ---------------
       //
-      // THIS IS A PROMPT, NOT A RESIZE. The backing store is sized ONCE, before
-      // boot, from innerWidth/innerHeight (see the long block above), and a
-      // rotation after that point does not move it: the game's viewport,
-      // projection and HUD layout were all computed from what it read at boot,
-      // so following the rotation properly means calling SDL_SetVideoMode again
-      // -- sr_ReinitDisplay. That path is now known to WORK (M5 task 4c measured
-      // the canvas resizing live with no context loss and two full rounds
-      // afterwards), so a real resize listener is available to whoever wants it.
-      // It is not being built here, for the reason it was not built at M5: a
-      // live re-init on every orientation flip is a much larger claim than a
-      // sentence of honest text.
+      // STILL NOT A RESIZE. The backing store is sized before boot, from
+      // innerWidth/innerHeight (see the long block above), and a rotation after
+      // main() has started does not move it: the game's viewport, projection
+      // and HUD layout were all computed from what it read at boot, so
+      // following a rotation properly means calling SDL_SetVideoMode again --
+      // sr_ReinitDisplay. That path is known to WORK (M5 task 4c measured the
+      // canvas resizing live with no context loss and two full rounds
+      // afterwards), and it is still not being built here.
       //
-      // SO THE HONEST TEXT IS THE FEATURE. Portrait at 9:19.5 is an aspect this
-      // game has never rendered and is not worth discovering on a phone, so
-      // portrait gets a full-screen "turn it sideways" -- shown over the loading
-      // overlay too, because the useful moment to say it is while the 5 MB of
-      // wasm is still downloading. And a rotation AFTER load gets a chip that
-      // says exactly what is wrong (the picture is being stretched from the size
-      // it loaded at) and offers the one thing that fixes it.
+      // WHAT CHANGED, AND WHY IT IS THE ONE REAL "IT LOOKS STRETCHED" DEFECT
+      // THIS PAGE HAD. A phone is held in portrait. A link opens in portrait.
+      // Phase 3 sized the backing store from that portrait viewport, started
+      // the game, and then asked the player to rotate -- so the game built its
+      // projection for an aspect near 0.45, and rViewport::Perspective below
+      // 1.5 leaves the horizontal fov alone and divides the vertical by the
+      // aspect (ymul = xmul/aspectratio): a VERTICAL field of view near 131
+      // degrees. That is a real distortion in the render, and no CSS afterwards
+      // can undo it -- the picture is drawn wrong before the page lays it out.
+      // Rotating then left a narrow pillarboxed strip of a fisheyed portrait
+      // frame; docs/evidence/phase3-touch/portrait-02-*.png is the picture, and
+      // docs/evidence/phone-feedback/README.md is the arithmetic.
       //
-      // The chip's condition is "the orientation differs from the one at load",
-      // not "the orientation changed" -- rotating back really does restore the
-      // crisp picture, because the backing store never moved.
+      // So portrait no longer starts the game. The prompt HOLDS main(), the
+      // wasm keeps downloading behind it, and the moment the phone is turned
+      // the backing store is re-measured for the real orientation and the game
+      // starts -- once, at the right shape, with no re-init and no reload.
+      // Holding is only possible because sizing and starting are separate steps
+      // on this page. It costs a landscape visitor nothing: the hold is false
+      // and the behaviour is Phase 3's exactly.
+      //
+      // THE ESCAPE HATCH IS NOT DECORATION. If a device answers the orientation
+      // media query wrongly -- and this page cannot test every device -- an
+      // unconditional hold is a game that never starts. "Start in portrait
+      // anyway" sizes for whatever is there and boots.
+      //
+      // The chip's condition is "the orientation differs from the one the
+      // backing store was measured FOR", which is no longer the same sentence
+      // as "differs from the one at load" now that the measurement can happen
+      // after a rotation. sizedForPortrait is written by sizeCanvas() itself,
+      // so the two cannot drift apart.
       let mq;
       try { mq = window.matchMedia('(orientation: portrait)'); }
       catch (e) { return; }
-      const portraitAtLoad = mq.matches;
       let chipDismissed = false;
       const applyOrientation = () => {
-        rotateEl.hidden = !mq.matches;
-        if (!chipDismissed) chipEl.hidden = (mq.matches === portraitAtLoad);
+        // The prompt stays up only while the hold is on. Once the game has been
+        // released to start, a later rotation into portrait is the player's own
+        // doing and gets the chip, not a full-screen takeover.
+        rotateEl.hidden = !(mq.matches && window.AA_BOOT_HELD_FOR_PORTRAIT);
+        if (!chipDismissed) chipEl.hidden = (mq.matches === sizedForPortrait);
         console.log('[TOUCH] orientation portrait=' + mq.matches +
-                    ' (at load: ' + portraitAtLoad + ')');
+                    ' (sized for portrait: ' + sizedForPortrait +
+                    ', boot held: ' + !!window.AA_BOOT_HELD_FOR_PORTRAIT + ')');
       };
+      // The hold lives on window rather than in this closure because its other
+      // half -- startGame(), defined far below and outside this IIFE -- has to
+      // read it, and because a gate should be able to assert on it.
+      window.AA_BOOT_HELD_FOR_PORTRAIT = mq.matches;
+      window.AA_RELEASE_PORTRAIT_HOLD = (why) => {
+        if (!window.AA_BOOT_HELD_FOR_PORTRAIT) return;
+        window.AA_BOOT_HELD_FOR_PORTRAIT = false;
+        // Re-measure for the orientation the phone is in NOW. Safe only because
+        // main() has not run: see the header on sizeCanvas().
+        sizeCanvas('portrait hold released by ' + why);
+        applyOrientation();
+        console.log('[BOOT] portrait hold released by ' + why);
+        if (window.AA_RUNTIME_READY) startGame();
+      };
+      if (window.AA_BOOT_HELD_FOR_PORTRAIT) {
+        console.log('[BOOT] portrait at load: HOLDING main() until landscape');
+      }
+      document.getElementById('rotate-anyway')
+        .addEventListener('click', () => window.AA_RELEASE_PORTRAIT_HOLD('button'));
       document.getElementById('reloadchip-go')
         .addEventListener('click', () => location.reload());
       document.getElementById('reloadchip-x')
         .addEventListener('click', () => { chipDismissed = true; chipEl.hidden = true; });
+      const onOrientationChange = () => {
+        if (window.AA_BOOT_HELD_FOR_PORTRAIT && !mq.matches) {
+          window.AA_RELEASE_PORTRAIT_HOLD('rotation to landscape');
+          return;
+        }
+        applyOrientation();
+      };
       // addListener is the pre-2019 spelling; Safari needed it until 14. Both
       // are tried because the cost is one line and the failure mode of neither
       // firing is a prompt that never appears.
-      if (mq.addEventListener) mq.addEventListener('change', applyOrientation);
-      else if (mq.addListener) mq.addListener(applyOrientation);
+      if (mq.addEventListener) mq.addEventListener('change', onOrientationChange);
+      else if (mq.addListener) mq.addListener(onOrientationChange);
       applyOrientation();
     })();
+
+    // ---- PHONE FEEDBACK: "the bike is tiny" -----------------------------
+    //
+    // THE MEASUREMENT FIRST. At a phone's landscape aspect (2745x1050, a
+    // Pixel-class device at dpr 3 with the URL bar showing) the player's own
+    // cycle is 23 x 63 backing-store pixels during the round-start countdown --
+    // 6 % of the screen HEIGHT and 2.2 % of its width. That is not a phone bug:
+    // rViewport::Perspective fixes the vertical field of view for every aspect
+    // above 1.5 and widens only the horizontal, so a cycle occupies the same
+    // fraction of screen height on a phone as on a desktop. The phone's screen
+    // is simply small and at arm's length.
+    //
+    // WHAT WAS MEASURED, at that same geometry, from four full runs
+    // (docs/evidence/phone-feedback/camera/):
+    //
+    //   stock (fov 90)                     23 x 63 px    horizon visible
+    //   START_FOV_1 78                     29 x 75 px    horizon visible
+    //   START_FOV_1 69                     33 x 80 px    horizon at the corners
+    //   camera distance x0.5               47 x 122 px   horizon visible
+    //
+    // Halving the camera distance wins on both counts: 1.94x linear against
+    // 1.27x, AND it keeps the arena rim in frame, which narrowing the field of
+    // view does not -- at fov 69 the horizon is already leaving the top of the
+    // screen, and at 60 the frame is floor and nothing else. So the lever is
+    // the camera, not the fov.
+    //
+    // WHY THIS IS DONE HERE AND NOT AS A COMPILED DEFAULT, which is what M4
+    // task 3 established as the right home for a preference. Because the
+    // compiled default is not reachable for these four settings:
+    // config/settings_visual.cfg NAMES all of them, and st_LoadConfig loads
+    // config/settings.cfg (which includes it) AFTER user.cfg -- so a default in
+    // eCamera.cpp is overwritten on every boot by the shipped config, and so is
+    // anything a player could put in user.cfg. They are also tSettingItem, i.e.
+    // never written back to user.cfg, and there is no menu row for any of them.
+    // The player therefore has NO way to set these today, on any platform,
+    // which is exactly the "there is no player choice for it to overwrite" case
+    // web/webdefaults/autoexec.cfg's own header calls harmless.
+    //
+    // WHY IT IS TOUCH-ONLY AND WHY THAT IS THE POINT. The dispatch's constraint
+    // is "do not break the desktop experience to fix the phone one". Appending
+    // to the preloaded autoexec.cfg from the page -- rather than editing
+    // web/webdefaults/autoexec.cfg on disk -- is what makes the change
+    // conditional on something only the page knows: whether the primary input
+    // is a finger. A desktop visitor's /data/webdefaults/autoexec.cfg is byte
+    // for byte the file the build shipped, and every desktop gate in
+    // web/tools/ therefore measures an unchanged game.
+    //
+    // ?cam=F OVERRIDES IT, ON ANY DEVICE, and that is how the next round of
+    // this conversation gets to be a measurement instead of a preference.
+    // ?cam=1 is stock (nothing is written at all), ?cam=0.35 is closer still.
+    //
+    // THE FOUR BASE VALUES ARE COPIED FROM config/settings_visual.cfg and are
+    // multiplied, not replaced, so the speed-scaling shape of the stock camera
+    // is preserved: at 40 m/s the halved camera sits where the stock one sits
+    // at 14 m/s rather than on top of the cycle. If those base values ever
+    // change in that file, THESE GO STALE SILENTLY -- there is no way for a
+    // page to read them back, since they are not exposed to JS anywhere.
+    const CAMERA_BASE = {                      // config/settings_visual.cfg
+      CAMERA_CUSTOM_BACK: 6,   CAMERA_CUSTOM_RISE: 4,
+      CAMERA_CUSTOM_BACK_FROMSPEED: 0.5, CAMERA_CUSTOM_RISE_FROMSPEED: 0.4,
+      CAMERA_GLANCE_BACK: 6,   CAMERA_GLANCE_RISE: 4,
+      CAMERA_GLANCE_BACK_FROMSPEED: 0.5, CAMERA_GLANCE_RISE_FROMSPEED: 0.4
+    };
+    const CAMERA_TOUCH_FACTOR = 0.5;
+    function applyTouchCameraTuning() {
+      let factor = 1;
+      try {
+        const q = readNumberParam('cam', 0.15, 4);
+        factor = q !== null ? q : (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1);
+        if (factor === 1) {
+          console.log('[CAMERA] stock camera (factor 1' +
+                      (q !== null ? ', from ?cam' : '') + ')');
+          return;
+        }
+        const lines = ['', '# appended at runtime by web/shell.html: camera x' +
+                       factor + (window.AA_TOUCH ? ' (touch device)' : '')];
+        for (const k in CAMERA_BASE) {
+          lines.push(k + ' ' + (Math.round(CAMERA_BASE[k] * factor * 1e4) / 1e4));
+        }
+        lines.push('');
+        const path = '/data/webdefaults/autoexec.cfg';
+        Module.FS.writeFile(
+          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
+        console.log('[CAMERA] camera distance x' + factor +
+                    ' written to ' + path + ' before main()');
+      } catch (e) {
+        // A failure here is a stock camera, not a broken game. It must never
+        // reach showFailure.
+        console.log('[CAMERA] tuning skipped (factor ' + factor + '): ' + e);
+      }
+    }
 
     var Module = {
       canvas: document.getElementById('canvas'),
@@ -867,6 +1183,12 @@
         // the two lines swap order deterministically -- which is how
         // docs/evidence/m4-persist demonstrates that this check can fail.
         console.log('[PERSIST] runtime initialized, starting the game');
+        // The preloaded /data tree exists from here on and not one moment
+        // earlier: the file packager appends ITS preRun callback after this
+        // page's, so a preRun hook cannot read /data at all. That is why the
+        // touch camera tuning below is here rather than in preRun.
+        window.AA_RUNTIME_READY = true;
+        applyTouchCameraTuning();
         let manual = false;
         try {
           manual = new URLSearchParams(location.search).get('autostart') === '0';
@@ -877,6 +1199,9 @@
           // containing it as a substring made M4's P14 read the hold as the
           // start. Measured -- it did.
           console.log('[BOOT] main() HELD by ?autostart=0, waiting for AA_START()');
+        } else if (window.AA_BOOT_HELD_FOR_PORTRAIT) {
+          // Same rule about the string: this must not contain '[BOOT] autostart'.
+          console.log('[BOOT] main() HELD in portrait, waiting for landscape');
         } else {
           startGame();
         }
@@ -1026,6 +1351,109 @@
       if (document.visibilityState === 'hidden') persistBackstop('visibilitychange-hidden');
     });
     window.addEventListener('beforeunload', () => persistBackstop('beforeunload'));
+
+    // ---- PHONE FEEDBACK: ?diag=1, the readout -----------------------------
+    //
+    // WHY A PANEL AT ALL, when the game already draws "FPS: n" in the corner
+    // (sr_FPSOut defaults to true in src/render/rScreen.cpp). Because frame rate
+    // is the one number this port could already see, and it is not the number
+    // the phone report turned on. The unanswerable questions were about
+    // GEOMETRY -- what dpr is this device, what did the page ask the GPU for,
+    // what did the GPU actually give it -- and there is no way to read those off
+    // a phone screen. This port cannot measure a phone; the maintainer is the
+    // instrument, and this is the dial.
+    //
+    // THE ROW THAT MATTERS IS `gl`. canvas.width/height is what the page asked
+    // for and what the game builds glViewport and glFrustum from;
+    // gl.drawingBufferWidth/Height is what the driver actually allocated. A
+    // WebGL drawing buffer over the driver's limit is silently clamped, and if
+    // that clamp is not proportional the browser scales a wrong-shaped buffer
+    // over the element box -- which is a genuinely stretched picture, and after
+    // the measurements in docs/evidence/phone-feedback it is the ONLY remaining
+    // mechanism on this page that can produce one. That row says MATCH or
+    // CLAMPED, in red.
+    //
+    // `err` is the other half: the displayed box's aspect against the backing
+    // store's. It reads 0.00 % in every configuration Chrome's device emulation
+    // can produce, including a deliberately falsified one, because `height:auto`
+    // on a replaced element makes a stretch unrepresentable in CSS. If a real
+    // phone ever shows a non-zero number there, that is a new fact.
+    //
+    // COSTS NOTHING WHEN OFF. Everything below is inside the `if`, including the
+    // glFlush/glFinish wrappers -- an unconditional prototype patch would put a
+    // function call in front of every buffer swap of the shipped game to serve a
+    // panel nobody asked for.
+    (() => {
+      let on = false;
+      try { on = new URLSearchParams(location.search).get('diag') === '1'; }
+      catch (e) { return; }
+      if (!on) return;
+
+      // The frame counter counts glFlush + glFinish, which is the same quantity
+      // web/tools/fps-resolution-probe.steps and every M2/M5 frame measurement
+      // counts -- i.e. buffer swaps, not requestAnimationFrame callbacks, which
+      // this game does not have. Verified against the game's own on-screen
+      // counter under emulation; if the two ever disagree, the game's is right
+      // and this one is counting something twice.
+      let swaps = 0, swapsPerSec = 0, lastT = performance.now();
+      for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
+        if (!C) continue;
+        for (const m of ['flush', 'finish']) {
+          const orig = C.prototype[m];
+          if (!orig) continue;
+          C.prototype[m] = function () { swaps++; return orig.apply(this, arguments); };
+        }
+      }
+
+      const el = document.getElementById('diag');
+      el.hidden = false;
+      const canvas = document.getElementById('canvas');
+      let gl = null;
+      const R2 = (x) => (Math.round(x * 100) / 100);
+      const tick = () => {
+        try {
+          const now = performance.now();
+          if (now - lastT >= 1000) {
+            swapsPerSec = Math.round(swaps * 1000 / (now - lastT));
+            swaps = 0; lastT = now;
+          }
+          // Fetched lazily and cached: before SDL_SetVideoMode there is no
+          // context, and getContext() on a canvas that already has one returns
+          // the same object rather than making a second.
+          if (!gl) {
+            try { gl = canvas.getContext('webgl') ||
+                       canvas.getContext('experimental-webgl'); } catch (e) { gl = null; }
+          }
+          const r = canvas.getBoundingClientRect();
+          const bsA = canvas.width / canvas.height;
+          const cssA = r.height > 0 ? r.width / r.height : 0;
+          const err = cssA ? (cssA / bsA - 1) * 100 : 0;
+          const vv = window.visualViewport;
+          const dbOK = gl && gl.drawingBufferWidth === canvas.width &&
+                             gl.drawingBufferHeight === canvas.height;
+          const rows = [
+            'dpr ' + (window.devicePixelRatio || 1) +
+              '   vp ' + window.innerWidth + 'x' + window.innerHeight +
+              (vv ? '  vis ' + R2(vv.width) + 'x' + R2(vv.height) : ''),
+            'bs  ' + canvas.width + 'x' + canvas.height + '  a ' + bsA.toFixed(4),
+            'css ' + R2(r.width) + 'x' + R2(r.height) + '  a ' + cssA.toFixed(4) +
+              '  err ' + err.toFixed(2) + '%',
+            'gl  ' + (gl ? gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight +
+                           (dbOK ? '  MATCH' : '  CLAMPED') : '(no context yet)'),
+            'fps ' + swapsPerSec + ' swaps/s' +
+              '   cam x' + (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1) +
+              '   touch ' + (window.AA_TOUCH ? 'on' : 'off')
+          ];
+          el.textContent = rows.join('\n');
+          el.className = (gl && !dbOK) || Math.abs(err) > 0.5 ? 'bad' : '';
+        } catch (e) {
+          el.textContent = 'diag failed: ' + e;
+        }
+      };
+      tick();
+      setInterval(tick, 500);
+      console.log('[DIAG] ?diag=1: readout on, glFlush/glFinish counted');
+    })();
 
   </script>
 
