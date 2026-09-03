@@ -83,14 +83,15 @@ not one.
    its two activations, so the hint stays up either way; and the 1.5 s
    screenshot after the presses looks behind the camera, where a jog would
    be. The one game-side hint is round 1's length: 46.1 s with the presses
-   after the countdown, 45.8 s with none, 17.9 s when the earlier template
-   pressed *during* the countdown — one sample each.
+   after the countdown, 45.8 s with none (twice), 17.9 s when the earlier
+   template pressed *during* the countdown — one sample of each key timing.
 
    So the invariant, stated honestly: the gate proves the input was *sent*,
    and the measured rounds are **AI-driven with an idle human** — in every
    round of every run the human cycle drives straight at speed 15.0 until it
    dies 59.1 s after `NEW_ROUND`, to the tenth of a second, keys or not
-   (four rounds in two runs on the old template, four more on this one). That
+   (four rounds in the two committed runs, four more in the rig's first
+   version). That
    is the condition every `base` number describes. The maintainer's *"the
    more I drive"* is a human turning; measuring that is a different template
    (Task 3), which must also prove the turn happened, and the key requirement
@@ -239,8 +240,8 @@ discriminator than the draw count alone, because the draw count cannot see
 the AI think time, the grid maintenance or the camera; read the two
 together, per second, from `per_second`. For the record, the base run's two
 measured rounds both rose in the last quarter with draws flat at 107–111:
-`ms_to_first_draw` went from 7.5 to 11–15 ms for about eleven seconds while
-`ms_first_draw_to_swap` stayed at 17–18. One run; Task 2 says how often.
+`ms_to_first_draw` went from 7.5 to 10.5–15 ms for about eleven seconds while
+`ms_first_draw_to_swap` stayed at 16–20. One run; Task 2 says how often.
 
 ## Screenshots and the late window
 
