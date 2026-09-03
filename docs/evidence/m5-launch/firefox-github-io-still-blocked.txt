@@ -1,0 +1,50 @@
+# Firefox on THIS machine still cannot reach any *.github.io host, re-measured
+# for M5 task 5 rather than carried forward from task 4.
+#
+# Four navigations, back to back, Firefox 154.0.1, fresh throwaway profile
+# (drive-firefox.mjs mkdtemps one per run), same minute as the Chrome gate that
+# played three rounds off the same URL and the curl run that measured the wire.
+#
+# A/B: the ONLY difference between control B and control D is the four --pref
+# lines pointing Firefox at docs/evidence/m5-deploy/tunnel-proxy.mjs. Control C
+# is the one that settles attribution -- GitHub's OWN Pages demo site fails the
+# same way, so this is a local outbound restriction on this machine and not a
+# fact about this deployment. Little Snitch runs here; its rules need root and
+# this port has no business changing them.
+#
+# The proxy tunnels CONNECT byte-for-byte and never sees plaintext, so control
+# D validated GitHub's real certificate and its document origin is still
+# https://escapedcat.github.io -- read back from the page in the last line.
+#
+# What that does NOT prove: that Firefox on an unrestricted machine reaches
+# Pages. Nothing here could, and nothing needs to -- Chrome and curl did, from
+# this machine, in the same session.
+#
+# Re-run: node web/tools/drive-firefox.mjs --out DIR --url URL --script 'wait:1500,eval:document.title'
+
+=== control A: no proxy, https://example.com
+[   1388ms] [harness] firefox: 154.0.1 (headless=true)
+[   1388ms] [harness] navigating to https://example.com
+[   1920ms] [harness] eval document.title => Example Domain
+
+=== control B: no proxy, the deployed deep link
+[   1423ms] [harness] firefox: 154.0.1 (headless=true)
+[   1424ms] [harness] navigating to https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[     14ms] [browser.error/network] fetch failed (NS_ERROR_FAILURE) <- https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[     18ms] [harness] FAILED: Error: browsingContext.navigate: unknown error: Error: NS_ERROR_FAILURE
+[     18ms] [harness] firefox said:
+
+=== control C: no proxy, GitHub's OWN Pages demo site
+[   1369ms] [harness] firefox: 154.0.1 (headless=true)
+[   1369ms] [harness] navigating to https://pages.github.io/
+[     87ms] [browser.error/network] fetch failed (NS_ERROR_FAILURE) <- https://pages.github.io/
+[     91ms] [harness] FAILED: Error: browsingContext.navigate: unknown error: Error: NS_ERROR_FAILURE
+[     91ms] [harness] firefox said:
+
+=== control D: same deep link THROUGH the proxy
+[   1384ms] [harness] firefox: 154.0.1 (headless=true)
+[   1385ms] [harness] navigating to https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[    615ms] [browser.error/network] 404  <- https://escapedcat.github.io/favicon.ico
+[   3128ms] [harness] eval document.title => Armagetron Advanced
+[   3129ms] [harness] eval location.href => https://escapedcat.github.io/armagetronad-web/armagetronad.html
+[   3131ms] [harness] eval location.protocol+" "+location.host => https: escapedcat.github.io

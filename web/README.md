@@ -651,20 +651,61 @@ so the bare Pages URL — the one a visitor is actually handed — is not GitHub
   0. `docs/evidence/m5-deploy/` has the broken commit verbatim and an A/B script
   that reproduces it on a local rig.
 
-**What a visitor downloads**, measured on the deployed site with real GETs
-(`docs/evidence/m5-deploy/measure-wire.sh`), not from `curl -I`:
+**What a visitor downloads**, measured on the deployed site with real GETs, not
+from `curl -I` (`sh web/tools/wire-facts.sh`, checked by
+`docs/evidence/m5-launch/check-wire-facts.mjs`):
 
 | file | identity | on the wire | content-type |
 |---|---|---|---|
-| `armagetronad.html` | 3,120 | 1,507 | `text/html; charset=utf-8` |
-| `armagetronad.js` | 355,549 | 87,271 | `application/javascript; charset=utf-8` |
-| `armagetronad.wasm` | 4,331,548 | 1,274,294 | `application/wasm` |
+| `armagetronad.html` | 4,395 | 2,078 | `text/html; charset=utf-8` |
+| `armagetronad.js` | 357,282 | 87,938 | `application/javascript; charset=utf-8` |
+| `armagetronad.wasm` | 4,331,484 | 1,274,267 | `application/wasm` |
 | `armagetronad.data` | 687,094 | 384,664 | `application/octet-stream` |
 
-**5,377,311 B becomes 1,747,736 B (1.667 MiB) on the wire.** The Pages edge does
+**5,380,255 B becomes 1,748,947 B (1.668 MiB) on the wire.** The Pages edge does
 gzip a 4.33 MB `.wasm` — that was M5's one unmeasured Pages fact, and it is
 settled. It serves gzip only: `Accept-Encoding: br` alone returns identity.
-Re-measure rather than copying these numbers; they move with every link.
+
+*The table above was 4,331,548 → 1,274,294 and 1.667 MiB when M5 task 4 wrote
+it, and both versions are correct about their own deploy: the site was
+redeployed afterwards with the autostart/sizing build and three of the four
+files changed size. That is the whole argument for **re-measuring rather than
+quoting** — which is why the numbers are now recorded as JSON and arbitrated by
+a program instead of typed into this table.*
+
+**The published branch currently carries more than the six files listed above.**
+`git ls-tree -r origin/gh-pages` shows 23 entries, 16,185,514 B; the four game
+files, `index.html` and `.nojekyll` are 5,382,608 B of that, and the remaining
+17 entries — `armagetronad-fstoggle.*`, `armagetronad-oldyield.*` and nine
+`res-*.html` — are probe builds from M5's startup/sizing work that were in
+`web/dist-m1` when the deploy ran. They are publicly fetchable (`200`,
+`application/wasm` for the stray wasms) and **a visitor never downloads them**,
+because nothing links to them; they cost repository storage, not wire bytes.
+`npm run deploy` publishes `web/dist-m1` exactly as it finds it, so
+`make -f web/Makefile clean` before a release build is what keeps them out.
+
+### Re-running the live gate
+
+Everything above, plus the gameplay and multiplayer gates, against the **public
+URL** rather than a local server:
+
+```sh
+sh web/tools/live-gate.sh                 # ~8 minutes: wire, 2 gameplay, 2 multiplayer
+sh web/tools/live-gate.sh --only wire     # just the curl assertions, seconds
+sh web/tools/live-gate.sh --no-proxy      # if your Firefox can reach *.github.io
+```
+
+It runs M2's `gameplay-gate.steps` and M5 task 3's `https-multiplayer.steps`
+**unmodified** — only `--url` changes — and arbitrates them with
+`docs/evidence/m2-gate/check-transcript.mjs` and
+`docs/evidence/m5-launch/check-live-multiplayer.mjs`. Evidence and the full
+argument are in `docs/evidence/m5-launch/README.md`.
+
+**On this machine Firefox cannot reach any `*.github.io` host**, GitHub's own
+`pages.github.io` included, while Chrome and curl reach the same URL in the same
+second. That is a local outbound restriction, so `live-gate.sh` routes Firefox
+through `docs/evidence/m5-deploy/tunnel-proxy.mjs` by default; the proxy tunnels
+`CONNECT` byte-for-byte, so TLS and the document origin are unchanged.
 
 ## Building the M0 dedicated server
 

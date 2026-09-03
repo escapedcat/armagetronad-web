@@ -148,3 +148,6 @@ web/node_modules
 # output, and it is the only reason https://escapedcat.github.io/armagetronad-web/
 # is not a 404 -- emcc names its page armagetronad.html.
 !web/index.html
+
+# live-gate.sh scratch runs; the kept evidence is committed alongside them
+docs/evidence/**/.runs/

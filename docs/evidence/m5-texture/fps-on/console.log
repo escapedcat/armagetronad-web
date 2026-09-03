@@ -1,0 +1,69 @@
+[    622ms] [harness] chrome: Chrome/152.0.7977.65
+[    622ms] [harness] navigating to http://localhost:8000/fps-aniso-on.html
+[     14ms] [console.log] [ANISO] armed at 16x
+[     15ms] [console.log] [DISPLAY] AA_CANVAS_SIZE override -> canvas 3600x2086
+[     32ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     35ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     41ms] [page] load event fired
+[     46ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[    105ms] [console.log] [PERSIST] populate ok in 37ms
+[    335ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    335ms] [console.log] [BOOT] autostart: calling main
+[    338ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    338ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    338ms] [console.error] 
+[    338ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    339ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    339ms] [console.log] 
+[    462ms] [console.log] [L] ENCODING latin1
+[    470ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    471ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    491ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    495ms] [console.error] TODO: glShadeModel
+[    498ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8000/armagetronad.js
+[    548ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    549ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    549ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    549ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[    550ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8000/armagetronad.js
+[   1013ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1013ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1013ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1014ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height+' screen '+screen.width+'x'+screen.height+' dpr '+devicePixelRatio})() => "canvas 3600x2086 screen 1800x1169 dpr 1"
+[   7069ms] [harness] screenshot -> docs/evidence/m5-texture/fps-on/01-language-menu.png
+[   7095ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[   7102ms] [harness] key Enter (1/1)
+[  10430ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10444ms] [harness] key Escape (1/1)
+[  14818ms] [harness] screenshot -> docs/evidence/m5-texture/fps-on/02-welcome-message.png
+[  14827ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  14828ms] [console.log] [L] TEAM_CREATED web_user
+[  14828ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  14830ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  14832ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  14833ms] [console.log] [L] NEW_ROUND 2026-09-01 15:40:06 UTC+0200
+[  14849ms] [console.log] [L] TEAM_CREATED ai_team
+[  14850ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  14850ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  14850ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  14851ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  14871ms] [harness] key Enter (1/1)
+[  14874ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  14874ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  14874ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  15152ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8000/favicon.ico
+[  15173ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  15173ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  15173ms] [harness] === ROUND-1-STARTED ===
+[  20768ms] [harness] screenshot -> docs/evidence/m5-texture/fps-on/03-round1-driving.png
+[  20777ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  20801ms] [harness] key Left (1/1)
+[  22336ms] [harness] key Right (1/1)
+[  22636ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 0)
+[  23096ms] [console.log] [L] DEATH_FRAG web_user word
+[  23097ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  24962ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  25059ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_WINNER>>
+[  25059ms] [harness] === ROUND-1-COMPLETE ===
+[  25194ms] [harness] screenshot -> docs/evidence/m5-texture/fps-on/04-round1-ended.png
+[  25198ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => "{\"total_frames_sampled\":1448,\"rounds_started\":1,\"rounds_won\":1,\"overall\":{\"span_s\":10.13,\"frames\":605,\"mean_fps\":59.73,\"frame_ms\":{\"p50\":16.7,\"p90\":17.9,\"p99\":19.2,\"max\":43.7},\"inst_fps\":{\"median\":59.88,\"p10\":55.87,\"p01\":52.08,\"min\":22.88},\"fps_per_second\":[58,60,60,60,60,60,60,60,60,60],\"fps_per_second_min\":58,\"fps_per_second_median\":60},\"per_round\":[{\"span_s\":10.13,\"frames\":605,\"mean_fps\":59.73,\"frame_ms\":{\"p50\":16.7,\"p90\":17.9,\"p99\":19.2,\"max\":43.7},\"inst_fps\":{\"median\":59.88,\"p10\":55.87,\"p01\":52.08,\"min\":22.88},\"fps_per_second\":[58,60,60,60,60,60,60,60,60,60],\"fps_per_second_min\":58,\"fps_per_second_median\":60}]}"
