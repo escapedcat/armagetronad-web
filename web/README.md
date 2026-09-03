@@ -238,7 +238,7 @@ person holding it a switch and a readout.
 | `?touch=1` / `?touch=0` | media query | forces the touch overlay on or off. |
 | `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
 | `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
-| `?portrait=ask` | off | clears the remembered "Play in portrait" answer, so the portrait prompt is asked again. The answer lives in `localStorage` under `aa.portrait`; this is the only way back once it is stored. |
+| `?portrait=ask` | off | clears the remembered "Play in portrait" answer, so the portrait prompt is asked again. The answer lives in `localStorage` under `aa.portrait`; this is the only way back once it is stored. Answering the prompt again drops the parameter from the URL, so the new answer is not cleared by the reload that applies it. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 
 **`?dpr=1` is the experiment that decides the performance question, and it
