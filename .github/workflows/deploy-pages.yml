@@ -85,9 +85,9 @@ jobs:
     permissions:
       contents: write   # the gh-pages push; read-only anyway on PRs from forks
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
 
@@ -98,7 +98,7 @@ jobs:
       # the first link compiles -- the network-bound half of a first build.
       - name: Restore emsdk
         id: emsdk-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: deps/emsdk
           key: emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
@@ -119,7 +119,7 @@ jobs:
 
       - name: Restore libxml2
         id: libxml2-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: deps/build/libxml2-install
           key: libxml2-${{ hashFiles('deps/build-libxml2.sh') }}-emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v1
