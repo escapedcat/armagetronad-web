@@ -705,6 +705,32 @@ to get one onto a phone before it merges; `main` takes the site back on its next
 change. Docs-only pushes are skipped. The manual procedure above stays valid and
 is exactly what the workflow runs.
 
+**Checks on every pull request** (`.github/workflows/checks.yml`, since
+2026-09-03) add two things the build-and-gate above does not cover. The
+`dedicated-pin` job builds the *other* wasm — the M0 dedicated server, which
+`deploy-pages.yml` never touches — and asserts the byte invariant this file
+states above under *Known limitations*: 2,488,298 bytes **and** md5
+`9718a2a64978cb6e9b95ea2f0454cca5`, both halves, the way size alone once
+matched a build with the wrong md5. The `scripts` job runs `shellcheck` over
+`web/tools/*.sh` and `deps/*.sh` and `node --check` over every
+`web/tools/*.mjs`, so a script that cannot parse or has a real quoting bug
+fails the PR instead of the next person to run it. There is deliberately no
+C++ lint or formatter here: this port carries roughly 114,000 lines of
+essentially unpatched upstream Armagetron source, and reformatting it would
+fight `upstream-watch.yml`'s diff against real upstream commits rather than
+catch anything this project wrote.
+
+After an actual deploy (never on a PR — see *What runs when* above),
+`deploy-pages.yml` itself polls the live site until
+`armagetronad.wasm`'s sha256 matches what this job just built (Pages' own
+build lag is ~20 s; the poll gives up after 10 minutes), then runs this
+project's wire check — `web/tools/wire-facts.sh` and
+`docs/evidence/m5-launch/check-wire-facts.mjs`, chained exactly as
+`web/tools/live-gate.sh --only wire` runs them — against the freshly deployed
+site. Its W7 compares the deployed bytes to a *local* build under
+`web/dist-m1`, which in this job is the build that was just published, so the
+comparison is never stale.
+
 **What it does to the repository.** It force-pushes the branch `gh-pages` as a
 single **parentless** commit containing only the six published files — the
 branch has no shared history with `main` and is replaced, not appended to, on
