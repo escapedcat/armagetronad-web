@@ -644,7 +644,7 @@ Neither phase below is part of "done." Each gets its own go/no-go decision after
 >    were left alone exactly as instructed.)*
 
 
-### Phase 3 — minimal touch support — **BUILT, and unverified on a real device**
+### Phase 3 — minimal touch support — **BUILT, ~~and unverified on a real device~~ deployed, and played on a real phone**
 
 Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mobile play needs **zero C++ changes**: a JavaScript overlay in the shell page synthesizes the game's existing keyboard controls from touch input (tap zones for turn/brake, a simple D-pad for menus). Unknowns priced into this phase, not the Demo: phone GPU performance under the emulation layers, canvas sizing, and iOS — where every browser is WebKit underneath, reopening the Safari question deliberately skipped on desktop.
 
@@ -673,6 +673,52 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > device that kills tabs), palm rejection, Android's edge gestures, the URL bar, Firefox for
 > Android and iOS Safari are all untested. The list is at the end of
 > `docs/evidence/phase3-touch/README-overlay.md`.
+
+> **Then a real phone, 2026-09-03.** The maintainer played the deployed build on his Android
+> phone and reported four things. Each was measured before it was believed, and three of the
+> four measurements disagreed with the first explanation offered for them.
+>
+> - *"It works, very nice."* The trust question settled in emulation held on the device. The
+>   one control change he asked for shipped the same day: in menus a tap anywhere is Enter and
+>   Escape is a button in the top-left corner, Up/Down stay because menus are lists, and during
+>   a round only the two turn zones are live. `src/emscripten/eWebInput.cpp` exports
+>   `aa_web_input_context()` so the page knows which surface a tap belongs to; the gate asserts
+>   the two surfaces are never in the box tree together. `docs/evidence/phone-round2/touch/`.
+> - *"It looks stretched."* Not the 3D view — the **title picture**. `textures/title.jpg` is
+>   800x600 and `gLogo::Display()` drew it across the whole viewport: a measured **1.96x**
+>   horizontal stretch at the phone's landscape aspect, and 1.33x on every 16:9 desktop, which
+>   nobody had noticed. Fixed in `gLogo.cpp`, guarded `__EMSCRIPTEN__ && !DEDICATED` so the
+>   dedicated wasm stays byte-identical by construction (2,488,298 / `9718a2a6…`, rebuilt and
+>   checked). `docs/evidence/phone-round2/logo/`.
+> - *"The bike is tiny."* Real geometry, not a defect. `rViewport::Perspective` widens the
+>   horizontal FOV from 90° at 4:3 to ~111° at the phone's aspect while pinning the vertical at
+>   67.4°. The fix is a viewport *shape*, not a zoom setting: at a **square** viewport the FOV
+>   returns to 90° horizontal and 90° vertical. That is the arithmetic behind the maintainer's
+>   portrait "Game Boy" layout — square game, controls below — which is parked as the milestone
+>   after M6. `docs/evidence/phone-round2/fov/`.
+> - *"It lags — starts smooth, gets laggier the more I drive, and when I'm fast and close to a
+>   wall."* **CPU-bound, not fill-bound**: `?dpr=1`, a ninth of the pixels, felt identical to
+>   him. Two candidate mechanisms are in the source and **neither is measured yet**: unbounded
+>   wall trails (`wallsLength = -1`) re-submitted through the GL emulation every frame, because
+>   display lists are stubs here and `sr_useDisplayLists` only ever turns on for an NVIDIA
+>   vendor string; and the rubber path's recursive `TimestepCore` when grinding a wall. The
+>   first desktop sweep measured nothing — its harness never sent a steering input, so all six
+>   arms sampled an idle tutorial screen in an empty arena and read the same 6.4–8.2 ms, and
+>   the "control" arm designed to prove `WALLS_LENGTH` bites could not bite on trails that did
+>   not exist. Two fixes to the rig — actually drive, and throttle the CPU (`cpu:RATE` in
+>   `drive-browser.mjs`) so the desktop sits in a phone's regime instead of eight times above it
+>   — and one round reproduced the symptom: **20.0 → 27.7 ms p50 early-to-late, p90 23 → 41 ms,
+>   29 fps on screen**. The next round was flat (1.03x). That is an instrument, not a baseline.
+>
+> **This is M6.** Establish reproducibility first; then A/B the cheap levers (`WALLS_LENGTH`, a
+> frame cap, `FLOOR_MIRROR_INT 0`) against that baseline; then price real display lists in
+> `eCompat.cpp` against the *measured* growth. Nothing milestone-sized is built without the
+> maintainer's say. The invalid sweep and its tooling are in a git stash titled "M6 seed" for
+> the M6 branch to take up and fix, not to cite.
+>
+> The lesson this round adds to M4's P11 and M5's stale gate: **a gate must prove the condition
+> it measures actually held** — a late-round screenshot with trail geometry in it, a non-zero
+> "Rubber Used" for a grind arm — or its numbers are evidence of nothing.
 
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 

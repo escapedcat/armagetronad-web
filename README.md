@@ -54,11 +54,12 @@ but reaches no servers. Safari is not a target.
   and unresolved.
 - The multiplayer menu shows about **20 seconds of black canvas** before the game's
   own "Sorry, no server found". It fails gracefully; the black canvas is undiagnosed.
-- **On a phone you get a canvas you cannot play and no explanation.** A "needs a
-  keyboard" notice was promised and never built. **Phase 3 has since built the
-  real thing — tap zones and a menu strip, in `web/shell.html`, no C++ — but it
-  is committed, not deployed**, so this remains true of the URL above until the
-  maintainer decides to publish. `docs/evidence/phase3-touch/`.
+- **On a phone it plays, and it slows down as a round goes on.** Touch controls are
+  deployed and have been played on a real Android phone. The frame rate falls the
+  longer you drive — **CPU-bound, not resolution-bound** (a ninth of the pixels felt
+  identical) — and that is the open performance item: it reproduces on a throttled
+  desktop rig and no fix is chosen yet. Portrait is not supported; you get a prompt
+  to rotate. `docs/evidence/phone-round2/`.
 
 ## Why
 
@@ -90,14 +91,15 @@ required. Client-side only; offline mode opens no sockets. Full milestones and
 risk analysis in **[PLAN.md](PLAN.md)**; shared vocabulary in
 [CONTEXT.md](CONTEXT.md); founding decisions in [docs/adr/](docs/adr/).
 
-Beyond the Demo, two follow-ups are designed but deliberately **not
-committed** — each gets its own go/no-go decision once the Demo ships:
+Beyond the Demo, two follow-ups were designed and deliberately **not committed**
+with it. One has since shipped; the other still awaits its own go/no-go:
 
 - **Touch controls** — minimal mobile play via a JavaScript overlay that maps
-  taps to the game's existing keyboard controls (no C++ changes). **Built, and
-  not deployed**: six keys from two half-screen turn zones and a four-button
-  menu strip, measured playable under Chrome phone emulation with real taps, and
-  never run on an actual phone. `docs/evidence/phase3-touch/`.
+  taps to the game's existing keyboard controls (no C++ changes beyond a
+  one-function input-context export). **Built, deployed, and played on a real
+  phone**: two half-screen turn zones during a round; in menus a tap is Enter,
+  Up and Down are two buttons at the top, Escape is the top-left corner.
+  `docs/evidence/phase3-touch/`, `docs/evidence/phone-round2/touch/`.
 - **Multiplayer on real community servers** — a small UDP-over-WebSocket
   bridge lets the browser client speak the game's native protocol to today's
   unmodified public servers, including the in-game server browser.
@@ -113,7 +115,7 @@ sentence is the deliverable and it is deliberately narrow: one machine (macOS
 this for enjoyment rather than to satisfy a script.**
 
 What is measured, against the deployment rather than a local server: a first
-visit transfers **1,748,947 B = 1.668 MiB** for the four game files, 8.6× under
+visit transfers **1,753,578 B = 1.672 MiB** for the four game files, 8.6× under
 the 15 MB budget; three complete rounds against three AI opponents in both
 engines, arbitrated by M2's unmodified checker; and the whole set is
 **reproducible** — all five published files come back byte-identical from a clean
