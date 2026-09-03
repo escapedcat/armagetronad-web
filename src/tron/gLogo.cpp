@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // static rFileTexture sg_LogoTexture(rTextureGroups::TEX_FONT, "textures/KGN_logo.png",0,0,1);
 static rISurfaceTexture* sg_LogoMPTitle = NULL;
 
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
 // ---- PHONE FEEDBACK ROUND 2: the title picture is drawn at ITS shape -------
 //
 // THE DEFECT, WHICH IS "the image in the beginning" AND NOT THE 3D VIEW. Both
@@ -84,6 +84,14 @@ static rISurfaceTexture* sg_LogoMPTitle = NULL;
 // NATIVE IS UNTOUCHED. The #else gives the two halves the value 1, which is
 // the literal the four Vertex() calls used before this block existed.
 //
+// !defined(DEDICATED) IS NOT DECORATION EITHER, even though every caller is
+// already inside this file's own #ifndef DEDICATED. web/Makefile's $(SRCS)
+// wildcards src/tron, so this file is compiled into the DEDICATED server too,
+// whose wasm is byte-pinned at 2,488,298 / 9718a2a6. Without the second
+// condition the helper is compiled there as an unused static -- discarded by
+// -O2, and the relink does come out byte-identical, but by optimisation rather
+// than by construction. This makes it structural.
+//
 // IF THIS IS EVER SENT UPSTREAM, SEND IT UNGUARDED. Nothing here is
 // browser-specific: a native 16:9 or 21:9 desktop has exactly the same defect
 // to exactly the same formula. The guard is this repository's rule for
@@ -101,7 +109,7 @@ static void sg_LogoQuadHalfExtents( REAL & hx, REAL & hy )
     else if ( screenAspect < logoAspect )
         hy = screenAspect/logoAspect;            // screen taller than the picture
 }
-#endif
+#endif // __EMSCRIPTEN__ && !DEDICATED
 
 static gLogo logo;
 
@@ -198,7 +206,7 @@ void gLogo::Display()
         // draw -- everywhere except the browser client, where they fit the
         // picture to its own 4:3 instead of to the window. See the long
         // comment on sg_LogoQuadHalfExtents.
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
         REAL hx, hy;
         sg_LogoQuadHalfExtents( hx, hy );
 #else
@@ -256,7 +264,7 @@ void gLogo::Display()
         // draw -- everywhere except the browser client, where they fit the
         // picture to its own 4:3 instead of to the window. See the long
         // comment on sg_LogoQuadHalfExtents.
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
         REAL hx, hy;
         sg_LogoQuadHalfExtents( hx, hy );
 #else
