@@ -1,0 +1,108 @@
+# The GRIND arm: one cycle, no AIs, driven straight into the rim and held there.
+# SAMPLER, REPORT, CONFIGLINES, TAGHERE, CPURATE are substituted by run-arm.sh (comment
+# lines are left alone). Not runnable on its own. Run it through run-arm.sh with this
+# file as the 5th argument and, as the 4th, the four lines SP_SIZE_FACTOR -3,
+# SP_NUM_AIS 0, CYCLE_RUBBER_TIME 0.1 and TIMESTEP_MAX 10 separated the way
+# run-arm.sh's header says (a backslash-n pair per line break; the tripwire that
+# refuses a doubled backslash reads comment lines too, which is why this comment
+# does not spell it). Read docs/evidence/m6-lag/task3-mechanisms/README.md before
+# changing a number here.
+#
+# WHAT IT MEASURES. Mechanism 2 of the M6 plan is the rubber path of
+# gCycleMovement::TimestepCore -- the gSensor scan (GetMaxSpaceAhead) every step and
+# the recursive re-simulation when a wall is near -- which scales with walls NEAR the
+# cycle, not with the total trail. So: the smallest arena, no other cycle (the draw
+# count is flat by construction), the idle human drives straight from its spawn into
+# the rim and stays pressed against it. Per-second ms_to_first_draw before contact
+# against after contact, with draws/frame flat, is the reading.
+#
+# WHY THESE CONFIG LINES, and why not the plan's. The match is welcome()'s tutorial
+# match (gArmagetron.cpp; web/tools/perf/README.md, "What an arm is"), which assigns
+# sg_rubberCycle = 5 for its duration AFTER autoexec.cfg is read, so the plan's
+# CYCLE_RUBBER 50 cannot reach the game and is left out. What keeps the cycle alive
+# at the rim is CYCLE_RUBBER_TIME: TimestepCore lets rubber decay by
+# rubber /= (1 + ts/CYCLE_RUBBER_TIME) every step, so pressed against a wall at speed
+# v the reservoir settles at v * CYCLE_RUBBER_TIME (15 * 0.1 = 1.5 of the 5 granted)
+# and the cycle dies only when one step alone adds the missing 3.5 -- a frame over
+# about 233 ms. (The plan's CYCLE_RUBBER_TIME 0 takes the else branch, rubber = 0
+# every step: alive too, but the HUD's Rubber Used gauge reads 0 and cannot prove the
+# grind; 0.1 shows a steady 30 % fill while grinding and 0 while free.)
+# TIMESTEP_MAX 10 is for the kill switch below. SP_NUM_AIS 0 is honoured because
+# welcome() sets autoNum 0. SP_SIZE_FACTOR -3 is the shipped value, written out so
+# the arm says what it ran; welcome() lowers it by 2 more (a 0.177x arena, the rim
+# 450 * 0.177 = 80 map units ahead of the spawn: 5.3 s at 15.0 after the 4 s
+# countdown, so contact about 9.5 s after NEW_ROUND).
+#
+# THE KILL SWITCH. A lone cycle ends no round: with one team there is no winner
+# (gGame.cpp Analysis: winner needs eTeam::teams.Len() > 1) and the round only
+# advances when alive == 0, so a cycle that cannot die at the rim would hold round 1
+# open for ever and round 2 would never start. The harness therefore kills it: a 1 s
+# busy loop on the main thread (an eval: step; CDP has no timeout on it) makes the
+# game's next timestep 1 s long, TIMESTEP_MAX 10 stops gGame::Timestep chopping it
+# into 0.2 s pieces (sg_timestepMax), and one 1 s step against a wall needs 15 units
+# of rubber where 5 are granted: death. A FREE cycle just moves 15 units and lives --
+# so the death that follows each stall is itself proof the cycle was pressed against
+# a wall. The stall is bracketed like a screenshot (sampler.js S.shot), so report.js
+# drops its frame from every statistic; the span ends at the DEATH_ mark anyway.
+# No ROUND_WINNER is written for a winnerless round; report.js closes a round at the
+# next NEW_ROUND (closed_by: next_round), which is what the until: steps wait for.
+#
+# ROUND 1 is setup and is NOT measured: the tutorial's two key presses after the
+# countdown (arm.steps.tmpl says why the 3 s), the throttle, the first kill.
+wait:800
+eval:SAMPLER
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# perf arm TAGHERE\nMAX_FPS 1000\nCONFIGLINES\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})()
+eval:window.AA_START()
+until:1:90000:[BOOT] autostart
+wait:9000
+tap:#tapzone
+wait:3000
+tap:#tapzone
+wait:3500
+tap:#tapzone
+wait:2000
+until:1:120000:[L] NEW_ROUND
+mark:ROUND-1-SETUP-NOT-MEASURED
+wait:3000
+key:Right:1
+key:Left:1
+wait:1500
+eval:__fps.shot('r1-after-tutorial-keys','begin')
+shot:r1-after-tutorial-keys
+eval:__fps.shot('r1-after-tutorial-keys','end')
+cpu:CPURATE
+mark:THROTTLE-ON
+wait:7000
+eval:__fps.shot('kill-stall-r1','begin')
+eval:(()=>{const t0=performance.now();while(performance.now()-t0<1000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
+eval:__fps.shot('kill-stall-r1','end')
+until:2:60000:[L] NEW_ROUND
+mark:ROUND-2-GRIND
+wait:2000
+eval:__fps.shot('g-02s-before-rim','begin')
+shot:g-02s-before-rim
+eval:__fps.shot('g-02s-before-rim','end')
+wait:4000
+eval:__fps.shot('g-06s-approach','begin')
+shot:g-06s-approach
+eval:__fps.shot('g-06s-approach','end')
+wait:6000
+eval:__fps.shot('g-12s-grinding','begin')
+shot:g-12s-grinding
+eval:__fps.shot('g-12s-grinding','end')
+wait:8000
+eval:__fps.shot('g-20s-grinding','begin')
+shot:g-20s-grinding
+eval:__fps.shot('g-20s-grinding','end')
+wait:10000
+eval:__fps.shot('g-30s-grinding','begin')
+shot:g-30s-grinding
+eval:__fps.shot('g-30s-grinding','end')
+wait:8000
+eval:__fps.shot('kill-stall-r2','begin')
+eval:(()=>{const t0=performance.now();while(performance.now()-t0<1000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
+eval:__fps.shot('kill-stall-r2','end')
+until:3:60000:[L] NEW_ROUND
+mark:GRIND-OVER
+wait:1000
+eval:REPORT

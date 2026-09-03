@@ -88,9 +88,20 @@
     return { start: (last + 1 < n) ? S.t[last + 1] : t0,
              stats: { frames: ov.length, ms_p50: r2(q(d, .5)), draws_per_frame: r2(dr / ov.length),
                       span_ms: r2(S.t[last] - S.t[ov[0]]), split_at_draws: r2(thr) } }; };
+  /* A round is closed by its ROUND_WINNER mark when one is written; a
+     winnerless round -- a lone cycle with no AI (gGame.cpp Analysis: a winner
+     needs more than one team) -- writes none and ends when the next NEW_ROUND
+     starts, and a round still running when this report runs closes here. For
+     a transcript where every round has its ROUND_WINNER before the next
+     NEW_ROUND (every base arm), this pairs exactly as nr[i]/rw[i] did. */
   const rounds = [];
-  for (let i = 0; i < Math.min(nr.length, rw.length); i++) {
-    const t0 = nr[i], t1 = rw[i], len = (t1 - t0) / 1000; if (len < 8) continue;
+  const tReport = performance.now();
+  for (let i = 0; i < nr.length; i++) {
+    const t0 = nr[i], next = (i + 1 < nr.length) ? nr[i + 1] : Infinity;
+    const won = rw.find(t => t > t0 && t < next);
+    const t1 = won != null ? won : (next < Infinity ? next : tReport);
+    const closedBy = won != null ? 'round_winner' : (next < Infinity ? 'next_round' : 'report');
+    const len = (t1 - t0) / 1000; if (len < 8) continue;
     /* The measured span runs from the first world frame to the human's death
        when the human dies before ROUND_WINNER (after it the camera shows an
        explosion and the AIs' endgame, which is not what the maintainer
@@ -99,7 +110,7 @@
     const pr = preRound(t0); const ts = pr.start;
     const e = win(ts, ts + 5000), l = win(te - 5000, te), all = win(ts, te);
     const shots = ex.filter(x => x.a >= t0 && x.a <= t1).map(x => ({ name: x.name, at_s: r2((x.a + PAD_BEFORE - t0) / 1000), dur_ms: r2(x.dur) }));
-    rounds.push({ round: i + 1, length_s: r2(len),
+    rounds.push({ round: i + 1, length_s: r2(len), closed_by: closedBy,
       measured_from_s: r2((ts - t0) / 1000), measured_to_s: r2((te - t0) / 1000),
       human_death_s: death != null ? r2((death - t0) / 1000) : null, ends_at: death != null ? 'human_death' : 'round_winner',
       pre_round: pr.stats, early_5s: e, late_5s: l,
