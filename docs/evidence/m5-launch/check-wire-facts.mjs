@@ -118,10 +118,19 @@ check('W3', w.gunzip_ok === true && w.decoded_sha256 === w.identity_sha256
 }
 
 // -------------------------------- 7. the deployed bytes ARE this tree's build
-// Identity by sha256 against web/dist-m1, per file. This is the check that
-// makes every other number here a statement about THIS repository rather than
-// about whatever happens to be published. It fails loudly, not silently, when
-// there is no local build to compare against.
+// Identity by sha256 against the local file each deployed file was made from,
+// per file. This is the check that makes every other number here a statement
+// about THIS repository rather than about whatever happens to be published. It
+// fails loudly, not silently, when there is no local copy to compare against.
+//
+// Four of the five come from web/dist-m1. index.html does not: nothing in
+// web/Makefile emits it, and it only appears in dist-m1 as the `cp` at the
+// front of `npm run deploy`. Comparing it against dist-m1 therefore read a
+// side effect of the LAST DEPLOY rather than anything the build produced, and
+// this check failed on a healthy deployment whenever the tree had been rebuilt
+// clean. wire-facts.sh now falls back to web/index.html and reports which path
+// it used in local_path; the message below names it per file so the reader is
+// told what was compared instead of inferring it.
 {
   const missing = ALL.filter((n) => f(n).local_sha256 == null);
   const differ = ALL.filter((n) => f(n).local_sha256 != null
@@ -132,7 +141,9 @@ check('W3', w.gunzip_ok === true && w.decoded_sha256 === w.identity_sha256
             + `(build first: make -f web/Makefile client)`
           : differ.length
             ? `the deployed bytes DIFFER from the local build: ${differ.join(', ')}`
-            : `all ${ALL.length} deployed files are byte-identical to ${o.dist} (sha256)`);
+            : `all ${ALL.length} deployed files are byte-identical to their local `
+              + `source (sha256): `
+              + ALL.map((n) => `${n} <- ${f(n).local_path ?? o.dist + '/' + n}`).join(', '));
 }
 
 // ------------------------------------------------- 8. what a first visit costs
