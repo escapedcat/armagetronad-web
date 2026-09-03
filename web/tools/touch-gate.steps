@@ -45,6 +45,32 @@
 # display:none's whichever the game is not asking for. Two controls that are
 # never in the box tree at the same time cannot collide.
 #
+# T7 WAS ADDED FOR "I WANT PORTRAIT", AND IT IS LAST FOR TWO REASONS THAT ARE
+# BOTH ABOUT THE RELOAD IT PERFORMS. Tapping "Play in portrait" after the game
+# has started stores the answer and reloads the page -- the only way to reach a
+# portrait-shaped backing store, since it is measured once, before main(). So:
+#
+#   1. THE RELOAD DESTROYS BOTH PROBES. window.__fps and window.__tg are page
+#      globals; a navigation takes them with it. Everything that reads them --
+#      T1 to T6, and the frame-rate dump above all -- therefore has to have
+#      already run. T7's own checks are self-contained one-liners for the same
+#      reason: there is nothing left to install into after the reload.
+#   2. `until:` COUNTS THE WHOLE TRANSCRIPT, WHICH IS WHAT MAKES IT USEFUL
+#      HERE. It does not reset at a navigation, so the second boot is
+#      `until:2:...:[BOOT] autostart` and not `until:1`. That same property is
+#      how P2 asserts an ABSENCE: "[BOOT] portrait at load: HOLDING main()" has
+#      a count of 0 for the whole run until P4 deliberately restores the prompt
+#      with ?portrait=ask, and P4's `until:1` passing is the proof that the
+#      portrait boot in between held nothing.
+#
+# The driver survives the navigation -- it attaches to a TARGET, not to a
+# document, so the console stream and Runtime.evaluate carry on into the new
+# page (web/tools/touch-portrait-probe.steps has reloaded mid-script since
+# Phase 3). ONE driver run covers the whole cycle. What must not happen is an
+# `eval:` in the window where the old execution context is gone and the new one
+# has not arrived, so every step after a navigation waits on `until:` first --
+# which reads the transcript and touches no execution context at all.
+#
 # --headed is REQUIRED, for the reason in drive-browser.mjs's header.
 
 wait:1000
@@ -190,6 +216,61 @@ tap:#escbtn
 wait:2500
 shot:10-after-tapping-escape-in-the-corner
 eval:window.__tg.dump('after-escape-corner-tap')
+
+# ===========================================================================
+# T7: "I WANT PORTRAIT" MEANS THEY GET PORTRAIT.
+#
+# THE DEFECT THIS IS THE REGRESSION TEST FOR, from the maintainer's phone: "i
+# always see 'turn your phone sideways' even when i selected portrait mode."
+# The prompt is raised for any portrait viewport, before the boot AND after it,
+# and the button that dismissed it was hidden once the game had started -- so
+# turning the phone mid-session put a full-screen overlay on the game with no
+# exit but turning back. T4 above rotates into exactly that state and only
+# screenshots it; this section acts on it.
+#
+# The four checks, in the order the player meets them:
+#   P1  the prompt raised AFTER the boot carries the button, it is a real touch
+#       target, and the "the game starts by itself" line is NOT shown (it is
+#       true only while the boot is held, and the game is running behind this).
+#   P2  tapping it reloads, and the reloaded page boots in portrait: the answer
+#       is stored, nothing is held, no prompt, and the canvas is portrait-shaped
+#       -- i.e. the game is drawn FOR portrait, not letterboxed into it.
+#   P3  the chip does not nag either, because the orientation on screen and the
+#       one the backing store was measured for now agree.
+#   P4  ?portrait=ask clears the answer and today's behaviour is back.
+# ===========================================================================
+mark:P1-ROTATE-TO-PORTRAIT-WITH-THE-GAME-ALREADY-RUNNING
+metrics:412:915:3
+wait:2000
+shot:11-portrait-prompt-after-boot-has-the-button
+eval:(()=>{const r=document.getElementById('rotate'),b=document.getElementById('rotate-play'),h=document.getElementById('rotate-held');const bb=b.getBoundingClientRect();const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P1 prompt-after-boot '+JSON.stringify({rotate_hidden:r.hidden,button:Math.round(bb.width)+'x'+Math.round(bb.height)+'@'+Math.round(bb.left)+','+Math.round(bb.top),label:b.textContent,held_note_hidden:h.hidden,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,stored:st,PASS:r.hidden===false&&bb.width>=44&&bb.height>=44&&h.hidden===true&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&st===null})})()
+
+# A REAL TOUCH ON THE BUTTON, not element.click(): this is the one control on
+# the page a player reaches while the game is running, and the point of the
+# whole harness is that the tap goes through the browser's input pipeline.
+mark:P2-TAP-PLAY-IN-PORTRAIT
+tap:#rotate-play
+# The second [BOOT] autostart of the run is the reloaded page's. See the header:
+# the count is cumulative across the navigation, deliberately.
+until:2:120000:[BOOT] autostart
+# The page's own words for "the backing store was measured for portrait". It
+# cannot have been printed before: boot 1 was landscape, and T4's rotation
+# printed "sized for portrait: false".
+until:1:30000:sized for portrait: true
+wait:9000
+shot:12-portrait-boot-after-choosing-play-in-portrait
+eval:(()=>{const c=document.getElementById('canvas'),r=document.getElementById('rotate'),ch=document.getElementById('reloadchip');const b=c.getBoundingClientRect();const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P2/P3 portrait-boot '+JSON.stringify({stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,chip_hidden:ch.hidden,inner:innerWidth+'x'+innerHeight,canvas:c.width+'x'+c.height,canvas_portrait:c.height>c.width,aspect:Math.round(c.width/c.height*1000)/1000,css:Math.round(b.width)+'x'+Math.round(b.height),touch_hidden:document.getElementById('touch').hidden,PASS:st==='play'&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&r.hidden===true&&ch.hidden===true&&c.height>c.width&&document.getElementById('touch').hidden===false})})()
+
+# P4: THE WAY BACK. location.search rather than a hard-coded URL, so this step
+# does not have to know which port the server was started on. It drops any
+# other query the run was started with, which is why nothing else in this file
+# takes one.
+mark:P4-PORTRAIT-ASK-RESTORES-THE-PROMPT
+eval:location.search='?portrait=ask'
+until:1:60000:[BOOT] portrait at load: HOLDING main()
+wait:3000
+shot:13-portrait-ask-restores-the-prompt
+eval:(()=>{const r=document.getElementById('rotate'),h=document.getElementById('rotate-held');const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P4 portrait=ask '+JSON.stringify({search:location.search,stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,held_note_hidden:h.hidden,button_present:!!document.getElementById('rotate-play'),PASS:st===null&&window.AA_BOOT_HELD_FOR_PORTRAIT===true&&r.hidden===false&&h.hidden===false})})()
 
 # CONTROL: can this transcript see a browser-reported JS error at all?
 mark:positive-control-deliberate-uncaught-error-follows

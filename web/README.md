@@ -238,6 +238,7 @@ person holding it a switch and a readout.
 | `?touch=1` / `?touch=0` | media query | forces the touch overlay on or off. |
 | `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
 | `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
+| `?portrait=ask` | off | clears the remembered "Play in portrait" answer, so the portrait prompt is asked again. The answer lives in `localStorage` under `aa.portrait`; this is the only way back once it is stored. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 
 **`?dpr=1` is the experiment that decides the performance question, and it
@@ -278,8 +279,12 @@ then differs from the desktop page in three ways, all of them in
   orientation and the game starts. Before this, a portrait load built the
   projection for an aspect near 0.45 — a vertical field of view near 131° — and
   no amount of CSS afterwards could undo a frame drawn at the wrong shape.
-  "Start in portrait anyway" is there for a device whose orientation this page
-  reads wrongly.
+  **"Play in portrait" is on that prompt in both states and is remembered**
+  (`localStorage` `aa.portrait`, cleared by `?portrait=ask`): before the boot it
+  starts the game at the portrait shape, after it the answer is stored and the
+  page reloads, because the backing store can only be sized before `main()`.
+  Portrait still looks wrong and the prompt says so; the square-viewport layout
+  is the planned fix. `docs/evidence/portrait-choice/`.
 - **the camera sits at half the stock distance.** At a phone's landscape
   geometry the player's own cycle measures 23 × 63 backing-store pixels stock
   and 47 × 122 at `?cam=0.5`. `?cam=1` restores stock;

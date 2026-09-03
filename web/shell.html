@@ -299,9 +299,16 @@
     #reloadchip button { color:#eee; background:rgba(255,255,255,.14);
                          border:1px solid rgba(255,255,255,.3);
                          border-radius:.4rem; padding:.35rem .6rem; font:13px system-ui, sans-serif; }
+    /* min-height IS THE 44 px TOUCH-TARGET MINIMUM THE MENU PAD ABOVE IS ALSO
+       BUILT TO, and it is here because the gate measured this button at 128x38
+       and failed it: the padding alone leaves it 6 px short on the axis a thumb
+       is least accurate on. This is now the one control on the page a player
+       has to hit while a full-screen overlay is over the game, so it is the
+       last button that should be under the minimum. */
     #rotate button { color:#eee; background:rgba(255,255,255,.14);
                      border:1px solid rgba(255,255,255,.3); border-radius:.4rem;
-                     padding:.6rem 1rem; font:14px system-ui, sans-serif; }
+                     padding:.6rem 1rem; min-height:44px;
+                     font:14px system-ui, sans-serif; }
 
     /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
        z-index 40 puts it above everything including the rotate prompt, because
@@ -402,17 +409,33 @@
     See the orientation block in the script for the whole argument; in one line,
     a portrait boot does not merely look small, it builds the projection for a
     0.45 aspect (a ~131 degree VERTICAL field of view) and no amount of later
-    CSS can undo that. The button is the escape hatch for a device whose
-    orientation media query this page reads wrong.
+    CSS can undo that.
+
+    THE BUTTON IS NOT AN ESCAPE HATCH ANY MORE, IT IS THE PLAYER'S ANSWER, AND
+    IT IS ON THE PROMPT IN BOTH STATES. It was written for a device that reports
+    its orientation wrongly, so it was hidden the moment the game started -- and
+    that left a player who turned the phone mid-session under a full-screen
+    overlay with no way out but turning back. Reported from the maintainer's own
+    phone as "i always see 'turn your phone sideways' even when i selected
+    portrait mode", and his rule decides it: the user decides. The id changed
+    with the meaning ("anyway" was the old sentence, not this one); the choice
+    block in the script is the other half.
+
+    THE LAST SENTENCE IS ITS OWN ELEMENT BECAUSE IT IS THE ONLY STATE-DEPENDENT
+    ONE. "The game starts by itself the moment you turn the phone" is true while
+    the boot is held and a lie afterwards -- by then the game is already running
+    behind this overlay -- so it is hidden in that state rather than reworded
+    into something vague enough to cover both.
   -->
   <div id="rotate" hidden>
     <div class="glyph">&#128241;&#8635;</div>
     <p><strong>Turn your phone sideways.</strong></p>
-    <p class="dim">Armagetron draws a wide 3D view and has never been rendered
-       at a phone's portrait shape. Landscape is the only orientation this demo
-       is known to work at. The game starts by itself the moment you turn the
-       phone.</p>
-    <p><button type="button" id="rotate-anyway">Start in portrait anyway</button></p>
+    <p class="dim">Portrait has no layout yet: the view is drawn far too tall and
+       looks wrong. A portrait layout &mdash; a square game with the controls below
+       it &mdash; is planned.</p>
+    <p class="dim" id="rotate-held">The game starts by itself the moment you turn
+       the phone.</p>
+    <p><button type="button" id="rotate-play">Play in portrait</button></p>
   </div>
 
   <!--
@@ -863,8 +886,11 @@
 
       const touchEl = document.getElementById('touch');
       const rotateEl = document.getElementById('rotate');
-      // The <p> wrapping the button, so hiding it takes its spacing with it.
-      const anywayEl = document.getElementById('rotate-anyway').parentNode;
+      // The one sentence on the prompt that is only true while the boot is
+      // held -- the <p> itself, so hiding it takes its spacing with it. This
+      // used to be the button's <p>; see the markup comment on #rotate for why
+      // the button is no longer the thing that comes and goes.
+      const heldNoteEl = document.getElementById('rotate-held');
       const chipEl = document.getElementById('reloadchip');
       const decision = decideTouch();
       // One machine-readable line, so a gate can assert which branch ran rather
@@ -1089,30 +1115,106 @@
       // as "differs from the one at load" now that the measurement can happen
       // after a rotation. sizedForPortrait is written by sizeCanvas() itself,
       // so the two cannot drift apart.
+      //
+      // ---- "I WANT PORTRAIT" IS AN ANSWER, AND IT IS REMEMBERED -----------
+      //
+      // THE DEFECT, IN THE MAINTAINER'S WORDS AFTER PLAYING THE DEPLOYED
+      // BUILD: "i always see 'turn your phone sideways' even when i selected
+      // portrait mode." Both halves of that were this block's doing -- the
+      // prompt is raised for ANY portrait viewport, before the boot and after
+      // it, and the button that dismissed it was hidden as soon as the game
+      // started. So the state a player reached by turning the phone mid-session
+      // was a full-screen overlay with no exit but turning back. His rule,
+      // stated first about fullscreen and applying here unchanged: the user
+      // decides. If they ask for portrait, they get portrait, and they are not
+      // asked again.
+      //
+      // ONE KEY, WRITTEN BY THE BUTTON AND BY NOTHING ELSE. localStorage rather
+      // than the game's own /persist tree, because this is a property of the
+      // PAGE and is needed several seconds before the game exists: the answer
+      // decides whether main() is held and what shape the backing store is
+      // measured at, both of which happen long before IDBFS is mounted.
+      //
+      // EVERY ACCESS IS IN A try/catch AND THAT IS NOT A FORMALITY: in a
+      // browser set to block site data, touching the `localStorage` property
+      // itself throws a SecurityError -- so the read throws too, not just the
+      // write. The rule here is the same one the sizing block follows: a
+      // failure degrades to the behaviour that shipped, never to a page that
+      // does not start.
+      const PORTRAIT_KEY = 'aa.portrait';
+      const readPortraitChoice = () => {
+        try { return localStorage.getItem(PORTRAIT_KEY) === 'play'; }
+        catch (e) { console.log('[TOUCH] portrait choice unreadable: ' + e); return false; }
+      };
+      // Returns whether the answer will still be there on the NEXT load, which
+      // is what the caller has to know before it reloads the page. Reading it
+      // back is the only way to find out: a quota-exceeded or otherwise
+      // rejected write does not reliably throw.
+      const storePortraitChoice = () => {
+        try { localStorage.setItem(PORTRAIT_KEY, 'play'); }
+        catch (e) { console.log('[TOUCH] portrait choice not stored: ' + e); }
+        return readPortraitChoice();
+      };
+      const clearPortraitChoice = () => {
+        try { localStorage.removeItem(PORTRAIT_KEY); }
+        catch (e) { console.log('[TOUCH] portrait choice not cleared: ' + e); }
+      };
+      // ?portrait=ask IS THE WAY BACK, spelled like every other parameter this
+      // page takes (?touch=, ?cam=, ?dpr=): nothing in the shipped flow sets
+      // it, nothing links to it, and web/README.md's table documents it. It
+      // clears the stored answer and restores the prompt -- which is otherwise
+      // unreachable, because the prompt is the only interface this page has and
+      // a stored answer is exactly what stops it appearing.
+      let playInPortrait = readPortraitChoice();
+      let askPortraitAgain = false;
+      try { askPortraitAgain = new URLSearchParams(location.search).get('portrait') === 'ask'; }
+      catch (e) { /* a browser without URLSearchParams keeps the stored answer */ }
+      if (askPortraitAgain) { clearPortraitChoice(); playInPortrait = false; }
+      // One machine-readable line, for the same reason the [TOUCH] enabled line
+      // above is one: a gate should assert which branch ran.
+      console.log('[TOUCH] play in portrait: ' + playInPortrait +
+                  ' (localStorage ' + PORTRAIT_KEY +
+                  (askPortraitAgain ? ', cleared by ?portrait=ask' : '') + ')');
+
       let mq = null;
       try { mq = window.matchMedia('(orientation: portrait)'); } catch (e) { mq = null; }
       let chipDismissed = false;
       const applyOrientation = () => {
         const portrait = viewportIsPortrait();
-        // PORTRAIT ALWAYS GETS THE PROMPT, before the boot and after it, which
-        // is Phase 3's behaviour unchanged -- an earlier version of this block
-        // showed it only while the boot was held, and that was a regression
-        // dressed up as tidiness: a player who rotates mid-game gets a
-        // letterboxed sliver, and "turn your phone sideways" is more use to
-        // them than a chip at the bottom of it. The chip is additional
-        // information for that case, not a replacement.
-        rotateEl.hidden = !portrait;
-        // The escape hatch only means anything while the game has not started.
-        anywayEl.hidden = !window.AA_BOOT_HELD_FOR_PORTRAIT;
+        // PORTRAIT GETS THE PROMPT IN BOTH STATES -- UNLESS IT HAS ALREADY
+        // BEEN ANSWERED. Showing it after the boot as well is Phase 3's
+        // behaviour and is kept on purpose: an earlier version showed it only
+        // while the boot was held, and that was a regression dressed up as
+        // tidiness, because a player who rotates mid-game gets a letterboxed
+        // sliver and "turn your phone sideways" is more use to them than a chip
+        // at the bottom of it. What is new is the second clause: a question
+        // that has been answered is not asked again.
+        rotateEl.hidden = !portrait || playInPortrait;
+        // The only line on the prompt that is not true in both states.
+        heldNoteEl.hidden = !window.AA_BOOT_HELD_FOR_PORTRAIT;
+        // THE CHIP IS DELIBERATELY LEFT ALONE, and it is not the prompt in
+        // miniature. Its sentence is "the backing store is for the other
+        // orientation, so this is letterboxed and soft" and its button is the
+        // reload that fixes exactly that -- true and useful in whichever
+        // orientation the player is not sized for, including for someone who
+        // chose portrait and then turned the phone. On the boot a stored choice
+        // produces, the two agree and it stays hidden; that is asserted (P3 in
+        // web/tools/touch-gate.steps), not assumed.
         if (!chipDismissed) chipEl.hidden = (portrait === sizedForPortrait);
         console.log('[TOUCH] orientation portrait=' + portrait +
                     ' (sized for portrait: ' + sizedForPortrait +
-                    ', boot held: ' + !!window.AA_BOOT_HELD_FOR_PORTRAIT + ')');
+                    ', boot held: ' + !!window.AA_BOOT_HELD_FOR_PORTRAIT +
+                    ', play in portrait: ' + playInPortrait + ')');
       };
       // The hold lives on window rather than in this closure because its other
       // half -- startGame(), defined far below and outside this IIFE -- has to
       // read it, and because a gate should be able to assert on it.
-      window.AA_BOOT_HELD_FOR_PORTRAIT = viewportIsPortrait();
+      //
+      // A stored answer means there is nothing to hold FOR: the player has
+      // already said which orientation they want, and holding would be this
+      // page asking the question a second time in a form that cannot be
+      // answered at all.
+      window.AA_BOOT_HELD_FOR_PORTRAIT = viewportIsPortrait() && !playInPortrait;
       let holdPoll = 0;
       window.AA_RELEASE_PORTRAIT_HOLD = (why) => {
         if (!window.AA_BOOT_HELD_FOR_PORTRAIT) return;
@@ -1141,8 +1243,39 @@
           if (!viewportIsPortrait()) window.AA_RELEASE_PORTRAIT_HOLD('poll');
         }, 250);
       }
-      document.getElementById('rotate-anyway').addEventListener('click',
-        () => window.AA_RELEASE_PORTRAIT_HOLD('button'));
+      // ONE BUTTON, TWO MECHANISMS, AND THE SPLIT IS WHERE main() IS.
+      document.getElementById('rotate-play').addEventListener('click', () => {
+        playInPortrait = true;
+        const stored = storePortraitChoice();
+        console.log('[TOUCH] play in portrait chosen (stored for next load: ' +
+                    stored + ')');
+        if (window.AA_BOOT_HELD_FOR_PORTRAIT) {
+          // BEFORE main(): the path that already existed, unchanged. The hold
+          // release re-measures the backing store for the portrait viewport
+          // that is actually there and starts the game once, at that shape --
+          // no reload, because nothing has been drawn yet.
+          window.AA_RELEASE_PORTRAIT_HOLD('button');
+          return;
+        }
+        // AFTER main(): THE ONLY HONEST ANSWER IS A RELOAD. The canvas is sized
+        // for landscape and this page cannot change that in place --
+        // sizeCanvas() is safe only before main() (see its header), and a live
+        // sr_ReinitDisplay is a much larger claim that PLAN.md has now declined
+        // twice on grounds this button does not alter. So: the answer is
+        // stored, the page is reloaded, and the reloaded boot reads the answer,
+        // holds nothing, shows no prompt, and sizes the backing store for the
+        // portrait viewport it is in. The player asked for portrait and gets
+        // portrait, drawn for portrait, in one tap.
+        //
+        // RELOADING EVEN WHEN THE STORE DID NOT TAKE is deliberate. If it did
+        // not (site data blocked), the reload lands on the prompt again -- but
+        // in its BEFORE-boot state, where this same button releases the hold
+        // and boots portrait at the right size. That is one extra tap, not a
+        // loop, and it is still a better place to be than here, looking at a
+        // picture drawn for the other orientation.
+        console.log('[BOOT] reloading to size the canvas for portrait');
+        location.reload();
+      });
       document.getElementById('reloadchip-go')
         .addEventListener('click', () => location.reload());
       document.getElementById('reloadchip-x')

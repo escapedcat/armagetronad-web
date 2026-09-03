@@ -621,6 +621,21 @@ Neither phase below is part of "done." Each gets its own go/no-go decision after
 >    phone sideways", and a rotation after load raises a chip that says the picture is being
 >    stretched from the size it loaded at and offers a reload. Measured: a portrait-loaded
 >    page rotated to landscape is a 186x412 sliver.)*
+>
+>    *(**And then the prompt itself became the defect, because it could not be answered.**
+>    It is raised for any portrait viewport, before the boot and after it, and the button
+>    that dismissed it was hidden the moment the game started — so the maintainer, playing on
+>    his phone and wanting portrait, was under a full-screen overlay with no exit but turning
+>    back: "i always see 'turn your phone sideways' even when i selected portrait mode". His
+>    own rule settles it — **the user decides** — so the button is now on the prompt in both
+>    states, reads "Play in portrait", and is **remembered** (`localStorage` `aa.portrait`;
+>    `?portrait=ask` clears it and asks again). Before the boot it releases the hold as it
+>    always did; after the boot it stores the answer and **reloads**, because `sizeCanvas()`
+>    is only safe before `main()` and the live re-init in item 9 is still declined — a reload
+>    is the only way to reach a portrait-shaped backing store, and it gets there in one tap.
+>    Portrait still looks wrong at that ~131° vertical field of view, the prompt now says so
+>    in a line, and the square-viewport layout in the phone-round-2 notes below is the fix
+>    that is planned. `docs/evidence/portrait-choice/`.)*
 > 9. **`sr_ReinitDisplay` works, which reopens the resize question Phase 3 will need.**
 >    Measured at M5 task 4c: the canvas resizes live, `isContextLost()` stays false, no
 >    `webglcontextlost` fires, 0 GL errors in 3832 polls, and the game then plays two full
