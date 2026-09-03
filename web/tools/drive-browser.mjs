@@ -49,6 +49,8 @@
 //                         emulated phone. Needs --mobile to have set the rest.
 //   eval:EXPR             Runtime.evaluate an expression, print the result
 //   mark:TEXT             write a marker line into the console transcript
+//   cpu:RATE              throttle the CPU RATE times (CDP), 1 = full speed.
+//                         Use it AFTER the boot so only the measured part is slow.
 //   until:N:MS:TEXT       block until TEXT has appeared in N transcript lines,
 //                         or MS milliseconds elapse. Records which happened.
 //
@@ -419,6 +421,27 @@ async function main() {
         case 'mark':
           record(`[harness] === ${arg} ===`);
           break;
+        // CPU THROTTLING, and the perf sweep cannot say anything without it.
+        // Unthrottled, this desktop draws a frame in 6-8 ms against a 16.7 ms
+        // budget. A cost that grows by a tenth cannot stutter with that much
+        // headroom, so every arm of a sweep reads the same and no lever can
+        // show a benefit -- which is exactly what the first sweep produced.
+        // A rate near 6 puts the frame cost up against the budget, which is
+        // the regime a phone is in and the only one where the maintainer's
+        // "the more i drive the laggier it gets" can reproduce at all.
+        //
+        // It is a STEP and not a flag on purpose: the boot and the menu walk
+        // should run at full speed. Throttling those only burns wall-clock and
+        // drags the `until:` waits towards their timeouts.
+        case 'cpu': {
+          const rate = Number(arg);
+          if (!(rate >= 1)) {
+            throw new Error(`cpu:RATE needs a rate >= 1, got ${JSON.stringify(arg)}`);
+          }
+          await send('Emulation.setCPUThrottlingRate', { rate });
+          record(`[harness] CPU throttling rate ${rate}x`);
+          break;
+        }
         case 'shot': {
           // fromSurface:true captures the compositor surface, which is the
           // only way to get canvas pixels out of a headless window.
