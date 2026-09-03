@@ -73,8 +73,12 @@ these intervals.
 
 **Three sentences.**
 
-1. `ratio_ms ≥ 1.2` in **4 of 10** rounds (1.20, 1.45, 1.53, 1.63); two more
-   read 1.19, so 7 of 10 are ≥ 1.15 and 3 of 10 are ≥ 1.45.
+1. `ratio_ms ≥ 1.2` in **4 of 10** rounds (1.20, 1.45, 1.53, 1.63). Two more
+   read 1.19 (1.194 and 1.186 before rounding) and two read 1.15 (1.150 and
+   1.151), so **8 of 10** are ≥ 1.15; 3 of 10 are ≥ 1.45. Counted over the
+   ten `ratio_ms` values in the table above; the unrounded figures are each
+   row's late p50 divided by its early p50. (An earlier revision of this
+   sentence said 7 of 10; no reading of the ten values gives 7.)
 2. Median `ratio_ms` **1.19** (the ten sorted: 1.04, 1.11, 1.15, 1.15, 1.19,
    1.19, 1.20, 1.45, 1.53, 1.63); worst **1.63**, run 4 round 3, 22.1 → 36.1 ms
    p50 with the p90 at 46.4 ms and 42 hitches over 50 ms in the span.
@@ -144,30 +148,101 @@ run 4: 1.53 then 1.63; runs 2, 3, 5 flat in both), so the incidence — 3 of
 10 — is per round, not per run.
 
 What the second-45 event *is* was not established here, and it is the
-question Task 3 inherits. What is recorded: it starts at the same second in
-every round with the human on the same straight line; no cycle dies until
-59.1 s; the 50 s screenshots of a spike round (`base-r4/r3-50s.png`, FPS 19
-on the HUD, 365 draws/frame in that second) and of a flat round
-(`base-r2/r2-50s.png`, FPS 37) show the same forward view — three trails at
-the horizon, the cycle at 15.0 — so the geometry the draw count reports is
-not in the camera's view. A cycle turning many times in a few seconds would
-add a wall segment per turn and remove them again as the 400-unit cap moves
-on, which fits the rise and the decay; that is a reading, not a measurement.
+question Task 3 inherits. What is recorded:
+
+- It starts at the same second in every round with the human on the same
+  straight line, and no cycle dies until 59.1 s.
+- The 50 s screenshots of a spike round (`base-r4/r3-50s.png`, FPS 19 on the
+  HUD, 365 draws/frame in that second) and of a flat round
+  (`base-r2/r2-50s.png`, FPS 37) show the same forward view — three trails at
+  the horizon, the cycle at 15.0 — so the geometry the draw count reports is
+  not in the camera's view.
+- **The transcript carries a same-second marker.** In round 2 of all five
+  runs the sound engine's voice limiter (the bottom of `fill_audio`,
+  `eSound.cpp`) printed `[SND] voice limiter STARTED cutting: N live voices`
+  45.45–45.56 s after `NEW_ROUND` — second 45 on the round clock, the second
+  in which `ms_to_first_draw` jumps (s44 6.6–7.7 → s45 11.0–14.9 ms in all
+  ten rounds) — with N = 12–14. How long it then stayed cutting separates the
+  two spike round-2s from the three flat ones: `stopped` at 56.92 s (run 1)
+  and 56.94 s (run 4), in the second their draw count is falling (s55 → s56:
+  481 → 396 and 456 → 375 draws/frame); `stopped` at 47.08, 47.08 and 47.34 s
+  in runs 2, 3 and 5. Every run then has one more `STARTED` at 58.77–58.84 s
+  (12–13 voices), about a third of a second before the human's death at
+  59.10–59.13 s, i.e. inside the last second of the late window, and a
+  `stopped` at 60.3–62.9 s. Round 2 of each run, seconds after `NEW_ROUND`:
+
+  | run | round 2 | `STARTED` (voices) | `stopped` (voices) | `STARTED` again (voices) | `stopped` |
+  |---|---|---|---|---|---|
+  | base-r1 | spike | 45.56 (14) | 56.92 (8) | 58.84 (12) | 62.88 |
+  | base-r2 | flat | 45.47 (12) | 47.08 (8) | 58.81 (13) | 62.91 |
+  | base-r3 | flat | 45.46 (12) | 47.08 (8) | 58.80 (12) | 61.10 |
+  | base-r4 | spike | 45.50 (13) | 56.94 (8) | 58.77 (12) | 60.32 |
+  | base-r5 | flat | 45.45 (12) | 47.34 (8) | 58.83 (12) | 60.32 |
+
+  What the marker means, from `fill_audio`: the count it prints,
+  `real_sound_sources`, is zeroed at the top of the callback and incremented
+  only by `eSoundPlayer::Mix`, once per voice mixed, so it is the complete
+  count of voices mixed in the callback that printed the line. The limiter
+  starts cutting (`loudness_thresh` leaves 0) in the first callback whose
+  count exceeds `SOUND_SOURCES + 1` = 11, and the transition prints in that
+  same callback while the budget lasts. So from the round-start burst (next
+  bullet) until 45.45–45.56 s no callback mixed more than 11 voices, and in
+  that second one mixed 12–14. Voices are sounds being played; which sounds
+  is not recorded.
+- **Why round 3 is silent, and round 1.** The transition line has a budget of
+  16 per process (`se_limiterBudget`, `eSound.cpp`), and every run spent all
+  16 in round 2: twelve in its first 1.8 s (`live voices peaked at 16` at
+  0.04–0.05 s, then six start/stop oscillations ending 1.75–1.79 s) and the
+  four in the table. Round 3 — whose `ms_to_first_draw` jumps at second 45 in
+  all five runs just as round 2's does — logged nothing because nothing was
+  left to log with: a log cap, not evidence that its voice count stayed put.
+  Round 1 logged nothing because its peak was 11 (`live voices peaked at
+  11`), which does not exceed 11.
+- **Where that work is counted.** `fill_audio` is the SDL audio callback, and
+  in this port it runs on the main thread (`web/README.md`, the cockpit-HUD
+  bullet — "per-callback mixing work landing on the main thread" — and "Sound
+  is produced, but nobody has heard it", which also says the limiter had
+  never engaged at the shipped AI count and that raising `SP_NUM_AIS` would
+  be the first time that code ran with real voices in it; this harness's
+  `SP_NUM_AIS 7` is that configuration). The sampler's split puts everything
+  between a swap's return and the next frame's first draw call — the
+  event-loop yield included — into `ms_to_first_draw`, so whatever a callback
+  costs lands in that part, the part that doubles in 10 of 10 rounds, and
+  never in `ms_first_draw_to_swap`. That follows from where the split is cut,
+  not from a measurement of the callback; how much of the 5.3–9.2 ms rise at
+  the peak is mixing work, if any, is not known from these runs.
+
+This is a correlate with timestamps, not a cause: the same second could hold
+an AI behaviour that both makes more noise and costs more simulation. Task 3
+has a lever that needs no game-source change: `SOUND_QUALITY 0` in the
+autoexec lines (`SOUND_OFF`: `se_SoundInit` opens no device, so `fill_audio`
+never runs) against `base`, read on `ms_to_first_draw` at seconds 44–55 and
+on spike incidence over as many rounds as it runs; `SOUND_SOURCES` is a
+config item too, and raising it keeps the mixing while stopping the cutting,
+which separates the two. Raising `se_limiterBudget` so round 3 logs as well
+is a `src/engine/eSound.cpp` change, outside what Tasks 1–5 may touch. A
+cycle turning many times in a few seconds would add a wall segment per turn
+and remove them again as the 400-unit cap moves on, which fits the rise and
+the decay of the draw count; that is a reading, not a measurement.
 
 ## The baseline Tasks 3–5 compare against
 
-Ten rounds, as distributions (sorted; median in bold):
+Ten rounds, as distributions. Each list is the ten measured values, sorted;
+the median of ten values is the mean of the 5th and 6th and is not itself a
+measured round, so it has its own column. (An earlier revision of this table
+printed the rounded median in place of the 5th value in four rows; these
+lists are regenerated from the five `[PERF]` lines.)
 
-| statistic | ten rounds | the seven without a draw spike | the three with one |
-|---|---|---|---|
-| `ratio_ms` | 1.04, 1.11, 1.15, 1.15, **1.19**, 1.19, 1.20, 1.45, 1.53, 1.63 | 1.04–1.20 (median 1.15) | 1.45, 1.53, 1.63 |
-| late ms p50 | 24.5, 24.8, 25.1, 25.8, **27.2**, 27.4, 28.0, 33.1, 34.1, 36.1 | 24.5–28.0 (median 25.8) | 33.1–36.1 |
-| late ms p90 | 30.8, 31.7, 31.7, 34.5, **35.4**, 36.2, 36.8, 42.7, 45.6, 46.4 | 30.8–36.8 (median 34.5) | 42.7–46.4 |
-| hitches > 50 ms, span | 2, 6, 7, 7, **8**, 8, 9, 23, 32, 42 | 2–9 | 23–42 |
-| hitches > 50 ms, late window | 0, 1, 1, 1, 1, 2, 2, 4, 9, 11 | 0–2 | 4–11 |
-| early ms p50 | 20.6, 21.3, 21.6, 22.1, **22.6**, 22.8, 23.6, 23.8, 24.1, 24.3 | | |
-| `ratio_draws` | 1.17, 1.20, 1.20, 1.23, **1.26**, 1.26, 1.26, 2.61, 3.54, 3.73 | 1.17–1.26 | 2.61–3.73 |
-| spike incidence | 3 of 10 rounds; 2 of 5 runs had at least one | | |
+| statistic | ten rounds, sorted | median | the seven without a draw spike | the three with one |
+|---|---|---|---|---|
+| `ratio_ms` | 1.04, 1.11, 1.15, 1.15, 1.19, 1.19, 1.20, 1.45, 1.53, 1.63 | **1.19** | 1.04–1.20 (median 1.15) | 1.45, 1.53, 1.63 |
+| late ms p50 | 24.5, 24.8, 25.1, 25.8, 27.0, 27.4, 28.0, 33.1, 34.1, 36.1 | **27.2** | 24.5–28.0 (median 25.8) | 33.1–36.1 |
+| late ms p90 | 30.8, 31.7, 31.7, 34.5, 34.5, 36.2, 36.8, 42.7, 45.6, 46.4 | **35.35** | 30.8–36.8 (median 34.5) | 42.7–46.4 |
+| hitches > 50 ms, span | 2, 6, 7, 7, 8, 8, 9, 23, 32, 42 | **8** | 2–9 (median 7) | 23–42 |
+| hitches > 50 ms, late window | 0, 1, 1, 1, 1, 2, 2, 4, 9, 11 | **1.5** | 0–2 (median 1) | 4–11 |
+| early ms p50 | 20.6, 21.3, 21.6, 22.1, 22.3, 22.8, 23.6, 23.8, 24.1, 24.3 | **22.55** | 20.6–24.3 (median 23.6) | 22.1–22.8 |
+| `ratio_draws` | 1.17, 1.20, 1.20, 1.23, 1.25, 1.26, 1.26, 2.61, 3.54, 3.73 | **1.255** | 1.17–1.26 (median 1.23) | 2.61–3.73 |
+| spike incidence | 3 of 10 rounds; 2 of 5 runs had at least one | | | |
 
 Same units and caveats as above. For Tasks 3–4: with the spike in 3 of 10
 rounds, a two-round A/B can land on 0, 1 or 2 spike rounds by chance, and a
