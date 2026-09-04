@@ -760,7 +760,13 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > uncapped, 6 s at 400, 2 s at 150) and still brings the worst frames down with it (late p90
 > 35.6 → 28.5 → 27.05 ms), so option A survives its "untested on the real path" caveat, the
 > shipped configuration turns out to be unmeasurable by this rig at all (8.1-second rounds, an
-> idle human dead 6.5 s in), and the decision is still the maintainer's.)*
+> idle human dead 6.5 s in), and the decision is still the maintainer's. **Task 8 is the first
+> thing this milestone has shipped rather than measured:** the crash sparks thrown while a cycle
+> grinds a wall are worth about a quarter of the frame at the rim (17.1 ms median and 20.3 worst
+> with draw bursts to 171, against 13.1/13.6 median, 13.8/15.0 worst and draws flat at 60 with
+> `SPARKS 0`), so `web/shell.html` now appends `SPARKS 0` on touch devices only — a settings
+> change with no C++ in it, `?sparks=1` to restore them, and the desktop autoexec untouched and
+> gated as such. `docs/evidence/m6-lag/task8-sparks/`.)*
 >
 > The lesson this round adds to M4's P11 and M5's stale gate: **a gate must prove the condition
 > it measures actually held** — a late-round screenshot with trail geometry in it, a non-zero
