@@ -86,9 +86,11 @@ until:1:120000:[BOOT] autostart
 # D1: THE DESKTOP AUTOEXEC IS THE ONE THE BUILD SHIPPED.
 #
 # M6 task 8 turns the crash sparks off ON TOUCH DEVICES ONLY -- they cost about
-# a quarter of the frame while a cycle grinds a wall (17.1 ms median stock
-# against 13.1/13.6 with SPARKS 0; docs/evidence/m6-lag/task8-sparks/), and a
-# desktop is not the machine that is short of milliseconds. The page appends
+# a quarter of the frame while a cycle is actually sparking against a wall
+# (17.15 ms median stock against 13.1 with SPARKS 0 in the arm that sparked in
+# 29 of its 40 rim seconds; a second stock run that sparked in 11 of 40 read
+# 14.0 against 13.65; docs/evidence/m6-lag/task8-sparks/), and a desktop is not
+# the machine that is short of milliseconds. The page appends
 # the setting to the preloaded /data/webdefaults/autoexec.cfg at runtime rather
 # than the repo editing that file, which is what makes it conditional at all.
 #
