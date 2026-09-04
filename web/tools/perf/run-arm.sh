@@ -96,7 +96,11 @@ if grep -v '^#' "$OUT/steps.txt" | grep -q 'SAMPLER\|REPORT\|CONFIGLINES\|TAGHER
   fail "a placeholder survived substitution in $OUT/steps.txt"
 fi
 grep -q 'MAX_FPS 1000' "$OUT/steps.txt" || fail "MAX_FPS 1000 is not in the arm (template broken)"
-grep -qF '\\' "$OUT/steps.txt" && fail "a double backslash survived into steps.txt; the config would reach autoexec.cfg as literal \\n text"
+# The pattern is two literal backslashes. Double-quoted rather than '\\'
+# because the single-quoted form reads to SC1003 as a mis-escaped quote; the
+# two forms produce the same two characters. (A comment must not OPEN with the
+# linter's own name either -- that parses as a directive, SC1073.)
+grep -qF "\\\\" "$OUT/steps.txt" && fail "a double backslash survived into steps.txt; the config would reach autoexec.cfg as literal \\n text"
 grep -v '^#' "$OUT/steps.txt" | grep '^eval:' | sed -e 's/^eval://' | while IFS= read -r expr; do
   printf '%s\n' "$expr" | node --check - 2>/dev/null || { echo "$expr" | cut -c1-80; exit 9; }
 done || fail "an eval: step is not valid JavaScript (shown above)"

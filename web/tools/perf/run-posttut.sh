@@ -83,11 +83,17 @@ ARMS='posttut-default-r1 posttut-default-r2 posttut-base-r1 posttut-base-r2 post
 # sweep -- naming it explicitly is the only way to get it.
 EXTRA='smoke-posttut-base'
 
-if [ "$WANT" = "--list" ]; then printf '%s\n' $ARMS; printf '%s (on request only)\n' $EXTRA; exit 0; fi
+if [ "$WANT" = "--list" ]; then
+  for a in $ARMS; do printf '%s\n' "$a"; done
+  for a in $EXTRA; do printf '%s (on request only)\n' "$a"; done
+  exit 0
+fi
 [ -f "$TMPL" ] || { echo "no template at $TMPL (run me from the repository root)" >&2; exit 2; }
 if [ -n "$WANT" ]; then
   case " $ARMS $EXTRA " in *" $WANT "*) ;; *)
-    echo "unknown arm '$WANT'. Known arms:" >&2; printf '  %s\n' $ARMS $EXTRA >&2; exit 2;; esac
+    echo "unknown arm '$WANT'. Known arms:" >&2
+    for a in $ARMS $EXTRA; do printf '  %s\n' "$a" >&2; done
+    exit 2;; esac
 fi
 
 cfg_for() {
