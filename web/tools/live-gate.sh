@@ -121,6 +121,10 @@ if [ "$USE_PROXY" = 1 ]; then
       echo "proxy did not start; see $OUT/tunnel-proxy.log" >&2; exit 3; }
     trap 'kill $PROXY_PID 2>/dev/null || true' EXIT
   fi
+  # about:config string prefs need a quoted value, and FF_PREFS is deliberately
+  # expanded unquoted below so each --pref (and its literal quotes) survives as
+  # its own word.
+  # shellcheck disable=SC2089 # embedded \"...\" are intentional, see above
   FF_PREFS="--pref network.proxy.type=1
 --pref network.proxy.ssl=\"127.0.0.1\"
 --pref network.proxy.ssl_port=$PROXY_PORT
@@ -130,9 +134,11 @@ fi
 
 # Firefox prefs have to survive word splitting with an embedded quoted value,
 # which is why they are fed through "$@" rather than interpolated.
+# shellcheck disable=SC2329 # invoked indirectly: drive() below calls it via "$@"
 firefox_run() { # firefox_run <outdir> <steps>
-  # shellcheck disable=SC2086
+  # shellcheck disable=SC2090,SC2086,SC2317 # unquoted on purpose (FF_PREFS above); reachable via drive(), see above
   set -- --out "$1" --url "$URL/$PAGE" --script-file "$2" $FF_PREFS
+  # shellcheck disable=SC2317 # reachable via drive(), see above
   node "$ROOT/web/tools/drive-firefox.mjs" "$@"
 }
 
@@ -182,4 +188,4 @@ echo "=== summary  ($URL)"
 cat "$SUMMARY"
 echo
 if [ "$FAILED" = 0 ]; then echo "LIVE GATE PASSED"; else echo "LIVE GATE FAILED ($FAILED)"; fi
-exit $([ "$FAILED" = 0 ] && echo 0 || echo 1)
+exit "$([ "$FAILED" = 0 ] && echo 0 || echo 1)"

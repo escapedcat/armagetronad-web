@@ -1,0 +1,211 @@
+# Checks worth having on every pull request, beyond "does the client build"
+# (that proof already belongs to deploy-pages.yml, which runs the same event).
+#
+# TWO JOBS, TWO DIFFERENT KINDS OF REGRESSION.
+#
+#   dedicated-pin  Builds the OTHER wasm -- the M0 dedicated server -- which
+#                  deploy-pages.yml never touches, and asserts the byte
+#                  invariant this project has otherwise kept by hand since M0:
+#                  web/README.md "both builds share -- 2,488,298 bytes AND md5
+#                  9718a2a64978cb6e9b95ea2f0454cca5". Size alone has already
+#                  passed a build with the wrong md5 once (M4 task 3); this
+#                  asserts both halves, the way every milestone since has had
+#                  to remember to do by hand. TWO PINS, NOT ONE: this
+#                  workflow's own first run showed a Linux build of the same
+#                  source under the same emsdk 6.0.8 does not reproduce the
+#                  Mac pin -- see the comment above LINUX_PIN_BYTES below for
+#                  the run that established the second number, and
+#                  web/README.md for why the Mac pin still stands as the
+#                  local invariant.
+#
+#   scripts        shellcheck on the shell scripts and `node --check` on the
+#                  ES modules under web/tools/ and deps/. Nothing here runs
+#                  the tools, so it catches a script that cannot parse or a
+#                  quoting bug, not a logic error -- cheap, and everything
+#                  cheap is worth having on every PR.
+#
+# WHY NOT A THIRD JOB FOR C++. This port carries ~114k lines of upstream
+# Armagetron source essentially unpatched; a linter or formatter run over it
+# would either drown in upstream's own style or rewrite files this project
+# does not own, fighting the upstream-watch.yml tracking that diffs against
+# real upstream commits. The C++ this project actually wrote is small,
+# reviewed by hand, and already gated by the byte-identity checks above and in
+# deploy-pages.yml -- there is no lint budget left for the other 114k lines.
+#
+# NOTE ON FILE PLACEMENT. Same exception as the other files under
+# .github/workflows/: this repo's convention keeps new files under
+# src/emscripten/, web/, deps/ or docs/, and a workflow cannot live there. The
+# logic invoked here -- the Makefile, the scripts under lint -- all does.
+
+name: checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Read-only: this workflow only builds and asserts, it never pushes anything
+# (unlike deploy-pages.yml, which needs contents: write for the gh-pages
+# push).
+permissions:
+  contents: read
+
+# A superseded push to the same PR should not keep its emsdk build running:
+# cancel it for the newer one rather than paying for both.
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+# Same variable, same reason as deploy-pages.yml: sourcing
+# deps/emsdk/emsdk_env.sh clears EMSDK_VERSION, so the pin check needs a name
+# outside emsdk's own namespace.
+env:
+  AA_EMSDK_VERSION: '6.0.8'
+
+jobs:
+  dedicated-pin:
+    name: dedicated server byte pin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+
+      # Restore/install/pin-check and the libxml2 build below are the exact
+      # STEPS from deploy-pages.yml. THE CACHE KEYS ARE DELIBERATELY -v2, NOT
+      # THE SAME -v1 deploy-pages.yml uses. actions/cache is first-writer-wins
+      # per key: sharing -v1 with deploy-pages.yml would mean this job's cache
+      # is normally seeded by deploy-pages.yml's client build (same PR event,
+      # same runner OS), so a "measure the Linux dedicated pin" run could
+      # silently be reusing warm SDK/port state from a client link rather than
+      # proving anything cold. -v2 gives this job its own cache lineage, so
+      # its first run is a genuinely cold build -- which is what actually
+      # established the Linux pin below (see the comment above
+      # LINUX_PIN_BYTES for both runs' URLs, one warm-shared and one cold).
+      - name: Restore emsdk
+        id: emsdk-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: deps/emsdk
+          key: emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v2
+
+      - name: Install emsdk ${{ env.AA_EMSDK_VERSION }}
+        if: steps.emsdk-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git deps/emsdk
+          cd deps/emsdk
+          ./emsdk install "$AA_EMSDK_VERSION"
+          ./emsdk activate "$AA_EMSDK_VERSION"
+
+      - name: Pin check
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          emcc --version | head -1
+          emcc --version | head -1 | grep -q " $AA_EMSDK_VERSION " || { echo "emcc is not $AA_EMSDK_VERSION"; exit 1; }
+
+      - name: Restore libxml2
+        id: libxml2-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: deps/build/libxml2-install
+          key: libxml2-${{ hashFiles('deps/build-libxml2.sh') }}-emsdk-${{ env.AA_EMSDK_VERSION }}-${{ runner.os }}-v2
+
+      - name: Build libxml2 (static wasm)
+        if: steps.libxml2-cache.outputs.cache-hit != 'true'
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          ./deps/build-libxml2.sh
+
+      - name: Build the dedicated server
+        run: |
+          source deps/emsdk/emsdk_env.sh >/dev/null 2>&1
+          make -f web/Makefile dedicated -j"$(nproc)"
+          ls -l web/dist-m0/
+
+      # THE INVARIANT. web/README.md's 2,488,298 B / md5 9718a2a6... was
+      # measured on the maintainer's macOS. The first CI client build
+      # (deploy-pages.yml) showed the Linux .wasm differs from the Mac one by
+      # 16 bytes on the SAME emsdk 6.0.8, so whether the dedicated wasm
+      # reproduces here is a question this run answers, not one this file
+      # assumes -- see the comment above MAC_PIN_BYTES for what happens next
+      # depending on the answer. Both measured values are printed before the
+      # assertion, so a failing log needs no re-run to explain itself.
+      #
+      # THIS IS NOT THE ONLY PLACE THESE NUMBERS ARE WRITTEN DOWN. If either
+      # pin ever legitimately moves, it has to move in three places, not just
+      # here: web/README.md (the human-readable invariant, both platforms),
+      # and docs/evidence/m5-camera/invariant/dedicated-invariant.sh (a
+      # positive/negative-control script that asserts the Mac figure locally
+      # and predates this workflow). A future change that updates this file
+      # alone will pass CI while leaving the other two stale.
+      - name: Assert the dedicated wasm byte pin
+        run: |
+          WASM=web/dist-m0/armagetronad-dedicated.wasm
+          BYTES=$(wc -c < "$WASM" | tr -d ' ')
+          MD5=$(md5sum "$WASM" | cut -d' ' -f1)
+          echo "measured: $BYTES bytes, md5 $MD5"
+
+          # The local invariant (web/README.md), established on the
+          # maintainer's macOS.
+          MAC_PIN_BYTES=2488298
+          MAC_PIN_MD5=9718a2a64978cb6e9b95ea2f0454cca5
+          echo "Mac pin (web/README.md, local invariant): $MAC_PIN_BYTES bytes, md5 $MAC_PIN_MD5"
+
+          # This workflow's own first run answered the question web/README.md
+          # asks (does a Linux runner reproduce the Mac pin?) with "no": same
+          # source, same emsdk 6.0.8, a wasm 16 bytes SMALLER with a different
+          # md5. That run (warm cache, shared with deploy-pages.yml's client
+          # build on the same PR event) is where these two numbers first came
+          # from --
+          # https://github.com/escapedcat/armagetronad-web/actions/runs/33772244626/job/100705140914
+          # -- and a second run, after the cache keys below were bumped to
+          # -v2 specifically to force a COLD build (log confirms "Cache not
+          # found for input keys: emsdk-6.0.8-Linux-v2" and the libxml2
+          # equivalent), reproduced the IDENTICAL pin from scratch --
+          # https://github.com/escapedcat/armagetronad-web/actions/runs/33781875180/job/100737268664
+          # -- so this is not an artifact of a shared, pre-warmed cache.
+          # Recorded here rather than silently adopted, per web/README.md's
+          # "Deploying to GitHub Pages" note on why there are now two
+          # platform pins. The Mac pin above stays the local invariant; this
+          # is what CI actually asserts.
+          LINUX_PIN_BYTES=2488282
+          LINUX_PIN_MD5=ecb69e501f47c1a35cfe544ec0fe4e15
+          echo "Linux pin (this workflow, ubuntu-latest, emsdk $AA_EMSDK_VERSION): $LINUX_PIN_BYTES bytes, md5 $LINUX_PIN_MD5"
+
+          if [ "$BYTES" = "$MAC_PIN_BYTES" ] && [ "$MD5" = "$MAC_PIN_MD5" ]; then
+            echo "PASS: matches the Mac pin"
+          elif [ "$BYTES" = "$LINUX_PIN_BYTES" ] && [ "$MD5" = "$LINUX_PIN_MD5" ]; then
+            echo "PASS: matches the Linux pin"
+          else
+            echo "FAIL: measured $BYTES bytes / md5 $MD5 matches NEITHER the Mac pin ($MAC_PIN_BYTES / $MAC_PIN_MD5) NOR the Linux pin ($LINUX_PIN_BYTES / $LINUX_PIN_MD5)" >&2
+            exit 1
+          fi
+
+  scripts:
+    name: shellcheck + node --check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+
+      - name: Verify shellcheck
+        run: |
+          if ! command -v shellcheck >/dev/null; then
+            sudo apt-get update && sudo apt-get install -y shellcheck
+          fi
+          shellcheck --version
+
+      - name: shellcheck web/tools/*.sh and deps/*.sh
+        run: shellcheck web/tools/*.sh deps/*.sh
+
+      - name: node --check on web/tools/*.mjs
+        run: |
+          for f in web/tools/*.mjs; do
+            echo "-- $f"
+            node --check "$f"
+          done
