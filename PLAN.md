@@ -752,7 +752,15 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > outranks the rest: every arm in this milestone measured the tutorial match. The phone plays
 > the post-tutorial game — `SP_` settings live, `SP_WALLS_LENGTH` -1, trails that never expire
 > — and no arm has ever booted it. That path is M6's open item, and `docs/evidence/m6-lag/README.md`
-> puts it to the maintainer as one of three costed options.)*
+> puts it to the maintainer as one of three costed options. **That was true until Task 7**
+> (branch `m6b-posttutorial`, ten runs in `docs/evidence/m6-lag/task7-posttutorial/`): unlimited
+> trails do **not** grow the render work — the draw count is exactly 114.00 per frame from second
+> 15 to second 44 in all eighteen measured rounds, whether the trail is capped at 150 units, at
+> 400, or not at all — while a trail cap still shortens the second-45 event (a median 12 s
+> uncapped, 6 s at 400, 2 s at 150) and still brings the worst frames down with it (late p90
+> 35.6 → 28.5 → 27.05 ms), so option A survives its "untested on the real path" caveat, the
+> shipped configuration turns out to be unmeasurable by this rig at all (8.1-second rounds, an
+> idle human dead 6.5 s in), and the decision is still the maintainer's.)*
 >
 > The lesson this round adds to M4's P11 and M5's stale gate: **a gate must prove the condition
 > it measures actually held** — a late-round screenshot with trail geometry in it, a non-zero

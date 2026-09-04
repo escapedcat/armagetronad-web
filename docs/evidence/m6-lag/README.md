@@ -15,6 +15,7 @@ decision is taken here** — this document ends in three options and stops.
 | Task 3 | both mechanisms measured; six skeptics then narrowed one of the verdicts | [`task3-mechanisms/`](task3-mechanisms/README.md) |
 | Task 4 | four levers, eleven completed runs of twelve: one moves the event, one moves the variance, two are not levers | [`task4-levers/`](task4-levers/README.md) |
 | Task 5 | display lists priced, written before Task 4 ran: **not yet** | [`display-lists-pricing.md`](display-lists-pricing.md) |
+| Task 7 | the game the phone actually plays, measured: unlimited trails do **not** grow the render work, and a trail cap still shortens the second-45 event | [`task7-posttutorial/`](task7-posttutorial/README.md) |
 
 **Every millisecond in this milestone is one desktop's**, at `MAX_FPS 1000`
 under a 6× CPU throttle at a phone's pixel count, with a fixed event-loop
@@ -153,7 +154,9 @@ trip its no-go condition and has not been folded back in.
 
 ## 5. What was NOT measured
 
-Three gaps. Every option in §6 turns on the first.
+Three gaps. Every option in §6 turns on the first — and **the first has since
+been measured**: Task 7 took it, and the paragraph under item 1 says what it
+found. The other two stand, and gap 2 is now the one that matters.
 
 1. **The game the phone actually plays.** Every arm in Tasks 1–4 measured
    the **tutorial match**: a first-use boot, so `welcome()`
@@ -165,9 +168,41 @@ Three gaps. Every option in §6 turns on the first.
    -1.0f`, **trails that never expire**. That is the only configuration in
    which *"the more I drive"* can be literally about the trail, and it is the
    configuration in which the wall-length lever is a direct setting rather
-   than a workaround. **No arm has ever booted it.** The 107-draw plateau
-   that makes every render-side reading in this milestone come out small is
-   an artefact of the 400-unit cap.
+   than a workaround. **No arm in Tasks 1–4 ever booted it.**
+
+   **Measured, Task 7**
+   ([`task7-posttutorial/README.md`](task7-posttutorial/README.md)): ten runs
+   on that boot path, eight of them VALID, each with a mid-round probe that
+   saves the live config and reads `SP_WALLS_LENGTH -1`, `SP_SPEED_FACTOR 0`
+   and `SP_SIZE_FACTOR 6` back out of the running game. **Unlimited trails do
+   not make the render work grow.** From second 15 to second 44 the draw count
+   is exactly **114.00 per frame in all eighteen measured rounds** — whether
+   the trail is capped at 150 units, at 400, or not at all — and the plateau
+   frame cost (23.30 ms), its simulation part (7.25) and its render part
+   (15.95) all sit inside Task 2's own spread (22.40–25.35 / 6.95–7.55 /
+   15.40–17.60, medians 23.675 / 7.20 / 16.35). So the
+   sentence this item used to end with is withdrawn: the 107-draw plateau is
+   **not** an artefact of the 400-unit cap; with the cap gone the plateau is
+   114 and just as flat, because a cycle driving straight lays one wall
+   segment however long its trail grows. What a cap does move on that path is
+   the same second-45 event Task 4 found on the tutorial one — bump length a
+   median 12 s uncapped, 6 s at 400 units, 2 s at 150, with late p90 35.6 →
+   28.5 → 27.05 ms.
+
+   **Three confounds come with it**, all of them settings `welcome()` forces
+   for the tutorial and this path does not: the cycles run at twice the speed
+   (HUD 30.0 against 15.0), the arena is twice the linear size (multiplier 8
+   against 4), and — the one that bears on the reading above — the rounds ran
+   the shipped `CYCLE_RUBBER 1.0` and `CYCLE_DELAY .1` against the tutorial's
+   forced 5 and 0.05, so **every cycle in them could turn at most half as
+   often**. Draw calls follow turns, so the path on which trail length was
+   shown not to drive the draw count is also a path where turning is
+   rate-limited. Two more things that arm could not reach: the human is still
+   idle (gap 2), and the **shipped** configuration cannot be measured by this
+   rig at all — its rounds last 8.1 s because an idle human dies 6.5 s into an
+   AI's wall, and Task 7 records that rather than changing shipped values to
+   open its own gate.
+
 2. **The human never drives in a measured round.** The two tutorial key
    presses are sent and Task 1 proved the browser delivers them as trusted
    events — but nothing in the transcript or the screenshots shows the cycle
@@ -210,36 +245,42 @@ and the AIs'. That changes how the game plays for everyone on that build.
 *What the evidence says:* it is the only lever that moved the growth, and it
 moved it by shortening the second-45 event from 11–12 s to 4–5. It did not
 move the flat cost, it did not remove the spikes, and it removed almost no
-render work. **Its effect on the path the phone actually plays is untested**
-— that path has unlimited trails, where the cap should matter more, but "should"
-is not a measurement.
+render work. **Task 7 has now tested it on the path the phone plays, and it
+survives.** Against unlimited trails as the baseline there, `SP_WALLS_LENGTH
+150` shortens the second-45 event from a median 12 s to **2 s** (`400`: 6 s)
+and takes late p90 from **35.6 to 27.05 ms**, while moving the flat cost by
+−0.25 ms, which is inside that arm's own round-to-round spread. It did **not**
+matter more there, as "should" had it: the cap removes 8 draw calls and 1.08 KB
+of 179 per frame, because trail length is not what sets the draw count
+([`task7-posttutorial/README.md`](task7-posttutorial/README.md) §4). Two
+things to re-cost with: on that path the setting is live — the probe reads it
+back from inside a measured round — so the one-line `SP_WALLS_LENGTH` form is
+the one that applies to the phone, and the shrink pair is still what any path
+where `welcome()` runs would need.
 
 ### B. Ship nothing, and measure the post-tutorial path first
 
-*What:* one new arm on the boot path the phone uses, with `SP_WALLS_LENGTH`
-−1 (shipped) against a capped value.
+**Taken — this is Task 7** ([`task7-posttutorial/`](task7-posttutorial/README.md)).
+Re-cost as done, not as pending.
 
-*Cost to build:* `FIRST_USE 0` in the arm's config lines makes `welcome()`
-take its early-return branch (`tConfItem<bool> fu("FIRST_USE", st_FirstUse)`,
-`src/tools/tConfiguration.cpp`; `autoexec.cfg` is read before `welcome()`
-runs), which lands the client on the main menu with no tutorial — and
-therefore with **no tutorial key presses and no automatic match**, so the arm
-needs its own menu walk to start a single-player game and its own validity
-check, because `check-arm.mjs`'s current gate is "two tutorial key presses
-logged". Both have precedent in this tree: `web/tools/gameplay-gate.steps`
-walks a first-time visitor's path and `web/tools/maxfps-precedence.steps`
-already walks far enough to persist `FIRST_USE 0` and boot again. Machine
-time is small — each Task 4 run took about 3 min 20 s wall clock, so six
-rounds is well under an hour; the work is the template and the gate.
+*What it cost to build:* `web/tools/perf/posttut.steps.tmpl` (the measured
+structure on a `FIRST_USE 0` boot, with the three render settings a returning
+phone has and the two turn binds `sg_StartupPlayerMenu` would have written),
+`check-arm.mjs --posttut` (three checks on top of the existing gate: the menu
+walk, the patched `autoexec.cfg`, and a mid-round probe that saves the live
+config and reads the `SP_` values back out of it), and `run-posttut.sh`. Ten
+runs at about four minutes each, one machine, one morning.
 
-*What it buys:* the number every other option is missing. It would say
-whether the trail is a cost that grows with driving time on the real path,
-which is the maintainer's sentence, and it is the same measurement Task 5
-names as its own build-it-if.
+*What it bought:* the answer, and it is **no** — trail length is not a cost
+that grows with driving time on the real path (§5 item 1 above). It also
+bought option A its missing evidence, and it bought a *narrower* case for
+option C than the milestone had before.
 
-*What it costs:* a delay before anything ships, and it may come back saying
-the growth on that path is also the second-45 simulation event, in which case
-no trail lever helps.
+*What it did not buy, and what a next measurement would have to:* a human who
+**turns** — gap 2, and now the one that matters, because draw calls follow
+turns and a turning player is the case where they would actually grow; a phone
+(gap 3); and the **shipped** configuration, whose 8.1-second rounds this rig
+cannot measure with an idle driver at all.
 
 ### C. Ship nothing, and build display lists as M8
 
@@ -264,20 +305,30 @@ variant; the cheap variant saves the calls and not the bytes) — for every
 listed wall of every cycle, amortised over the manager's rebuilds; models are
 list-able by the same mechanism. Its ceiling is §4's unsplit 36–53 % of a
 flat late frame, and Task 5 §3 says the wall share "can only be larger" on
-the unlimited-trail path — the path no arm has measured.
+the unlimited-trail path — which Task 7 has now measured, and where it is not
+larger (below).
 
 *What the evidence says:* Task 5's own verdict is **not yet** — the growth
 this milestone measured is in the simulation, which no list touches, and the
 render-side ceiling has never been split into walls versus floor versus
 models. Task 4's result (the cap removed at most 1 KB of 179 and no draw
 calls) did not trip Task 5's no-go condition, and Task 5 was not revisited
-after it (§4).
+after it (§4). **Task 7 has now measured the path Task 5 §3 expected the wall
+share to be larger on, and it is not larger:** with trails that never expire
+the render part of the flat frame is **15.95 ms**, no worse than the
+tutorial's 16.35, the draw count is exactly **114.00 per frame from second 15
+to 44 whether the trail is capped at 150, at 400, or not at all**, and the
+render part does not grow through the round
+([`task7-posttutorial/README.md`](task7-posttutorial/README.md) §3–§4). That
+answers the "and growing" half of §4's build-it-if in the negative and makes
+this option's case weaker, not stronger; the wall-versus-floor-versus-model
+split that would answer the other half still does not exist.
 
 ## 7. Evidence weight, and the seed
 
-**About 35 MB across the four task directories** — 178 committed files, 59
+**About 49 MB across the five task directories** — 259 committed files, 93
 of them PNG (`task1-rig` 5.4 MB, `task2-repro` 6.0 MB, `task3-mechanisms`
-7.6 MB, `task4-levers` 16 MB). Every run keeps its `console.log` (the
+7.6 MB, `task4-levers` 16 MB, `task7-posttutorial` 14 MB). Every run keeps its `console.log` (the
 transcript, ending in the `[PERF]` JSON that every number here is computed
 from), its `steps.txt` (the exact script that ran, config lines included),
 its `uptime.txt` and its driver log; screenshots were trimmed to the ones

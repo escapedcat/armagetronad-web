@@ -24,10 +24,16 @@ skipped and counted under each round), `late` the five seconds before the
 human's death (ROUND_WINNER when the human outlives the round). The `gate`
 column is check-arm.mjs's verdict; an INVALID row is printed so the reader can
 see WHY it is not a number, not so it can be used.
+
+Any further arguments beginning with `--` are passed to check-arm.mjs, so a set
+that has to be judged in another mode says which:
+
+    python3 web/tools/perf/summarise.py docs/evidence/m6-lag/task7-posttutorial --posttut
 """
 import sys, os, json, re, subprocess
 
 root = sys.argv[1] if len(sys.argv) > 1 else 'docs/evidence/m6-lag/task1-rig'
+GATE_ARGS = [a for a in sys.argv[2:] if a.startswith('--')]
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESULT = re.compile(r' => ("(?:[^"\\]|\\.)*")\s*$')
 
@@ -56,10 +62,15 @@ def perf(log):
 
 
 def gate(log):
-    r = subprocess.run(['node', os.path.join(HERE, 'check-arm.mjs'), log],
+    r = subprocess.run(['node', os.path.join(HERE, 'check-arm.mjs')] + GATE_ARGS + [log],
                        capture_output=True, text=True)
     text = (r.stdout or r.stderr).strip()
-    return text.split(':')[0] if text else 'INVALID', text
+    # check-arm.mjs names its mode on the first line before it judges anything,
+    # so the verdict is the first line that IS one. (Taking text.split(':')[0]
+    # printed "check-arm.mjs" in the gate column of every row of every set.)
+    verdict = next((ln.split(':')[0] for ln in text.splitlines()
+                    if ln.startswith('VALID') or ln.startswith('INVALID')), 'INVALID')
+    return verdict, text
 
 
 def num(x, w, p):

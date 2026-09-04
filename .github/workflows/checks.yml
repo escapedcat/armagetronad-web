@@ -200,8 +200,8 @@ jobs:
           fi
           shellcheck --version
 
-      - name: shellcheck web/tools/*.sh and deps/*.sh
-        run: shellcheck web/tools/*.sh deps/*.sh
+      - name: shellcheck web/tools/*.sh, web/tools/perf/*.sh and deps/*.sh
+        run: shellcheck web/tools/*.sh web/tools/perf/*.sh deps/*.sh
 
       - name: node --check on web/tools/*.mjs
         run: |

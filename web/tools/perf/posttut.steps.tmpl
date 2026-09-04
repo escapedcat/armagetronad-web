@@ -1,0 +1,218 @@
+# The POST-TUTORIAL arm: the game the phone actually plays.
+# SAMPLER, REPORT, CONFIGLINES, TAGHERE, CPURATE are substituted by run-arm.sh (comment
+# lines are left alone). Not runnable on its own. Run it through run-arm.sh with this
+# file as the 5th argument, or through web/tools/perf/run-posttut.sh, which knows the
+# arms. Score it with `node web/tools/perf/check-arm.mjs --posttut <console.log>`:
+# the DEFAULT gate cannot tell this path from the tutorial one, and says so.
+#
+# WHY THIS TEMPLATE EXISTS. Every arm of M6 Tasks 1-4 measured the TUTORIAL match.
+# drive-browser.mjs boots a fresh browser profile, so st_FirstUse is true, so
+# welcome() (gArmagetron.cpp:269) takes its st_FirstUse branch and runs
+# sg_SinglePlayerGame() itself with six settings forced for the duration
+# (gArmagetron.cpp:375-395): speedFactor -2, autoNum 0, sizeFactor -= 2,
+# wallsLength 400, sg_rubberCycle 5, sg_delayCycle 0.05. wallsLength 400 is the
+# one that matters: it caps every trail, and it is why the draw count in every
+# measured round of Tasks 1-4 plateaus around 107. A returning visitor -- the
+# phone, on every launch after the first -- gets welcome()'s ELSE branch: a splash
+# screen, an early return, the main menu, and SP_ settings that are live, with the
+# shipped SP_WALLS_LENGTH of -1 meaning trails that never expire
+# (gGame.cpp:219, gGame.cpp:601). docs/evidence/m6-lag/README.md section 5.1 and
+# option B.
+#
+# THE CONFIG LINES THIS TEMPLATE ADDS, and the symbol each one comes from. They are
+# prefixed to the arm's own CONFIGLINES inside the autoexec.cfg patch below, so an
+# arm can override any of them by naming it again (autoexec.cfg is read top to
+# bottom and the last assignment wins).
+#
+#   FIRST_USE 0      tConfItem<bool> fu("FIRST_USE", st_FirstUse) --
+#                    tConfiguration.cpp:402. st_LoadConfig reads autoexec.cfg LAST
+#                    (tConfiguration.cpp:991), after user.cfg, settings.cfg and
+#                    default.cfg, and welcome() runs after all of it, so this is
+#                    what puts welcome() on its else branch. Note the ordering
+#                    consequence, which is wanted: default.cfg is loaded under
+#                    `if (st_FirstUse)` at tConfiguration.cpp:983, i.e. BEFORE this
+#                    line is parsed, so the shipped default.cfg (camera keys,
+#                    INGAME_MENU on Escape) still loads exactly as on any boot.
+#
+# The next three are what sr_LoadDefaultConfig() (rScreen.cpp:1007) would have set
+# and PERSISTED on a first-use boot. A returning phone HAS them in its user.cfg:
+# welcome() calls sr_LoadDefaultConfig() on the first-use path (gArmagetron.cpp:296)
+# and st_SaveConfig() writes every tConfItem back. The only other caller,
+# lowlevel_sr_InitDisplay (rScreen.cpp:854), is guarded by
+# `software_renderer && !last_software_renderer` and never fires under WebGL -- which
+# is exactly Task 1's finding that the shipped client swaps with glFinish ONLY
+# because welcome() ran. Emulating a returning visitor therefore means writing them
+# out. They are the only three of the eleven variables sr_LoadDefaultConfig touches
+# that DIFFER from their static initialisers (rScreen.cpp:978-1003 and
+# rTexture.cpp:1143 for the texture modes; checked one by one):
+#
+#   SWAP_MODE 2      rSysDep::swapMode_ = rSysDep::rSwap_glFinish (rScreen.cpp:1029).
+#                    rSwap_glFinish == 2 (rSysdep.h:38); the static default is
+#                    rSwap_glFlush == 1 (rSysdep.cpp:459). tConfItem swapModeCI,
+#                    gMenus.cpp:630. Without this line the arm would swap with
+#                    glFlush and would not be comparable with Tasks 1-4 at all.
+#   FLOOR_DETAIL 3   sr_floorDetail = rFLOOR_TWOTEXTURE (rScreen.cpp:1023).
+#                    rFLOOR_TWOTEXTURE == 3 (rScreen.h:134); the static default is
+#                    rFLOOR_TEXTURE == 2 (rScreen.cpp:984). tConfItem fd,
+#                    gMenus.cpp:169. It is floor geometry, so it is in the draw
+#                    count the gate's floor is calibrated against.
+#   TEXT_OUT 1       sr_textOut = true (rScreen.cpp:1012); the static default is
+#                    false (rScreen.cpp:999). tConfItem to, gMenus.cpp:164. It is
+#                    the HUD/console text, i.e. draw calls in every frame including
+#                    the overlay-only pre-round ones report.js measures the floor
+#                    from.
+#
+# The last two lines are NOT from sr_LoadDefaultConfig, and they are here because of
+# a hole this path has that the tutorial path does not:
+#
+#   KEYBOARD 276 PLAYER_BIND CYCLE_TURN_LEFT 1
+#   KEYBOARD 275 PLAYER_BIND CYCLE_TURN_RIGHT 1
+#                    config/keys_cursor.cfg lines 2-3, verbatim, in the SDL 1.2
+#                    keysym numbering the shipped files use; uInput.cpp's
+#                    su_TranslateSDL12Keysym (case 275/276, uInput.cpp:215-216)
+#                    converts them on read and is idempotent. keys_cursor.cfg is
+#                    loaded by exactly one caller, sg_StartupPlayerMenu
+#                    (gArmagetron.cpp:257), which FIRST_USE 0 skips -- the hazard
+#                    web/webdefaults/autoexec.cfg's closing comment records as the
+#                    reason it does not set FIRST_USE 0 itself. A real returning
+#                    visitor ran that menu once and has these two binds in their
+#                    user.cfg (they are saved: tConfItem_key::WriteVal,
+#                    uInput.cpp:271), so writing them here is what makes this arm a
+#                    returning visitor rather than a visitor with no controls. The
+#                    probe below reports the binds it finds, so the claim is checked
+#                    every run and not assumed.
+#
+# WHAT IS DELIBERATELY NOT SET: nothing else. In particular no SP_SPEED_FACTOR and
+# no SP_SIZE_FACTOR unless an arm asks for one, because the difference between the
+# value the config asked for and the value the game is actually running is the
+# gate's proof that welcome() did not touch this match.
+#
+# THE MENU WALK. With no tutorial there is no automatic match, so the arm has to
+# start one. After welcome()'s else branch returns, gArmagetron.cpp:911 calls
+# MainMenu() (gGame.cpp:2510). uMenu draws its items with the LAST-ADDED at the top
+# and starts with that one selected (uMenu.cpp:67 sets selected huge, :219 clamps it
+# to items.Len()-1; YPos(num) at :111 puts a higher index higher on the screen), and
+# SDLK_DOWN DECREMENTS the index (uMenu.cpp:432), i.e. moves down the screen. The
+# last item added to MainMenu is gamemenuitem (gGame.cpp:2717), which renders as
+# "Play Game", so it is selected at entry; the last item added to game_menu is
+# connect (gGame.cpp:2553), which renders as "Multiplayer", so one Down reaches
+# start (gGame.cpp:2549) -- rendered "Local Game", helptext "Enter the game grid!",
+# function &sg_SinglePlayerGame, the very function welcome() calls on the tutorial
+# path. Hence Enter, Down, Enter, and the two menu screenshots are named for the
+# source symbols while the pictures show those four labels. This is the walk
+# docs/evidence/phase3-touch/synthetic-key-gate.steps.asrun already recorded
+# screenshot by screenshot (synkey-02 main menu, -03 submenu, -04 cursor on Start
+# New Game, -05 round 1 driving), and web/tools/maxfps-precedence.steps uses the
+# same key: steps for the sibling branch of the same menu.
+#
+# ONE ORDERING TRAP, measured in the first run of this template: the driver records
+# a key: step AFTER dispatching keyUp and sleeping 30 ms, while the game acts on the
+# keyDown -- so the closing Enter is written to the transcript AFTER the
+# [L] NEW_ROUND it caused (23187 ms against 23221 ms in
+# docs/evidence/m6-lag/task7-posttutorial/smoke-posttut-base/console.log). A gate
+# that looks for the walk strictly "before the first NEW_ROUND" fails a good run.
+# check-arm.mjs --posttut ends its walk window at the ROUND-1-SETUP-NOT-MEASURED
+# mark below instead.
+#
+# WHY THE WAITS BEFORE THE WALK ARE BLIND. There is no console marker for "the main
+# menu is up": [PERSISTSAVE] fires on menu LEAVE (eWebPersist.cpp:114) and the
+# splash is not a uMenu at all -- it is welcome()'s own 6-second event loop
+# (gArmagetron.cpp:322-341), which ends on a timeout or on any SDL_KEYDOWN and then
+# DRAINS the input queue (gArmagetron.cpp:346), so a key pressed early is both
+# early and eaten. So: 9 s for the boot (the same 9 s arm.steps.tmpl waits for the
+# language menu), then 9 s more for the 6 s splash plus margin. m0-main-menu is the
+# picture that proves the wait was long enough, and it is also the picture the
+# tutorial path can never produce: it never shows the main menu at boot.
+#
+# THE PROBE, and what it is for. check-arm.mjs --posttut has to prove the tutorial's
+# forced settings are ABSENT, and nothing in the transcript says so on its own.
+# window.__posttut(phase) calls Module._aa_web_save_config() -- eWebPersist.cpp:205,
+# the non-yielding EMSCRIPTEN_KEEPALIVE export web/shell.html's unload backstop
+# already calls, and which synthetic-key-gate.steps.asrun already calls mid-round --
+# which runs st_SaveConfig(), which serialises every live tConfItem to
+# /persist/var/user.cfg. It then reads that file back through Module.FS and prints
+# the live values beside the ones the patched autoexec.cfg asked for. SP_WALLS_LENGTH,
+# SP_SPEED_FACTOR and SP_SIZE_FACTOR are tConfItems on singlePlayer.* (gGame.cpp:601,
+# :583, :584) and sg_currentSettings points AT singlePlayer in a single-player game,
+# so these are the very fields welcome() assigns: on the tutorial path a probe taken
+# during the match reads speed -2, size (asked - 2) and walls 400 no matter what the
+# config said. Here they must equal what was asked. The probe runs once in round 1
+# and once inside measured round 2, and the round-2 call is bracketed as r2-probe so
+# report.js drops the frames the ~22 KB serialise disturbs (69 ms, measured). The
+# round-1 call is deliberately NOT bracketed: round 1 is setup and is never a
+# measurement, and leaving its cost visible in round 1's per_second series is how a
+# reader sees what the probe costs at all.
+#
+# Everything from ROUND-1-SETUP-NOT-MEASURED onwards is arm.steps.tmpl's structure
+# unchanged: round 1 is setup and takes the throttle, rounds 2 and 3 are measured
+# with the 06/30/50 s bracketed shots, eval:REPORT at the end. THE TWO KEY PRESSES
+# IN ROUND 1 ARE NOT TUTORIAL KEYS HERE -- there is no tutorial. They are kept for
+# symmetry with arm.steps.tmpl and because check-arm.mjs counts them; with the two
+# KEYBOARD lines above they are live binds rather than the inert presses
+# arm.steps.tmpl's negative control measured, and they land in round 1, which is
+# never measured.
+wait:800
+eval:SAMPLER
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const pick=(t,k)=>{if(t===null)return null;let v=null;for(const l of t.split('\n')){const s=l.trim();if(s.indexOf(k)===0&&/\s/.test(s.charAt(k.length)))v=s.slice(k.length).trim().replace(/\s+/g,' ')}return v};const DFLT={FIRST_USE:'1',SP_WALLS_LENGTH:'-1',SP_SPEED_FACTOR:'0',SP_SIZE_FACTOR:'-3',SP_NUM_AIS:'1',SP_AUTO_AIS:'1'};const KEYS=['FIRST_USE','SP_WALLS_LENGTH','SP_SPEED_FACTOR','SP_SIZE_FACTOR','SP_NUM_AIS','SP_AUTO_AIS','MAX_FPS','SWAP_MODE','TEXT_OUT','FLOOR_DETAIL'];window.__posttut=(phase)=>{let sv;try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const a=rd('/data/webdefaults/autoexec.cfg');const c=rd('/persist/var/user.cfg');const asked={},live={},expect={};for(const k of KEYS){asked[k]=pick(a,k);live[k]=pick(c,k);expect[k]=asked[k]!==null?asked[k]:(DFLT[k]!==undefined?DFLT[k]:null)}const K=c===null?[]:c.split('\n').map(l=>l.trim().replace(/\s+/g,' ')).filter(l=>l.indexOf('KEYBOARD ')===0);const bind=(x)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+x+' 1')>0).map(l=>l.split(' ')[1]);console.log('[POSTTUT] '+JSON.stringify({phase:phase,save:sv,user_cfg_bytes:c===null?null:c.length,asked:asked,live:live,expect:expect,turn_left_bound:bind('CYCLE_TURN_LEFT'),turn_right_bound:bind('CYCLE_TURN_RIGHT')}));return 'posttut probe '+phase};return 'posttut probe installed'})()
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# perf arm TAGHERE (post-tutorial path)\nFIRST_USE 0\nSWAP_MODE 2\nFLOOR_DETAIL 3\nTEXT_OUT 1\nKEYBOARD 276 PLAYER_BIND CYCLE_TURN_LEFT 1\nKEYBOARD 275 PLAYER_BIND CYCLE_TURN_RIGHT 1\nMAX_FPS 1000\nCONFIGLINES\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})()
+eval:window.AA_START()
+until:1:90000:[BOOT] autostart
+wait:9000
+shot:m0a-splash
+wait:9000
+shot:m0-main-menu
+mark:MENU-WALK-NO-TUTORIAL-ON-THIS-PATH
+key:Enter
+wait:1800
+shot:m1-game-submenu
+key:Down:1
+wait:1200
+shot:m2-cursor-on-start-new-game
+key:Enter
+until:1:120000:[L] NEW_ROUND
+mark:ROUND-1-SETUP-NOT-MEASURED
+wait:3000
+key:Right:1
+key:Left:1
+wait:1500
+eval:__fps.shot('r1-after-keys','begin')
+shot:r1-after-keys
+eval:__fps.shot('r1-after-keys','end')
+eval:window.__posttut('round1-setup')
+cpu:CPURATE
+mark:THROTTLE-ON
+until:2:260000:[L] NEW_ROUND
+mark:ROUND-2-MEASURED
+wait:6000
+eval:__fps.shot('r2-06s','begin')
+shot:r2-06s
+eval:__fps.shot('r2-06s','end')
+eval:__fps.shot('r2-probe','begin')
+eval:window.__posttut('round2-measured')
+eval:__fps.shot('r2-probe','end')
+wait:24000
+eval:__fps.shot('r2-30s','begin')
+shot:r2-30s
+eval:__fps.shot('r2-30s','end')
+wait:20000
+eval:__fps.shot('r2-50s','begin')
+shot:r2-50s
+eval:__fps.shot('r2-50s','end')
+until:3:260000:[L] NEW_ROUND
+mark:ROUND-3-MEASURED
+wait:6000
+eval:__fps.shot('r3-06s','begin')
+shot:r3-06s
+eval:__fps.shot('r3-06s','end')
+wait:24000
+eval:__fps.shot('r3-30s','begin')
+shot:r3-30s
+eval:__fps.shot('r3-30s','end')
+wait:20000
+eval:__fps.shot('r3-50s','begin')
+shot:r3-50s
+eval:__fps.shot('r3-50s','end')
+until:3:260000:[L] ROUND_WINNER
+mark:MATCH-OVER
+wait:1000
+eval:REPORT
