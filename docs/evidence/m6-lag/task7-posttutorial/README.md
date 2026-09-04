@@ -8,7 +8,7 @@ Every arm of Tasks 1–4 measured the **tutorial match**. `drive-browser.mjs`
 boots a fresh browser profile, so `st_FirstUse` is true, so `welcome()`
 (`src/tron/gArmagetron.cpp:269`) takes its first-use branch and runs
 `sg_SinglePlayerGame()` itself with six settings forced for the duration
-(`gArmagetron.cpp:375-395`): `speedFactor = -2`, `autoNum = 0`,
+(`gArmagetron.cpp:377-397`): `speedFactor = -2`, `autoNum = 0`,
 `sizeFactor -= 2`, **`wallsLength = 400`**, `sg_rubberCycle = 5`,
 `sg_delayCycle = 0.05`, all restored afterwards. The trail cap is the one that
 shapes every render-side number in the milestone: it is why the draw count in
@@ -437,11 +437,11 @@ rule uses — the first second at or above 120 draws is **second 46** in all six
 `posttut-base` rounds and both smoke rounds. The window matters, and it matters
 asymmetrically. Below second 10 the count is above 120 in every round of every
 arm — **121.26–128.60 at second 4**, while the AIs are still entering. After
-second 57 it climbs again as the round ends, past 120 in every `posttut-base`,
-smoke and `posttut-walls400` round (121.09–131.30) but in only **one
-`posttut-walls150` round of six**: `walls150-r2` round 2, which reaches
-**120.39** in its last partial second where the other five stop at
-115.50–118.00.
+second 57 it climbs again as the round ends: in `posttut-base`, the smoke run
+and `posttut-walls400`, **every** post-57 second is above 120 (121.09–131.30
+across all of them), but in `posttut-walls150` only **one round of six** gets
+there — `walls150-r2` round 2, which reaches **120.39** in its last partial
+second, where the other five stop at 115.50–118.00.
 
 Two consequences, pointing opposite ways. Trails that never expire do **not**
 make the draw count climb: across those thirty seconds it does not move by a
