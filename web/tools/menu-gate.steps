@@ -20,6 +20,9 @@
 # load, so that rule can actually be checked -- before, Chrome logged the
 # status without the URL and Firefox logged no network events at all.
 #
+# AND, SINCE M6, ONE MORE LINE HAS TO SAY PASS: the [SPARKSGATE] D1 check below.
+# It is this gate's half of a touch-only change -- see the section comment on it.
+#
 # WHAT THIS DOES AND DOES NOT DEMONSTRATE. It demonstrates every menu input
 # path M1 can reach: Down, Up, Left/Right, Enter and Escape, each with a
 # before/after screenshot pair.
@@ -78,6 +81,29 @@
 wait:6000
 eval:(()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})()
 until:1:120000:[BOOT] autostart
+
+# ===========================================================================
+# D1: THE DESKTOP AUTOEXEC IS THE ONE THE BUILD SHIPPED.
+#
+# M6 task 8 turns the crash sparks off ON TOUCH DEVICES ONLY -- they cost about
+# a quarter of the frame while a cycle grinds a wall (17.1 ms median stock
+# against 13.1/13.6 with SPARKS 0; docs/evidence/m6-lag/task8-sparks/), and a
+# desktop is not the machine that is short of milliseconds. The page appends
+# the setting to the preloaded /data/webdefaults/autoexec.cfg at runtime rather
+# than the repo editing that file, which is what makes it conditional at all.
+#
+# So this gate owns the NEGATIVE half of that claim, and it owns it by reading
+# the file rather than by trusting the branch: the page must say it wrote
+# nothing, and the file the game parses must contain no SPARKS anywhere -- not
+# the setting, not the comment the touch path writes above it. The positive
+# half is T1b in web/tools/touch-gate.steps.
+#
+# It adds no screenshot on purpose: the PASS above is "ten screenshots, all ten
+# different", and a check about a file has nothing to show.
+# ===========================================================================
+until:1:30000:[SPARKS] stock sparks, nothing written
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/SPARKS/g)||[]).length:-1;return '[SPARKSGATE] D1 desktop-autoexec-untouched '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_occurrences:n,tail:ok?t.slice(-64):null,PASS:ok&&n===0})})()
+
 wait:5000
 mark:should-be-the-language-menu
 shot:01-language-menu
