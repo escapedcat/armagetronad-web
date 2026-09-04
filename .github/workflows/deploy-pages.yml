@@ -182,24 +182,39 @@ jobs:
       # fetch too: without them a hung connection can outlast the 10-minute
       # deadline outright, since the deadline is only checked BETWEEN
       # requests.
+      # WAIT ON ALL FIVE FILES, NOT THE WASM. The first real run of this step
+      # (run 33853765793, the four-merge morning of 2026-09-04) waited 0 s: it
+      # keyed on armagetronad.wasm, and four back-to-back deploys had produced
+      # byte-identical wasm because no source had changed, so the very first
+      # fetch matched -- while Pages was still serving the PREVIOUS html. The
+      # wire check then reported W7 "deployed bytes DIFFER: armagetronad.html",
+      # correctly. A deploy is "served" only when every published file matches
+      # what this job built; the html and the js are the ones that change when
+      # the wasm does not.
       - name: Wait for Pages to serve the new build
         if: github.event_name != 'pull_request'
         run: |
           set -euo pipefail
-          WANT=$(sha256sum web/dist-m1/armagetronad.wasm | cut -d' ' -f1)
-          echo "waiting for https://escapedcat.github.io/armagetronad-web/armagetronad.wasm to match sha256 $WANT"
+          BASE=https://escapedcat.github.io/armagetronad-web
+          FILES="armagetronad.html armagetronad.js armagetronad.wasm armagetronad.data index.html"
+          for f in $FILES; do echo "want $f sha256 $(sha256sum web/dist-m1/$f | cut -d' ' -f1)"; done
           END=$((SECONDS + 600))
           while true; do
-            GOT=$(curl -sL --connect-timeout 15 --max-time 120 https://escapedcat.github.io/armagetronad-web/armagetronad.wasm | sha256sum | cut -d' ' -f1) || GOT=transient
-            if [ "$GOT" = "$WANT" ]; then
-              echo "Pages is serving the new build (sha256 $GOT)"
+            PENDING=""
+            for f in $FILES; do
+              WANT=$(sha256sum "web/dist-m1/$f" | cut -d' ' -f1)
+              GOT=$(curl -sL --connect-timeout 15 --max-time 120 -H 'Cache-Control: no-cache' "$BASE/$f?t=$SECONDS" | sha256sum | cut -d' ' -f1) || GOT=transient
+              if [ "$GOT" != "$WANT" ]; then PENDING="$PENDING $f($GOT)"; fi
+            done
+            if [ -z "$PENDING" ]; then
+              echo "Pages is serving the new build: all 5 files match"
               break
             fi
             if [ "$SECONDS" -ge "$END" ]; then
-              echo "Pages did not start serving sha256 $WANT within 10 minutes (last saw sha256 $GOT)" >&2
+              echo "Pages did not serve the new build within 10 minutes; still stale:$PENDING" >&2
               exit 1
             fi
-            if [ "$GOT" = transient ]; then echo "transient fetch error, retrying"; fi
+            echo "still stale:$PENDING -- retrying in 20 s"
             sleep 20
           done
 
