@@ -234,17 +234,16 @@ jobs:
       # sha256sum-backed shim instead of turning into an opaque "command not
       # found" inside every one of wire-facts.sh's checks.
       #
-      # continue-on-error: TRUE, DELIBERATELY, FOR NOW. This step has never
-      # run against a real Linux deploy before this PR merges -- deploy never
-      # happens on a PR, so there is no way to exercise it for real first.
-      # gh-pages has already force-pushed by the time this step runs, and
-      # that push cannot be undone by a later step failing, so a red result
-      # here would only paint an otherwise-successful deploy red over its own
-      # brand-new check. REMOVE continue-on-error once the first real run on
-      # `main` comes back green (see the PR's Follow-up note).
+      # This step used to carry continue-on-error: true, because it could not be
+      # exercised before its first real deploy (deploy never happens on a PR) and
+      # a red result would only have painted a finished deploy red. Its first
+      # real run (33853765793) failed W7 -- correctly: the wait step had keyed on
+      # the wasm alone -- and its second (33856255947, after #25 made the wait
+      # poll all five files) passed 13 of 13 with LIVE GATE PASSED. The net came
+      # off after that green run, as #20's follow-up said it would. From here a
+      # deploy whose served bytes do not match the build is a red run.
       - name: Wire check against the live deployment
         if: github.event_name != 'pull_request'
-        continue-on-error: true
         run: |
           if ! command -v shasum >/dev/null; then
             echo "shasum not found; installing a sha256sum-backed shim (wire-facts.sh calls 'shasum -a 256')"
