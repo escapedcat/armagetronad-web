@@ -58,8 +58,11 @@ but reaches no servers. Safari is not a target.
   deployed and have been played on a real Android phone. The frame rate falls the
   longer you drive — **CPU-bound, not resolution-bound** (a ninth of the pixels felt
   identical) — and that is the open performance item: it reproduces on a throttled
-  desktop rig and no fix is chosen yet. Portrait is not supported; you get a prompt
-  to rotate. `docs/evidence/phone-round2/`.
+  desktop rig and no fix is chosen yet. Portrait raises a prompt to turn the phone
+  with a **Play in portrait** button that is remembered — portrait still looks wrong
+  today (the view is drawn at a ~131° vertical field of view) and a proper portrait
+  layout, a square game with the controls below it, is planned.
+  `docs/evidence/phone-round2/`, `docs/evidence/portrait-choice/`.
 
 ## Why
 
