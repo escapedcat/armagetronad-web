@@ -143,15 +143,18 @@ counted twice: over the whole measured span and inside the late window
 alone. `base` is Task 2's ten rounds. Every figure is computed from the
 `[PERF]` JSON at the end of each `console.log` — the same objects
 `summarise.py` prints into `table.txt` — and none is copied from a report.
+The `ratio_ms` means are printed to three decimals: the per-round values are
+two-decimal, and two of the arm means (`walls400` 1.265, `walls150` 1.095)
+sit exactly on a two-decimal tie.
 
 | arm | rounds | late ms p50 mean / worst | late p90 mean / worst | `ratio_ms` mean / worst | hitches, span mean / worst | hitches, late window mean / worst | late draws/frame mean | Δ late p50 vs `base` | Δ late p90 | Δ `ratio_ms` |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `base` (Task 2) | 10 | 28.59 / 36.1 | 37.09 / 46.4 | 1.260 / 1.63 | 14.4 / 42 | 3.2 / 11 | 171.8 | — | — | — |
-| `walls400` (control) | 6 | 27.40 / 32.1 | 34.80 / 40.6 | 1.260 / 1.57 | 5.7 / 10 | 1.3 / 2 | 160.6 | −1.19 | −2.29 | 0.000 |
-| `walls150` | 6 | 24.88 / 26.0 | 29.82 / 30.7 | 1.090 / 1.16 | 6.8 / 13 | 1.8 / 3 | 113.4 | −3.71 | −7.27 | −0.170 |
-| `nomirror` (null) | 6 | 25.07 / 27.8 | 31.07 / 37.0 | 1.160 / 1.34 | 4.7 / 8 | 1.0 / 2 | 113.8 | −3.52 | −6.02 | −0.100 |
-| `fps30` | 4 | 33.65 / 34.6 | 41.00 / 42.8 | 1.010 / 1.04 | 10.8 / 15 | 1.8 / 2 | 147.7 | +5.06 | +3.91 | −0.250 |
-| `sp-walls150-probe` | 2 | 25.40 / 26.0 | 31.65 / 32.0 | 1.150 / 1.24 | 4.5 / 6 | 1.5 / 2 | 112.7 | −3.19 | −5.44 | −0.110 |
+| `base` (Task 2) | 10 | 28.59 / 36.1 | 37.09 / 46.4 | 1.264 / 1.63 | 14.4 / 42 | 3.2 / 11 | 171.8 | — | — | — |
+| `walls400` (control) | 6 | 27.40 / 32.1 | 34.80 / 40.6 | 1.265 / 1.57 | 5.7 / 10 | 1.3 / 2 | 160.6 | −1.19 | −2.29 | +0.001 |
+| `walls150` | 6 | 24.88 / 26.0 | 29.82 / 30.7 | 1.095 / 1.16 | 6.8 / 13 | 1.8 / 3 | 113.4 | −3.71 | −7.27 | −0.169 |
+| `nomirror` (null) | 6 | 25.07 / 27.8 | 31.07 / 37.0 | 1.157 / 1.34 | 4.7 / 8 | 1.0 / 2 | 113.8 | −3.52 | −6.02 | −0.107 |
+| `fps30` | 4 | 33.65 / 34.6 | 41.00 / 42.8 | 1.010 / 1.04 | 10.8 / 15 | 1.8 / 2 | 147.7 | +5.06 | +3.91 | −0.254 |
+| `sp-walls150-probe` | 2 | 25.40 / 26.0 | 31.65 / 32.0 | 1.145 / 1.24 | 4.5 / 6 | 1.5 / 2 | 112.7 | −3.19 | −5.44 | −0.119 |
 
 Read the mean columns knowing what is inside them: a draw-spike round differs
 from a flat one by more than any of these levers moves a flat round, and the
@@ -167,7 +170,7 @@ spike round removed:
 | `fps30` | 3 of 4 | 33.5 | 40.1 | 1.00 | 10 / 2 | 179.48 |
 | `sp-walls150-probe` | 2 of 2 | 25.4 | 31.65 | 1.15 | 4.5 / 1.5 | 180.46 |
 
-"Flat" here means the round had no draw spike anywhere in its measured span
+"Flat" here means the round had no draw spike in any whole second of its measured span
 (`spike_any`, defined two tables down) — a stricter test than Task 2's
 late-window `ratio_draws`, and it moves exactly one round: `walls150-r3`
 round 3, whose spike was over before the late window opened. Task 2's
@@ -197,11 +200,13 @@ event peeks 1–2 ms above the cap (34.0–35.7 ms in seconds 45–55 of
 `fps30-r2` round 2) rather than doubling.
 
 **Draw spikes.** `spike_any` is true when the peak draws per frame in any
-second from second 10 to the end of the measured span reaches **≥ 200**
-(Task 2's late-window `ratio_draws ≥ 2` misses a spike that ends before
-second 54, and `walls150-r3` round 3 is exactly that case). `length` counts
-seconds at ≥ 150 draws; `peak ms` is the highest per-second `ms_p50` in the
-same range.
+whole second from 10 through 58 — the whole seconds inside the measured
+span; the partial last second, 59.0 s to the death at 59.1, also holds
+post-death frames and is excluded — reaches **≥ 200** (Task 2's late-window
+`ratio_draws ≥ 2` misses a spike that ends before second 54, and
+`walls150-r3` round 3 is exactly that case). `length` counts seconds at
+≥ 150 draws in the same range; `peak ms` is the highest per-second `ms_p50`
+in it.
 
 | arm | spike rounds | which | peak draws (second) | length | peak ms |
 |---|---|---|---|---|---|
@@ -249,7 +254,7 @@ lever.
 - **`fps30` — half the frames.** The plateau is pinned at the cap (33.33 ms
   median against `base`'s 23.67) and the on-screen rate is 29 fps mean over
   the late windows against 33.8. What the player gets back is steadiness:
-  `ratio_ms` 1.010 mean and 1.04 worst against 1.260 and 1.63, and the one
+  `ratio_ms` 1.010 mean and 1.04 worst against 1.264 and 1.63, and the one
   spike round the arm caught peaked at 39.5 ms against `base`'s spike rounds
   at 43.0, 45.3 and 51.6, with p90 42.8 against 42.7–46.4 — a spike that is
   no worse than a flat frame is by much. It does not remove the spikes (1 of
@@ -360,7 +365,11 @@ longer be there.
   `ms_to_first_draw_p50` exceeds the round's seconds-15–44 median by more
   than 2 ms; *mean s45–55* = the arithmetic mean of the eleven per-second
   `ms_to_first_draw_p50` values; *`spike_any`* = the maximum
-  `draws_per_frame` over seconds 10 to `measured_to_s` is ≥ 200; *length* =
-  the count of those seconds at ≥ 150; *peak ms* = the maximum `ms_p50` over
-  the same range. Per-arm means and medians are over that arm's measured
+  `draws_per_frame` over seconds 10 through 58 (the whole seconds inside the
+  measured span; the partial last second, index 59 of `per_second`, starts
+  before `measured_to_s` 59.1 and also holds post-death frames, and is
+  excluded — read to `measured_to_s` instead, it would flag `base-r2` round
+  2 and `walls150-r3` round 2 on that second alone) is ≥ 200; *length* = the
+  count of those seconds at ≥ 150; *peak ms* = the maximum `ms_p50` over the
+  same range. Per-arm means and medians are over that arm's measured
   rounds, `fps30-r3` excluded because it has none.
