@@ -179,14 +179,25 @@ found. The other two stand, and gap 2 is now the one that matters.
    is exactly **114.00 per frame in all eighteen measured rounds** — whether
    the trail is capped at 150 units, at 400, or not at all — and the plateau
    frame cost (23.30 ms), its simulation part (7.25) and its render part
-   (15.95) all sit inside Task 2's own spread (23.67 / 7.20 / 16.35). So the
+   (15.95) all sit inside Task 2's own spread (22.40–25.35 / 6.95–7.55 /
+   15.40–17.60, medians 23.675 / 7.20 / 16.35). So the
    sentence this item used to end with is withdrawn: the 107-draw plateau is
    **not** an artefact of the 400-unit cap; with the cap gone the plateau is
    114 and just as flat, because a cycle driving straight lays one wall
    segment however long its trail grows. What a cap does move on that path is
    the same second-45 event Task 4 found on the tutorial one — bump length a
-   median 13 s uncapped, 6 s at 400 units, 2 s at 150, with late p90 35.60 →
-   28.50 → 27.05 ms. Two things that arm could not reach: the human is still
+   median 12 s uncapped, 6 s at 400 units, 2 s at 150, with late p90 35.6 →
+   28.5 → 27.05 ms.
+
+   **Three confounds come with it**, all of them settings `welcome()` forces
+   for the tutorial and this path does not: the cycles run at twice the speed
+   (HUD 30.0 against 15.0), the arena is twice the linear size (multiplier 8
+   against 4), and — the one that bears on the reading above — the rounds ran
+   the shipped `CYCLE_RUBBER 1.0` and `CYCLE_DELAY .1` against the tutorial's
+   forced 5 and 0.05, so **every cycle in them could turn at most half as
+   often**. Draw calls follow turns, so the path on which trail length was
+   shown not to drive the draw count is also a path where turning is
+   rate-limited. Two more things that arm could not reach: the human is still
    idle (gap 2), and the **shipped** configuration cannot be measured by this
    rig at all — its rounds last 8.1 s because an idle human dies 6.5 s into an
    AI's wall, and Task 7 records that rather than changing shipped values to
@@ -236,8 +247,8 @@ moved it by shortening the second-45 event from 11–12 s to 4–5. It did not
 move the flat cost, it did not remove the spikes, and it removed almost no
 render work. **Task 7 has now tested it on the path the phone plays, and it
 survives.** Against unlimited trails as the baseline there, `SP_WALLS_LENGTH
-150` shortens the second-45 event from a median 13 s to **2 s** (`400`: 6 s)
-and takes late p90 from **35.60 to 27.05 ms**, while moving the flat cost by
+150` shortens the second-45 event from a median 12 s to **2 s** (`400`: 6 s)
+and takes late p90 from **35.6 to 27.05 ms**, while moving the flat cost by
 −0.25 ms, which is inside that arm's own round-to-round spread. It did **not**
 matter more there, as "should" had it: the cap removes 8 draw calls and 1.08 KB
 of 179 per frame, because trail length is not what sets the draw count

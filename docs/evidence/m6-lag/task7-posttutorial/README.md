@@ -339,10 +339,19 @@ is reported beside `posttut-base` everywhere below and is in none of its
 figures**: it is the run that proved the template, taken before the sweep, and
 n = 1.
 
+**"Measured round" means one round the `[PERF]` report measured**, and it is
+used twice below with two different populations: the **eighteen** rounds 2 and
+3 of the nine valid runs, which every figure in §3 and §4 is computed over, and
+the **fourteen** rounds 2–8 of the two `posttut-default` runs, which the report
+also measured but which the gate rejects (§2). Where the count matters the
+population is named.
+
 In all nine valid runs the same three things happened: three deaths per run,
 all of them `web_user`'s (`[L] DEATH_FRAG web_user <ai>`), no AI died in any
 measured round (every round-2 and round-3 `ROUND_WINNER` lists all seven), and
-the human died **58.79–58.82 s** after `NEW_ROUND`.
+the human died **58.79–58.85 s** after `NEW_ROUND` — 58.79–58.82 across
+`posttut-base` and the smoke run, with the four latest deaths all in the capped
+arms (`walls150-r1` round 3 at 58.85 is the latest).
 
 ### 2. The shipped configuration: eight-second rounds, which this rig cannot measure
 
@@ -407,9 +416,12 @@ expire. Three runs, and the smoke run beside them.
 † the proving run, listed for comparison and counted in no `posttut-base`
 figure anywhere below.
 
-`ms_in_swap` p50 is 0 in every window of every run and its maximum is 1.4 ms,
-so no GPU wait hides in these intervals; every sampled frame of every run ended
-in `glFinish`. KB/frame is ~179 in round 2 and ~182 in round 3 **in every arm
+`ms_in_swap` p50 is **0 in every window of all eighteen measured rounds** of
+the nine valid runs, and the largest single-window maximum among them is
+**1.7 ms** (`posttut-walls150-r1` round 2, early); across `posttut-base` and
+the smoke run alone it is 1.5, and counting the two INVALID `posttut-default`
+runs as well it is 1.8. So no GPU wait hides in these intervals, and every
+sampled frame of every run ended in `glFinish`. KB/frame is ~179 in round 2 and ~182 in round 3 **in every arm
 of this task**, so a round 2 is only comparable with a round 2.
 
 **The per-second shape: a plateau at 114, and a step at second 46.** Round 2 of
@@ -420,16 +432,21 @@ then 117.7 at second 45, **122 at second 46**, and 122 held to the end (123.7,
 128.1, 130 in the last three seconds, the end-of-round creep Task 2 records
 too). The shape is not one run's: **the plateau is exactly 114.00 in every
 second from 15 to 44 of all eighteen measured rounds of this task, in all three
-arms**, and in all six `posttut-base` rounds and both smoke rounds the first
-second at or above 120 draws is **second 46**.
+arms**, and — counted over the whole seconds 10–57, the same window §4's spike
+rule uses — the first second at or above 120 draws is **second 46** in all six
+`posttut-base` rounds and both smoke rounds. The window matters: outside it the
+count is above 120 in every round of every arm, at second 4 (121.3–129.1) while
+the AIs are still entering, and again in the partial seconds after 57 as the
+round ends.
 
 Two consequences, pointing opposite ways. Trails that never expire do **not**
 make the draw count climb: across those thirty seconds it does not move by a
 single call while every cycle's trail grows by 30 units a second. But this path
 does have something the tutorial path does not — a **step of +8 draw calls at
 second 46 that never comes back down**, where the tutorial's flat rounds step
-107 → 111 gradually over seconds 45–50 and only creep to 111.5–114.8 by their
-last second.
+107 → 111 gradually over seconds 45–50 and end with a late window (the five
+seconds before the death) of **111.46–114.82** draws; their last whole second,
+58, reads 112.66–119.25.
 
 **Against the tutorial, in one table.** Same seven AIs, same rig, same
 throttle; `posttut-base` from this task, `base` from Task 2, `walls400` from
@@ -442,33 +459,43 @@ anyway, so it is the same scene twice.
 | `SP_WALLS_LENGTH` in force | **−1, unlimited** | −1 | 400 (forced by `welcome()`) | 400 (asked for, and forced) |
 | cycle speed multiplier | **1.0** (HUD 30.0) | 1.0 | 0.5 (HUD 15.0) | 0.5 |
 | arena size multiplier | **8** (`SP_SIZE_FACTOR` 6) | 8 | 4 (6 − 2) | 4 |
+| `CYCLE_RUBBER` / `CYCLE_DELAY` | **1.0 / 0.1 s** (shipped) | 1.0 / 0.1 | 5 / 0.05 s (forced by `welcome()`) | 5 / 0.05 |
 | plateau draws/frame, s15–44 | **114.0** in 6 of 6 | 114.0 | **107.0** in 10 of 10 | **107.0** in 6 of 6 |
-| plateau ms p50, s15–44 | 22.80–23.65 (23.30) | 22.60, 23.65 | 22.40–25.35 (23.67) | 21.70–24.70 (22.52) |
-| plateau `ms_to_first_draw` | 7.20–7.30 (7.25) | 7.15, 7.35 | 6.95–7.55 (7.20) | 6.70–7.35 (6.97) |
-| plateau `ms_first_draw_to_swap` | 15.70–16.15 (15.95) | 15.50, 16.20 | 15.40–17.60 (16.35) | 14.90–17.20 (15.57) |
-| early ms p50 | 19.8–22.2 (21.4) | 21.6, 21.9 | 20.6–24.3 (22.6) | 20.5–23.1 (21.6) |
-| late ms p50 | 25.6–28.9 (25.9) | 26.1, 26.6 | 24.5–36.1 (27.2) | 24.7–32.1 (26.0) |
-| late ms p90 | 34.5–39.3 (35.6) | 34.3, 35.7 | 30.8–46.4 (35.4) | 30.7–40.6 (33.0) |
+| plateau ms p50, s15–44 | 22.80–23.65 (23.30) | 22.60, 23.65 | 22.40–25.35 (23.675) | 21.70–24.70 (22.525) |
+| plateau `ms_to_first_draw` | 7.20–7.30 (7.25) | 7.15, 7.35 | 6.95–7.55 (7.20) | 6.70–7.35 (6.975) |
+| plateau `ms_first_draw_to_swap` | 15.70–16.15 (15.95) | 15.50, 16.20 | 15.40–17.60 (16.35) | 14.90–17.20 (15.575) |
+| early ms p50 | 19.8–22.2 (21.35) | 21.6, 21.9 | 20.6–24.3 (22.55) | 20.5–23.1 (21.6) |
+| late ms p50 | 25.6–28.9 (25.95) | 26.1, 26.6 | 24.5–36.1 (27.2) | 24.7–32.1 (26.0) |
+| late ms p90 | 34.5–39.3 (35.6) | 34.3, 35.7 | 30.8–46.4 (35.35) | 30.7–40.6 (33.05) |
 | `ratio_ms` | 1.17–1.35 (1.23) | 1.21, 1.21 | 1.04–1.63 (1.19) | 1.15–1.57 (1.16) |
-| late draws/frame | 122.06–122.15 | 122.07 | 111.46–355.66 (113.53) | 113.35–255.77 (114.22) |
+| late draws/frame | 122.06–122.15 | 122.07 | 111.46–355.66 (113.525) | 113.35–255.77 (114.22) |
 | late KB/frame, rd 2 / rd 3 | 178.86–178.92 / 182.48–182.62 | 179.07 / 182.50 | 179.38–273.99 / 181.59–229.34 | 179.15–234.01 / 181.95–237.98 |
-| second-45 bump length, s | 12–14 (13) | 13, 14 | 11–14 (11) | 11–12 (11) |
-| draw-spike rounds (≥ 200 draws in a whole second 10–58) | **0 of 6** | 0 of 2 | 3 of 10 | 2 of 6 |
+| second-45 bump length, s (window below) | 11–13 (**12**) | 12, 13 | 11–14 (11) | 11–12 (11) |
+| draw-spike rounds (≥ 200 draws in one whole second from 10 on) | **0 of 6** | 0 of 2 | 3 of 10 | 2 of 6 |
 | hitches > 50 ms per span | 7–17 (10) | 6, 7 | 2–42 (8) | 2–10 (6) |
 
 Ranges are min–max over that arm's measured rounds, median in parentheses; the
 tutorial columns' wide late figures are the three and two draw-spike rounds
-inside them.
+inside them. **Two printing rules hold for every table in this document.** A
+median that falls exactly halfway between two recorded values is printed with
+one more decimal than the values themselves rather than rounded onto one side
+of the tie (so 23.675, not 23.67 or 23.68); this is Task 4's rule for its
+`ratio_ms` means, applied here to every column. And **the bump-length window is
+each column's own whole seconds**: 45–57 for this task, whose measured spans
+end at 58.79–58.85 s, and 45–58 for Tasks 2 and 4, whose spans end at
+59.07–59.13 s and whose second 58 is therefore complete. It is the same rule
+the spike test uses, and it reproduces Tasks 2 and 4's published bump lengths
+exactly (11,11,11,11,11,11,11,12,14,14 and 11,11,11,11,12,12).
 
 **Reading down that table: almost nothing changed.** Removing the trail cap,
 doubling the cycle speed and doubling the arena's linear size moved the plateau
 frame cost by less than the tutorial's own run-to-run spread (23.30 ms against
-23.67 and 22.52), moved the plateau's render part by less than half a
-millisecond (15.95 against 16.35 and 15.57), left the plateau's simulation part
-where it was (7.25 against 7.20 and 6.97) and moved the plateau draw count by
-**+7 calls, 107 → 114**. Where the flat frame is concerned this is the same
-scene at the same price. What *did* change is that the second-45 event now
-steps the draw count and leaves it stepped, that the bump lasts a median 13 s
+23.675 and 22.525), moved the plateau's render part by less than half a
+millisecond (15.95 against 16.35 and 15.575), left the plateau's simulation
+part where it was (7.25 against 7.20 and 6.975) and moved the plateau draw
+count by **+7 calls, 107 → 114**. Where the flat frame is concerned this is the
+same scene at the same price. What *did* change is that the second-45 event now
+steps the draw count and leaves it stepped, that the bump lasts a median 12 s
 instead of 11 — and that **no round on this path spiked**: the draw
 excursions that hit 3 of Task 2's 10 rounds (peaks 503, 511 and 393 at second
 49) and 2 of Task 4 `walls400`'s 6 (343 and 338) did not happen once in
@@ -478,14 +505,37 @@ the same second as Tasks 2 and 4's 45.44–45.56 — but *stops* at
 **46.69–46.96 s** in all nine, where in Tasks 2 and 4 the three round 2s whose
 limiter stayed cutting past 56 s were precisely the three round-2 draw spikes.
 
-**Two confounds to carry from here on.** The cycles run at **twice** the
-tutorial's speed (`SP_SPEED_FACTOR` 0 → multiplier 1.0, HUD 30.0, against −2 →
-0.5, HUD 15.0) and the arena is **twice the linear size** (`SP_SIZE_FACTOR`
-really is 6 here → multiplier 8; the tutorial's `sizeFactor -= 2` makes it 4,
-so four times the floor area). A cycle at twice the speed lays trail twice as
-fast and reaches a wall in half the time. Neither was varied here, so nothing
-in this task separates "the post-tutorial path" from "faster cycles in a bigger
-arena" — the columns differ by three things at once. What the table does
+**Three confounds to carry from here on**, all of them consequences of the
+same `welcome()` block, and the third bears directly on this document's own
+causal claim.
+
+1. **Speed.** The cycles run at **twice** the tutorial's speed
+   (`SP_SPEED_FACTOR` 0 → multiplier 1.0, HUD 30.0, against −2 → 0.5, HUD
+   15.0). A cycle at twice the speed lays trail twice as fast and reaches a
+   wall in half the time.
+2. **Arena.** It is **twice the linear size** (`SP_SIZE_FACTOR` really is 6
+   here → multiplier 8; the tutorial's `sizeFactor -= 2` makes it 4), so four
+   times the floor area.
+3. **Rubber and turn delay.** `welcome()` also forces `sg_rubberCycle = 5` and
+   `sg_delayCycle = 0.05` for the tutorial's duration and restores them after
+   (`gArmagetron.cpp`, the block quoted at the top of this file). `FIRST_USE 0`
+   skips that block and no arm here sets either, so every post-tutorial round
+   ran the **shipped** `CYCLE_RUBBER 1.0` and `CYCLE_DELAY .1`
+   (`config/settings.cfg:157` and `:152`, bound to those two variables by
+   `nSettingItem` at `gCycleMovement.cpp:329` and `:183`): **a fifth of the
+   tutorial's rubber, and twice its minimum time between turns.** Read from
+   the source and the shipped config file, not from a probe — the arm's probe
+   reports the four `SP_` keys and the two binds, not these. It matters here
+   more than the other two, because `CYCLE_DELAY` is a floor on how often any
+   cycle, AI or human, can turn, and this document's own reading of the draw
+   counts is that **draw calls follow turns**. A path whose cycles may turn
+   only half as often is not a neutral place to conclude that trail length
+   does not drive the draw count — it is a place where turns themselves are
+   rate-limited.
+
+None of the three was varied in this task, so nothing here separates "the
+post-tutorial path" from "faster cycles that turn less often in a bigger
+arena" — the columns differ by four things at once. What the table does
 support is narrower and more useful: **on the configuration the phone boots
 into, the flat frame costs what the tutorial's flat frame costs, and its render
 part is no worse.**
@@ -502,28 +552,30 @@ the smoke run's two are beside `posttut-base` and in none of its figures.
 |---|---|---|---|---|
 | rounds / runs | 6 / 3 | 4 / 2 | 6 / 3 | 2 / 1 |
 | plateau draws/frame, s15–44 | **114.0** | **114.0** | **114.0** | 114.0 |
-| plateau ms p50, s15–44 | 22.80–23.65 (23.30) | 23.35–23.90 (23.82) | 22.45–24.45 (23.05) | 22.60, 23.65 |
-| plateau `ms_to_first_draw` | 7.20–7.30 (7.25) | 7.20–7.30 (7.20) | 7.10–7.50 (7.22) | 7.15, 7.35 |
-| early ms p50 | 19.8–22.2 (21.4) | 21.7–23.2 (22.2) | 19.8–22.6 (21.6) | 21.6, 21.9 |
-| late ms p50 | 25.6–28.9 (**25.95**) | 23.1–24.5 (**24.15**) | 22.4–24.6 (**23.80**) | 26.1, 26.6 |
-| late ms p90 | 34.5–39.3 (**35.60**) | 26.3–29.7 (**28.50**) | 24.5–30.5 (**27.05**) | 34.3, 35.7 |
-| `ratio_ms` | 1.17–1.35 (**1.230**) | 1.03–1.13 (**1.070**) | 1.07–1.15 (**1.095**) | 1.21, 1.21 |
+| plateau ms p50, s15–44 | 22.80–23.65 (23.30) | 23.35–23.90 (23.825) | 22.45–24.45 (23.05) | 22.60, 23.65 |
+| plateau `ms_to_first_draw` | 7.20–7.30 (7.25) | 7.20–7.30 (7.20) | 7.10–7.50 (7.225) | 7.15, 7.35 |
+| early ms p50 | 19.8–22.2 (21.35) | 21.7–23.2 (22.25) | 19.8–22.6 (21.6) | 21.6, 21.9 |
+| late ms p50 | 25.6–28.9 (**25.95**) | 23.1–24.5 (**24.15**) | 22.4–24.6 (**23.8**) | 26.1, 26.6 |
+| late ms p90 | 34.5–39.3 (**35.6**) | 26.3–29.7 (**28.5**) | 24.5–30.5 (**27.05**) | 34.3, 35.7 |
+| `ratio_ms` | 1.17–1.35 (**1.23**) | 1.03–1.13 (**1.07**) | 1.07–1.15 (**1.095**) | 1.21, 1.21 |
 | late draws/frame | 122.06–122.15 | 120.02–122.05 | 114.04–114.11 | 122.07 |
 | late KB/frame, rd 2 (mean) | 178.86–178.92 (**178.90**) | 178.84–178.90 (**178.87**) | 177.78–177.85 (**177.82**) | 179.07 |
 | late KB/frame, rd 3 (mean) | 182.48–182.62 (**182.55**) | 182.49–182.53 (**182.51**) | 181.73–181.93 (**181.80**) | 182.50 |
-| second-45 bump length, s | 12–14 (**13**) | **6** in 4 of 4 | 2–3 (**2**) | 13, 14 |
-| mean `ms_to_first_draw`, s45–55 | 10.43–13.20 (10.73) | 9.25–10.23 (9.59) | 7.79–8.34 (8.02) | 10.30, 10.89 |
-| first second ≥ 120 draws | **s46**, 6 of 6 | **s51**, 4 of 4 | never, 6 of 6 | s46, 2 of 2 |
+| second-45 bump length, s (45–57) | 11–13 (**12**) | **6** in 4 of 4 | **2** in 6 of 6 | 12, 13 |
+| mean `ms_to_first_draw`, s45–55 | 10.43–13.20 (10.73) | 9.25–10.23 (9.595) | 7.79–8.34 (8.02) | 10.30, 10.89 |
+| first second ≥ 120 draws, s10–57 | **s46**, 6 of 6 | **s51**, 4 of 4 | never, 6 of 6 | s46, 2 of 2 |
 | draw-spike rounds | 0 of 6 | 0 of 4 | 0 of 6 | 0 of 2 |
 | hitches > 50 ms per span | 7–17 (10) | 6–11 (6) | 2–6 (5) | 6, 7 |
 
 Definitions are Task 4's, unchanged, so the two tasks' rows mean the same
 thing: *plateau* = the median over seconds 15–44 of that round's per-second
-series; *bump length* = the count of seconds in 45–58 whose
-`ms_to_first_draw_p50` exceeds that round's own seconds-15–44 median by more
-than 2 ms; *mean s45–55* = the arithmetic mean of those eleven per-second
-values; a *draw spike* = the maximum `draws_per_frame` over the whole seconds
-10–58 inside the measured span reaching ≥ 200. Recomputing that spike rule over
+series; *bump length* = the count of that round's **whole** seconds from 45 on
+whose `ms_to_first_draw_p50` exceeds its own seconds-15–44 median by more than
+2 ms — 45–57 here, 45–58 in Tasks 2 and 4, for the reason given under the
+previous table; *mean s45–55* = the arithmetic mean of those eleven per-second
+values; a *draw spike* = the maximum `draws_per_frame` over that round's whole
+seconds from 10 on — 10–57 here, 10–58 in Tasks 2 and 4, the same per-column
+window as the bump — reaching ≥ 200. Recomputing that spike rule over
 Tasks 2 and 4 reproduces their published counts exactly — `base` 3 of 10 with
 peaks 503, 511 and 393 at second 49, `walls400` 2 of 6, `walls150` 1 of 6 with
 a 6-second spike, `nomirror` 0 of 6, `fps30` 1 of 4 — which is why it can be
@@ -531,7 +583,8 @@ carried over here. It reproduces Task 4's *mistake* case too: reading to
 `measured_to_s` instead of to the last whole second flags `base-r2` round 2 and
 `walls150-r3` round 2 on their partial final second alone, which are the two
 rounds `task4-levers/README.md` names for exactly that reason. This task's
-spans end at 58.79–58.85 s, so its last whole second is 57.
+spans end at 58.79–58.85 s, so its last whole second is 57, where Tasks 2 and
+4's spans end at 59.07–59.13 s and theirs is 58.
 
 One printing note, following Task 4's: `posttut-walls150`'s median `ratio_ms`
 is **1.095**, the midpoint of two two-decimal per-round values, so it is
@@ -539,37 +592,53 @@ printed to three decimals rather than rounded onto one side of a tie. No two
 arms of this task tie at two decimals in any column.
 
 **The deltas, against the spread that has to swallow them.** `posttut-base`'s
-own six rounds range 3.30 ms in late `ms_p50`, 4.80 ms in late p90, 0.18 in
+own six rounds range 3.3 ms in late `ms_p50`, 4.8 ms in late p90, 0.18 in
 `ratio_ms` and 0.85 ms in the plateau; Task 2's run-to-run spread of the
 *level* was about 4 ms. Median deltas from `posttut-base`:
 
 | | Δ `walls400` | Δ `walls150` | `posttut-base`'s own round-to-round range |
 |---|---|---|---|
-| late ms p50 | −1.80 | −2.15 | 3.30 |
-| late ms p90 | −7.10 | −8.55 | 4.80 |
-| `ratio_ms` | −0.160 | −0.135 | 0.180 |
-| plateau ms p50 | +0.53 | −0.25 | 0.85 |
-| bump length, s | −7 | −11 | 2 |
-| late draws/frame | −2.07 | −8.05 | 0.09 |
+| late ms p50 | −1.80 | −2.15 | 3.3 |
+| late ms p90 | −7.10 | −8.55 | 4.8 |
+| `ratio_ms` | −0.160 | −0.135 | 0.18 |
+| plateau ms p50 | +0.525 | −0.25 | 0.85 |
+| bump length, s (45–57) | −6 | −10 | 2 |
+| mean `ms_to_first_draw` s45–55 | −1.135 | −2.710 | 2.77 |
+| late draws/frame | −2.070 | −8.045 | 0.09 |
 | late KB/frame, rd 2 | −0.03 | −1.08 | 0.06 |
 
 Those rows fall into three groups. **The non-result** is the plateau: **no cap
 changed the flat cost of a frame** in either direction, exactly as Task 4 found
 on the tutorial path. **The two results** clear the spread by a wide margin —
-the **late p90** (−8.55 ms against a 4.80 ms spread; the capped arms' worst
+the **late p90** (−8.55 ms against a 4.8 ms spread; the capped arms' worst
 frames beat the uncapped arm's *typical* worst frames) and the **bump length**,
-which is disjoint across all three arms with no overlap whatever: 12–14 s
-uncapped, exactly 6 s in every `walls400` round, 2–3 s in every `walls150`
-round. **The two that have to be stated carefully** are the late `ms_p50` delta
-(−2.15 ms) and the `ratio_ms` delta (−0.135): both are *smaller* than the base
+which is disjoint across all three arms with no overlap whatever: 11–13 s
+uncapped, exactly 6 s in every `walls400` round, exactly 2 s in every
+`walls150` round. **The two that have to be stated carefully** are the late
+`ms_p50` delta (−2.15 ms) and the `ratio_ms` delta (−0.135): both are
+*smaller* than the base
 arm's own round-to-round range, so by Task 4's rule neither is a result on its
 own — but the two sets do not overlap. All six `posttut-base` rounds are at or
 above 25.6 ms and all ten capped rounds at or below 24.6 (the smoke run's 26.1
 and 26.6 fall with the uncapped six), and the same clean separation holds for
 p90 (34.5 minimum uncapped against 30.5 maximum capped) and for `ratio_ms`
-(1.17 against 1.15). `walls400` and `walls150` are **not** separable from each
-other: 0.35 ms of median late `ms_p50` apart, overlapping in every millisecond
-column, and only their draw counts and bump lengths tell them apart.
+(1.17 against 1.15).
+
+**`walls400` against `walls150` is a narrower question, and the answer differs
+by column.** In the late-window millisecond columns they are not separable:
+0.35 ms of median late `ms_p50` apart, and their ranges overlap in `ms_p50`
+(23.1–24.5 against 22.4–24.6), p90 (26.3–29.7 against 24.5–30.5) and
+`ratio_ms` (1.03–1.13 against 1.07–1.15). But three columns *are* disjoint —
+late draws/frame (120.02–122.05 against 114.04–114.11), bump length (6 in every
+`walls400` round against 2 in every `walls150` round) and the **mean
+`ms_to_first_draw` over seconds 45–55** (9.25–10.23 against 7.79–8.34, a
+−1.575 ms median gap). That last one is Task 4's own ranking metric, and its
+being disjoint here supports an ordering of the two caps *on the simulation
+part during the event* — 150 units costs less pre-draw time in seconds 45–55
+than 400 does, in 6 rounds against 4, with no overlap. It does **not** support
+a claim that a player would feel the difference: the frame time the player
+actually gets, in the window where the two are compared, is the column where
+they overlap.
 
 **Draw calls follow turns, not trail length — three independent ways.** First,
 the plateau: seconds 15 to 44 read exactly 114.00 draws per frame in all
@@ -584,11 +653,15 @@ round 2 (177.82 against 178.90) and 0.75 KB less in round 3** — under 1 KB of
 179, for two thirds of the visible trail removed, the same result Task 4 got on
 the tutorial path through a different setting. Third, the shape of the
 difference: it is not a slope but a **step at the second-45 event**, and the cap
-moves *when the step arrives*, not how fast anything grows — 114 → 122 at
-second 46 with no cap (6 of 6 rounds, and both smoke rounds), 114 → 120
-arriving at second 51 with the 400 cap (4 of 4, five seconds later), and never
-reaching 120 at all with the 150 cap (6 of 6: it lifts to 116–118 for four to
-eight seconds around seconds 45–52 and falls back to 114 by second 53).
+moves *when the step arrives*, not how fast anything grows. Counted over the
+whole seconds 10–57: 114 → 122 at second 46 with no cap (6 of 6 rounds, and
+both smoke rounds), 114 → 120 arriving at second 51 with the 400 cap (4 of 4,
+five seconds later), and **never reaching 120 with the 150 cap** (6 of 6).
+What the 150 cap does instead is smaller and not uniform: in **4 of its 6
+rounds** the count lifts to 116–118.4 for **four or five seconds** inside
+seconds 47–51 and is back at 114 by second 53; in the other two
+(`walls150-r1` and `-r3`, both round 3) it never exceeds **114.9** after second
+44 at all.
 **The 400-unit cap and no cap at all draw essentially the same scene** — 2 calls
 and 0.03 KB per frame apart — and only the 150-unit cap moves the count, by 8
 calls and 1.08 KB.
@@ -596,29 +669,32 @@ calls and 1.08 KB.
 ### 5. The verdict on option B's question
 
 **No: on the path the phone actually plays, trail length is not a cost that
-grows with driving time.** For thirty consecutive seconds of every one of
+grows with driving time.** For thirty consecutive seconds of every one of the
 eighteen measured rounds the draw count is exactly 114.0 per frame and the
 frame costs 22.45–24.45 ms — with trails that never expire, at twice the
 tutorial's speed — and capping the trail at 400 or at 150 units moves that flat
-cost by less than the base arm's own round-to-round spread (+0.53 and −0.25 ms
+cost by less than the base arm's own round-to-round spread (+0.525 and −0.25 ms
 against 0.85). What a cap does move is the **second-45 event**, the same event
-Task 2 found and Task 3 attributed to the simulation: it lasts a median 13 s
-uncapped, 6 s at 400 units and 2 s at 150, and the worst frames come down with
-it (late p90 median 35.60 → 28.50 → 27.05 ms, a delta well clear of the 4.80 ms
-spread). **So the trail cap is worth what Task 4 said it was worth, for the
-reason Task 4 gave — it shortens the event, it does not remove render work —
-and option A's "its effect on the path the phone actually plays is untested"
-caveat is now tested and survives.**
+Task 2 found and Task 3 attributed to the simulation — a median 12 s uncapped,
+6 s at 400 units and 2 s at 150, with the worst frames coming down with it
+(late p90 median 35.6 → 28.5 → 27.05 ms, well clear of the 4.8 ms spread) — so
+**the trail cap is worth what Task 4 said it was worth, for the reason Task 4
+gave, and option A's "its effect on the path the phone actually plays is
+untested" caveat is now tested and survives.**
 
 What this cannot say, and no reading of it should. The human is idle in every
 one of these rounds — Task 1's caveat is unchanged: nothing here shows the
 cycle ever turned, and a player who turns often adds wall segments, which is
-precisely the case where draw calls, following turns, *would* grow. These are
+precisely the case where draw calls, following turns, *would* grow. Turning is
+also **rate-limited differently here**: these rounds ran the shipped
+`CYCLE_DELAY .1` against the tutorial's forced 0.05, so every cycle in them may
+turn at most half as often (§3, confound 3). These are
 one desktop's milliseconds under a 6× CPU throttle at a phone's pixel count,
 not a phone's, and the machine was loaded throughout (1-minute load 9.44–27.41,
 a Time Machine backup running the whole time). And n is 6, 4 and 6 rounds from
 3, 2 and 3 runs: enough for a bump-length ordering with no overlap, not enough
-to rank two arms that overlap in every millisecond column.
+to rank two capped arms that overlap in every late-window millisecond column
+(§4).
 
 ### 6. What this changes in the package
 
