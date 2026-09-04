@@ -1,0 +1,140 @@
+Task 8 (SPARKS 0) comparisons, computed from the [PERF] JSON that ends each
+console.log named below -- every input file is committed in this tree.
+
+  ms      = the frame interval's p50 in that window, MAX_FPS 1000, CPU throttle 6x
+  pre     = ms_to_first_draw_p50   (the yield, input, the simulation, render setup)
+  ren     = ms_first_draw_to_swap_p50 (render submission)
+  draws   = draws_per_frame, the mean over the window
+  free    = seconds 8-17 of the grind arm's round (driving in the open)
+  rim     = seconds 20-59 of the same round (held against the wall)
+  a median or a maximum over a window is over that window's PER-SECOND series,
+  so "max 20.3 ms" is the worst SECOND's p50, not the worst single frame
+  (the worst single frames are raw_ms_max in table.txt)
+  spike round = peak draws/frame over whole seconds 10-58 >= 200, Task 2's definition
+  flat round  = the same peak below 200
+
+== GRIND: free s8-17 | rim s20-59 (ms p50 / draws / pre-draw / render) ==
+grind              free ms 11.1 dr 53.0 pre 5.9 ren 5.1 | rim ms 17.1 (max 20.3) dr 113.3 (max 171.2) pre 9.4 ren 7.6
+grind-r2           free ms 11.4 dr 53.0 pre 6.0 ren 5.2 | rim ms 14.0 (max 18.3) dr 60.0 (max 173.6) pre 8.5 ren 5.5
+grind-nosparks-r1  free ms 10.5 dr 53.0 pre 5.8 ren 4.7 | rim ms 13.1 (max 13.8) dr 60.0 (max 60) pre 8.3 ren 4.8
+grind-nosparks-r2  free ms 10.7 dr 53.0 pre 5.8 ren 4.9 | rim ms 13.6 (max 15) dr 60.0 (max 60) pre 8.4 ren 5.2
+
+== SPIKES per measured round: peak draws s10-58 | secs>=150 | late p50/p90 | hitches ==
+-- tutorial base (Task 2)
+   base-r1                rd2 peak  503.3 secs>=150 13 late p50  33.1 p90  42.7 hitches  23 | s45-58 draws [122, 215, 321, 422, 503, 497, 476, 478, 482, 490, 480, 395, 296, 208]
+   base-r1                rd3 peak  114.8 secs>=150  0 late p50  24.5 p90  30.8 hitches   7 | s45-58 draws [109, 107, 107, 107, 110, 111, 111, 111, 111, 111, 111, 112, 113, 114]
+   base-r2                rd2 peak  119.2 secs>=150  0 late p50  25.8 p90  34.5 hitches   6 | s45-58 draws [109, 107, 107, 109, 110, 111, 111, 111, 111, 111, 111, 113, 115, 119]
+   base-r2                rd3 peak  114.8 secs>=150  0 late p50  24.8 p90  31.7 hitches   2 | s45-58 draws [109, 107, 107, 107, 108, 109, 111, 111, 111, 111, 111, 112, 113, 114]
+   base-r3                rd2 peak  114.4 secs>=150  0 late p50  27.0 p90  36.2 hitches   9 | s45-58 draws [109, 107, 107, 109, 111, 111, 111, 111, 111, 111, 111, 111, 111, 114]
+   base-r3                rd3 peak  112.7 secs>=150  0 late p50  25.1 p90  31.7 hitches   8 | s45-58 draws [109, 107, 107, 107, 107, 110, 111, 111, 111, 111, 111, 111, 111, 112]
+   base-r4                rd2 peak  510.6 secs>=150 13 late p50  34.1 p90  45.6 hitches  32 | s45-58 draws [125, 230, 341, 438, 510, 497, 475, 472, 478, 476, 456, 374, 284, 204]
+   base-r4                rd3 peak  392.6 secs>=150 13 late p50  36.1 p90  46.4 hitches  42 | s45-58 draws [119, 201, 294, 360, 392, 365, 297, 281, 288, 299, 293, 249, 205, 159]
+   base-r5                rd2 peak  117.3 secs>=150  0 late p50  27.4 p90  34.5 hitches   7 | s45-58 draws [109, 108, 109, 110, 111, 111, 111, 111, 111, 111, 111, 114, 115, 117]
+   base-r5                rd3 peak  115.7 secs>=150  0 late p50  28.0 p90  36.8 hitches   8 | s45-58 draws [109, 107, 107, 110, 111, 111, 111, 111, 111, 111, 111, 112, 113, 115]
+   spike rounds (peak >= 200): 3 of 10
+-- tutorial SPARKS 0 (task8)
+   tut-nosparks-r1        rd2 peak  116.9 secs>=150  0 late p50  24.7 p90  31.0 hitches   4 | s45-58 draws [109, 108, 110, 111, 111, 111, 111, 111, 111, 111, 111, 113, 114, 116]
+   tut-nosparks-r1        rd3 peak  117.2 secs>=150  0 late p50  25.0 p90  31.1 hitches   4 | s45-58 draws [109, 108, 110, 111, 111, 111, 111, 111, 111, 111, 111, 114, 115, 117]
+   tut-nosparks-r2        rd2 peak  114.7 secs>=150  0 late p50  25.5 p90  32.2 hitches   7 | s45-58 draws [109, 107, 107, 109, 110, 111, 111, 111, 111, 111, 111, 112, 113, 114]
+   tut-nosparks-r2        rd3 peak  115.4 secs>=150  0 late p50  24.3 p90  31.0 hitches   3 | s45-58 draws [109, 107, 107, 110, 111, 111, 111, 111, 111, 111, 111, 112, 113, 115]
+   tut-nosparks-r3        rd2 peak  114.8 secs>=150  0 late p50  24.3 p90  32.6 hitches   5 | s45-58 draws [109, 107, 107, 107, 108, 109, 110, 111, 111, 111, 111, 111, 111, 114]
+   tut-nosparks-r3        rd3 peak  115.3 secs>=150  0 late p50  25.9 p90  31.6 hitches   7 | s45-58 draws [109, 107, 107, 110, 111, 111, 111, 111, 111, 111, 111, 112, 113, 115]
+   tut-nosparks-r4        rd2 peak  117.0 secs>=150  0 late p50  26.4 p90  34.2 hitches   9 | s45-58 draws [109, 108, 109, 109, 110, 111, 111, 111, 111, 111, 111, 113, 115, 117]
+   tut-nosparks-r4        rd3 peak  115.1 secs>=150  0 late p50  24.9 p90  29.4 hitches   2 | s45-58 draws [109, 107, 108, 112, 113, 113, 113, 113, 113, 113, 113, 113, 113, 115]
+   tut-nosparks-r5        rd2 peak  118.0 secs>=150  0 late p50  25.0 p90  30.8 hitches   3 | s45-58 draws [109, 108, 109, 110, 111, 111, 111, 111, 111, 111, 111, 113, 115, 117]
+   tut-nosparks-r5        rd3 peak  114.7 secs>=150  0 late p50  26.3 p90  33.0 hitches   5 | s45-58 draws [109, 107, 107, 108, 109, 110, 111, 111, 111, 111, 111, 112, 113, 114]
+   spike rounds (peak >= 200): 0 of 10
+-- posttut base (Task 7)
+   posttut-base-r1        rd2 peak  123.7 secs>=150  0 late p50  25.6 p90  35.4 hitches   9 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 123]
+   posttut-base-r1        rd3 peak  123.7 secs>=150  0 late p50  26.0 p90  34.5 hitches  12 | s45-58 draws [116, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 123]
+   posttut-base-r2        rd2 peak  124.1 secs>=150  0 late p50  25.9 p90  35.8 hitches   9 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 124]
+   posttut-base-r2        rd3 peak  123.5 secs>=150  0 late p50  26.7 p90  37.1 hitches   7 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 123]
+   posttut-base-r3        rd2 peak  123.9 secs>=150  0 late p50  25.6 p90  35.4 hitches  11 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 123]
+   posttut-base-r3        rd3 peak  124.0 secs>=150  0 late p50  28.9 p90  39.3 hitches  17 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 124]
+   spike rounds (peak >= 200): 0 of 6
+-- posttut SPARKS 0 (task8)
+   posttut-nosparks-r1    rd2 peak  123.9 secs>=150  0 late p50  27.1 p90  36.6 hitches  11 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 123]
+   posttut-nosparks-r1    rd3 peak  123.3 secs>=150  0 late p50  25.8 p90  34.8 hitches   9 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 123]
+   posttut-nosparks-r2    rd2 peak  123.6 secs>=150  0 late p50  25.8 p90  36.5 hitches  10 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 123]
+   posttut-nosparks-r2    rd3 peak  123.8 secs>=150  0 late p50  28.1 p90  38.7 hitches   9 | s45-58 draws [117, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 123]
+   spike rounds (peak >= 200): 0 of 4
+
+== FLAT ROUNDS ONLY (peak draws s10-58 < 200): late window, pooled ==
+-- tutorial base (Task 2): n=7 flat rounds
+   late ms_p50 med 25.8 range 24.5-28
+   late ms_p90 med 34.5 range 30.8-36.8
+   late pre    med 8.8 range 8.1-9.3
+   late render med 16.7 range 15.4-18.7
+   late draws  med 112.72 range 111.46-114.82
+   hitches>50ms med 7 range 2-9
+-- tutorial SPARKS 0 (task8): n=10 flat rounds
+   late ms_p50 med 25.0 range 24.3-26.4
+   late ms_p90 med 31.35 range 29.4-34.2
+   late pre    med 8.35 range 8.1-8.7
+   late render med 16.6 range 15.7-17.5
+   late draws  med 113.17 range 112.08-114.15
+   hitches>50ms med 4.5 range 2-9
+
+== PRE-DRAW (simulation) PER SECOND, s40-56, median over flat rounds ==
+-- tutorial base (Task 2), flat rounds (n=7)
+   s40-56 pre: [7.5, 7.2, 7.2, 7.1, 7.2, 12.1, 13, 13.1, 11.9, 11.5, 11.2, 10.8, 10.9, 10.9, 11.1, 11, 7.8]
+   s40-56 ms : [25.3, 23.7, 24.6, 24.1, 23.4, 28, 30, 30.7, 28.2, 28.9, 27.3, 28.5, 27.7, 28.6, 28.1, 28.9, 25.2]
+   s40-56 ren: [17.7, 16.4, 17.2, 16.8, 16.2, 16.8, 16.5, 16.8, 17, 17.6, 16.6, 17.2, 16.7, 17.2, 17.1, 17.1, 16.4]
+-- tutorial SPARKS 0 (task8), all rounds (n=10)
+   s40-56 pre: [7.2, 7.2, 7.2, 7.4, 7.3, 12.2, 12.6, 12.4, 10.8, 10.8, 10.6, 10.6, 10.6, 10.6, 10.6, 10.1, 7.4]
+   s40-56 ms : [24.3, 23.9, 23.8, 24.1, 23.8, 28.6, 29.4, 29.1, 27.9, 27.5, 27.1, 27.3, 27.1, 27.2, 27.0, 26.3, 24.1]
+   s40-56 ren: [16.9, 16.6, 16.5, 16.8, 16.6, 16.6, 16.6, 16.6, 16.7, 16.4, 16.4, 16.6, 16.6, 16.4, 16.5, 16.4, 16.6]
+
+== PLATEAU s15-44 and late window: posttut base (Task 7) vs posttut SPARKS 0 (task8) ==
+-- posttut base (Task 7) (n=6 measured rounds)
+   posttut-base-r1        rd2 plateau ms 23.6 pre 7.3 ren 16.1 draws 114.0 | late p50 25.6 p90 35.4 pre 9.4 ren 16.1 draws 122.15 hitches 9
+   posttut-base-r1        rd3 plateau ms 22.8 pre 7.2 ren 15.7 draws 114.0 | late p50 26 p90 34.5 pre 10.4 ren 15.4 draws 122.09 hitches 12
+   posttut-base-r2        rd2 plateau ms 23.4 pre 7.3 ren 15.9 draws 114.0 | late p50 25.9 p90 35.8 pre 9.7 ren 16.2 draws 122.14 hitches 9
+   posttut-base-r2        rd3 plateau ms 23.2 pre 7.2 ren 15.9 draws 114.0 | late p50 26.7 p90 37.1 pre 9.8 ren 16.9 draws 122.06 hitches 7
+   posttut-base-r3        rd2 plateau ms 23.6 pre 7.3 ren 16.1 draws 114.0 | late p50 25.6 p90 35.4 pre 9.4 ren 16 draws 122.09 hitches 11
+   posttut-base-r3        rd3 plateau ms 23.1 pre 7.2 ren 15.9 draws 114.0 | late p50 28.9 p90 39.3 pre 11.3 ren 17.2 draws 122.13 hitches 17
+   MEDIAN plateau ms 23.3 (22.8-23.6) pre 7.25 (7.2-7.3) ren 15.9 (15.7-16.1) draws 114.0 (114.0-114.0)
+   MEDIAN late    p50 25.95 (25.6-28.9) p90 35.6 (34.5-39.3) pre 9.75 (9.4-11.3) ren 16.15 (15.4-17.2) draws 122.11 (122.06-122.15) hitches 10.0 (7-17)
+-- posttut SPARKS 0 (task8) (n=4 measured rounds)
+   posttut-nosparks-r1    rd2 plateau ms 24.4 pre 7.5 ren 16.9 draws 114.0 | late p50 27.1 p90 36.6 pre 10.1 ren 16.9 draws 122.16 hitches 11
+   posttut-nosparks-r1    rd3 plateau ms 23.2 pre 7.3 ren 16.0 draws 114.0 | late p50 25.8 p90 34.8 pre 9.4 ren 16.3 draws 122.05 hitches 9
+   posttut-nosparks-r2    rd2 plateau ms 23.4 pre 7.3 ren 16.0 draws 114.0 | late p50 25.8 p90 36.5 pre 9.6 ren 16.1 draws 122.09 hitches 10
+   posttut-nosparks-r2    rd3 plateau ms 23.9 pre 7.3 ren 16.4 draws 114.0 | late p50 28.1 p90 38.7 pre 11.3 ren 16.6 draws 122.22 hitches 9
+   MEDIAN plateau ms 23.65 (23.2-24.4) pre 7.3 (7.3-7.5) ren 16.2 (16.0-16.9) draws 114.0 (114.0-114.0)
+   MEDIAN late    p50 26.45 (25.8-28.1) p90 36.55 (34.8-38.7) pre 9.85 (9.4-11.3) ren 16.45 (16.1-16.9) draws 122.12 (122.05-122.22) hitches 9.5 (9-11)
+
+== GRIND per-second detail, rim window s20-59 (draws, then render p50) ==
+-- grind: 29 of 40 rim seconds draw more than 60/frame; 21 at 100 or more
+   draws : [65, 77.2, 105.9, 134, 160.6, 153.5, 125.0, 95.6, 68.7, 60, 60, 60, 60, 60, 62.1, 89.6, 120.8, 148.7, 171.2, 171.1, 166.5, 166.2, 167.0, 167.7, 167.6, 166.3, 165.9, 165.6, 166.2, 167.5, 153.1, 127.2, 99.4, 72.0, 60, 60, 60, 60, 60, 60]
+   render: [5.6, 6.5, 7.4, 8.3, 10.3, 10, 8, 7.2, 6.3, 6.7, 6.5, 6.1, 5.8, 5.5, 5.8, 6.5, 7.7, 9.5, 10, 9.3, 9.1, 9.2, 9.6, 9.2, 9.1, 9.1, 9.9, 9.2, 9.1, 9.3, 8.8, 8.2, 7.3, 6.2, 5.9, 6.1, 5.7, 5.6, 6.3, 6.4]
+   ms    : [14.9, 16.2, 17, 17.4, 19.9, 20.3, 17.4, 16.6, 15.9, 16.5, 16.1, 15.8, 14.7, 14.6, 15.3, 15.6, 17.3, 19.4, 19.9, 18.7, 18.8, 18.4, 19.5, 18.5, 18.9, 18.5, 19.7, 18.8, 18.6, 18.9, 18.2, 17.4, 16.9, 15.3, 15.1, 15.3, 14.5, 14.6, 15.6, 15.8]
+   pre   : [8.9, 9.5, 9.6, 9.2, 9.9, 10.3, 9.4, 9.2, 9.5, 9.8, 9.3, 9.5, 8.8, 9, 9.3, 9, 9.5, 9.9, 10, 9.4, 9.5, 9.5, 9.8, 9.1, 9.6, 9.7, 9.7, 9.4, 9.3, 9.7, 9.2, 9.2, 9.4, 8.9, 9.1, 9.1, 8.6, 8.9, 9.3, 9.2]
+-- grind-r2: 11 of 40 rim seconds draw more than 60/frame; 6 at 100 or more
+   draws : [85.9, 102, 102, 98.3, 68.1, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 64.0, 96.9, 121.0, 149.3, 171.3, 173.6]
+   render: [5.6, 6.5, 7.2, 6.3, 5.1, 5.1, 5.4, 5.3, 5.3, 5, 5.2, 5.6, 4.9, 4.8, 5, 5, 4.7, 4.9, 5, 5.5, 5.3, 5.1, 4.9, 5.2, 5.5, 5.4, 5.3, 5.8, 6, 6.3, 6.3, 6.9, 7, 6.9, 7.5, 7.3, 7.8, 8.7, 8.7, 8.9]
+   ms    : [14.5, 14.9, 16.2, 15.3, 13.5, 13.2, 13.7, 13.5, 13.4, 13.4, 13.8, 14, 12.8, 12.9, 13, 13.7, 12.9, 13.6, 13.4, 13.8, 13.7, 13.3, 13.2, 13.6, 14.2, 14.1, 14, 14.9, 15.5, 15.9, 15.5, 16.6, 16.5, 16.5, 17.3, 16.5, 17.6, 18.3, 17.7, 18.2]
+   pre   : [8.5, 8.5, 8.9, 8.7, 8.3, 8.1, 8.3, 8.3, 8.4, 8.2, 8.5, 8.5, 8, 8, 8, 8.6, 8, 8.4, 8.1, 8.3, 8.5, 8.1, 8.2, 8.4, 8.4, 8.6, 8.5, 9.1, 9.3, 9.3, 9.4, 9.7, 9.7, 9.6, 10, 9.3, 9.6, 9.6, 9, 9.3]
+-- grind-nosparks-r1: 0 of 40 rim seconds draw more than 60/frame; 0 at 100 or more
+   draws : [60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60]
+   render: [4.9, 4.9, 4.7, 4.9, 4.9, 5.1, 5, 5.1, 5, 5, 5.2, 5, 4.6, 4.6, 4.8, 4.7, 4.6, 4.8, 4.8, 5, 4.9, 4.9, 5, 4.7, 4.8, 4.8, 4.7, 4.5, 4.7, 4.7, 4.8, 4.9, 4.9, 4.9, 5.2, 4.7, 4.8, 4.7, 4.5, 4.8]
+   ms    : [13.5, 13.3, 13.3, 13.1, 13.5, 13.5, 13.4, 13.8, 13.5, 13.3, 13.7, 13.4, 13.1, 13, 13.4, 12.7, 12.8, 13.2, 13.1, 13.1, 13.2, 13.4, 13.4, 12.9, 12.9, 13.1, 13.1, 12.7, 12.8, 13.1, 13.2, 13.3, 12.9, 12.9, 13.4, 12.7, 13.1, 12.4, 12.4, 12.9]
+   pre   : [8.7, 8.3, 8.5, 8.2, 8.7, 8.3, 8.5, 8.5, 8.4, 8.3, 8.4, 8.5, 8.3, 8.4, 8.4, 7.9, 8.1, 8.3, 8.1, 8.1, 8.2, 8.1, 8.3, 8.1, 8.1, 8.4, 8.3, 8, 8.3, 8.3, 8.2, 8.2, 8.1, 8.3, 8.3, 7.9, 8, 7.7, 8, 8.2]
+-- grind-nosparks-r2: 0 of 40 rim seconds draw more than 60/frame; 0 at 100 or more
+   draws : [60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60]
+   render: [5.3, 5.2, 5.1, 5.6, 5.1, 5.2, 5.3, 5, 5.3, 5.5, 5.3, 5.1, 5, 4.9, 4.7, 5.1, 4.9, 5, 5.1, 5.2, 5.1, 5.6, 5.8, 5.5, 5.1, 5.1, 5, 5, 5.6, 5.7, 5.3, 5.7, 5.8, 5.5, 5.6, 5.4, 5.2, 5.2, 5.4, 5]
+   ms    : [14.5, 13.6, 13.5, 14.3, 13.9, 13.8, 13.7, 13.8, 13.7, 13.7, 13.6, 13.3, 13.1, 13.2, 13, 13.4, 13, 13.5, 13.3, 13.3, 13.5, 14.7, 14.5, 14.2, 13.5, 13.5, 13.1, 13.3, 14.7, 15, 14, 14.9, 14.7, 14.3, 14.1, 13.9, 13.4, 13.5, 13.8, 13.3]
+   pre   : [8.9, 8.4, 8.5, 8.8, 8.6, 8.4, 8.5, 8.5, 8.3, 8.1, 8.4, 8.3, 8.2, 8.2, 8.2, 8.2, 8.2, 8.4, 8.1, 8.1, 8.2, 8.8, 8.7, 8.5, 8.3, 8.3, 8, 8.2, 8.7, 9, 8.7, 8.9, 8.6, 8.7, 8.6, 8.3, 8.2, 8.3, 8.6, 8.1]
+
+== THE SAME-SECOND SOUND MARKER in round 2 (Task 2 README, 'a same-second marker') ==
+-- tutorial base (Task 2)
+   base-r1                round 2 spike: STARTED 45.56s (14), stopped 56.92s (8), STARTED 58.84s (12), stopped 62.88s (8)   [16 limiter lines in the run, budget se_limiterBudget 16]
+   base-r2                round 2 flat : STARTED 45.47s (12), stopped 47.08s (8), STARTED 58.81s (13), stopped 62.91s (8)   [16 limiter lines in the run, budget se_limiterBudget 16]
+   base-r3                round 2 flat : STARTED 45.46s (12), stopped 47.08s (8), STARTED 58.8s (12), stopped 61.1s (8)   [16 limiter lines in the run, budget se_limiterBudget 16]
+   base-r4                round 2 spike: STARTED 45.5s (13), stopped 56.94s (8), STARTED 58.77s (12), stopped 60.32s (7)   [16 limiter lines in the run, budget se_limiterBudget 16]
+   base-r5                round 2 flat : STARTED 45.45s (12), stopped 47.34s (8), STARTED 58.83s (12), stopped 60.32s (7)   [16 limiter lines in the run, budget se_limiterBudget 16]
+-- tutorial SPARKS 0 (task8)
+   tut-nosparks-r1        round 2 flat : STARTED 45.48s (12), stopped 47.35s (8), STARTED 58.84s (12), stopped 60.35s (7)   [16 limiter lines in the run, budget se_limiterBudget 16]
+   tut-nosparks-r2        round 2 flat : STARTED 45.48s (12), stopped 47.07s (8)   [16 limiter lines in the run, budget se_limiterBudget 16]
+   tut-nosparks-r3        round 2 flat : STARTED 45.48s (12), stopped 47.07s (8)   [16 limiter lines in the run, budget se_limiterBudget 16]
+   tut-nosparks-r4        round 2 flat : STARTED 45.46s (12), stopped 47.31s (8), STARTED 58.83s (12), stopped 60.35s (7)   [16 limiter lines in the run, budget se_limiterBudget 16]
+   tut-nosparks-r5        round 2 flat : STARTED 45.46s (12), stopped 47.31s (8), STARTED 58.81s (12), stopped 60.33s (7)   [16 limiter lines in the run, budget se_limiterBudget 16]
