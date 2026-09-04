@@ -136,9 +136,10 @@ Task 3 identified — the pre-draw (simulation) part that actually grows:
 line added to each of three earlier arms). At the wall, counting whole seconds
 20–59 of each grind run: with sparks **40 of 80 rim seconds draw more than 60
 calls per frame**, without, **0 of 80**. In the arm whose cycle actually
-sparked for most of its window the median rim second falls **17.1 → 13.1 ms**
-and the worst **20.3 → 13.8**; in the arm that sparked in 11 of its 40 rim
-seconds, 14.0 → 13.6 and 18.3 → 15.0. End-of-round spikes: **0 of 10 rounds
+sparked for most of its window (29 of its 40 rim seconds) the median rim
+second falls **17.15 → 13.1 ms** and the worst **20.3 → 13.8**; in the arm
+that sparked in 11 of its 40 rim seconds, 14.0 → 13.65 and 18.3 → 15.0 — so
+−23.6 % and −2.5 % at the median, −32 % and −18 % at the worst second. End-of-round spikes: **0 of 10 rounds
 against 3 of 10** (§2). What it does not move: the pre-draw part still rises
 +2.5/+2.6 ms at the wall (mechanism 2 intact), the second-45 event is
 unchanged, and a flat round's late window is unchanged — sparks cost nothing
@@ -383,10 +384,11 @@ milestone measured. The build-it-if is unchanged and still unmeasured.
 
 ## 7. Evidence weight, and the seed
 
-**About 60 MB across the six task directories** — 322 committed files, 113
-of them PNG (`task1-rig` 5.4 MB, `task2-repro` 6.0 MB, `task3-mechanisms`
-7.6 MB, `task4-levers` 16 MB, `task7-posttutorial` 14 MB, `task8-sparks`
-11 MB, of which the two browser gates are 0.9). Every run keeps its `console.log` (the
+**About 60 MB across the six task directories** — **320 committed files in
+them** (322 counting this document and the pricing note), 113 of them PNG
+(`task1-rig` 5.4 MB, `task2-repro` 6.0 MB, `task3-mechanisms` 7.6 MB,
+`task4-levers` 16 MB, `task7-posttutorial` 14 MB, `task8-sparks` 11 MB, of
+which the two browser gates are 0.9). Every run keeps its `console.log` (the
 transcript, ending in the `[PERF]` JSON that every number here is computed
 from), its `steps.txt` (the exact script that ran, config lines included),
 its `uptime.txt` and its driver log; screenshots were trimmed to the ones

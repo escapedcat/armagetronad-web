@@ -2,7 +2,7 @@
 
 **Nine runs and one setting. The two `crash_sparks` guards in `gCycle.cpp` are
 about a quarter of the frame of a cycle that is sparking against a wall
-(median second 17.1 → 13.1 ms, worst second 20.3 → 13.8), and they are the
+(median second 17.15 → 13.1 ms, worst second 20.3 → 13.8), and they are the
 geometry behind the end-of-round draw spikes Task 3's skeptic could not
 identify: with `SPARKS 0` the spikes are 0 of 10 rounds against 3 of 10.
 Nothing else moved, and the second-45 simulation bump is untouched. The change
@@ -33,6 +33,15 @@ cross-day comparison and not a same-sweep one:
   load of **8.00–19.24** before and after each run, the same busy background
   Task 4 recorded. One more reason to read within-run deltas.
 
+**How a median is printed here.** Every median below is computed on unrounded
+values and printed with the decimals it needs. An even-length window has no
+middle observation — the grind's rim window is 40 seconds — so its median is
+the midpoint of two, and the milestone's rule is that such a tie median keeps
+the extra decimal rather than being rounded away: the grind arm's rim median
+is **17.15 ms**, not 17.1, and `grind-nosparks-r2`'s is **13.65**. Pooled
+figures over rounds (§3, §4) are medians of the unrounded per-round medians,
+not of rounded ones. `compare.txt` prints every one of them the same way.
+
 ## Files
 
 | | |
@@ -61,10 +70,14 @@ exists — they are the tutorial match — and are not a result.
 `[PERF]` object with an older report expression than every run since; the
 current one closes a round on `ROUND_WINNER` *when one is written* and adds a
 `closed_by` field, so that Task 3's winnerless grind rounds could be reported
-at all. For the transcripts compared here it is a no-op, and that is checked
-rather than assumed: in all five Task 2 runs and all five `tut-nosparks` runs,
-3 rounds started and 3 were won, every round closed on its `ROUND_WINNER`, and
-every measured span runs 0.53 s → 59.09–59.13 s and ends at the human's death.
+at all. **The two expressions can differ only on a round that has no
+`ROUND_WINNER`, and there is no such round in either set** — which is what was
+actually checked, since Task 2's older object carries no `closed_by` field to
+read: in all five Task 2 runs and all five `tut-nosparks` runs,
+`rounds_started` and `rounds_won` are both 3, and every measured round reports
+`ends_at: human_death` with a span of 0.53–0.54 s → 59.09–59.13 s. The
+stronger sentence — that each round *closed on* its `ROUND_WINNER` — is not
+recoverable from Task 2's JSON, so it is not claimed.
 
 ## 1. Why this task exists
 
@@ -122,10 +135,10 @@ is the worst *second*, not the worst frame (`compare.txt` header).
 
 | arm | sparks | free ms | rim ms (worst second) | rim − free | rim draws (worst second) | rim pre − free pre | rim render − free render |
 |---|---|---|---|---|---|---|---|
-| `task3-mechanisms/grind` | on | 11.1 | **17.1** (20.3) | **+6.0** | 113.3 (171.2) | +3.5 | **+2.5** |
-| `task3-mechanisms/grind-r2` | on | 11.4 | **14.0** (18.3) | **+2.6** | 60.0 (173.6) | +2.5 | +0.3 |
-| `grind-nosparks-r1` | off | 10.5 | **13.1** (13.8) | **+2.6** | 60.0 (60.0) | +2.5 | +0.1 |
-| `grind-nosparks-r2` | off | 10.7 | **13.6** (15.0) | **+2.9** | 60.0 (60.0) | +2.6 | +0.3 |
+| `task3-mechanisms/grind` | on | 11.15 | **17.15** (20.3) | **+6.0** | 113.34 (171.24) | +3.5 | **+2.45** |
+| `task3-mechanisms/grind-r2` | on | 11.4 | **14.0** (18.3) | **+2.6** | 60.0 (173.59) | +2.55 | +0.2 |
+| `grind-nosparks-r1` | off | 10.5 | **13.1** (13.8) | **+2.6** | 60.0 (60.0) | +2.5 | +0.15 |
+| `grind-nosparks-r2` | off | 10.7 | **13.65** (15.0) | **+2.95** | 60.0 (60.0) | +2.6 | +0.3 |
 
 **The draw count is the cleanest reading.** Counting whole seconds 20–59 of
 each run's round: with sparks on, **40 of 80 rim seconds draw more than 60
@@ -138,27 +151,33 @@ sparks either — and everything above 60 was.
 
 **What that is worth in milliseconds.** In `grind` — the arm whose cycle
 actually sat sparking for most of its window — the median rim second falls
-**17.1 → 13.1 ms (−23 %)** and the worst rim second **20.3 → 13.8 (−32 %)**;
-subtracting the 0.6 ms the two days differ by in the free window, −20 % and
-−29 %. In `grind-r2`, which sparked in only 11 of its 40 rim seconds, the
-median second falls just 14.0 → 13.6 but the worst falls 18.3 → 15.0 (−18 %).
-So *"about a quarter of the frame"* is the price of a cycle that is sparking,
-and the honest range over these four runs is **3 % of a median second to 32 %
-of a worst one**. It is also the *variance*: the two stock arms disagree by
-3.1 ms at the median (17.1 vs 14.0) and the two spark-free ones by 0.5
-(13.1 vs 13.6).
+**17.15 → 13.1 ms (−23.6 %)** and the worst rim second **20.3 → 13.8
+(−32.0 %)**; subtracting the 0.65 ms the two days differ by in the free
+window, −20.6 % and −29.8 %. In `grind-r2`, which sparked in only 11 of its 40
+rim seconds, the median second falls just 14.0 → 13.65 (−2.5 %) but the worst
+falls 18.3 → 15.0 (−18.0 %). So *"about a quarter of the frame"* is the price
+of a cycle that is sparking, and the honest range over these four runs is
+**2.5 % of a median second to 32 % of a worst one**. It is also the
+*variance*: the two stock arms disagree by 3.15 ms at the median (17.15 vs
+14.0) and the two spark-free ones by 0.55 (13.1 vs 13.65).
 
 **Mechanism 2 is untouched, exactly as Task 3 predicted.** The part of the
 frame before its first draw call still rises by the same amount when the cycle
-reaches the wall: **+3.5 and +2.5 ms with sparks, +2.5 and +2.6 without**
-(free 5.8–6.0 → rim 8.3–9.4). The +26 % simulation cost of being at a wall is
+reaches the wall: **+3.5 and +2.55 ms with sparks, +2.5 and +2.6 without**
+(free 5.8–5.95 → rim 8.3–9.4). The +26 % simulation cost of being at a wall is
 not a spark and no setting here removes it.
 
-**The render part is where the sparks were.** Rim render minus free render is
-**+2.5 ms** in `grind` and **+0.1 / +0.3** in the two spark-free arms — that
-is, without sparks, *rendering* a cycle pressed against a wall costs what
-rendering a cycle in the open costs, and the whole render-side difference Task
-3 measured at the rim was the spark shower. `grind-nosparks-r1`'s render
+**The render part is where the sparks were — and it tracks how much of the
+window actually sparked, not the setting.** Rim render minus free render is
+**+2.45 ms** in `grind`, whose cycle sparked in 29 of its 40 rim seconds, and
+**+0.15 / +0.3** in the two spark-free arms — but it is **+0.2** in
+`grind-r2`, which had sparks *on* and sparked in only 11 of 40. That is the
+honest four-run picture: an arm that barely sparks pays what a spark-free arm
+pays, so the on/off split is not as clean as two of the four runs alone would
+make it look, and the quantity that predicts the render cost is the number of
+sparking seconds. Where the shower is continuous it costs 2.45 ms of render;
+where there is no shower at all, rendering a cycle pressed against a wall
+costs what rendering a cycle in the open costs. `grind-nosparks-r1`'s render
 series over its 40 rim seconds sits at 4.5–5.2 ms against `grind`'s 5.5–10.3
 (`compare.txt`, "GRIND per-second detail").
 
@@ -263,21 +282,27 @@ checks them:
 
 | | Task 7 base, sparks on (n = 6 rounds) | `posttut-nosparks`, off (n = 4) |
 |---|---|---|
-| plateau s15–44 `ms_p50` | 23.3 (22.8–23.6) | 23.65 (23.2–24.4) |
-| plateau pre-draw / render | 7.25 / 15.9 | 7.3 / 16.2 |
+| plateau s15–44 `ms_p50` | 23.3 (22.8–23.65) | 23.625 (23.25–24.4) |
+| plateau pre-draw / render | 7.25 / 15.95 | 7.3 / 16.2 |
 | plateau draws/frame | 114.0 in all six | 114.0 in all four |
 | late `ms_p50` / `ms_p90` | 25.95 / 35.6 | 26.45 / 36.55 |
+| late draws/frame | 122.11 | 122.125 |
 | hitches > 50 ms | 10 (7–17) | 9.5 (9–11) |
 | spike rounds | 0 of 6 | 0 of 4 |
 
-**Nothing moved, and the spark-free arm is fractionally *slower* on every line
-but the hitch count** (plateau 23.3 → 23.65 ms, late p50 25.95 → 26.45, late
-p90 35.6 → 36.55, the draw count identical to two decimals) — every difference
-is inside Task 7's own round-to-round spread and points the wrong way for a
-win. The reason is not that sparks are
-free on this path; it is that **this arm never produces one**. The human is
-idle (`../README.md` §5, gap 2), and Task 7's own three confounds say why the AIs
-do not pile up either: the arena is twice the linear size, the cycles run at
+**Nothing moved.** Two of those rows are exactly equal: the plateau draw count
+is 114.0 in every one of the ten measured rounds across both arms, and neither
+arm has a spike round. On every row that does differ, except the hitch count,
+the spark-free arm is fractionally *slower* — plateau 23.3 → 23.625 ms, late
+p50 25.95 → 26.45, late p90 35.6 → 36.55, and the late draw count 122.11
+against 122.125, close but not identical. Only the hitch count favours it
+(10 → 9.5). Every one of those differences is inside Task 7's own
+round-to-round spread, and the ones that are not ties point the wrong way for
+a win.
+
+The reason is not that sparks are free on this path; it is that **this arm
+never produces one**. The human is idle (`../README.md` §5, gap 2), and Task
+7's own three confounds say why the AIs do not pile up either: the arena is twice the linear size, the cycles run at
 twice the speed, and `CYCLE_RUBBER 1.0` / `CYCLE_DELAY .1` let every cycle turn
 at most half as often as the tutorial's forced 5 / 0.05. The base arm spiked in
 0 of 6 rounds, so there was nothing here for the setting to remove.
@@ -348,7 +373,7 @@ runs rather than this one's number.
    runtime, gated in both directions, reversible per-load with `?sparks=1`,
    and it costs a visual effect that upstream already turns off by default on
    Macs for the same reason. What it buys, measured: a cycle that is grinding
-   a wall gets back **about a quarter of its frame** (17.1 → 13.1 ms median
+   a wall gets back **about a quarter of its frame** (17.15 → 13.1 ms median
    second in the sparking arm, worst second 20.3 → 13.8, and 40 of 80 rim
    seconds with excess draw calls become 0 of 80), and the end-of-round draw
    spikes go from **3 of 10 rounds to 0 of 10**, while a flat round's late p90
@@ -357,7 +382,7 @@ runs rather than this one's number.
    simulation cost of being at a wall (+26 % of the frame, mechanism 2) is
    unchanged at +2.5 / +2.6 ms of pre-draw with sparks off, and the second-45
    simulation bump still arrives on the same second and reaches the same
-   height (7.2 → 12.2 ms). If the phone still feels heavy at a wall after
+   height (second 44 → 45, 7.2 → 12.1 ms with sparks and 7.3 → 12.2 without). If the phone still feels heavy at a wall after
    this, that is the part that is left, and no setting in M6 has moved it.
 3. **The unmeasured half is the real game.** Every number above is a desktop
    at a phone's pixel count, and the arm that ran the phone's actual boot path

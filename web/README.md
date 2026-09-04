@@ -301,14 +301,19 @@ then differs from the desktop page in four ways, all of them in
   `docs/evidence/phone-feedback/camera/` is the sweep, including why narrowing
   the field of view was the worse lever.
 - **the crash sparks are off.** `SPARKS` is an existing config item, read at the
-  two `new gSpark` sites in `src/tron/gCycle.cpp` — the shower thrown when a cycle
-  grinds a wall or dies, and drawing only: no physics, timing, rubber or score
-  consults it. M6 task 8 measured it where it hurts, with a cycle held against the
-  rim: 17.1 ms median frame and 20.3 ms in the worst measured second, draw calls
-  bursting to 171, against 13.1 and 13.6 ms median with `SPARKS 0` and the draw
-  count pinned flat at 60. About a quarter of the frame at the wall. `?sparks=1`
-  restores them; `EXPLOSION` is the same kind of switch, was **not** measured, and
-  is left alone. `docs/evidence/m6-lag/task8-sparks/`.
+  two `crash_sparks` guards in `src/tron/gCycle.cpp` — both in the wall-contact
+  block, so this is the shower a cycle throws while it **grinds a wall** and
+  nothing else (dying is `EXPLOSION`) — and drawing only: no physics, timing,
+  rubber or score consults it. M6 task 8 measured it where it hurts, with a cycle
+  held against the rim: 17.15 ms median frame and 20.3 ms in the worst measured
+  second, draw calls bursting to 171, against 13.1 and 13.65 ms median with
+  `SPARKS 0` and the draw count pinned flat at 60. About a quarter of the frame at
+  the wall — with its condition: the 17.15 arm sparked in 29 of its 40 rim
+  seconds, while the second stock run of the same arm sparked in 11 of 40 and read
+  14.0 ms median, so the median win is 23.6 % in the one and 2.5 % in the other
+  and the worst second falls 32 % and 18 %. `?sparks=1` restores them; `EXPLOSION`
+  is the same kind of switch, was **not** measured, and is left alone.
+  `docs/evidence/m6-lag/task8-sparks/`.
 
 A successful run shows the game's language menu on the canvas within a few
 seconds of the page load. Enter chooses a language, the first-run setup menu

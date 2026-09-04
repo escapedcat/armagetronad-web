@@ -13,11 +13,18 @@ console.log named below -- every input file is committed in this tree.
   spike round = peak draws/frame over whole seconds 10-58 >= 200, Task 2's definition
   flat round  = the same peak below 200
 
+  MEDIANS ARE EXACT AND PRINTED WITH THE DECIMALS THEY NEED. An even-length
+  window (the rim window is 40 seconds) has no middle observation, so its
+  median is the midpoint of two and keeps the extra decimal instead of being
+  rounded away: the grind arm's rim median is 17.15 ms, not 17.1. Figures
+  pooled over rounds are medians of the UNROUNDED per-round medians, not of
+  rounded ones. rim-free is computed from the unrounded medians too.
+
 == GRIND: free s8-17 | rim s20-59 (ms p50 / draws / pre-draw / render) ==
-grind              free ms 11.1 dr 53.0 pre 5.9 ren 5.1 | rim ms 17.1 (max 20.3) dr 113.3 (max 171.2) pre 9.4 ren 7.6
-grind-r2           free ms 11.4 dr 53.0 pre 6.0 ren 5.2 | rim ms 14.0 (max 18.3) dr 60.0 (max 173.6) pre 8.5 ren 5.5
-grind-nosparks-r1  free ms 10.5 dr 53.0 pre 5.8 ren 4.7 | rim ms 13.1 (max 13.8) dr 60.0 (max 60) pre 8.3 ren 4.8
-grind-nosparks-r2  free ms 10.7 dr 53.0 pre 5.8 ren 4.9 | rim ms 13.6 (max 15) dr 60.0 (max 60) pre 8.4 ren 5.2
+grind              free ms 11.15 dr 53.0 pre 5.9 ren 5.1 | rim ms 17.15 (max 20.3) dr 113.34 (max 171.24) pre 9.4 ren 7.55 | rim-free ms 6.0 pre 3.5 ren 2.45 draws 60.34
+grind-r2           free ms 11.4 dr 53.0 pre 5.95 ren 5.25 | rim ms 14.0 (max 18.3) dr 60.0 (max 173.59) pre 8.5 ren 5.45 | rim-free ms 2.6 pre 2.55 ren 0.2 draws 7.0
+grind-nosparks-r1  free ms 10.5 dr 53.0 pre 5.8 ren 4.65 | rim ms 13.1 (max 13.8) dr 60.0 (max 60.0) pre 8.3 ren 4.8 | rim-free ms 2.6 pre 2.5 ren 0.15 draws 7.0
+grind-nosparks-r2  free ms 10.7 dr 53.0 pre 5.8 ren 4.9 | rim ms 13.65 (max 15.0) dr 60.0 (max 60.0) pre 8.4 ren 5.2 | rim-free ms 2.95 pre 2.6 ren 0.3 draws 7.0
 
 == SPIKES per measured round: peak draws s10-58 | secs>=150 | late p50/p90 | hitches ==
 -- tutorial base (Task 2)
@@ -61,19 +68,19 @@ grind-nosparks-r2  free ms 10.7 dr 53.0 pre 5.8 ren 4.9 | rim ms 13.6 (max 15) d
 
 == FLAT ROUNDS ONLY (peak draws s10-58 < 200): late window, pooled ==
 -- tutorial base (Task 2): n=7 flat rounds
-   late ms_p50 med 25.8 range 24.5-28
+   late ms_p50 med 25.8 range 24.5-28.0
    late ms_p90 med 34.5 range 30.8-36.8
    late pre    med 8.8 range 8.1-9.3
    late render med 16.7 range 15.4-18.7
    late draws  med 112.72 range 111.46-114.82
-   hitches>50ms med 7 range 2-9
+   hitches>50ms med 7.0 range 2.0-9.0
 -- tutorial SPARKS 0 (task8): n=10 flat rounds
    late ms_p50 med 25.0 range 24.3-26.4
    late ms_p90 med 31.35 range 29.4-34.2
    late pre    med 8.35 range 8.1-8.7
    late render med 16.6 range 15.7-17.5
    late draws  med 113.17 range 112.08-114.15
-   hitches>50ms med 4.5 range 2-9
+   hitches>50ms med 4.5 range 2.0-9.0
 
 == PRE-DRAW (simulation) PER SECOND, s40-56, median over flat rounds ==
 -- tutorial base (Task 2), flat rounds (n=7)
@@ -87,21 +94,21 @@ grind-nosparks-r2  free ms 10.7 dr 53.0 pre 5.8 ren 4.9 | rim ms 13.6 (max 15) d
 
 == PLATEAU s15-44 and late window: posttut base (Task 7) vs posttut SPARKS 0 (task8) ==
 -- posttut base (Task 7) (n=6 measured rounds)
-   posttut-base-r1        rd2 plateau ms 23.6 pre 7.3 ren 16.1 draws 114.0 | late p50 25.6 p90 35.4 pre 9.4 ren 16.1 draws 122.15 hitches 9
+   posttut-base-r1        rd2 plateau ms 23.65 pre 7.3 ren 16.15 draws 114.0 | late p50 25.6 p90 35.4 pre 9.4 ren 16.1 draws 122.15 hitches 9
    posttut-base-r1        rd3 plateau ms 22.8 pre 7.2 ren 15.7 draws 114.0 | late p50 26 p90 34.5 pre 10.4 ren 15.4 draws 122.09 hitches 12
-   posttut-base-r2        rd2 plateau ms 23.4 pre 7.3 ren 15.9 draws 114.0 | late p50 25.9 p90 35.8 pre 9.7 ren 16.2 draws 122.14 hitches 9
-   posttut-base-r2        rd3 plateau ms 23.2 pre 7.2 ren 15.9 draws 114.0 | late p50 26.7 p90 37.1 pre 9.8 ren 16.9 draws 122.06 hitches 7
-   posttut-base-r3        rd2 plateau ms 23.6 pre 7.3 ren 16.1 draws 114.0 | late p50 25.6 p90 35.4 pre 9.4 ren 16 draws 122.09 hitches 11
-   posttut-base-r3        rd3 plateau ms 23.1 pre 7.2 ren 15.9 draws 114.0 | late p50 28.9 p90 39.3 pre 11.3 ren 17.2 draws 122.13 hitches 17
-   MEDIAN plateau ms 23.3 (22.8-23.6) pre 7.25 (7.2-7.3) ren 15.9 (15.7-16.1) draws 114.0 (114.0-114.0)
-   MEDIAN late    p50 25.95 (25.6-28.9) p90 35.6 (34.5-39.3) pre 9.75 (9.4-11.3) ren 16.15 (15.4-17.2) draws 122.11 (122.06-122.15) hitches 10.0 (7-17)
+   posttut-base-r2        rd2 plateau ms 23.4 pre 7.3 ren 15.95 draws 114.0 | late p50 25.9 p90 35.8 pre 9.7 ren 16.2 draws 122.14 hitches 9
+   posttut-base-r2        rd3 plateau ms 23.2 pre 7.2 ren 15.95 draws 114.0 | late p50 26.7 p90 37.1 pre 9.8 ren 16.9 draws 122.06 hitches 7
+   posttut-base-r3        rd2 plateau ms 23.55 pre 7.3 ren 16.1 draws 114.0 | late p50 25.6 p90 35.4 pre 9.4 ren 16 draws 122.09 hitches 11
+   posttut-base-r3        rd3 plateau ms 23.1 pre 7.2 ren 15.95 draws 114.0 | late p50 28.9 p90 39.3 pre 11.3 ren 17.2 draws 122.13 hitches 17
+   MEDIAN plateau ms 23.3 (22.8-23.65) pre 7.25 (7.2-7.3) ren 15.95 (15.7-16.15) draws 114.0 (114.0-114.0)
+   MEDIAN late    p50 25.95 (25.6-28.9) p90 35.6 (34.5-39.3) pre 9.75 (9.4-11.3) ren 16.15 (15.4-17.2) draws 122.11 (122.06-122.15) hitches 10.0 (7.0-17.0)
 -- posttut SPARKS 0 (task8) (n=4 measured rounds)
    posttut-nosparks-r1    rd2 plateau ms 24.4 pre 7.5 ren 16.9 draws 114.0 | late p50 27.1 p90 36.6 pre 10.1 ren 16.9 draws 122.16 hitches 11
-   posttut-nosparks-r1    rd3 plateau ms 23.2 pre 7.3 ren 16.0 draws 114.0 | late p50 25.8 p90 34.8 pre 9.4 ren 16.3 draws 122.05 hitches 9
+   posttut-nosparks-r1    rd3 plateau ms 23.25 pre 7.3 ren 16.0 draws 114.0 | late p50 25.8 p90 34.8 pre 9.4 ren 16.3 draws 122.05 hitches 9
    posttut-nosparks-r2    rd2 plateau ms 23.4 pre 7.3 ren 16.0 draws 114.0 | late p50 25.8 p90 36.5 pre 9.6 ren 16.1 draws 122.09 hitches 10
-   posttut-nosparks-r2    rd3 plateau ms 23.9 pre 7.3 ren 16.4 draws 114.0 | late p50 28.1 p90 38.7 pre 11.3 ren 16.6 draws 122.22 hitches 9
-   MEDIAN plateau ms 23.65 (23.2-24.4) pre 7.3 (7.3-7.5) ren 16.2 (16.0-16.9) draws 114.0 (114.0-114.0)
-   MEDIAN late    p50 26.45 (25.8-28.1) p90 36.55 (34.8-38.7) pre 9.85 (9.4-11.3) ren 16.45 (16.1-16.9) draws 122.12 (122.05-122.22) hitches 9.5 (9-11)
+   posttut-nosparks-r2    rd3 plateau ms 23.85 pre 7.3 ren 16.4 draws 114.0 | late p50 28.1 p90 38.7 pre 11.3 ren 16.6 draws 122.22 hitches 9
+   MEDIAN plateau ms 23.625 (23.25-24.4) pre 7.3 (7.3-7.5) ren 16.2 (16.0-16.9) draws 114.0 (114.0-114.0)
+   MEDIAN late    p50 26.45 (25.8-28.1) p90 36.55 (34.8-38.7) pre 9.85 (9.4-11.3) ren 16.45 (16.1-16.9) draws 122.125 (122.05-122.22) hitches 9.5 (9.0-11.0)
 
 == GRIND per-second detail, rim window s20-59 (draws, then render p50) ==
 -- grind: 29 of 40 rim seconds draw more than 60/frame; 21 at 100 or more

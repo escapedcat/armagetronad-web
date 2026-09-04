@@ -1428,17 +1428,28 @@
     // THE MEASUREMENT FIRST, AND IT IS ABOUT THE WALL. M6 task 3's grind arm
     // holds a cycle pressed against the rim for the whole measured window --
     // which is not a contrived case on a phone, it is what a thumb does by
-    // accident every round. Stock, that frame costs 17.1 ms median and 20.3 ms
+    // accident every round. Stock, that frame costs 17.15 ms median and 20.3 ms
     // in the worst measured second, and the draw count BURSTS to 171 calls in
-    // a frame. Re-run with SPARKS 0, twice: 13.1 and 13.6 ms median, worst 13.8
+    // a frame. Re-run with SPARKS 0, twice: 13.1 and 13.65 ms median, worst 13.8
     // and 15.0, and the draw count pinned flat at 60. About a quarter of the
     // frame at the wall is spark bursts, and it is spent exactly when the
-    // player is least able to afford it. docs/evidence/m6-lag/task8-sparks/.
+    // player is least able to afford it.
+    //
+    // READ THE 17.15 WITH ITS CONDITION. It is the arm whose cycle sparked in
+    // 29 of its 40 rim seconds. The SECOND stock run of the same arm sparked
+    // in only 11 of 40 and read 14.0 ms median (worst 18.3), so the median win
+    // is 23.6 % in the first and 2.5 % in the second, while the WORST second
+    // falls 32 % and 18 %. The quarter is what a cycle that is actually
+    // sparking gets back, not what every rim second costs.
+    // docs/evidence/m6-lag/task8-sparks/.
     //
     // WHAT IS TURNED OFF, EXACTLY. SPARKS is an existing config item --
     // `static tConfItem<bool> cs2("SPARKS",crash_sparks)` in src/tron/gMenus.cpp
-    // -- and the flag is read at the two `new gSpark` sites in src/tron/gCycle.cpp,
-    // i.e. the shower thrown when a cycle grinds a wall or dies. It is drawing
+    // -- and the flag is read at the two `if (crash_sparks && animts>0)` guards
+    // in src/tron/gCycle.cpp (the four `new gSpark` calls live inside them),
+    // both in the WALL-CONTACT block: this is the shower a cycle throws while
+    // it grinds a wall, and nothing else. Dying is EXPLOSION, below, which is a
+    // different flag over a different effect and is not touched. It is drawing
     // and nothing else: no physics, no timing, no rubber, no score consults it.
     // The game plays identically; it stops painting sparks. That is also why
     // this is a settings change and not a C++ one -- there is nothing to patch.
@@ -1470,8 +1481,13 @@
       let off = false;
       try {
         // 0 = off, 1 = keep. SPARKS is a bool, so anything else is a typo and
-        // is ignored out loud rather than silently half-answering the question
-        // -- the same rule readNumberParam applies to a value out of range.
+        // is ignored out loud rather than silently half-answering the question.
+        // WHICH TAG SAYS SO DEPENDS ON THE VALUE, because readNumberParam
+        // screens the range first: ?sparks=2 is out of range, so IT logs
+        // "[DISPLAY] ?sparks=2 ignored ..." and returns null (exactly as with
+        // ?cam), and the [SPARKS] line below fires only for a value that is in
+        // range but not 0 or 1, e.g. ?sparks=0.5. Either way the device default
+        // stands. Grep for both tags when chasing a ?sparks= that did nothing.
         const q = readNumberParam('sparks', 0, 1);
         if (q !== null && q !== 0 && q !== 1) {
           console.log('[SPARKS] ?sparks=' + q + ' ignored (want 0 or 1)');

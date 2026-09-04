@@ -107,10 +107,13 @@ shot:00-language-menu-with-touch-controls
 #
 # WHY THE SETTING IS THERE. M6 task 8 measured the spark bursts thrown while a
 # cycle grinds a wall -- which on a phone is not a contrived case, it is what a
-# thumb does by accident every round. Stock: 17.1 ms median frame, 20.3 ms in
+# thumb does by accident every round. Stock: 17.15 ms median frame, 20.3 ms in
 # the worst measured second, the draw count bursting to 171 calls in a frame.
-# The same arm with SPARKS 0, twice: 13.1 and 13.6 ms median, worst 13.8 and
-# 15.0, draws pinned flat at 60. About a quarter of the frame at the wall.
+# The same arm with SPARKS 0, twice: 13.1 and 13.65 ms median, worst 13.8 and
+# 15.0, draws pinned flat at 60. About a quarter of the frame at the wall --
+# read with its condition: that 17.15 is the arm whose cycle sparked in 29 of
+# its 40 rim seconds, and the second stock run of the same arm sparked in only
+# 11 of 40 and read 14.0 ms median (worst 18.3).
 # docs/evidence/m6-lag/task8-sparks/.
 #
 # TWO CHECKS, BECAUSE EITHER ALONE CAN PASS WHILE THE GAME IS UNCHANGED. The
