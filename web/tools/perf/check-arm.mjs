@@ -52,13 +52,77 @@
 // anything: throttled rounds 2 and 3 read 25-29 in their first second.
 // Re-measure the constant if the HUD, the centre text or the spawn layout
 // changes; it carries its provenance in the comment beside it.
+//
+// --posttut -- THE POST-TUTORIAL MODE, and why it is a different proof.
+//
+// The checks above prove a measurement of the TUTORIAL match. They cannot tell
+// that match apart from any other: welcome() (gArmagetron.cpp:269) starts it by
+// itself on a first-use boot and forces speedFactor -2, autoNum 0,
+// sizeFactor -= 2, wallsLength 400, rubber 5 and delayCycle 0.05 for its
+// duration, and a transcript of it looks exactly like a transcript of a match
+// started from the menu. `--posttut` is for web/tools/perf/posttut.steps.tmpl,
+// which boots with FIRST_USE 0 so welcome() returns early, walks the main menu
+// to Game > Start New Game, and measures the game a returning phone plays.
+// docs/evidence/m6-lag/README.md section 5.1 and option B; the arm's own README
+// is docs/evidence/m6-lag/task7-posttutorial/README.md.
+//
+// It keeps every check above -- the two key presses (kept for symmetry; on this
+// path they are not tutorial keys and the template says so), the throttle, both
+// measured rounds at >= 30 s, >= 30 frames per late window, the draws floor and
+// a second-half screenshot per round -- and adds three:
+//
+//   walk      the harness's own key/tap lines BEFORE the first [L] NEW_ROUND
+//             must contain a Down and an Enter (or tap) after it. The tutorial
+//             template's pre-round input is three taps and no Down at all, so a
+//             tutorial transcript fails this outright.
+//   patched   the "autoexec.cfg patched:" eval result -- the driver's record of
+//             the exact text appended to /data/webdefaults/autoexec.cfg -- must
+//             contain FIRST_USE 0 and the three returning-visitor render
+//             settings sr_LoadDefaultConfig would have persisted (SWAP_MODE 2,
+//             FLOOR_DETAIL 3, TEXT_OUT 1; rScreen.cpp:1007, and the template
+//             header has the symbol for each).
+//   settings  the tutorial's forced settings must be ABSENT while a MEASURED
+//             round is running. This is the one that needed a mechanism rather
+//             than a grep, because nothing the game prints says it. The
+//             template's window.__posttut(phase) probe calls
+//             Module._aa_web_save_config() (eWebPersist.cpp:205, the
+//             non-yielding export web/shell.html's unload backstop already
+//             uses), which runs st_SaveConfig() and serialises every live
+//             tConfItem to /persist/var/user.cfg, then reads that file back
+//             through Module.FS and logs "[POSTTUT] {...}" with the live value
+//             beside the value the patched autoexec asked for. SP_WALLS_LENGTH,
+//             SP_SPEED_FACTOR and SP_SIZE_FACTOR are tConfItems on
+//             singlePlayer.* (gGame.cpp:601, :583, :584) and sg_currentSettings
+//             points at singlePlayer in a single-player game, so they ARE the
+//             fields welcome() assigns. This check requires the probe taken
+//             inside round 2 to report live == asked for all three. On the
+//             tutorial path the same probe would read speed -2 against 0,
+//             size (asked - 2) against asked, and walls 400 against -1: three
+//             independent failures, and at least two of them survive even for
+//             the walls400 arm, whose asked value happens to be the tutorial's.
+//
+// A gate that cannot fail is not a gate: run this mode over any Task 1-4
+// console.log -- e.g. docs/evidence/m6-lag/task1-rig/base/console.log -- and it
+// reports INVALID on the walk, the patch and the probe, because that run is the
+// tutorial match. That is the falsification, and it is one command.
 import fs from 'node:fs';
 import path from 'node:path';
 
 const EMPTY_ARENA_DRAWS_PER_FRAME = 18.05;   // docs/evidence/m6-lag/task1-rig/base (2026-09-03 20:39), rounds[0].pre_round.draws_per_frame over 91 overlay-only frames; see THE FLOOR above
 
-const file = process.argv[2];
-if (!file) { console.log('usage: node check-arm.mjs <console.log>'); process.exit(2); }
+const argv = process.argv.slice(2);
+const posttut = argv.includes('--posttut');
+const file = argv.filter((a) => !a.startsWith('--'))[0];
+if (!file || argv.some((a) => a.startsWith('--') && a !== '--posttut')) {
+  console.log('usage: node check-arm.mjs [--posttut] <console.log>');
+  process.exit(2);
+}
+const MODE = posttut ? 'posttut' : 'default';
+// Printed before any verdict, so a reader of a log that scrolled never has to
+// guess which set of checks produced the line below it.
+console.log(`check-arm.mjs: mode ${MODE} -- ${posttut
+  ? 'the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)'
+  : 'the tutorial match (the default; it cannot tell that match from any other)'}`);
 const dir = path.dirname(file);
 const lines = fs.readFileSync(file, 'utf8').split('\n');
 const stamp = (l) => { const m = /^\[\s*(\d+)ms\]/.exec(l); return m ? Number(m[1]) : null; };
@@ -78,7 +142,7 @@ for (const l of lines) {
   if (typeof s !== 'string' || !s.startsWith('[PERF] ')) { perfNote = `the report eval returned: ${String(s).slice(0, 160)}`; continue; }
   try { d = JSON.parse(s.slice(s.indexOf('{'))); } catch (e) { perfNote = `[PERF] JSON does not parse: ${e.message}`; d = null; }
 }
-if (!d) { console.log(`INVALID: ${perfNote}`); process.exit(1); }
+if (!d) { console.log(`INVALID [${MODE}]: ${perfNote}`); process.exit(1); }
 
 // ---- keys
 const keys = lines.filter((l) => /\[harness\] key (Right|Left) /.test(l)).length;
@@ -128,9 +192,77 @@ for (const r of measured) {
   else lateShots.push(present.map((f) => path.basename(f, '.png')).join(','));
 }
 
-if (problems.length) { console.log('INVALID: ' + problems.join('; ')); process.exit(1); }
+// ---- the post-tutorial proof ------------------------------------------------
+// Three additions, and each one fails on a tutorial transcript. See the header.
+let probeNote = '';
+if (posttut) {
+  const firstRound = nr.length ? nr[0][1] : lines.length;
+
+  // walk: the harness's own input BEFORE the first NEW_ROUND. The tutorial
+  // template's pre-round input is three tap:#tapzone lines and no Down; this
+  // path has to steer a menu, so a Down and an Enter/tap after it are required.
+  const walk = lines.slice(0, firstRound)
+    .map((l, i) => [/\[harness\] (key (\w+)|tap )/.exec(l), i]).filter(([m]) => m)
+    .map(([m, i]) => [m[2] || 'tap', i]);
+  const down = walk.findIndex(([k]) => k === 'Down');
+  const enterBefore = walk.slice(0, down < 0 ? 0 : down).filter(([k]) => k === 'Enter' || k === 'tap').length;
+  const enterAfter = down < 0 ? 0 : walk.slice(down + 1).filter(([k]) => k === 'Enter' || k === 'tap').length;
+  if (down < 0)
+    problems.push(`no menu walk before the first NEW_ROUND: ${walk.length} harness input(s), none of them Down `
+      + `(the tutorial path reaches its match with no Down at all)`);
+  else if (!enterBefore || !enterAfter)
+    problems.push(`the menu walk before the first NEW_ROUND is not Enter/Down/Enter `
+      + `(${enterBefore} Enter-or-tap before the Down, ${enterAfter} after)`);
+
+  // patched: what the arm actually appended to /data/webdefaults/autoexec.cfg,
+  // as the driver recorded the patch step's own return value.
+  const patch = lines.slice(0, firstRound).filter((l) => l.includes('] [harness] eval ')
+    && l.includes(' => "autoexec.cfg patched: '));
+  if (!patch.length) problems.push('no "autoexec.cfg patched:" eval before the first NEW_ROUND (the patch step did not run)');
+  else {
+    const p0 = patch[patch.length - 1];
+    // The result is JSON-quoted twice, but these needles contain no backslash
+    // or quote, so they survive both encodings literally.
+    for (const need of ['FIRST_USE 0', 'SWAP_MODE 2', 'FLOOR_DETAIL 3', 'TEXT_OUT 1']) {
+      if (!p0.includes(need)) problems.push(`the patched autoexec.cfg does not contain "${need}"`);
+    }
+  }
+
+  // settings: the probe taken INSIDE measured round 2. live must equal asked
+  // for the three fields welcome() forces; on the tutorial path it cannot.
+  const probes = lines.map((l, i) => [l, i]).filter(([l]) => l.includes('[console.log] [POSTTUT] '))
+    .map(([l, i]) => { try { return [JSON.parse(l.slice(l.indexOf('[POSTTUT] ') + 10)), i]; } catch { return null; } })
+    .filter(Boolean);
+  const r2at = nr.length >= 2 ? nr[1][1] : Infinity;
+  const inRound2 = probes.filter(([p, i]) => i > r2at && String(p.phase || '').startsWith('round2'));
+  if (!probes.length) problems.push('no [POSTTUT] probe line at all (window.__posttut never ran)');
+  else if (!inRound2.length) problems.push(`no [POSTTUT] probe from inside measured round 2 (phases seen: ${probes.map(([p]) => p.phase).join(',')})`);
+  else {
+    const [p] = inRound2[inRound2.length - 1];
+    if (p.save !== 'saved') problems.push(`the probe could not force a config save: ${p.save}`);
+    const num = (x) => (x === null || x === undefined || x === '' ? NaN : Number(x));
+    const TUTORIAL = { SP_SPEED_FACTOR: -2, SP_WALLS_LENGTH: 400 };
+    for (const k of ['SP_WALLS_LENGTH', 'SP_SPEED_FACTOR', 'SP_SIZE_FACTOR']) {
+      const live = num(p.live[k]), want = num(p.expect[k]);
+      if (Number.isNaN(live) || Number.isNaN(want)) { problems.push(`${k}: probe read live=${p.live[k]} expected=${p.expect[k]}`); continue; }
+      if (Math.abs(live - want) > 1e-6) {
+        const why = (TUTORIAL[k] !== undefined && Math.abs(live - TUTORIAL[k]) < 1e-6)
+          ? ` -- that is welcome()'s tutorial value; this is the TUTORIAL match, not the post-tutorial one`
+          : (k === 'SP_SIZE_FACTOR' && Math.abs(live - (want - 2)) < 1e-6)
+            ? ` -- exactly asked-minus-2, which is welcome()'s "sizeFactor -= 2"; this is the TUTORIAL match`
+            : '';
+        problems.push(`${k} is ${p.live[k]} in the running game but the config asked for ${p.expect[k]}${why}`);
+      }
+    }
+    probeNote = `; live in round 2: SP_WALLS_LENGTH ${p.live.SP_WALLS_LENGTH}, SP_SPEED_FACTOR ${p.live.SP_SPEED_FACTOR}, `
+      + `SP_SIZE_FACTOR ${p.live.SP_SIZE_FACTOR}, SP_NUM_AIS ${p.live.SP_NUM_AIS} (all as asked); `
+      + `turn binds L${JSON.stringify(p.turn_left_bound)} R${JSON.stringify(p.turn_right_bound)}`;
+  }
+}
+
+if (problems.length) { console.log(`INVALID [${MODE}]: ` + problems.join('; ')); process.exit(1); }
 const swaps = d.swaps ? `; swaps finish ${d.swaps.finish} / flush ${d.swaps.flush}` : '';
-console.log(`VALID: ${measured.length} rounds at cpu ${d.cpu_rate}x; late ms p50 ${measured.map((r) => r.late_5s.ms_p50).join('/')}; `
+console.log(`VALID [${MODE}]: ${measured.length} rounds at cpu ${d.cpu_rate}x; late ms p50 ${measured.map((r) => r.late_5s.ms_p50).join('/')}; `
   + `late draws/frame ${measured.map((r) => r.late_5s.draws_per_frame).join('/')} (floor ${EMPTY_ARENA_DRAWS_PER_FRAME}); `
   + `spans ${measured.map((r) => `${r.measured_from_s != null ? r.measured_from_s : 0}-${spanOf(r)} s`).join('/')}; `
-  + `late shots ${lateShots.join(' / ')}${swaps}`);
+  + `late shots ${lateShots.join(' / ')}${swaps}${probeNote}`);
