@@ -11,3 +11,83 @@ VALID [posttut]: 2 rounds at cpu 6x; late ms p50 26.6/26.1; late draws/frame 122
 --- gate now lists only the shots still on disk:
 check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
 VALID [posttut]: 2 rounds at cpu 6x; late ms p50 26.6/26.1; late draws/frame 122.07/122.07 (floor 18.05); spans 0.53-58.82 s/0.53-58.79 s; late shots r2-50s / r3-50s; swaps finish 12924 / flush 0; live in round 2: SP_WALLS_LENGTH -1, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+==================================================================
+2026-09-04 09:09:40 UTC  arm=posttut-default-r1 cpu=6 port=8007
+cfg='# posttut-default: no SP_ override -- the shipped SP_ defaults stand'
+before: 11:09  up 4 days, 22:37, 35 users, load averages: 13.02 12.80 12.34
+after:  11:12  up 4 days, 22:40, 35 users, load averages: 9.44 11.47 11.89
+run-arm.sh exit (default gate): 1
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+INVALID [posttut]: 0 measured round(s) with a span >= 30 s (need rounds 2 and 3)
+==================================================================
+2026-09-04 09:12:13 UTC  arm=posttut-default-r2 cpu=6 port=8007
+cfg='# posttut-default: no SP_ override -- the shipped SP_ defaults stand'
+before: 11:12  up 4 days, 22:40, 35 users, load averages: 12.46 12.06 12.09
+after:  11:14  up 4 days, 22:42, 35 users, load averages: 15.56 13.96 12.91
+run-arm.sh exit (default gate): 1
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+INVALID [posttut]: 0 measured round(s) with a span >= 30 s (need rounds 2 and 3)
+==================================================================
+2026-09-04 09:14:45 UTC  arm=posttut-base-r1 cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH -1'
+before: 11:14  up 4 days, 22:42, 35 users, load averages: 14.25 13.73 12.84
+after:  11:18  up 4 days, 22:46, 35 users, load averages: 15.42 12.58 12.40
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 25.6/26; late draws/frame 122.15/122.09 (floor 18.05); spans 0.53-58.82 s/0.53-58.8 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 13156 / flush 0; live in round 2: SP_WALLS_LENGTH -1, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+==================================================================
+2026-09-04 09:18:18 UTC  arm=posttut-base-r2 cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH -1'
+before: 11:18  up 4 days, 22:46, 35 users, load averages: 14.62 12.51 12.37
+after:  11:21  up 4 days, 22:49, 35 users, load averages: 11.13 12.57 12.54
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 25.9/26.7; late draws/frame 122.14/122.06 (floor 18.05); spans 0.53-58.81 s/0.53-58.8 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 13011 / flush 0; live in round 2: SP_WALLS_LENGTH -1, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+==================================================================
+2026-09-04 09:21:53 UTC  arm=posttut-base-r3 cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH -1'
+before: 11:21  up 4 days, 22:49, 35 users, load averages: 11.33 12.57 12.54
+after:  11:25  up 4 days, 22:53, 35 users, load averages: 12.75 13.53 13.00
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 25.6/28.9; late draws/frame 122.09/122.13 (floor 18.05); spans 0.54-58.79 s/0.54-58.8 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 12797 / flush 0; live in round 2: SP_WALLS_LENGTH -1, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+==================================================================
+2026-09-04 09:25:26 UTC  arm=posttut-walls150-r1 cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH 150'
+before: 11:25  up 4 days, 22:53, 35 users, load averages: 11.65 13.27 12.92
+after:  11:28  up 4 days, 22:56, 35 users, load averages: 12.65 14.20 13.50
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 23.6/24.3; late draws/frame 114.04/114.06 (floor 18.05); spans 0.54-58.81 s/0.53-58.85 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 13089 / flush 0; live in round 2: SP_WALLS_LENGTH 150, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+==================================================================
+2026-09-04 09:29:01 UTC  arm=posttut-walls150-r2 cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH 150'
+before: 11:29  up 4 days, 22:57, 35 users, load averages: 15.21 14.73 13.71
+after:  11:32  up 4 days, 23 hrs, 35 users, load averages: 27.41 18.25 15.25
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 24/24.6; late draws/frame 114.1/114.07 (floor 18.05); spans 0.53-58.84 s/0.53-58.8 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 13155 / flush 0; live in round 2: SP_WALLS_LENGTH 150, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+==================================================================
+2026-09-04 09:33:07 UTC  arm=posttut-walls150-r3 cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH 150'
+before: 11:33  up 4 days, 23:01, 35 users, load averages: 25.20 18.89 15.63
+after:  11:36  up 4 days, 23:04, 35 users, load averages: 13.04 15.97 15.12
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 22.6/22.4; late draws/frame 114.11/114.04 (floor 18.05); spans 0.53-58.83 s/0.53-58.81 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 13672 / flush 0; live in round 2: SP_WALLS_LENGTH 150, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+==================================================================
+2026-09-04 09:36:40 UTC  arm=posttut-walls400-r1 cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH 400'
+before: 11:36  up 4 days, 23:04, 35 users, load averages: 12.55 15.82 15.08
+after:  11:40  up 4 days, 23:08, 35 users, load averages: 13.28 13.87 14.37
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 24.5/23.8; late draws/frame 122.05/120.02 (floor 18.05); spans 0.54-58.81 s/0.53-58.8 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 12900 / flush 0; live in round 2: SP_WALLS_LENGTH 400, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+==================================================================
+2026-09-04 09:40:12 UTC  arm=posttut-walls400-r2 cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH 400'
+before: 11:40  up 4 days, 23:08, 35 users, load averages: 13.08 13.81 14.35
+after:  11:43  up 4 days, 23:11, 35 users, load averages: 16.17 14.94 14.82
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 24.5/23.1; late draws/frame 120.05/120.03 (floor 18.05); spans 0.54-58.83 s/0.53-58.79 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 13078 / flush 0; live in round 2: SP_WALLS_LENGTH 400, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
