@@ -518,7 +518,8 @@ causal claim.
    times the floor area.
 3. **Rubber and turn delay.** `welcome()` also forces `sg_rubberCycle = 5` and
    `sg_delayCycle = 0.05` for the tutorial's duration and restores them after
-   (`gArmagetron.cpp`, the block quoted at the top of this file). `FIRST_USE 0`
+   (`gArmagetron.cpp:375-395`, the block quoted at the top of this file, which
+   already names both). `FIRST_USE 0`
    skips that block and no arm here sets either, so every post-tutorial round
    ran the **shipped** `CYCLE_RUBBER 1.0` and `CYCLE_DELAY .1`
    (`config/settings.cfg:157` and `:152`, bound to those two variables by
@@ -535,7 +536,8 @@ causal claim.
 
 None of the three was varied in this task, so nothing here separates "the
 post-tutorial path" from "faster cycles that turn less often in a bigger
-arena" — the columns differ by four things at once. What the table does
+arena" — the two columns differ by the boot path and all three of these at
+once. What the table does
 support is narrower and more useful: **on the configuration the phone boots
 into, the flat frame costs what the tutorial's flat frame costs, and its render
 part is no worse.**
