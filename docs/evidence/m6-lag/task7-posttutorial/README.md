@@ -434,10 +434,14 @@ too). The shape is not one run's: **the plateau is exactly 114.00 in every
 second from 15 to 44 of all eighteen measured rounds of this task, in all three
 arms**, and — counted over the whole seconds 10–57, the same window §4's spike
 rule uses — the first second at or above 120 draws is **second 46** in all six
-`posttut-base` rounds and both smoke rounds. The window matters: outside it the
-count is above 120 in every round of every arm, at second 4 (121.3–129.1) while
-the AIs are still entering, and again in the partial seconds after 57 as the
-round ends.
+`posttut-base` rounds and both smoke rounds. The window matters, and it matters
+asymmetrically. Below second 10 the count is above 120 in every round of every
+arm — **121.26–128.60 at second 4**, while the AIs are still entering. After
+second 57 it climbs again as the round ends, past 120 in every `posttut-base`,
+smoke and `posttut-walls400` round (121.09–131.30) but in only **one
+`posttut-walls150` round of six**: `walls150-r2` round 2, which reaches
+**120.39** in its last partial second where the other five stop at
+115.50–118.00.
 
 Two consequences, pointing opposite ways. Trails that never expire do **not**
 make the draw count climb: across those thirty seconds it does not move by a
@@ -518,8 +522,9 @@ causal claim.
    times the floor area.
 3. **Rubber and turn delay.** `welcome()` also forces `sg_rubberCycle = 5` and
    `sg_delayCycle = 0.05` for the tutorial's duration and restores them after
-   (`gArmagetron.cpp:375-395`, the block quoted at the top of this file, which
-   already names both). `FIRST_USE 0`
+   (`welcome()`, `gArmagetron.cpp:388-389`, restored at `:396-397`; it is the
+   block quoted at the top of this file, which already names both). `FIRST_USE
+   0`
    skips that block and no arm here sets either, so every post-tutorial round
    ran the **shipped** `CYCLE_RUBBER 1.0` and `CYCLE_DELAY .1`
    (`config/settings.cfg:157` and `:152`, bound to those two variables by
@@ -660,7 +665,7 @@ whole seconds 10–57: 114 → 122 at second 46 with no cap (6 of 6 rounds, and
 both smoke rounds), 114 → 120 arriving at second 51 with the 400 cap (4 of 4,
 five seconds later), and **never reaching 120 with the 150 cap** (6 of 6).
 What the 150 cap does instead is smaller and not uniform: in **4 of its 6
-rounds** the count lifts to 116–118.4 for **four or five seconds** inside
+rounds** the count lifts to 116–118.0 for **four or five seconds** inside
 seconds 47–51 and is back at 114 by second 53; in the other two
 (`walls150-r1` and `-r3`, both round 3) it never exceeds **114.9** after second
 44 at all.
