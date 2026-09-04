@@ -1,0 +1,67 @@
+# One arm. SAMPLER, REPORT, CONFIGLINES, TAGHERE, CPURATE are substituted by run-arm.sh
+# (comment lines are left alone). Not runnable on its own.
+# Round 1 takes the two key presses and switches the throttle on; it is NOT measured.
+# (The negative control showed the match runs without the presses: README.md, "Drive".)
+# The 3 s pause before the keys puts both presses AFTER the round's 4 s countdown
+# (PREPARE_TIME in gGame.cpp; the until: step is satisfied about 2.3 s after NEW_ROUND),
+# so they land on a cycle that can move. At the plan's timing they landed in the
+# countdown, when gGame's GameLoop does not call Timestep.
+# Every shot: is bracketed by eval:__fps.shot(NAME,'begin'|'end') so report.js can
+# drop the frames the screenshot itself disturbed (README, "Screenshots"). The 30 s
+# shot in each measured round is the one check-arm.mjs can always find in the round's
+# second half; the 50 s shot is the late-window picture when the round lasts that long.
+wait:800
+eval:SAMPLER
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# perf arm TAGHERE\nMAX_FPS 1000\nCONFIGLINES\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})()
+eval:window.AA_START()
+until:1:90000:[BOOT] autostart
+wait:9000
+tap:#tapzone
+wait:3000
+tap:#tapzone
+wait:3500
+tap:#tapzone
+wait:2000
+until:1:120000:[L] NEW_ROUND
+mark:ROUND-1-SETUP-NOT-MEASURED
+wait:3000
+key:Right:1
+key:Left:1
+wait:1500
+eval:__fps.shot('r1-after-tutorial-keys','begin')
+shot:r1-after-tutorial-keys
+eval:__fps.shot('r1-after-tutorial-keys','end')
+cpu:CPURATE
+mark:THROTTLE-ON
+until:2:260000:[L] NEW_ROUND
+mark:ROUND-2-MEASURED
+wait:6000
+eval:__fps.shot('r2-06s','begin')
+shot:r2-06s
+eval:__fps.shot('r2-06s','end')
+wait:24000
+eval:__fps.shot('r2-30s','begin')
+shot:r2-30s
+eval:__fps.shot('r2-30s','end')
+wait:20000
+eval:__fps.shot('r2-50s','begin')
+shot:r2-50s
+eval:__fps.shot('r2-50s','end')
+until:3:260000:[L] NEW_ROUND
+mark:ROUND-3-MEASURED
+wait:6000
+eval:__fps.shot('r3-06s','begin')
+shot:r3-06s
+eval:__fps.shot('r3-06s','end')
+wait:24000
+eval:__fps.shot('r3-30s','begin')
+shot:r3-30s
+eval:__fps.shot('r3-30s','end')
+wait:20000
+eval:__fps.shot('r3-50s','begin')
+shot:r3-50s
+eval:__fps.shot('r3-50s','end')
+until:3:260000:[L] ROUND_WINNER
+mark:MATCH-OVER
+wait:1000
+eval:REPORT

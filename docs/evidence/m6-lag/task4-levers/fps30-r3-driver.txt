@@ -1,0 +1,127 @@
+[    766ms] [harness] mobile emulation: 915x412 CSS px dpr 3 (= 2745x1236 device px), touch on
+[    767ms] [harness] chrome: Chrome/152.0.7977.77
+[    767ms] [harness] navigating to http://localhost:8006/armagetronad.html?autostart=0&touch=1
+[     24ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[     25ms] [console.log] [TOUCH] enabled=true (?touch=1) maxTouchPoints=5
+[     25ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     25ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false)
+[     33ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     33ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     35ms] [page] load event fired
+[     43ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8006/favicon.ico
+[     90ms] [console.log] [PERSIST] populate ok in 37ms
+[    276ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    277ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    278ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[    809ms] [harness] eval (() => {  /* One frame = one flush/finish on the WebGL context. rSysDep::SwapGL calls     exactly one of the two per swap, chosen by swapMode_: the static default     is rSwap_glFlush, but sr_LoadDefaultConfig (rScreen.cpp) sets     rSwap_glFinish and welcome() (gArmagetron.cpp) runs it under st_FirstUse     -- and every harness run is a first-use boot (drive-browser.mjs makes a     fresh profile), so the client the harness measures swaps with glFinish,     a synchronous wait for the GPU. S.swaps counts each kind so the [PERF]     line says which fired instead of assuming. Per frame we keep: the     timestamp (taken BEFORE the swap call), the time spent INSIDE the swap     call (the GPU wait), the timestamp of the frame's first draw call, the     number of drawArrays/drawElements calls, and the bytes through     bufferData/bufferSubData. Draw calls and bytes are the direct measure of     "geometry re-submitted through the emulation this frame" (mechanism 1);     the first-draw timestamp lets report.js split a frame interval into     [end of previous swap -> first draw] (event-loop yield, input,     simulation) and [first draw -> swap] (render submission), so a frame that     gets slower in the first part while its draw calls stay flat is NOT the     renderer. */  /* THIS FILE IS ONE EXPRESSION WITH BLOCK COMMENTS ONLY: run-arm.sh strips     every newline to fit it into a single eval: step of drive-browser.mjs, so     a // comment would swallow the rest of the program. */  const N = 600000;  const S = { t: new Float64Array(N), wait: new Float32Array(N), first: new Float64Array(N),              draws: new Uint32Array(N), bytes: new Float64Array(N), n: 0,              swaps: { flush: 0, finish: 0 }, marks: [], shots: [], cur: { draws: 0, bytes: 0, first: 0 } };  window.__fps = S;  /* Screenshot bracket. Page.captureScreenshot spends real time on the page     and can put a hitch INTO a measured window; the driver's own     "[harness] screenshot" line is on the driver's clock, in the driver's     transcript, where report.js cannot see it. The template therefore wraps     every shot: step in eval:__fps.shot('name','begin') and     eval:__fps.shot('name','end'), on the page's clock, and report.js drops     the frames between the two (plus a pad) from every statistic. */  S.shot = (name, edge) => { S.shots.push([performance.now(), name, edge]); return 'shot ' + edge + ' ' + name; };  const wrap = (C) => {    if (!C) return; const P = C.prototype;    for (const m of ['flush', 'finish']) { const o = P[m]; if (!o) continue;      P[m] = function () {        const i = S.n, now = performance.now();        if (i < N) { S.t[i] = now; S.draws[i] = S.cur.draws; S.bytes[i] = S.cur.bytes; S.first[i] = S.cur.first; S.n = i + 1; }        S.swaps[m]++; S.cur.draws = 0; S.cur.bytes = 0; S.cur.first = 0;        const r = o.apply(this, arguments);        if (i < N) S.wait[i] = performance.now() - now;        return r; }; }    for (const m of ['drawArrays', 'drawElements']) { const o = P[m]; if (!o) continue;      P[m] = function () { if (!S.cur.first) S.cur.first = performance.now(); S.cur.draws++; return o.apply(this, arguments); }; }    for (const m of ['bufferData', 'bufferSubData']) { const o = P[m]; if (!o) continue;      P[m] = function () { const d = (m === 'bufferData') ? arguments[1] : arguments[2];        S.cur.bytes += (d && d.byteLength) ? d.byteLength : (typeof d === 'number' ? d : 0);        return o.apply(this, arguments); }; }  };  wrap(window.WebGLRenderingContext); wrap(window.WebGL2RenderingContext);  const cl = console.log.bind(console);  console.log = function () { const s = (arguments.length && typeof arguments[0] === 'string') ? arguments[0] : '';    if (s.indexOf('[L] ') === 0) S.marks.push([performance.now(), s]); return cl.apply(null, arguments); };  return 'sampler armed: frames, swap kind and wait, first draw, draw calls, buffer bytes, shot brackets';})() => "sampler armed: frames, swap kind and wait, first draw, draw calls, buffer bytes, shot brackets"
+[    811ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# perf arm fps30-r3\nMAX_FPS 1000\nSP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nMAX_FPS 30\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})() => "autoexec.cfg patched: \"\\n# perf arm fps30-r3\\nMAX_FPS 1000\\nSP_SIZE_FACTOR 6\\nSP_NUM_AIS 7\\nMAX_FPS 30\\n\""
+[    812ms] [console.log] [BOOT] autostart: calling main
+[    817ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    817ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    817ms] [console.error] 
+[    818ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    818ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    818ms] [console.log] 
+[    952ms] [console.log] [L] ENCODING latin1
+[    959ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    960ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    982ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    985ms] [console.error] TODO: glShadeModel
+[    988ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8006/armagetronad.js
+[   1025ms] [harness] eval window.AA_START() => undefined
+[   1025ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1025ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1027ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1027ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1027ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1027ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1028ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[   1274ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  10032ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8006/armagetronad.js
+[  10099ms] [harness] tap #tapzone at 458,206 (1/1)
+[  10108ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  13473ms] [harness] tap #tapzone at 458,206 (1/1)
+[  13515ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13524ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  17349ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  17350ms] [console.log] [L] TEAM_CREATED web_user
+[  17350ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  17352ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  17354ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  17355ms] [console.log] [L] NEW_ROUND 2026-09-03 23:38:00 UTC+0200
+[  17372ms] [console.log] [L] TEAM_CREATED ai_team
+[  17372ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  17372ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  17373ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  17373ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gcc
+[  17373ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  17396ms] [harness] tap #tapzone at 458,206 (1/1)
+[  17397ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  17397ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  17398ms] [console.log] [SND] live voices peaked at 11 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  17524ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  17665ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8006/favicon.ico
+[  19700ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[  19700ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  19701ms] [harness] === ROUND-1-SETUP-NOT-MEASURED ===
+[  22736ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  22740ms] [harness] key Right (1/1)
+[  23078ms] [harness] key Left (1/1)
+[  24881ms] [harness] eval __fps.shot('r1-after-tutorial-keys','begin') => "shot begin r1-after-tutorial-keys"
+[  25055ms] [harness] screenshot -> docs/evidence/m6-lag/task4-levers/fps30-r3/r1-after-tutorial-keys.png
+[  25056ms] [harness] eval __fps.shot('r1-after-tutorial-keys','end') => "shot end r1-after-tutorial-keys"
+[  25057ms] [harness] CPU throttling rate 6x
+[  25057ms] [harness] === THROTTLE-ON ===
+[  25057ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 260000ms, have 1)
+[  63471ms] [console.log] [L] DEATH_FRAG web_user gcc
+[  63479ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  63524ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  65404ms] [console.log] [L] ROUND_WINNER ai_team gcc notepad excel word
+[  69552ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  69554ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  69555ms] [console.log] [L] NEW_ROUND 2026-09-03 23:38:52 UTC+0200
+[  69559ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  69560ms] [harness] === ROUND-2-MEASURED ===
+[  69572ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  69575ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team latex
+[  69576ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gdb
+[  69591ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  69598ms] [console.log] [SND] live voices peaked at 16 (SOUND_SOURCES 10, loudness_thresh 0.0110)
+[  69598ms] [console.log] [SND] voice limiter STARTED cutting: 16 live voices, SOUND_SOURCES 10, loudness_thresh 0.0110
+[  70070ms] [console.log] [SND] voice limiter stopped cutting: 4 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  70102ms] [console.log] [SND] voice limiter STARTED cutting: 15 live voices, SOUND_SOURCES 10, loudness_thresh 0.0110
+[  70569ms] [console.log] [SND] voice limiter stopped cutting: 4 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  70620ms] [console.log] [SND] voice limiter STARTED cutting: 15 live voices, SOUND_SOURCES 10, loudness_thresh 0.0110
+[  71069ms] [console.log] [SND] voice limiter stopped cutting: 4 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  71122ms] [console.log] [SND] voice limiter STARTED cutting: 14 live voices, SOUND_SOURCES 10, loudness_thresh 0.0010
+[  71169ms] [console.log] [SND] voice limiter stopped cutting: 5 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  71219ms] [console.log] [SND] voice limiter STARTED cutting: 14 live voices, SOUND_SOURCES 10, loudness_thresh 0.0010
+[  71254ms] [console.log] [SND] voice limiter stopped cutting: 5 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  71302ms] [console.log] [SND] voice limiter STARTED cutting: 14 live voices, SOUND_SOURCES 10, loudness_thresh 0.0010
+[  71355ms] [console.log] [SND] voice limiter stopped cutting: 5 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[  75561ms] [harness] eval __fps.shot('r2-06s','begin') => "shot begin r2-06s"
+[  75707ms] [harness] screenshot -> docs/evidence/m6-lag/task4-levers/fps30-r3/r2-06s.png
+[  75721ms] [harness] eval __fps.shot('r2-06s','end') => "shot end r2-06s"
+[  99723ms] [harness] eval __fps.shot('r2-30s','begin') => "shot begin r2-30s"
+[  99875ms] [harness] screenshot -> docs/evidence/m6-lag/task4-levers/fps30-r3/r2-30s.png
+[  99888ms] [harness] eval __fps.shot('r2-30s','end') => "shot end r2-30s"
+[ 115048ms] [console.log] [SND] voice limiter STARTED cutting: 15 live voices, SOUND_SOURCES 10, loudness_thresh 0.0110
+[ 119903ms] [harness] eval __fps.shot('r2-50s','begin') => "shot begin r2-50s"
+[ 120078ms] [harness] screenshot -> docs/evidence/m6-lag/task4-levers/fps30-r3/r2-50s.png
+[ 120084ms] [harness] eval __fps.shot('r2-50s','end') => "shot end r2-50s"
+[ 120084ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 260000ms, have 2)
+[ 126510ms] [console.log] [SND] voice limiter stopped cutting: 8 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[ 128678ms] [console.log] [L] DEATH_FRAG web_user notepad
+[ 128808ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[ 129881ms] [console.log] [L] ROUND_WINNER ai_team gdb latex outlook gcc notepad excel word
+[ 133952ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[ 133953ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[ 133954ms] [console.log] [L] NEW_ROUND 2026-09-03 23:39:57 UTC+0200
+[ 133987ms] [console.log] [SND] voice limiter STARTED cutting: 16 live voices, SOUND_SOURCES 10, loudness_thresh 0.0110
+[ 133991ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[ 133991ms] [harness] === ROUND-3-MEASURED ===
+[ 134030ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[ 134424ms] [console.log] [SND] voice limiter stopped cutting: 4 live voices, SOUND_SOURCES 10, loudness_thresh 0.0000
+[ 140009ms] [harness] eval __fps.shot('r3-06s','begin') => "shot begin r3-06s"
+[ 140137ms] [harness] screenshot -> docs/evidence/m6-lag/task4-levers/fps30-r3/r3-06s.png
+[ 140144ms] [harness] eval __fps.shot('r3-06s','end') => "shot end r3-06s"

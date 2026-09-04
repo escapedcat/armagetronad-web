@@ -1,0 +1,86 @@
+Mechanism 1 over the ten baseline rounds (docs/evidence/m6-lag/task2-repro, per_second of each [PERF] line).
+Moving seconds = 4 s (countdown end) to the death second; early/late = the [PERF] windows.
+COLUMN NOTE, added at the Task 3 adversarial check (README, "Adversarial check"); no number below changed.
+  ren%late = d_ren / late ms_p50: the render part's share of the round's early->late GROWTH, expressed
+             over the late frame time. It is NOT the render part's LEVEL share of the frame. That level
+             share is ms_first_draw_to_swap_p50 / ms_p50 in the late window, and over these same ten
+             rounds it is 62.1-68.9 % (median 65.4; flat median 64.9, spike median 67.7).
+  ren%grow = d_ren / d_ms.  pre%grow = d_pre / d_ms.
+  share_ren_of_late below is the ren%late column. Its median, 3.1, is the median of two populations
+  (seven flat rounds in -6..+4 %, three spike rounds in 17-21 %), not a central value of one; a
+  bootstrap 95 % CI over the ten rounds runs 0.1-17.2 %. Quote the two populations, not the median.
+
+run/rd     spike r(ms,dr) r(ren,dr) r(pre,dr) us/draw ren us/draw ms  dr peak(s)  ren s44->pk early->late ms  d_ms d_ren d_pre ren%late ren%grow pre%grow   kb e->l
+base-r1/2  yes       0.96      0.98      0.88        24.0       41.9     503(49)   17.9->27.5     22.8->33.1  10.3   5.7   4.1     17.2       55       40 180.86->273.99
+base-r1/3  no        0.20      0.13      0.20        54.3      204.8      116(5)   16.2->17.1     21.3->24.5   3.2   0.4   2.5      1.6       13       78 183.98->181.7
+base-r2/2  no        0.18      0.40      0.06        64.2       97.2      123(5)   15.8->16.6     21.6->25.8   4.2   1.1   2.7      4.3       26       64 180.68->179.48
+base-r2/3  no        0.24      0.01      0.25         3.2      161.4      117(5)     14.8->16     20.6->24.8   4.2   0.3   3.7      1.2        7       88 184.01->181.98
+base-r3/2  no        0.20      0.25      0.07        57.5      117.2      123(5)   16.7->17.6       24.3->27   2.7  -0.4   2.7     -1.5      -15      100 180.7->179.4
+base-r3/3  no        0.45      0.53      0.22       245.7      454.0      117(5)   15.7->18.5     24.1->25.1   1.0  -1.5   2.3     -6.0     -150      230 184.02->181.59
+base-r4/2  yes       0.98      0.98      0.92        31.1       50.3     511(49)   17.1->30.4     22.3->34.1  11.8   7.2   4.1     21.1       61       35 180.74->266.79
+base-r4/3  yes       0.95      0.95      0.91        46.8       83.5     393(49)   17.8->34.8     22.1->36.1  14.0   7.5   5.7     20.8       54       41 183.96->229.34
+base-r5/2  no        0.36      0.50      0.17       194.2      284.8      122(5)   17.6->18.3     23.8->27.4   3.6   0.6   2.6      2.2       17       72 180.71->179.38
+base-r5/3  no        0.52      0.49      0.35       193.5      474.9      117(5)   18.2->20.2       23.6->28   4.4   1.1   2.8      3.9       25       64 183.95->182.06
+share_ren_of_late      all: [-6.0, -1.5, 1.2, 1.6, 2.2, 3.9, 4.3, 17.2, 20.8, 21.1] median 3.1 | flat: [-6.0, -1.5, 1.2, 1.6, 2.2, 3.9, 4.3] median 1.6 | spike: [17.2, 20.8, 21.1] median 20.8
+share_ren_of_growth    all: [-150.0, -14.8, 7.1, 12.5, 16.7, 25.0, 26.2, 53.6, 55.3, 61.0] median 20.8 | flat: [-150.0, -14.8, 7.1, 12.5, 16.7, 25.0, 26.2] median 12.5 | spike: [53.6, 55.3, 61.0] median 55.3
+share_pre_of_growth    all: [34.7, 39.8, 40.7, 63.6, 64.3, 72.2, 78.1, 88.1, 100.0, 230.0] median 68.3 | flat: [63.6, 64.3, 72.2, 78.1, 88.1, 100.0, 230.0] median 78.1 | spike: [34.7, 39.8, 40.7] median 39.8
+dren                   all: [-1.5, -0.4, 0.3, 0.4, 0.6, 1.1, 1.1, 5.7, 7.2, 7.5] median 0.8 | flat: [-1.5, -0.4, 0.3, 0.4, 0.6, 1.1, 1.1] median 0.4 | spike: [5.7, 7.2, 7.5] median 7.2
+dpre                   all: [2.3, 2.5, 2.6, 2.7, 2.7, 2.8, 3.7, 4.1, 4.1, 5.7] median 2.8 | flat: [2.3, 2.5, 2.6, 2.7, 2.7, 2.8, 3.7] median 2.7 | spike: [4.1, 4.1, 5.7] median 4.1
+dms                    all: [1.0, 2.7, 3.2, 3.6, 4.2, 4.2, 4.4, 10.3, 11.8, 14.0] median 4.2 | flat: [1.0, 2.7, 3.2, 3.6, 4.2, 4.2, 4.4] median 3.6 | spike: [10.3, 11.8, 14.0] median 11.8
+slope_us_per_draw      all: [3.2, 24.0, 31.1, 46.8, 54.3, 57.5, 64.2, 193.5, 194.2, 245.7] median 55.9 | flat: [3.2, 54.3, 57.5, 64.2, 193.5, 194.2, 245.7] median 64.2 | spike: [24.0, 31.1, 46.8] median 31.1
+
+Per-second, spike rounds: second, draws, ms_p50, ms_to_first_draw, ms_first_draw_to_swap (seconds 42-59)
+base-r1/2:
+   s42 draws  107.0 ms  24.8 pre   7.4 ren  17.1
+   s43 draws  107.0 ms  24.0 pre   7.1 ren  16.6
+   s44 draws  107.0 ms  25.4 pre   7.5 ren  17.9
+   s45 draws  122.0 ms  31.4 pre  13.6 ren  18.4
+   s46 draws  215.0 ms  33.5 pre  13.7 ren  19.8
+   s47 draws  321.0 ms  37.2 pre  14.8 ren  22.0
+   s48 draws  422.8 ms  40.7 pre  15.0 ren  25.3
+   s49 draws  503.3 ms  43.0 pre  15.6 ren  27.5
+   s50 draws  497.9 ms  43.0 pre  14.7 ren  27.6
+   s51 draws  476.6 ms  41.1 pre  13.9 ren  27.3
+   s52 draws  478.2 ms  39.0 pre  12.9 ren  25.9
+   s53 draws  482.8 ms  40.5 pre  14.0 ren  26.1
+   s54 draws  490.8 ms  40.3 pre  13.5 ren  26.4
+   s55 draws  480.6 ms  39.1 pre  13.4 ren  25.4
+   s56 draws  395.8 ms  32.6 pre   9.3 ren  23.2
+   s57 draws  296.2 ms  29.5 pre   8.8 ren  20.4
+   s58 draws  208.4 ms  27.9 pre   9.2 ren  18.4
+base-r4/2:
+   s42 draws  107.0 ms  23.8 pre   7.3 ren  16.3
+   s43 draws  107.0 ms  24.2 pre   7.2 ren  17.0
+   s44 draws  107.0 ms  24.3 pre   7.3 ren  17.1
+   s45 draws  125.7 ms  29.3 pre  12.2 ren  17.9
+   s46 draws  230.1 ms  33.7 pre  13.6 ren  20.4
+   s47 draws  341.1 ms  36.1 pre  13.6 ren  23.5
+   s48 draws  438.8 ms  44.4 pre  14.7 ren  28.9
+   s49 draws  510.6 ms  45.3 pre  14.5 ren  30.4
+   s50 draws  497.8 ms  41.6 pre  13.5 ren  27.4
+   s51 draws  475.4 ms  42.9 pre  14.4 ren  27.8
+   s52 draws  472.8 ms  41.5 pre  12.9 ren  28.0
+   s53 draws  478.1 ms  41.8 pre  14.0 ren  27.4
+   s54 draws  476.8 ms  45.1 pre  14.6 ren  29.4
+   s55 draws  456.4 ms  40.9 pre  13.0 ren  27.8
+   s56 draws  374.6 ms  33.8 pre   9.3 ren  24.1
+   s57 draws  284.8 ms  31.6 pre   8.9 ren  21.9
+   s58 draws  204.1 ms  28.6 pre   8.8 ren  19.4
+base-r4/3:
+   s42 draws  107.0 ms  24.7 pre   7.3 ren  17.2
+   s43 draws  107.0 ms  24.1 pre   7.3 ren  16.8
+   s44 draws  107.0 ms  25.5 pre   7.5 ren  17.8
+   s45 draws  119.7 ms  34.3 pre  14.9 ren  19.6
+   s46 draws  201.0 ms  41.2 pre  16.0 ren  23.3
+   s47 draws  294.9 ms  40.6 pre  15.7 ren  24.7
+   s48 draws  360.9 ms  45.6 pre  16.7 ren  29.0
+   s49 draws  392.6 ms  51.6 pre  16.7 ren  34.8
+   s50 draws  365.0 ms  48.5 pre  15.6 ren  30.9
+   s51 draws  297.8 ms  38.3 pre  13.4 ren  24.6
+   s52 draws  281.2 ms  38.3 pre  14.1 ren  24.5
+   s53 draws  288.6 ms  40.3 pre  14.4 ren  24.9
+   s54 draws  299.3 ms  39.5 pre  13.8 ren  25.6
+   s55 draws  293.0 ms  38.9 pre  13.4 ren  25.3
+   s56 draws  249.9 ms  35.5 pre  10.6 ren  24.1
+   s57 draws  205.2 ms  31.9 pre   9.9 ren  22.2
+   s58 draws  160.0 ms  35.5 pre  11.7 ren  22.5

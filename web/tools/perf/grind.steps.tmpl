@@ -1,0 +1,131 @@
+# The GRIND arm: one cycle, no AIs, driven straight into the rim and held there.
+# SAMPLER, REPORT, CONFIGLINES, TAGHERE, CPURATE are substituted by run-arm.sh (comment
+# lines are left alone). Not runnable on its own. Run it through run-arm.sh with this
+# file as the 5th argument and, as the 4th, the four lines SP_SIZE_FACTOR 0,
+# SP_NUM_AIS 0, CYCLE_RUBBER_TIME 0.1 and TIMESTEP_MAX 10 separated the way
+# run-arm.sh's header says (a backslash-n pair per line break; the tripwire that
+# refuses a doubled backslash reads comment lines too, which is why this comment
+# does not spell it). Read docs/evidence/m6-lag/task3-mechanisms/README.md before
+# changing a number here.
+#
+# WHAT IT MEASURES. Mechanism 2 of the M6 plan is the rubber path of
+# gCycleMovement::TimestepCore -- the gSensor scan (GetMaxSpaceAhead) every step and
+# the recursive re-simulation when a wall is near -- which scales with walls NEAR the
+# cycle, not with the total trail. So: the smallest arena, no other cycle (the draw
+# count is flat by construction), the idle human drives straight from its spawn into
+# the rim and stays pressed against it. Per-second ms_to_first_draw before contact
+# against after contact, with draws/frame flat, is the reading.
+#
+# WHY THESE CONFIG LINES, and why not the plan's. The match is welcome()'s tutorial
+# match (gArmagetron.cpp; web/tools/perf/README.md, "What an arm is"), which assigns
+# sg_rubberCycle = 5 for its duration AFTER autoexec.cfg is read, so the plan's
+# CYCLE_RUBBER 50 cannot reach the game and is left out. What keeps the cycle alive
+# at the rim is CYCLE_RUBBER_TIME: TimestepCore lets rubber decay by
+# rubber /= (1 + ts/CYCLE_RUBBER_TIME) every step, so pressed against a wall at speed
+# v the reservoir settles at v * CYCLE_RUBBER_TIME (15 * 0.1 = 1.5 of the 5 granted)
+# and the cycle dies only when one step alone adds the missing 3.5 -- a frame over
+# about 233 ms. (The plan's CYCLE_RUBBER_TIME 0 takes the else branch, rubber = 0
+# every step: alive too, but the HUD's Rubber Used gauge reads 0 and cannot prove the
+# grind; 0.1 shows a steady 30 % fill while grinding and 0 while free.)
+# TIMESTEP_MAX 10 is for the stall below. SP_NUM_AIS 0 is honoured because
+# welcome() sets autoNum 0. SP_SIZE_FACTOR 0 -- not the shipped -3 -- because the
+# rim must be far enough away for a throttled free-driving window BEFORE contact:
+# welcome() lowers the factor by 2, so 0 is a 0.5x arena and the rim is
+# 450 * 0.5 = 225 map units ahead of the spawn, 15 s at 15.0 after the 4 s countdown,
+# contact about 19 s after NEW_ROUND. At -3 (tutorial -5, 0.177x) contact came 9.3 s
+# after NEW_ROUND, 1.6 s after the throttle went on (22:10 attempt, round 1: two
+# throttled seconds before the rim), which is no window at all.
+#
+# THE ONLY ROUND, AND WHY IT IS ROUND 1. A lone cycle ends no round: with one team
+# there is no winner (gGame.cpp Analysis: a winner needs eTeam::teams.Len() > 1), and
+# the winnerless path (alive == 0, 4 s after the last death) never fires either,
+# because Analysis counts a human whose cycle object is gone as "not yet logged in"
+# and, with ais == 0, adds one to alive for it. Measured: the 22:21 attempt killed the
+# cycle 14.8 s into round 1 (DEATH_SUICIDE 13 ms after the stall) and no NEW_ROUND
+# followed in 60 s. everytime.cfg, which could have switched an AI off between
+# rounds, is read only under #ifdef DEDICATED. So an arm with no AI has exactly one
+# round, round 1, and this template measures it -- a stated deviation from the
+# plan's "round 1 is never measured", whose two reasons are both over before the
+# window opens: the tutorial's two key presses land at 5.4 and 5.7 s and the
+# throttle goes on at 7.7 s; the free-driving window is 8-18 s and the rim from
+# about 19 s, all throttled. The alternative, one AI so rounds can end, puts a
+# second rubber path and a second trail into the scene whose cost would vary with
+# the AI's own wall proximity -- the very thing being measured.
+#
+# THE STALL is the proof of contact, and ends the measured span. A 6 s busy loop on
+# the main thread (an eval: step; CDP has no timeout on it) makes the game's next
+# timestep 6 s long. gGame::Timestep passes it whole under TIMESTEP_MAX 10 (0.2 s
+# shipped), then eGameObject::TimestepThis cuts it into its HARDCODED ten pieces of
+# 0.6 s. In each, the rubber path splits the piece where the reservoir would run out
+# (0.233 s at 15.0 with 3.5 of 5 free), the reservoir decays back to 1.5 at the end of
+# that half, and the second half (0.367 s, 5.5 needed against 3.5 free, the
+# recursion guard forbidding a further split) moves the cycle 2 units through the
+# rim: Move() throws and "prevent it if there is rubber left" has none. A FREE cycle
+# survives the same stall (it moves 90 units), so a DEATH_ mark right after the stall
+# proves the cycle was pressed against a wall. A 1 s stall does not kill -- five
+# 0.2 s pieces, 3 needed against 3.5 free -- measured twice on the 22:10 attempt. The
+# stall is bracketed like a screenshot (sampler.js S.shot) so report.js drops its
+# frame from every statistic; the measured span ends at the DEATH_ mark, so the
+# late_5s window is the last five seconds of grinding. The round itself never ends
+# (above); report.js closes it at report time (closed_by: report).
+#
+# The two key presses after the countdown are the tutorial's (arm.steps.tmpl says why
+# the 3 s wait); the throttle goes on right after them. Every shot: is bracketed as in
+# arm.steps.tmpl. check-arm.mjs reports this arm INVALID by design (it wants rounds 2
+# and 3); the arm's validity is the DEATH_ mark after the stall, the screenshots with
+# the gauge at 1.5 of 5 at the rim, and the window lengths, all in the evidence README.
+wait:800
+eval:SAMPLER
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# perf arm TAGHERE\nMAX_FPS 1000\nCONFIGLINES\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})()
+eval:window.AA_START()
+until:1:90000:[BOOT] autostart
+wait:9000
+tap:#tapzone
+wait:3000
+tap:#tapzone
+wait:3500
+tap:#tapzone
+wait:2000
+until:1:120000:[L] NEW_ROUND
+mark:ROUND-1-GRIND-MEASURED-FROM-THROTTLE-ON
+wait:3000
+key:Right:1
+key:Left:1
+wait:1500
+eval:__fps.shot('r1-after-tutorial-keys','begin')
+shot:r1-after-tutorial-keys
+eval:__fps.shot('r1-after-tutorial-keys','end')
+cpu:CPURATE
+mark:THROTTLE-ON
+wait:4000
+eval:__fps.shot('g-12s-free','begin')
+shot:g-12s-free
+eval:__fps.shot('g-12s-free','end')
+wait:6000
+eval:__fps.shot('g-18s-approach','begin')
+shot:g-18s-approach
+eval:__fps.shot('g-18s-approach','end')
+wait:6000
+eval:__fps.shot('g-24s-grinding','begin')
+shot:g-24s-grinding
+eval:__fps.shot('g-24s-grinding','end')
+wait:10000
+eval:__fps.shot('g-34s-grinding','begin')
+shot:g-34s-grinding
+eval:__fps.shot('g-34s-grinding','end')
+wait:10000
+eval:__fps.shot('g-44s-grinding','begin')
+shot:g-44s-grinding
+eval:__fps.shot('g-44s-grinding','end')
+wait:10000
+eval:__fps.shot('g-54s-grinding','begin')
+shot:g-54s-grinding
+eval:__fps.shot('g-54s-grinding','end')
+wait:5000
+eval:__fps.shot('kill-stall','begin')
+eval:(()=>{const t0=performance.now();while(performance.now()-t0<6000){}return 'kill stall '+Math.round(performance.now()-t0)+' ms on the main thread'})()
+eval:__fps.shot('kill-stall','end')
+until:1:15000:[L] DEATH_
+mark:GRIND-OVER
+wait:2000
+eval:REPORT
