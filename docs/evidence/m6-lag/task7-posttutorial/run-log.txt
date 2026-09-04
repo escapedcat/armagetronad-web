@@ -1,0 +1,13 @@
+==================================================================
+2026-09-04 08:58:51 UTC  arm=smoke-posttut-base cpu=6 port=8007
+cfg='SP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH -1'
+before: 10:58  up 4 days, 22:26, 35 users, load averages: 11.54 9.98 11.14
+after:  11:02  up 4 days, 22:30, 35 users, load averages: 10.43 10.07 10.92
+run-arm.sh exit (default gate): 0
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 26.6/26.1; late draws/frame 122.07/122.07 (floor 18.05); spans 0.53-58.82 s/0.53-58.79 s; late shots r2-30s,r2-50s / r3-30s,r3-50s; swaps finish 12924 / flush 0; live in round 2: SP_WALLS_LENGTH -1, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]
+--- after pruning the eight screenshots the argument does not use (Task 2's PNG
+--- policy; see README.md), the same log re-scores identically except that the
+--- gate now lists only the shots still on disk:
+check-arm.mjs: mode posttut -- the POST-TUTORIAL path (FIRST_USE 0, menu walk, live SP_ settings)
+VALID [posttut]: 2 rounds at cpu 6x; late ms p50 26.6/26.1; late draws/frame 122.07/122.07 (floor 18.05); spans 0.53-58.82 s/0.53-58.79 s; late shots r2-50s / r3-50s; swaps finish 12924 / flush 0; live in round 2: SP_WALLS_LENGTH -1, SP_SPEED_FACTOR 0, SP_SIZE_FACTOR 6, SP_NUM_AIS 7 (all as asked); turn binds L["1104"] R["1103"]

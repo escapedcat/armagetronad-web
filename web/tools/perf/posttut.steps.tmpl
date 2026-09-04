@@ -93,15 +93,26 @@
 # and starts with that one selected (uMenu.cpp:67 sets selected huge, :219 clamps it
 # to items.Len()-1; YPos(num) at :111 puts a higher index higher on the screen), and
 # SDLK_DOWN DECREMENTS the index (uMenu.cpp:432), i.e. moves down the screen. The
-# last item added to MainMenu is gamemenuitem (gGame.cpp:2717), so "Game" is selected
-# at entry; the last item added to game_menu is connect (gGame.cpp:2553), so
-# "Network Game" is selected there and one Down reaches start
-# (gGame.cpp:2549), whose function is &sg_SinglePlayerGame -- the very function
-# welcome() calls on the tutorial path. Hence Enter, Down, Enter. This is the walk
+# last item added to MainMenu is gamemenuitem (gGame.cpp:2717), which renders as
+# "Play Game", so it is selected at entry; the last item added to game_menu is
+# connect (gGame.cpp:2553), which renders as "Multiplayer", so one Down reaches
+# start (gGame.cpp:2549) -- rendered "Local Game", helptext "Enter the game grid!",
+# function &sg_SinglePlayerGame, the very function welcome() calls on the tutorial
+# path. Hence Enter, Down, Enter, and the two menu screenshots are named for the
+# source symbols while the pictures show those four labels. This is the walk
 # docs/evidence/phase3-touch/synthetic-key-gate.steps.asrun already recorded
 # screenshot by screenshot (synkey-02 main menu, -03 submenu, -04 cursor on Start
 # New Game, -05 round 1 driving), and web/tools/maxfps-precedence.steps uses the
 # same key: steps for the sibling branch of the same menu.
+#
+# ONE ORDERING TRAP, measured in the first run of this template: the driver records
+# a key: step AFTER dispatching keyUp and sleeping 30 ms, while the game acts on the
+# keyDown -- so the closing Enter is written to the transcript AFTER the
+# [L] NEW_ROUND it caused (23187 ms against 23221 ms in
+# docs/evidence/m6-lag/task7-posttutorial/smoke-posttut-base/console.log). A gate
+# that looks for the walk strictly "before the first NEW_ROUND" fails a good run.
+# check-arm.mjs --posttut ends its walk window at the ROUND-1-SETUP-NOT-MEASURED
+# mark below instead.
 #
 # WHY THE WAITS BEFORE THE WALK ARE BLIND. There is no console marker for "the main
 # menu is up": [PERSISTSAVE] fires on menu LEAVE (eWebPersist.cpp:114) and the
@@ -127,7 +138,10 @@
 # during the match reads speed -2, size (asked - 2) and walls 400 no matter what the
 # config said. Here they must equal what was asked. The probe runs once in round 1
 # and once inside measured round 2, and the round-2 call is bracketed as r2-probe so
-# report.js drops the frames the ~22 KB serialise disturbs.
+# report.js drops the frames the ~22 KB serialise disturbs (69 ms, measured). The
+# round-1 call is deliberately NOT bracketed: round 1 is setup and is never a
+# measurement, and leaving its cost visible in round 1's per_second series is how a
+# reader sees what the probe costs at all.
 #
 # Everything from ROUND-1-SETUP-NOT-MEASURED onwards is arm.steps.tmpl's structure
 # unchanged: round 1 is setup and takes the throttle, rounds 2 and 3 are measured

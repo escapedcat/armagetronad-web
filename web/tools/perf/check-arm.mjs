@@ -198,13 +198,27 @@ let probeNote = '';
 if (posttut) {
   const firstRound = nr.length ? nr[0][1] : lines.length;
 
-  // walk: the harness's own input BEFORE the first NEW_ROUND. The tutorial
-  // template's pre-round input is three tap:#tapzone lines and no Down; this
-  // path has to steer a menu, so a Down and an Enter/tap after it are required.
-  const walk = lines.slice(0, firstRound)
+  // walk: the harness's own input that reached the menu. The tutorial template's
+  // pre-round input is three tap:#tapzone lines and no Down at all; this path has
+  // to steer a menu, so a Down with an Enter/tap on each side of it is required.
+  //
+  // THE WINDOW IS NOT "BEFORE THE FIRST NEW_ROUND", and that is measured, not
+  // cautious. The driver records a key: step AFTER dispatching keyUp and sleeping
+  // 30 ms, while the game acts on the keyDown -- so the Enter that starts the
+  // match is recorded AFTER the [L] NEW_ROUND it caused. In the smoke run the gap
+  // is 34 ms (NEW_ROUND at 23187 ms, "key Enter" at 23221 ms). The window
+  // therefore ends at the template's ROUND-1-SETUP-NOT-MEASURED mark, which is
+  // the first thing after the walk and comes before round 1's own two presses;
+  // if that mark is absent it ends 2 s after the first NEW_ROUND. The Down itself
+  // must still be strictly before the first NEW_ROUND.
+  const setupMark = lines.findIndex((l) => l.includes('[harness] === ROUND-1-SETUP-NOT-MEASURED ==='));
+  const nrStamp = nr.length ? stamp(nr[0][0]) : null;
+  const walkEnd = setupMark >= 0 ? setupMark
+    : (nrStamp == null ? lines.length : lines.findIndex((l, i) => i > firstRound && stamp(l) > nrStamp + 2000));
+  const walk = lines.slice(0, walkEnd < 0 ? lines.length : walkEnd)
     .map((l, i) => [/\[harness\] (key (\w+)|tap )/.exec(l), i]).filter(([m]) => m)
     .map(([m, i]) => [m[2] || 'tap', i]);
-  const down = walk.findIndex(([k]) => k === 'Down');
+  const down = walk.findIndex(([k, i]) => k === 'Down' && i < firstRound);
   const enterBefore = walk.slice(0, down < 0 ? 0 : down).filter(([k]) => k === 'Enter' || k === 'tap').length;
   const enterAfter = down < 0 ? 0 : walk.slice(down + 1).filter(([k]) => k === 'Enter' || k === 'tap').length;
   if (down < 0)
