@@ -766,7 +766,11 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > with draw bursts to 171, against 13.1/13.6 median, 13.8/15.0 worst and draws flat at 60 with
 > `SPARKS 0`), so `web/shell.html` now appends `SPARKS 0` on touch devices only — a settings
 > change with no C++ in it, `?sparks=1` to restore them, and the desktop autoexec untouched and
-> gated as such. `docs/evidence/m6-lag/task8-sparks/`.)*
+> gated as such. **The same nine runs also close Task 3's open question**: the end-of-round draw
+> spikes, which the skeptics left as "a per-draw-call cost of unknown geometry", are those same
+> sparks — **0 spike rounds of 10 with `SPARKS 0` against 3 of 10** — while the second-45
+> simulation bump arrives on the same second at the same height either way, so what was
+> identified is the *spikes*, not the growth. `docs/evidence/m6-lag/task8-sparks/`.)*
 >
 > The lesson this round adds to M4's P11 and M5's stale gate: **a gate must prove the condition
 > it measures actually held** — a late-round screenshot with trail geometry in it, a non-zero
