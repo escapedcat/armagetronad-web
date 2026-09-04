@@ -1,7 +1,8 @@
-# M6 option B — the post-tutorial path
+# M6 option B — the post-tutorial path, measured
 
-**This directory is the instrument and one proving run. The sweep has not been
-taken; the Results section below is empty on purpose.**
+**The instrument, its proving run, and the sweep. Ten runs: eight VALID, and
+two INVALID because the shipped configuration's rounds last eight seconds —
+which is section 2's result, not a defect. Results are at the bottom.**
 
 Every arm of Tasks 1–4 measured the **tutorial match**. `drive-browser.mjs`
 boots a fresh browser profile, so `st_FirstUse` is true, so `welcome()`
@@ -20,8 +21,9 @@ runs (`gArmagetron.cpp:911`), the `SP_` settings are live, and the shipped
 trails that never expire. `../README.md` §5.1 names that as the milestone's
 first gap and §6 option B as the way to close it.
 
-Nothing here decides anything. It builds the arm, its gate and its runner, and
-proves them once.
+Nothing here decides anything. It builds the arm, its gate and its runner,
+proves them once, and then takes the measurement `../README.md` §5.1 said was
+missing. The decision stays the maintainer's.
 
 ## Files
 
@@ -31,7 +33,9 @@ proves them once.
 | `web/tools/perf/check-arm.mjs --posttut` | the gate; it prints which mode judged the log |
 | `web/tools/perf/run-posttut.sh` | the serial runner over the ten arms, one arm at a time if asked |
 | `smoke-posttut-base/` | the one proving run (below) |
+| `posttut-default-r1..2/`, `posttut-base-r1..3/`, `posttut-walls150-r1..3/`, `posttut-walls400-r1..2/` | the sweep, one directory per run, with `<run>-driver.txt` beside it |
 | `run-log.txt` | the runner's own log: one block per arm with `uptime` before and after and the verdict |
+| `table.txt` | `summarise.py … --posttut` over this directory: per measured round the early/late windows, the frame-part split and the full per-second series every derived number below is computed from |
 
 ## What the template sets, and why
 
@@ -175,7 +179,7 @@ comments — is `--exclude-file`d from the preload by `web/Makefile` and is
 `#ifdef DEDICATED` anyway, so none of its values reach this client.
 
 **`posttut-default` is expected to be reported INVALID, and that is a result,
-not a defect.** `SP_SIZE_FACTOR -3` is a 0.35× arena (`exponent(i) = 2^(i/2)`)
+not a defect** — it was, twice, and Results §2 has the round lengths. `SP_SIZE_FACTOR -3` is a 0.35× arena (`exponent(i) = 2^(i/2)`)
 and `SP_SPEED_FACTOR 0` is twice the tutorial's −2, so its rounds should be far
 under the 30 s span an early-vs-late comparison needs — `run-arm.sh`'s own
 header records eight-second rounds at the shipped size factor. The shipped
@@ -243,6 +247,11 @@ cycles moving twice as fast**. One run, so this is a thing to look at in the
 sweep and not a finding; the obvious hypothesis is that what is drawn is bounded
 by the view frustum rather than by trail length, and `r2-50s.png` — a huge arena
 with the AI trails a long way off at the horizon — is consistent with it.
+**The sweep found the same shape in all eighteen of its measured rounds**
+(Results §3): the plateau is exactly 114.00 draws per frame and it does not
+depend on the trail cap at all. The frustum half of that hypothesis is still
+untested — nothing in this task varied the camera or the arena — so what is
+established is the negative: trail *length* does not set the draw count.
 
 The screenshot also carries a second, independent, *visible* proof that this is
 not the tutorial: the HUD reads **Speed 30.0**, exactly twice the 15.0 every
@@ -257,12 +266,17 @@ were deleted — 3 MB of PNG the gate does not need and the argument does not us
 The two menu pictures are described above; if the walk ever has to be
 re-diagnosed, re-run the arm and look at them before pruning.
 
-## How to run the sweep
+## How the sweep was run
+
+Exactly this, on 2026-09-04 between 09:09 and 09:43 UTC, one arm at a time:
 
 ```sh
 python3 -m http.server 8007 --directory web/dist-m1 &
 AA_PERF_PORT=8007 sh web/tools/perf/run-posttut.sh                   # all ten, in order
 AA_PERF_PORT=8007 sh web/tools/perf/run-posttut.sh posttut-base-r1   # or one at a time
+python3 web/tools/perf/summarise.py \
+  docs/evidence/m6-lag/task7-posttutorial --posttut | tee \
+  docs/evidence/m6-lag/task7-posttutorial/table.txt
 ```
 
 Each arm is about four minutes of wall clock. The runner refuses to start an arm
@@ -271,6 +285,338 @@ and records `uptime` around every drive.
 
 ## Results
 
-*Not taken yet.* The sweep writes one directory per arm beside
-`smoke-posttut-base/`, and its verdicts accumulate in `run-log.txt`. Fill in the
-table, the per-arm spread and the comparison against Tasks 2 and 4 here.
+Ten runs, 2026-09-04 09:09–09:43 UTC, one arm at a time through
+`run-posttut.sh`, on this worktree's `web/dist-m1` served on port 8007; Chrome
+**152.0.7977.77** headed at `--mobile 915,412,3`, CPU throttle **6×**,
+`MAX_FPS 1000` — stated once here and true of every number below. **These are
+one desktop's milliseconds**, throttled, at a phone's pixel count, with a fixed
+event-loop yield inside each frame interval that the throttle does not scale
+(`web/tools/perf/README.md`, "What a frame time contains"): the ratios and the
+per-arm deltas travel, the milliseconds are not a phone's. The 1-minute load
+(`uptime.txt`, before and after every run) ran **9.44–27.41** across the sweep,
+because a Time Machine backup ran through all of it (the single highest figure,
+27.41, was recorded after `posttut-walls150-r2`). The highest load recorded
+*before* any run, 25.20, belongs to `posttut-walls150-r3` — the run that then
+produced the fastest two rounds of the whole task, 22.6 and 22.4 ms late p50 —
+so the load did not order the arms. Every figure is computed from
+the `[PERF]` JSON at the end of each run's `console.log`; `table.txt` is
+`python3 web/tools/perf/summarise.py docs/evidence/m6-lag/task7-posttutorial
+--posttut` over this directory, and nothing here is copied from a report.
+
+### 1. What this path is, and what proves each run was on it
+
+One line per proof, and the file that carries it.
+
+| the claim | what proves it | where |
+|---|---|---|
+| `welcome()` took its early-return branch — no tutorial, none of its forced settings | there is a main menu, and it had to be walked: an Enter, a **`Down`**, an Enter before the first `[L] NEW_ROUND` (the tutorial template reaches its match with three taps and no `Down` at all) | `m0-main-menu.png` in all ten runs; the `walk` check in `check-arm.mjs --posttut` |
+| the three render settings a returning phone really has | the run's own recorded `autoexec.cfg patched:` result contains `FIRST_USE 0`, `SWAP_MODE 2`, `FLOOR_DETAIL 3` and `TEXT_OUT 1` | `steps.txt` and `console.log` of all ten runs; the `patched` check |
+| the tutorial's forced settings were **not** running while a round was measured | the probe calls `Module._aa_web_save_config()` mid-round, reads `/persist/var/user.cfg` back and logs each live value beside the asked one: `SP_WALLS_LENGTH`, `SP_SPEED_FACTOR`, `SP_SIZE_FACTOR` and `SP_NUM_AIS` all as asked in **10 of 10** runs (`posttut-default` asks for none of them, so "as asked" there is the shipped default, and it read `-1`, `0`, `-3`, `3`) | the `[POSTTUT] {"phase":"round2-measured",…}` line, logged 6.26–6.42 s into measured round 2 of every run |
+| the two turn binds exist on a path that skips `sg_StartupPlayerMenu` | the same probe reads them back out of the saved `user.cfg`: `CYCLE_TURN_LEFT` **1104**, `CYCLE_TURN_RIGHT` **1103**, in **10 of 10** runs | same line, `turn_left_bound` / `turn_right_bound`; `posttut-base-r1/r1-after-keys.png` is round 1 just after the two presses |
+| …and one proof that needs no log at all | the HUD reads **Speed 30.0** and **Enemies: 7** — exactly twice the 15.0 of every tutorial round in Tasks 1–4, because `welcome()`'s `speedFactor = -2` is not running | `posttut-base-r1/r2-50s.png` |
+
+The ten verdicts, re-run with `node web/tools/perf/check-arm.mjs --posttut`
+**after** the screenshots were trimmed, so they judge exactly what is committed
+here (the only difference from `run-log.txt`'s copies is that the `late shots`
+list now names the two pictures still on disk):
+
+| run | verdict | late ms p50, rd 2 / 3 | late draws/frame |
+|---|---|---|---|
+| `posttut-default-r1` | **INVALID**: 0 measured round(s) with a span ≥ 30 s | — | — |
+| `posttut-default-r2` | **INVALID**: 0 measured round(s) with a span ≥ 30 s | — | — |
+| `posttut-base-r1` | VALID | 25.6 / 26 | 122.15 / 122.09 |
+| `posttut-base-r2` | VALID | 25.9 / 26.7 | 122.14 / 122.06 |
+| `posttut-base-r3` | VALID | 25.6 / 28.9 | 122.09 / 122.13 |
+| `posttut-walls150-r1` | VALID | 23.6 / 24.3 | 114.04 / 114.06 |
+| `posttut-walls150-r2` | VALID | 24 / 24.6 | 114.1 / 114.07 |
+| `posttut-walls150-r3` | VALID | 22.6 / 22.4 | 114.11 / 114.04 |
+| `posttut-walls400-r1` | VALID | 24.5 / 23.8 | 122.05 / 120.02 |
+| `posttut-walls400-r2` | VALID | 24.5 / 23.1 | 120.05 / 120.03 |
+| `smoke-posttut-base` (the proving run) | VALID | 26.6 / 26.1 | 122.07 / 122.07 |
+
+Sixteen measured rounds in the sweep, plus the smoke run's two. **The smoke run
+is reported beside `posttut-base` everywhere below and is in none of its
+figures**: it is the run that proved the template, taken before the sweep, and
+n = 1.
+
+In all nine valid runs the same three things happened: three deaths per run,
+all of them `web_user`'s (`[L] DEATH_FRAG web_user <ai>`), no AI died in any
+measured round (every round-2 and round-3 `ROUND_WINNER` lists all seven), and
+the human died **58.79–58.82 s** after `NEW_ROUND`.
+
+### 2. The shipped configuration: eight-second rounds, which this rig cannot measure
+
+`posttut-default` overrides nothing, so it plays what the shipped tree makes,
+and the probe read that back live in both runs: `SP_SIZE_FACTOR` **−3**,
+`SP_SPEED_FACTOR` **0**, `SP_WALLS_LENGTH` **−1**, `SP_NUM_AIS` **3**. That is
+a **0.35× arena** (`exponent(i) = pow(2, i/2)`, `gGame.cpp:1296`, applied to
+`sizeFactor` at `:1379`) at **twice** the tutorial's cycle speed, with three
+AIs.
+
+What the two transcripts measured, from `[L] NEW_ROUND` to `[L] ROUND_WINNER`
+and to `[L] DEATH_FRAG web_user`:
+
+| | `posttut-default-r1` | `posttut-default-r2` |
+|---|---|---|
+| rounds started / with a winner | 9 / 8 | 9 / 8 |
+| round length, `NEW_ROUND` → `ROUND_WINNER` | **8.06–8.10 s** (8 rounds) | **8.07–8.12 s** (8 rounds) |
+| the idle human's death | **6.54–6.56 s** after `NEW_ROUND`, every round | **6.54–6.60 s**, every round |
+| measured span (first world frame → that death) | 0.52–6.56 s, i.e. **≈ 6.0 s** | 0.52–6.60 s |
+| `NEW_ROUND` → next `NEW_ROUND` | 12.1 s, except rounds 3 and 6 at 20.2 s (`SP_LIMIT_ROUNDS 3`, the between-match screen) | the same |
+
+All eight shipped rounds of a run put together are 48 s of measured driving;
+one `posttut-base` round is 58. **The gate says `INVALID [posttut]: 0 measured
+round(s) with a span >= 30 s`, and that is the result**, not a defect: an
+early-vs-late comparison needs a round long enough to have an early and a late,
+and the shipped configuration does not give one **to an idle human**. The
+maintainer's rounds last because he steers; this rig's human drives straight
+into the nearest AI wall at speed 30 in an arena a third the size.
+`posttut-default-r1/r2-50s.png` is what that looks like — taken 50 s after
+measured round 2 began, by which time the game is three rounds further on
+("Go (round 2 of 3)!" of the second match): the rim wall is a few cycle lengths
+off, two AI trails cross the frame, and the HUD reads Speed 30.0, Enemies: 3.
+**The shipped values are not to be changed to open the gate.** They are the
+game; the rig is what cannot reach them.
+
+The frames it *did* measure are worth one line, because they are M6's only
+picture of the shipped scene. Over the fourteen measured rounds (rounds 2–8 of
+both runs): late `ms_p50` **14.4–16.7** (median 15.4), late p90 16.2–20.9,
+`ratio_ms` **1.01–1.08** (median 1.04), draws/frame 66.3–70.2,
+**102.2–105.1 KB/frame**, and **0–2 hitches over 50 ms in a whole round**. A
+small arena with three AIs is a light scene, it does not grow inside eight
+seconds, and nothing in it resembles the maintainer's report — which is why the
+arms below give it seven AIs and an arena to drive in.
+
+### 3. The base on the real path
+
+`posttut-base` is `SP_SIZE_FACTOR 6`, `SP_NUM_AIS 7`, `SP_WALLS_LENGTH -1`:
+Tasks 2 and 4's scene, on the boot path the phone uses, with trails that never
+expire. Three runs, and the smoke run beside them.
+
+| run | rd | span s | early ms p50 | late ms p50 | ratio_ms | late p90 | early draws | late draws | ratio_draws | late KB/frame | hitches span / late |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `posttut-base-r1` | 2 | 0.53–58.82 | 21.2 | 25.6 | 1.21 | 35.4 | 102.54 | 122.15 | 1.19 | 178.91 | 9 / 1 |
+| `posttut-base-r1` | 3 | 0.53–58.80 | 19.8 | 26.0 | 1.31 | 34.5 | 97.35 | 122.09 | 1.25 | 182.62 | 12 / 2 |
+| `posttut-base-r2` | 2 | 0.53–58.81 | 22.2 | 25.9 | 1.17 | 35.8 | 103.13 | 122.14 | 1.18 | 178.92 | 9 / 1 |
+| `posttut-base-r2` | 3 | 0.53–58.80 | 21.3 | 26.7 | 1.25 | 37.1 | 97.54 | 122.06 | 1.25 | 182.48 | 7 / 1 |
+| `posttut-base-r3` | 2 | 0.54–58.79 | 21.9 | 25.6 | 1.17 | 35.4 | 102.58 | 122.09 | 1.19 | 178.86 | 11 / 2 |
+| `posttut-base-r3` | 3 | 0.54–58.80 | 21.4 | 28.9 | 1.35 | 39.3 | 97.88 | 122.13 | 1.25 | 182.54 | 17 / 3 |
+| `smoke-posttut-base` † | 2 | 0.53–58.82 | 21.9 | 26.6 | 1.21 | 35.7 | 103.60 | 122.07 | 1.18 | 179.07 | 7 / 2 |
+| `smoke-posttut-base` † | 3 | 0.53–58.79 | 21.6 | 26.1 | 1.21 | 34.3 | 98.11 | 122.07 | 1.24 | 182.50 | 6 / 1 |
+
+† the proving run, listed for comparison and counted in no `posttut-base`
+figure anywhere below.
+
+`ms_in_swap` p50 is 0 in every window of every run and its maximum is 1.4 ms,
+so no GPU wait hides in these intervals; every sampled frame of every run ended
+in `glFinish`. KB/frame is ~179 in round 2 and ~182 in round 3 **in every arm
+of this task**, so a round 2 is only comparable with a round 2.
+
+**The per-second shape: a plateau at 114, and a step at second 46.** Round 2 of
+`posttut-base-r1`, draws per frame second by second: 31.5, 82.0, 100.7, 101,
+127.7, 129.1 while the AIs enter, a *fall* to 114.2 by second 14, then
+**exactly 114.00 in every second from 15 to 44** — thirty consecutive seconds —
+then 117.7 at second 45, **122 at second 46**, and 122 held to the end (123.7,
+128.1, 130 in the last three seconds, the end-of-round creep Task 2 records
+too). The shape is not one run's: **the plateau is exactly 114.00 in every
+second from 15 to 44 of all eighteen measured rounds of this task, in all three
+arms**, and in all six `posttut-base` rounds and both smoke rounds the first
+second at or above 120 draws is **second 46**.
+
+Two consequences, pointing opposite ways. Trails that never expire do **not**
+make the draw count climb: across those thirty seconds it does not move by a
+single call while every cycle's trail grows by 30 units a second. But this path
+does have something the tutorial path does not — a **step of +8 draw calls at
+second 46 that never comes back down**, where the tutorial's flat rounds step
+107 → 111 gradually over seconds 45–50 and only creep to 111.5–114.8 by their
+last second.
+
+**Against the tutorial, in one table.** Same seven AIs, same rig, same
+throttle; `posttut-base` from this task, `base` from Task 2, `walls400` from
+Task 4 — the tutorial arm that asked for the 400-unit cap the tutorial forces
+anyway, so it is the same scene twice.
+
+| | `posttut-base` (this path) | (`smoke`, n=1) | Task 2 `base` (tutorial) | Task 4 `walls400` (tutorial) |
+|---|---|---|---|---|
+| rounds / runs | 6 / 3 | 2 / 1 | 10 / 5 | 6 / 3 |
+| `SP_WALLS_LENGTH` in force | **−1, unlimited** | −1 | 400 (forced by `welcome()`) | 400 (asked for, and forced) |
+| cycle speed multiplier | **1.0** (HUD 30.0) | 1.0 | 0.5 (HUD 15.0) | 0.5 |
+| arena size multiplier | **8** (`SP_SIZE_FACTOR` 6) | 8 | 4 (6 − 2) | 4 |
+| plateau draws/frame, s15–44 | **114.0** in 6 of 6 | 114.0 | **107.0** in 10 of 10 | **107.0** in 6 of 6 |
+| plateau ms p50, s15–44 | 22.80–23.65 (23.30) | 22.60, 23.65 | 22.40–25.35 (23.67) | 21.70–24.70 (22.52) |
+| plateau `ms_to_first_draw` | 7.20–7.30 (7.25) | 7.15, 7.35 | 6.95–7.55 (7.20) | 6.70–7.35 (6.97) |
+| plateau `ms_first_draw_to_swap` | 15.70–16.15 (15.95) | 15.50, 16.20 | 15.40–17.60 (16.35) | 14.90–17.20 (15.57) |
+| early ms p50 | 19.8–22.2 (21.4) | 21.6, 21.9 | 20.6–24.3 (22.6) | 20.5–23.1 (21.6) |
+| late ms p50 | 25.6–28.9 (25.9) | 26.1, 26.6 | 24.5–36.1 (27.2) | 24.7–32.1 (26.0) |
+| late ms p90 | 34.5–39.3 (35.6) | 34.3, 35.7 | 30.8–46.4 (35.4) | 30.7–40.6 (33.0) |
+| `ratio_ms` | 1.17–1.35 (1.23) | 1.21, 1.21 | 1.04–1.63 (1.19) | 1.15–1.57 (1.16) |
+| late draws/frame | 122.06–122.15 | 122.07 | 111.46–355.66 (113.53) | 113.35–255.77 (114.22) |
+| late KB/frame, rd 2 / rd 3 | 178.86–178.92 / 182.48–182.62 | 179.07 / 182.50 | 179.38–273.99 / 181.59–229.34 | 179.15–234.01 / 181.95–237.98 |
+| second-45 bump length, s | 12–14 (13) | 13, 14 | 11–14 (11) | 11–12 (11) |
+| draw-spike rounds (≥ 200 draws in a whole second 10–58) | **0 of 6** | 0 of 2 | 3 of 10 | 2 of 6 |
+| hitches > 50 ms per span | 7–17 (10) | 6, 7 | 2–42 (8) | 2–10 (6) |
+
+Ranges are min–max over that arm's measured rounds, median in parentheses; the
+tutorial columns' wide late figures are the three and two draw-spike rounds
+inside them.
+
+**Reading down that table: almost nothing changed.** Removing the trail cap,
+doubling the cycle speed and doubling the arena's linear size moved the plateau
+frame cost by less than the tutorial's own run-to-run spread (23.30 ms against
+23.67 and 22.52), moved the plateau's render part by less than half a
+millisecond (15.95 against 16.35 and 15.57), left the plateau's simulation part
+where it was (7.25 against 7.20 and 6.97) and moved the plateau draw count by
+**+7 calls, 107 → 114**. Where the flat frame is concerned this is the same
+scene at the same price. What *did* change is that the second-45 event now
+steps the draw count and leaves it stepped, that the bump lasts a median 13 s
+instead of 11 — and that **no round on this path spiked**: the draw
+excursions that hit 3 of Task 2's 10 rounds (peaks 503, 511 and 393 at second
+49) and 2 of Task 4 `walls400`'s 6 (343 and 338) did not happen once in
+eighteen rounds here. The `[SND]` marker agrees: the voice limiter starts
+cutting **45.43–45.48 s** after `NEW_ROUND` in round 2 of all nine valid runs —
+the same second as Tasks 2 and 4's 45.44–45.56 — but *stops* at
+**46.69–46.96 s** in all nine, where in Tasks 2 and 4 the three round 2s whose
+limiter stayed cutting past 56 s were precisely the three round-2 draw spikes.
+
+**Two confounds to carry from here on.** The cycles run at **twice** the
+tutorial's speed (`SP_SPEED_FACTOR` 0 → multiplier 1.0, HUD 30.0, against −2 →
+0.5, HUD 15.0) and the arena is **twice the linear size** (`SP_SIZE_FACTOR`
+really is 6 here → multiplier 8; the tutorial's `sizeFactor -= 2` makes it 4,
+so four times the floor area). A cycle at twice the speed lays trail twice as
+fast and reaches a wall in half the time. Neither was varied here, so nothing
+in this task separates "the post-tutorial path" from "faster cycles in a bigger
+arena" — the columns differ by three things at once. What the table does
+support is narrower and more useful: **on the configuration the phone boots
+into, the flat frame costs what the tutorial's flat frame costs, and its render
+part is no worse.**
+
+### 4. The wall-length lever where it is a real setting
+
+`SP_WALLS_LENGTH` is inert in the tutorial match — Task 4 proved it with a
+probe that read back the identical 107.0 draws per frame — so Task 4 had to
+reach a 150-unit trail through `CYCLE_DIST_WALL_SHRINK`. Here it is one config
+line, and the probe reads it back live. Three arms, sixteen measured rounds;
+the smoke run's two are beside `posttut-base` and in none of its figures.
+
+| | `posttut-base` (−1) | `posttut-walls400` | `posttut-walls150` | (`smoke`, n=1) |
+|---|---|---|---|---|
+| rounds / runs | 6 / 3 | 4 / 2 | 6 / 3 | 2 / 1 |
+| plateau draws/frame, s15–44 | **114.0** | **114.0** | **114.0** | 114.0 |
+| plateau ms p50, s15–44 | 22.80–23.65 (23.30) | 23.35–23.90 (23.82) | 22.45–24.45 (23.05) | 22.60, 23.65 |
+| plateau `ms_to_first_draw` | 7.20–7.30 (7.25) | 7.20–7.30 (7.20) | 7.10–7.50 (7.22) | 7.15, 7.35 |
+| early ms p50 | 19.8–22.2 (21.4) | 21.7–23.2 (22.2) | 19.8–22.6 (21.6) | 21.6, 21.9 |
+| late ms p50 | 25.6–28.9 (**25.95**) | 23.1–24.5 (**24.15**) | 22.4–24.6 (**23.80**) | 26.1, 26.6 |
+| late ms p90 | 34.5–39.3 (**35.60**) | 26.3–29.7 (**28.50**) | 24.5–30.5 (**27.05**) | 34.3, 35.7 |
+| `ratio_ms` | 1.17–1.35 (**1.230**) | 1.03–1.13 (**1.070**) | 1.07–1.15 (**1.095**) | 1.21, 1.21 |
+| late draws/frame | 122.06–122.15 | 120.02–122.05 | 114.04–114.11 | 122.07 |
+| late KB/frame, rd 2 (mean) | 178.86–178.92 (**178.90**) | 178.84–178.90 (**178.87**) | 177.78–177.85 (**177.82**) | 179.07 |
+| late KB/frame, rd 3 (mean) | 182.48–182.62 (**182.55**) | 182.49–182.53 (**182.51**) | 181.73–181.93 (**181.80**) | 182.50 |
+| second-45 bump length, s | 12–14 (**13**) | **6** in 4 of 4 | 2–3 (**2**) | 13, 14 |
+| mean `ms_to_first_draw`, s45–55 | 10.43–13.20 (10.73) | 9.25–10.23 (9.59) | 7.79–8.34 (8.02) | 10.30, 10.89 |
+| first second ≥ 120 draws | **s46**, 6 of 6 | **s51**, 4 of 4 | never, 6 of 6 | s46, 2 of 2 |
+| draw-spike rounds | 0 of 6 | 0 of 4 | 0 of 6 | 0 of 2 |
+| hitches > 50 ms per span | 7–17 (10) | 6–11 (6) | 2–6 (5) | 6, 7 |
+
+Definitions are Task 4's, unchanged, so the two tasks' rows mean the same
+thing: *plateau* = the median over seconds 15–44 of that round's per-second
+series; *bump length* = the count of seconds in 45–58 whose
+`ms_to_first_draw_p50` exceeds that round's own seconds-15–44 median by more
+than 2 ms; *mean s45–55* = the arithmetic mean of those eleven per-second
+values; a *draw spike* = the maximum `draws_per_frame` over the whole seconds
+10–58 inside the measured span reaching ≥ 200. Recomputing that spike rule over
+Tasks 2 and 4 reproduces their published counts exactly — `base` 3 of 10 with
+peaks 503, 511 and 393 at second 49, `walls400` 2 of 6, `walls150` 1 of 6 with
+a 6-second spike, `nomirror` 0 of 6, `fps30` 1 of 4 — which is why it can be
+carried over here.
+
+**The deltas, against the spread that has to swallow them.** `posttut-base`'s
+own six rounds range 3.30 ms in late `ms_p50`, 4.80 ms in late p90, 0.18 in
+`ratio_ms` and 0.85 ms in the plateau; Task 2's run-to-run spread of the
+*level* was about 4 ms. Median deltas from `posttut-base`:
+
+| | Δ `walls400` | Δ `walls150` | `posttut-base`'s own round-to-round range |
+|---|---|---|---|
+| late ms p50 | −1.80 | −2.15 | 3.30 |
+| late ms p90 | −7.10 | −8.55 | 4.80 |
+| `ratio_ms` | −0.160 | −0.135 | 0.180 |
+| plateau ms p50 | +0.53 | −0.25 | 0.85 |
+| bump length, s | −7 | −11 | 2 |
+| late draws/frame | −2.07 | −8.05 | 0.09 |
+| late KB/frame, rd 2 | −0.03 | −1.08 | 0.06 |
+
+Those rows fall into three groups. **The non-result** is the plateau: **no cap
+changed the flat cost of a frame** in either direction, exactly as Task 4 found
+on the tutorial path. **The two results** clear the spread by a wide margin —
+the **late p90** (−8.55 ms against a 4.80 ms spread; the capped arms' worst
+frames beat the uncapped arm's *typical* worst frames) and the **bump length**,
+which is disjoint across all three arms with no overlap whatever: 12–14 s
+uncapped, exactly 6 s in every `walls400` round, 2–3 s in every `walls150`
+round. **The two that have to be stated carefully** are the late `ms_p50` delta
+(−2.15 ms) and the `ratio_ms` delta (−0.135): both are *smaller* than the base
+arm's own round-to-round range, so by Task 4's rule neither is a result on its
+own — but the two sets do not overlap. All six `posttut-base` rounds are at or
+above 25.6 ms and all ten capped rounds at or below 24.6 (the smoke run's 26.1
+and 26.6 fall with the uncapped six), and the same clean separation holds for
+p90 (34.5 minimum uncapped against 30.5 maximum capped) and for `ratio_ms`
+(1.17 against 1.15). `walls400` and `walls150` are **not** separable from each
+other: 0.35 ms of median late `ms_p50` apart, overlapping in every millisecond
+column, and only their draw counts and bump lengths tell them apart.
+
+**Draw calls follow turns, not trail length — three independent ways.** First,
+the plateau: seconds 15 to 44 read exactly 114.00 draws per frame in all
+eighteen rounds of all three arms, while across those thirty seconds a cycle at
+speed 30 lays 900 more units of trail under `-1`, is pinned at 400 under
+`walls400`, and at 150 under `walls150`. A trail nine times longer costs
+**zero** extra draw calls, because a cycle driving straight lays one wall
+segment however long it grows, and a segment is not a draw call
+(`display-lists-pricing.md`'s fourth correction). Second, the bytes:
+`walls150`'s late window carries **1.08 KB/frame less than `posttut-base`'s in
+round 2 (177.82 against 178.90) and 0.75 KB less in round 3** — under 1 KB of
+179, for two thirds of the visible trail removed, the same result Task 4 got on
+the tutorial path through a different setting. Third, the shape of the
+difference: it is not a slope but a **step at the second-45 event**, and the cap
+moves *when the step arrives*, not how fast anything grows — 114 → 122 at
+second 46 with no cap (6 of 6 rounds, and both smoke rounds), 114 → 120
+arriving at second 51 with the 400 cap (4 of 4, five seconds later), and never
+reaching 120 at all with the 150 cap (6 of 6: it lifts to 116–118 for four to
+eight seconds around seconds 45–52 and falls back to 114 by second 53).
+**The 400-unit cap and no cap at all draw essentially the same scene** — 2 calls
+and 0.03 KB per frame apart — and only the 150-unit cap moves the count, by 8
+calls and 1.08 KB.
+
+### 5. The verdict on option B's question
+
+**No: on the path the phone actually plays, trail length is not a cost that
+grows with driving time.** For thirty consecutive seconds of every one of
+eighteen measured rounds the draw count is exactly 114.0 per frame and the
+frame costs 22.45–24.45 ms — with trails that never expire, at twice the
+tutorial's speed — and capping the trail at 400 or at 150 units moves that flat
+cost by less than the base arm's own round-to-round spread (+0.53 and −0.25 ms
+against 0.85). What a cap does move is the **second-45 event**, the same event
+Task 2 found and Task 3 attributed to the simulation: it lasts a median 13 s
+uncapped, 6 s at 400 units and 2 s at 150, and the worst frames come down with
+it (late p90 median 35.60 → 28.50 → 27.05 ms, a delta well clear of the 4.80 ms
+spread). **So the trail cap is worth what Task 4 said it was worth, for the
+reason Task 4 gave — it shortens the event, it does not remove render work —
+and option A's "its effect on the path the phone actually plays is untested"
+caveat is now tested and survives.**
+
+What this cannot say, and no reading of it should. The human is idle in every
+one of these rounds — Task 1's caveat is unchanged: nothing here shows the
+cycle ever turned, and a player who turns often adds wall segments, which is
+precisely the case where draw calls, following turns, *would* grow. These are
+one desktop's milliseconds under a 6× CPU throttle at a phone's pixel count,
+not a phone's, and the machine was loaded throughout (1-minute load 9.44–27.41,
+a Time Machine backup running the whole time). And n is 6, 4 and 6 rounds from
+3, 2 and 3 runs: enough for a bump-length ordering with no overlap, not enough
+to rank two arms that overlap in every millisecond column.
+
+### 6. What this changes in the package
+
+`../README.md` §5 item 1 — "the game the phone actually plays" — is no longer a
+gap: it now says what the measurement found and links here. §6's options A, B
+and C have had their "untested on the real path" caveats replaced by what the
+test said, **without choosing between them**, which is still the maintainer's
+call. The summary table at the top of that file gains a Task 7 row, and
+`PLAN.md`'s M6 paragraph gains one sentence. Nothing else in the package was
+rewritten.
