@@ -527,7 +527,16 @@ values; a *draw spike* = the maximum `draws_per_frame` over the whole seconds
 Tasks 2 and 4 reproduces their published counts exactly — `base` 3 of 10 with
 peaks 503, 511 and 393 at second 49, `walls400` 2 of 6, `walls150` 1 of 6 with
 a 6-second spike, `nomirror` 0 of 6, `fps30` 1 of 4 — which is why it can be
-carried over here.
+carried over here. It reproduces Task 4's *mistake* case too: reading to
+`measured_to_s` instead of to the last whole second flags `base-r2` round 2 and
+`walls150-r3` round 2 on their partial final second alone, which are the two
+rounds `task4-levers/README.md` names for exactly that reason. This task's
+spans end at 58.79–58.85 s, so its last whole second is 57.
+
+One printing note, following Task 4's: `posttut-walls150`'s median `ratio_ms`
+is **1.095**, the midpoint of two two-decimal per-round values, so it is
+printed to three decimals rather than rounded onto one side of a tie. No two
+arms of this task tie at two decimals in any column.
 
 **The deltas, against the spread that has to swallow them.** `posttut-base`'s
 own six rounds range 3.30 ms in late `ms_p50`, 4.80 ms in late p90, 0.18 in
