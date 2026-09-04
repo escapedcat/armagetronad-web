@@ -13,8 +13,8 @@ decision is taken here** — this document ends in three options and stops.
 | Task 1 | the harness proves its own condition, and a negative control fails | [`task1-rig/`](task1-rig/README.md) |
 | Task 2 | ten measured rounds: the growth is real, and it is an **event at second 45**, not a slope | [`task2-repro/`](task2-repro/README.md) |
 | Task 3 | both mechanisms measured; six skeptics then narrowed one of the verdicts | [`task3-mechanisms/`](task3-mechanisms/README.md) |
-| Task 4 | four levers, twelve runs: one moves the event, one moves the variance, two are not levers | [`task4-levers/`](task4-levers/README.md) |
-| Task 5 | display lists priced against that evidence: **not yet** | [`display-lists-pricing.md`](display-lists-pricing.md) |
+| Task 4 | four levers, eleven completed runs of twelve: one moves the event, one moves the variance, two are not levers | [`task4-levers/`](task4-levers/README.md) |
+| Task 5 | display lists priced, written before Task 4 ran: **not yet** | [`display-lists-pricing.md`](display-lists-pricing.md) |
 | Task 7 | the game the phone actually plays, measured: unlimited trails do **not** grow the render work, and a trail cap still shortens the second-45 event | [`task7-posttutorial/`](task7-posttutorial/README.md) |
 
 **Every millisecond in this milestone is one desktop's**, at `MAX_FPS 1000`
@@ -81,27 +81,30 @@ moved with it and nothing else did (r = 0.95–0.98), at **24–47 µs per extra
 draw call**. What is *not* confirmed: that the geometry behind those spikes
 was walls — the trails are capped at 400 units in this match, the draw count
 is flat at 107 for thirty seconds in 10 of 10 rounds, and `gSparks.cpp`'s
-own bursts give the same coefficient from a non-wall source. Two numbers to
-keep straight, because the first write-up conflated them: the render part is
-**62–69 % of the late frame** (median 65.4) but only **a median 3.1 % of the
-frame's early→late growth** — and that 3.1 % is the median of two
-populations (seven flat rounds at −6 to +4 %, three spike rounds at
-17–21 %), not a point estimate.
+own bursts give the same coefficient from a non-wall source. Three numbers
+to keep straight, because the first write-up conflated them: the render part
+is **62–69 % of the late frame** (median 65.4); the render part's *growth*
+is **a median 3.1 % of the late frame time** (−6 to +4 % in the seven flat
+rounds, 17–21 % in the three spike rounds — the median of two populations,
+not a point estimate); and its share of the growth itself, Δrender ÷ Δms,
+is **a median 21 %** (12.5 % in the flat rounds, 54–61 % in the spike
+rounds).
 
 Together: **the growth this milestone reproduced lives in the simulation, and
-the renderer is most of the frame's cost but almost none of its growth — in
-this match.**
+the renderer is most of the frame's cost but, in the seven flat rounds,
+almost none of its growth — in this match.** In the three spike rounds it is
+54–61 % of the growth.
 
 ## 3. The levers
 
-Twelve runs plus a probe, A/B against the baseline
+Eleven completed runs of twelve, plus a probe, A/B against the baseline
 ([`task4-levers/README.md`](task4-levers/README.md)). Ranked on the metric
 Task 3 identified — the pre-draw (simulation) part that actually grows:
 
 | rank | lever | what it does, measured | what it costs the player |
 |---|---|---|---|
 | 1 | **trail length** (150 units instead of 400) | the only lever that moved the growth: mean `ms_to_first_draw` over seconds 45–55 **9.65 ms against the control's 11.53**, and the second-45 event lasts **4–5 s in 6 of 6 rounds against 11–12** in the control. Its one draw spike was 6 s long instead of 13. | your trail ends 150 units behind you, and so does everyone's — a real gameplay change. Today only reachable through `CYCLE_DIST_WALL_SHRINK` + `_OFFSET`, because the tutorial match forces `SP_WALLS_LENGTH` to 400. |
-| 2 | **`MAX_FPS 30`** | pins the plateau at the cap (33.33 ms median) and removes the *difference* between a spike round and a flat one: `ratio_ms` 1.010 mean and 1.04 worst against 1.260 and 1.63; its one spike round peaked at 39.5 ms against the baseline spikes' 43.0, 45.3 and 51.6. It does not remove the spikes. | half the frames — 29 fps mean in the late windows against 33.8. Steadier, slower. |
+| 2 | **`MAX_FPS 30`** | pins the plateau at the cap (33.33 ms median) and removes the *difference* between a spike round and a flat one: `ratio_ms` 1.010 mean and 1.04 worst against 1.264 and 1.63; its one spike round peaked at 39.5 ms against the baseline spikes' 43.0, 45.3 and 51.6. It does not remove the spikes. (4 measured rounds; `fps30-r3` INCOMPLETE, no `[PERF]`. Its pre-draw part carries the limiter's `emscripten_sleep` — plateau 15.70 ms — and is not comparable to the other arms', so this rank rests on `ratio_ms`, not on the pre-draw split.) | half the frames — 29 fps mean over its four late windows against 33.8. Steadier, slower. |
 | 3 | **`FLOOR_MIRROR_INT 0`** | **null.** `sr_floorMirror` is already `rMIRROR_OFF` in this build and the mirrored pass is not rendered; the setting only supplies that pass's alpha. Its six rounds are a second `base` replicate. | nothing gained, nothing lost. Do not ship it as a fix. |
 | 4 | **`SP_WALLS_LENGTH`** | **inert in the match every arm played** — `welcome()` overwrites it with 400. Proved by a probe that read the identical 107.0 draws/frame. | — but see §5: this is the setting the phone's real path actually uses. |
 
@@ -122,6 +125,12 @@ Trail *length* is not trail *cost* in this scene.
 [`display-lists-pricing.md`](display-lists-pricing.md) (Task 5, a design
 note, no code) prices the only structural fix anyone proposed, and its
 verdict is **not yet**.
+
+Written before Task 4 ran (at `172066e8`, when the evidence tree had no
+`task4-levers`): its Task-4 comparison is a named gap, and its "3.1 % share
+of the late frame" is the growth share (Task 3, "Adversarial check",
+item 1). Task 4's result — the cap removed almost no render work — does not
+trip its no-go condition and has not been folded back in.
 
 - The only shape that touches the priced cost is a JS-library override that
   wraps the emulation's `GLImmediate.flush` (~250–400 lines of new
@@ -145,9 +154,9 @@ verdict is **not yet**.
 
 ## 5. What was NOT measured
 
-Three gaps. **The first has since been measured** — Task 7 took it, and the
-paragraph under item 1 says what it found; the other two stand, and gap 2 is
-now the one that matters.
+Three gaps. Every option in §6 turns on the first — and **the first has since
+been measured**: Task 7 took it, and the paragraph under item 1 says what it
+found. The other two stand, and gap 2 is now the one that matters.
 
 1. **The game the phone actually plays.** Every arm in Tasks 1–4 measured
    the **tutorial match**: a first-use boot, so `welcome()`
@@ -196,7 +205,9 @@ now the one that matters.
    on the maintainer's device. (Chrome also updated mid-sweep in Task 4,
    between the `-r1` and `-r2` passes — balanced across arms, but one more
    reason the same-configuration control matters more than the cross-task
-   baseline.)
+   baseline — and a Time Machine backup plus XProtect scans ran through the
+   whole Task 4 window, 1-minute load 5.47–12.66 in each run's `uptime.txt`:
+   another reason to read ratios and same-sweep deltas, not milliseconds.)
 
 ## 6. Three options for the maintainer
 
@@ -264,21 +275,43 @@ cannot measure with an idle driver at all.
 
 *What:* the JS-library override of §4, as its own milestone with its own gate.
 
-*Cost:* 250–400 lines of new `web/library_displaylists.js` plus a Makefile
-flag, the `eCompat.cpp` stubs, and `autoexec.cfg`; the `GL_UNSAFE_OPTS`
-bookkeeping around a persistent vertex buffer; record/replay semantics for
-`Cancel()` and `ClearAll()`; and it lives in the layer that produced this
-port's largest defect class (`docs/porting/browser-runtime-notes.md` § 10).
+*Cost to build:* 250–400 lines of new `web/library_displaylists.js` plus a
+Makefile flag, the `eCompat.cpp` stubs, and `autoexec.cfg`; the
+`GL_UNSAFE_OPTS` bookkeeping around a persistent vertex buffer; record/replay
+semantics for `Cancel()` and `ClearAll()`; and it lives in the layer that
+produced this port's largest defect class
+(`docs/porting/browser-runtime-notes.md` § 10).
 
-*Against:* Task 5's own verdict is **not yet**, and this milestone's numbers
-are why — the growth is in the simulation, which no list touches, and the
+*Cost to the player:* none by design — the scene is drawn as today. The risk
+is that layer's defect class: a replay that leaves the emulation's
+`lastArrayBuffer` incoherent makes the next immediate-mode flush read its
+attributes off the list's buffer ("odd glitches", in the emulation's own
+warning; Task 5 §2b).
+
+*What it buys:* the wall pass's per-segment cost — 16 wasm→JS calls and
+152 bytes of upload per plain segment per frame (the persistent-buffer
+variant; the cheap variant saves the calls and not the bytes) — for every
+listed wall of every cycle, amortised over the manager's rebuilds; models are
+list-able by the same mechanism. Its ceiling is §4's unsplit 36–53 % of a
+flat late frame, and Task 5 §3 says the wall share "can only be larger" on
+the unlimited-trail path — which Task 7 has now measured, and where it is not
+larger (below).
+
+*What the evidence says:* Task 5's own verdict is **not yet** — the growth
+this milestone measured is in the simulation, which no list touches, and the
 render-side ceiling has never been split into walls versus floor versus
-models. That case is now **weaker, not stronger**: B has been taken, and on
-the post-tutorial path the render part of the flat frame is 15.95 ms — no worse
-than the tutorial's 16.35 — and it does not grow through the round, so the
-"and growing" half of §4's build-it-if is answered in the negative. The split
-that would justify this option (walls alone, against floor and models, in one
-arena) still does not exist.
+models. Task 4's result (the cap removed at most 1 KB of 179 and no draw
+calls) did not trip Task 5's no-go condition, and Task 5 was not revisited
+after it (§4). **Task 7 has now measured the path Task 5 §3 expected the wall
+share to be larger on, and it is not larger:** with trails that never expire
+the render part of the flat frame is **15.95 ms**, no worse than the
+tutorial's 16.35, the draw count is exactly **114.00 per frame from second 15
+to 44 whether the trail is capped at 150, at 400, or not at all**, and the
+render part does not grow through the round
+([`task7-posttutorial/README.md`](task7-posttutorial/README.md) §3–§4). That
+answers the "and growing" half of §4's build-it-if in the negative and makes
+this option's case weaker, not stronger; the wall-versus-floor-versus-model
+split that would answer the other half still does not exist.
 
 ## 7. Evidence weight, and the seed
 

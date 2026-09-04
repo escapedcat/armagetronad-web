@@ -182,24 +182,39 @@ jobs:
       # fetch too: without them a hung connection can outlast the 10-minute
       # deadline outright, since the deadline is only checked BETWEEN
       # requests.
+      # WAIT ON ALL FIVE FILES, NOT THE WASM. The first real run of this step
+      # (run 33853765793, the four-merge morning of 2026-09-04) waited 0 s: it
+      # keyed on armagetronad.wasm, and four back-to-back deploys had produced
+      # byte-identical wasm because no source had changed, so the very first
+      # fetch matched -- while Pages was still serving the PREVIOUS html. The
+      # wire check then reported W7 "deployed bytes DIFFER: armagetronad.html",
+      # correctly. A deploy is "served" only when every published file matches
+      # what this job built; the html and the js are the ones that change when
+      # the wasm does not.
       - name: Wait for Pages to serve the new build
         if: github.event_name != 'pull_request'
         run: |
           set -euo pipefail
-          WANT=$(sha256sum web/dist-m1/armagetronad.wasm | cut -d' ' -f1)
-          echo "waiting for https://escapedcat.github.io/armagetronad-web/armagetronad.wasm to match sha256 $WANT"
+          BASE=https://escapedcat.github.io/armagetronad-web
+          FILES="armagetronad.html armagetronad.js armagetronad.wasm armagetronad.data index.html"
+          for f in $FILES; do echo "want $f sha256 $(sha256sum web/dist-m1/$f | cut -d' ' -f1)"; done
           END=$((SECONDS + 600))
           while true; do
-            GOT=$(curl -sL --connect-timeout 15 --max-time 120 https://escapedcat.github.io/armagetronad-web/armagetronad.wasm | sha256sum | cut -d' ' -f1) || GOT=transient
-            if [ "$GOT" = "$WANT" ]; then
-              echo "Pages is serving the new build (sha256 $GOT)"
+            PENDING=""
+            for f in $FILES; do
+              WANT=$(sha256sum "web/dist-m1/$f" | cut -d' ' -f1)
+              GOT=$(curl -sL --connect-timeout 15 --max-time 120 -H 'Cache-Control: no-cache' "$BASE/$f?t=$SECONDS" | sha256sum | cut -d' ' -f1) || GOT=transient
+              if [ "$GOT" != "$WANT" ]; then PENDING="$PENDING $f($GOT)"; fi
+            done
+            if [ -z "$PENDING" ]; then
+              echo "Pages is serving the new build: all 5 files match"
               break
             fi
             if [ "$SECONDS" -ge "$END" ]; then
-              echo "Pages did not start serving sha256 $WANT within 10 minutes (last saw sha256 $GOT)" >&2
+              echo "Pages did not serve the new build within 10 minutes; still stale:$PENDING" >&2
               exit 1
             fi
-            if [ "$GOT" = transient ]; then echo "transient fetch error, retrying"; fi
+            echo "still stale:$PENDING -- retrying in 20 s"
             sleep 20
           done
 
@@ -219,17 +234,16 @@ jobs:
       # sha256sum-backed shim instead of turning into an opaque "command not
       # found" inside every one of wire-facts.sh's checks.
       #
-      # continue-on-error: TRUE, DELIBERATELY, FOR NOW. This step has never
-      # run against a real Linux deploy before this PR merges -- deploy never
-      # happens on a PR, so there is no way to exercise it for real first.
-      # gh-pages has already force-pushed by the time this step runs, and
-      # that push cannot be undone by a later step failing, so a red result
-      # here would only paint an otherwise-successful deploy red over its own
-      # brand-new check. REMOVE continue-on-error once the first real run on
-      # `main` comes back green (see the PR's Follow-up note).
+      # This step used to carry continue-on-error: true, because it could not be
+      # exercised before its first real deploy (deploy never happens on a PR) and
+      # a red result would only have painted a finished deploy red. Its first
+      # real run (33853765793) failed W7 -- correctly: the wait step had keyed on
+      # the wasm alone -- and its second (33856255947, after #25 made the wait
+      # poll all five files) passed 13 of 13 with LIVE GATE PASSED. The net came
+      # off after that green run, as #20's follow-up said it would. From here a
+      # deploy whose served bytes do not match the build is a red run.
       - name: Wire check against the live deployment
         if: github.event_name != 'pull_request'
-        continue-on-error: true
         run: |
           if ! command -v shasum >/dev/null; then
             echo "shasum not found; installing a sha256sum-backed shim (wire-facts.sh calls 'shasum -a 256')"

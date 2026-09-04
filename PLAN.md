@@ -747,7 +747,7 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > second-45 event** (4-5 s against the control's 11-12) and is the only one that moved the
 > growth; `FLOOR_MIRROR_INT 0` is a **null lever** (the mirror pass is not rendered in this
 > build); `MAX_FPS 30` buys steadiness, not speed; and `SP_WALLS_LENGTH` is **inert** in this
-> match because `welcome()` forces 400. Task 5 priced display lists against that evidence and
+> match because `welcome()` forces 400. Task 5 priced display lists (written before Task 4 ran) and
 > says **not yet**, with the number that would change its mind named. **The one sentence that
 > outranks the rest: every arm in this milestone measured the tutorial match. The phone plays
 > the post-tutorial game — `SP_` settings live, `SP_WALLS_LENGTH` -1, trails that never expire
