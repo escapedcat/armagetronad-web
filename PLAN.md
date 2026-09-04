@@ -716,6 +716,29 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > maintainer's say. The invalid sweep and its tooling are in a git stash titled "M6 seed" for
 > the M6 branch to take up and fix, not to cite.
 >
+> *(**M6 tasks 1-5 are done, on branch `m6-lag`, PR #23 — and the milestone's own framing was
+> the first casualty.** Task 1 built a rig that proves its condition instead of assuming it: the
+> same arm with the two tutorial key presses deleted reads `INVALID`, and `web/tools/perf/` is
+> the only thing on the branch that is not evidence. Task 2 ran it five times for ten measured
+> rounds: `ratio_ms >= 1.2` in **4 of 10**, median 1.19, worst 1.63 — the growth reproduces —
+> **but it is an event at second 45, not a slope.** The draw count is exactly 107 per frame from
+> second 15 to 44 in all ten rounds and the pre-draw part of the frame doubles at second 45 in
+> 10 of 10, spike or not. Task 3 measured both suspects: mechanism 2 is **confirmed, +20/+26/+37 %
+> of the frame pressed against the rim** with the draw count flat and the whole rise before the
+> first draw call; mechanism 1 is a **cost, not a curve** — 24-47 µs per extra draw call where
+> the count moves, a median 0.4 ms of 3.6 where it does not — and six skeptics, told to refute,
+> left mechanism 2 whole (3/3) and narrowed mechanism 1 to "a per-draw-call cost of unknown
+> geometry" (2/3, one refutation). Task 4's four cheap levers: **trail length shortens the
+> second-45 event** (4-5 s against the control's 11-12) and is the only one that moved the
+> growth; `FLOOR_MIRROR_INT 0` is a **null lever** (the mirror pass is not rendered in this
+> build); `MAX_FPS 30` buys steadiness, not speed; and `SP_WALLS_LENGTH` is **inert** in this
+> match because `welcome()` forces 400. Task 5 priced display lists against that evidence and
+> says **not yet**, with the number that would change its mind named. **The one sentence that
+> outranks the rest: every arm in this milestone measured the tutorial match. The phone plays
+> the post-tutorial game — `SP_` settings live, `SP_WALLS_LENGTH` -1, trails that never expire
+> — and no arm has ever booted it. That path is M6's open item, and `docs/evidence/m6-lag/README.md`
+> puts it to the maintainer as one of three costed options.)*
+>
 > The lesson this round adds to M4's P11 and M5's stale gate: **a gate must prove the condition
 > it measures actually held** — a late-round screenshot with trail geometry in it, a non-zero
 > "Rubber Used" for a grind arm — or its numbers are evidence of nothing.
