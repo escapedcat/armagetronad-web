@@ -25,15 +25,22 @@ else changed since Task 2).
 
 **The two verdicts, in one paragraph each.**
 
-*Mechanism 1 — confirmed as a cost, not as a curve in this match.* Where
+*Mechanism 1 — confirmed as a cost, not as a curve in this match, and
+narrower than that after six skeptics read it ("Adversarial check", last
+section: what is confirmed is a per-draw-call cost, not that the geometry
+was walls).* Where
 the draw count moved, the render part of the frame moved with it and
 nothing else did (r = 0.95–0.98, 24–47 µs per extra draw call); where it
 did not — the seven baseline rounds without a spike, and the tutorial caps
 every wall at 400 units so the draw count sits at exactly 107 for thirty
 seconds in all ten — the render part's share of the early→late growth is
-a median 0.4 ms of 3.6. Its share of the late frame time: 17–21 % in the
-three spike rounds, −6 to +4 % in the seven flat ones, **median 3.1 %** over
-the ten. Details in "Mechanism 1".
+a median 0.4 ms of 3.6. That **growth**, expressed over the late frame
+time, is 17–21 % in the three spike rounds and −6 to +4 % in the seven flat
+ones; the median of those ten values is 3.1 %, and it is the median of two
+populations rather than one number (see "Adversarial check"). It is not the
+render part's *level* share of the frame, which is far larger: 62.1–68.9 %
+of the late frame, median 65.4 % over the same ten rounds. Details in
+"Mechanism 1".
 
 *Mechanism 2 — confirmed.* Pressed against the rim, at the same draw count
 as free driving, the frame costs **+20, +26 and +37 %** (three runs:
@@ -86,12 +93,26 @@ without a spike grew by 1.0–4.4 ms of which the render part contributed
 −1.5 to +1.1 ms (median 0.4) and the pre-draw part 2.3–3.7 (median 2.7).
 Its share of the late-window growth: 54–61 % in the three spike rounds,
 −150 to +26 % (median 12.5 %) in the seven flat ones, median 21 % over the
-ten; as a share of the late frame time itself, 17–21 % in the spike rounds
-and −6 to +4 % (median 1.6 %) in the flat ones, **median 3.1 % over the
-ten**. What a spike is — a cycle adding wall segments faster than the
-400-unit cap removes them — is still the reading Task 2 offered, not a
-measurement; but whatever it is, it moves the renderer by the coefficient
-above.
+ten. **That growth expressed over the late frame time** — the
+`ren%late` column of `mech1-baseline-table.txt`, i.e. Δrender ÷ late
+`ms_p50` — is 17–21 % in the spike rounds and −6 to +4 % (median 1.6 %) in
+the flat ones, median 3.1 % over the ten. **This is a growth share, not a
+level share**, and the two must not be swapped: the render part's level
+share of the late frame, `ms_first_draw_to_swap_p50` ÷ `ms_p50` in the late
+window, is 62.1–68.9 % over the same ten rounds (median 65.4; flat median
+64.9, spike median 67.7), recomputed from the same `[PERF]` objects. Read
+together they say the renderer is most of the frame and almost none of the
+frame's *growth* in this match. What a spike is — a cycle adding wall
+segments faster than the 400-unit cap removes them — is still the reading
+Task 2 offered, not a measurement; but whatever it is, it moves the
+renderer by the coefficient above. **Read "confirmed" narrowly.** All three
+skeptics who read this verdict ("Adversarial check") landed on the same
+limit, and one refuted it on those grounds: what is confirmed is that extra
+draw calls cost 24–47 µs each in the render part of the frame. *Which*
+geometry produced the three spikes was never identified — the trails are
+capped at 400 units here, and `gSparks.cpp`'s own bursts give the same
+22–31 µs coefficient from a non-wall source (see "Mechanism 2"). Wall
+re-submission remains the reading, not the measurement.
 
 **What this says about the maintainer's "the more I drive".** The tutorial
 match cannot produce a trail-length curve; the post-tutorial match the
@@ -312,6 +333,10 @@ about 1 min 50 s.
   `[PERF]` lines in `docs/evidence/m6-lag/task2-repro` (the script is a
   scratch tool; every figure is the arithmetic stated in "Mechanism 1"
   over the `per_second` and `early_5s`/`late_5s` fields).
+  Its header now carries a column note added at the adversarial check:
+  `ren%late` is a *growth* share (Δrender ÷ late `ms_p50`), not the render
+  part's level share of the frame, and its median 3.1 is the median of two
+  populations.
 - `grind/`, `grind-nosound/`, `grind-r2/` — per run: `console.log` (the
   transcript; the last `[PERF] <arm> {…}` is the result), `steps.txt`,
   `uptime.txt`, and the proof screenshots: `g-12s-free.png` (free, gauge
@@ -326,3 +351,197 @@ about 1 min 50 s.
 - `table.txt` — `summarise.py` over this directory: three `INVALID` rows,
   by design (see "What was run").
 - `attempts/` — the two runs above.
+
+## Adversarial check
+
+Both verdicts above were put to three independent skeptics each — one
+reading the statistics, one hunting for a harness artifact, one testing game
+plausibility — every one of them told to **refute** the verdict and to
+default to *refuted* when unsure. Six votes, recorded here with their
+reasons verbatim from the workflow journal. Nothing in the evidence was
+re-run for this; the skeptics recomputed from the same `[PERF]` JSON and the
+same source files.
+
+**Tally.** Mechanism 2: **3 of 3 not refuted** — it stands as written.
+Mechanism 1: **2 not refuted, 1 refuted** — no majority to overturn, so the
+verdict stands, but all three votes (including the two that upheld it)
+raised the same three problems, and this section acts on all three. The
+verdict that stands is therefore narrower than the one that was written.
+
+### Mechanism 1 (render / trail re-submission) — statistics lens
+
+**refuted: False** (confidence high)
+
+> Recomputed from the raw [PERF] JSON in
+> docs/evidence/m6-lag/task2-repro/base-r{1..5}-driver.txt (per_second +
+> early_5s/late_5s); every number in task3-mechanisms/mech1-baseline-table.txt
+> reproduces. The effect is separable from noise where it is claimed: in the 3
+> spike rounds (r1/2, r4/2, r4/3) r(render,draws)=0.98/0.98/0.95 with
+> permutation p<0.001 (2000 shuffles), and the early->late render growth of
+> +5.7/+7.2/+7.5 ms is 5-12x the second-to-second sd of the render part on the
+> 107-draw plateau (0.5-1.3 ms per round). In the 7 flat rounds render growth
+> is -1.5..+1.1 ms (mean 0.23, sd 0.92) — inside that same noise band, which is
+> exactly what the claim says ("not a curve", 0.4 of 3.6 ms). One caveat for
+> the consumer, not a refutation: the headline "3.1 %" is the median of a
+> bimodal set (7 values in -6..+4 %, 3 in 17-21 %); its bootstrap 95 % CI over
+> ten rounds is 0.1-17.2 %, so it is an unstable point estimate and the
+> two-population split (flat ~0, spike ~20 %) is the defensible statement. Also
+> note pre-draw time correlates with draws too in spike rounds (r 0.88-0.92),
+> so render is the larger but not the only mover there — the claim's own split
+> (5.7/4.1 etc.) already reflects this.
+
+### Mechanism 1 — harness artifact lens
+
+**refuted: False** (confidence high)
+
+> No rig mark coincides with the rise. Driver logs
+> (task2-repro/base-r1..r5-driver.txt) show `cpu:6`/THROTTLE-ON once at ~25.0
+> s, before round 2, never switched again; per-round harness steps are only the
+> bracketed shots at 6/30/50 s (report.js excludes [begin-100 ms, end+250 ms];
+> frames_excluded 0 in every early/late window, late window 54-59 s lies after
+> the 50.4-50.5 s shot). The event starts at s45 in all 10 rounds with no
+> harness step within 15 s of it. In the flat rounds the s50 shot second leaves
+> no render bump (e.g. base-r2/2 ren s49/50/51 = 16/17/16 ms; table.txt
+> per-second). The spike's driver is draws 107->503/511/393 and kb 181->274,
+> counted by sampler.js wrapping the game's own drawArrays/drawElements
+> (S.cur.draws++) — nothing in the rig can add GL draw calls — and
+> ms_first_draw_to_swap rises with them second by second (s45-s55) while flat
+> rounds hold draws 107-111 and render 15-19 ms. Sampler uses preallocated
+> typed arrays (Float64Array(N), no per-frame allocation), so no sampler GC;
+> pre-round overlay frames are skipped before the split and the round-transition
+> HUD falls after the 59.1 s death that closes the late window. One caveat
+> outside my lens: the JSON key "share_pct_of_late_frame_time 3.1" is the render
+> *growth* as a share of late ms (mech1-baseline-table.txt share_ren_of_late
+> median 3.1), not the render part's level share (~60-65 %, 16-18 of 25 ms) — a
+> wording issue, not a rig artifact.
+
+### Mechanism 1 — game plausibility lens
+
+**refuted: True** (confidence medium)
+
+> Arithmetic holds (draws exactly 107 at s15-44 in 10/10 rounds per the raw
+> per_second in task2-repro/base-r*/console.log; welcome() wallsLength=400 at
+> src/tron/gArmagetron.cpp:387; deltas and the 3.1 median reproduce), but the
+> evidence never shows mechanism 1's condition: trails are capped, so the only
+> draw excursions are three spikes (r1/2, r4/2, r4/3, 107->503/511/393 from
+> s45) whose geometry is unidentified — task3 README itself calls the
+> wall-segment reading "not a measurement", and gSparks.cpp:110-196 (BeginLines
+> + per-spark RenderVertex) plus the grind arm's own spark bursts at 22-31
+> us/draw give the same coefficient from a non-wall source. Screenshots
+> base-r1/r2-50s.png (498 draws) vs r3-50s.png (107) show an identical
+> near-empty arena with distant trail lines; grind/g-24s-grinding.png shows
+> only the rim grind. "Confirmed" is therefore a per-draw-call cost of unknown
+> geometry, not a confirmation of wall re-submission; and the field
+> share_pct_of_late_frame_time=3.1 is render growth over late ms, while the
+> render part is ~65% of the late frame (15.9/24.5 ms in r1/3) — misleading as
+> labeled.
+
+### Mechanism 2 (simulation at the wall) — statistics lens
+
+**refuted: False** (confidence high)
+
+> Evidence shows the claimed condition: grind/g-24s-grinding.png = cycle
+> nose-on to the rim, Rubber Used 1.5/5, sparks, Speed 15.0, Enemies 0;
+> g-12s-free.png = gauge 0, empty arena; g-54s still at rim, gauge 1.5.
+> grind/console.log: stall eval returned 83543 ms, DEATH_SUICIDE 83559 ms (+16;
+> nosound +10, r2 +19), [SND] device opened only in grind/r2. Source backs the
+> gauge reading: gCycleMovement.cpp:4179-4182 rubber /= (1+ts/sg_rubberCycleTime)
+> -> 15*0.1 = 1.5; gHud.cpp:408 GetRubber()/sg_rubberCycle; gArmagetron.cpp:384-388
+> welcome() forces rubber 5, size -2, walls 400, autoNum 0. grind-per-second.txt:
+> draws 52-55 free vs flat 60 at the rim outside spark bursts (no trail-growth
+> confound), and the s8-17 vs rim@<=70 medians reproduce 11.1/11.3/11.4 ->
+> 15.3/14.3/13.7 (+37/+26/+20 %, median +26) with pre-draw 5.9/5.8/6.0 ->
+> 9.1/8.6/8.4 and render +0.9/+0.2/+0.0 ms. Caveat the README itself states: the
+> 2.5-3.2 ms pre-draw rise is "at-the-wall simulation work" (rubber path +
+> camera/spark timestep), not isolated to TimestepCore's recursion; the verdict
+> is sound as "wall proximity costs ~26 % of the frame in the simulation part",
+> not as a line-level attribution.
+
+### Mechanism 2 — harness artifact lens
+
+**refuted: False** (confidence high)
+
+> No rig explanation fits. grind/console.log: "CPU throttling rate 6x" is set
+> once at 25107 ms wall (7.7 s round clock, the s7->s8 jump 6.1->11.6 ms) and
+> never again; between 18 s and 60 s the only harness actions are the six
+> bracketed screenshots, which report.js drops with a [-100,+250] ms pad
+> (313/4250 frames excluded). The 12 s shot sits inside the free window and
+> leaves s12 at 11.8 vs 11.1 ms, so a shot cannot make a 40 s plateau.
+> sampler.js pre-allocates Float64Array/Uint32Array(600000) — no growing arrays,
+> no GC drift; marks/shots are dozens of entries. Single round (closed_by
+> report), so no round-transition HUD; the hint text is draw calls (render part)
+> and is absent at 44 s while pre is still 9.6. The pre-draw step
+> (grind-per-second.txt: 5.9->8.8, 5.7->8.0, 6.0->8.0 at s19, flat 5.8-6.2 over
+> s8-17) lands at the same second in all three runs, matching g-18s-approach
+> (rim ahead) -> g-24s-grinding (gauge 1.5). Caveats that soften the number, not
+> the verdict: machine load 10-14 (uptime.txt), within-rim variance (nosound
+> s58-60 falls to 12.2; r2 drifts 13.2->16.5 at flat 60 draws), and "same 60
+> draws" is really 53->60 (render +0.0-0.9 ms).
+
+### Mechanism 2 — game plausibility lens
+
+**refuted: False** (confidence high)
+
+> Recomputed from the [PERF] JSON in
+> docs/evidence/m6-lag/task3-mechanisms/{grind,grind-nosound,grind-r2}/console.log
+> and task2-repro/base-r{1..5}/console.log (parsed copies in scratchpad/stat/*.json).
+> Grind arms, s8-17 vs s20-59@draws<=70: ms_p50 11.1/11.3/11.4 -> 15.3/14.3/13.7
+> (matches the claim); before-window per-second SD only 0.25-0.73 ms, gap = 4-14
+> SD; Mann-Whitney P(rim second > free second) = 1.00/0.97/1.00 for ms and
+> 1.00/1.00/1.00 for ms_to_first_draw (rim min 8.0-8.6 vs free max 6.1-6.2, zero
+> overlap in all three runs); the rise is a step at s18-19 (e.g. grind pre
+> 5.9,5.9,6.9,8.8,8.9), coincident with the 18.5 s rim contact, not a drift.
+> Noise band from Task 2's ten measured rounds with the SAME window shape (s8-17
+> vs s20-59, draws flat 108->107): ms -3..+8 % (-0.6..+1.9 ms), pre-draw
+> -0.2..+0.3 ms, P=0.29-0.73, i.e. indistinguishable from zero. Grind's
+> +20/+26/+37 % and pre +2.5..+3.2 ms sit well outside that band (pre-draw is 8x
+> the largest baseline drift; the weakest run, grind-r2, +2.3 ms total, still
+> exceeds every baseline round and its pre-draw part alone is +2.5). The mech2
+> effect is distinguishable from run-to-run noise; the +26 % median is
+> faithfully reported (rim@<=70 vs rim-all 17.1/16.2/14.0 is the higher,
+> spark-inclusive number, so the claim is if anything conservative).
+
+### What was changed because of these votes
+
+Three things, all raised by more than one skeptic, all now fixed in this
+directory. No measurement was re-run and no number moved.
+
+1. **"Share of the late frame time 3.1 %" was the wrong label**, and all
+   three mechanism-1 skeptics said so independently. The 3.1 % is the render
+   part's *growth* (Δrender between the early and late windows) divided by
+   the late frame time — the `ren%late` column of
+   `mech1-baseline-table.txt`. The render part's **level** share of the late
+   frame is a different and much larger number: recomputed from the same ten
+   `[PERF]` objects as `ms_first_draw_to_swap_p50 ÷ ms_p50` in each late
+   window, it is **62.1–68.9 %, median 65.4** (flat rounds 62.1–66.8, median
+   64.9; spike rounds 65.9–68.9, median 67.7). Both wordings are corrected
+   above, and `mech1-baseline-table.txt` now carries a column note saying
+   which is which. *One place was deliberately left alone:*
+   `docs/evidence/m6-lag/display-lists-pricing.md` (Task 5, commit
+   `5ada43f0`) inherited the same phrasing — "the ten baseline rounds put the
+   render part's share of the late frame at a median 3.1 %". Read it as the
+   *growth* share; its go/no-go argument is about what a display list could
+   remove from the growth, which is the number it needs, so the conclusion is
+   unaffected. That note is Task 5's document and is not edited here.
+2. **The 3.1 % median is of a bimodal set** and should not be quoted as a
+   point estimate: seven flat rounds at −6 to +4 % and three spike rounds at
+   17–21 %, bootstrap 95 % CI over the ten 0.1–17.2 %. The two populations
+   are now stated in place of the median wherever the median was leaned on.
+3. **"Confirmed" means a per-draw-call cost of unknown geometry.** The
+   trails are capped at 400 units in this match, the draw count is flat at
+   107 for thirty seconds in all ten rounds, and the only excursions are the
+   three spikes, whose geometry was never identified — `gSparks.cpp`'s own
+   bursts give the same 22–31 µs coefficient from a non-wall source, as the
+   grind arm measured. So mechanism 1 is confirmed as **"extra draw calls
+   cost 24–47 µs each in the render part of the frame"**, and *not* as
+   "wall re-submission is confirmed". Nothing in Tasks 1–4 shows the walls
+   themselves growing; Task 4 later added the reason it could not
+   (`task4-levers/README.md`: cutting the trail to 150 units removed at most
+   1 KB of 179 per frame and no draw calls, because a cycle's segments batch
+   into one draw per pass).
+
+The refuting vote's own conclusion is the one to carry forward: the
+condition mechanism 1 describes — a trail that grows without bound,
+re-submitted every frame — has never been on screen in any arm of this
+milestone, because every arm played the tutorial match. That is the same gap
+Tasks 4 and 5 name, and it is M6's open item.

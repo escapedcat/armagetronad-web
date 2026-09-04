@@ -1,5 +1,15 @@
 Mechanism 1 over the ten baseline rounds (docs/evidence/m6-lag/task2-repro, per_second of each [PERF] line).
 Moving seconds = 4 s (countdown end) to the death second; early/late = the [PERF] windows.
+COLUMN NOTE, added at the Task 3 adversarial check (README, "Adversarial check"); no number below changed.
+  ren%late = d_ren / late ms_p50: the render part's share of the round's early->late GROWTH, expressed
+             over the late frame time. It is NOT the render part's LEVEL share of the frame. That level
+             share is ms_first_draw_to_swap_p50 / ms_p50 in the late window, and over these same ten
+             rounds it is 62.1-68.9 % (median 65.4; flat median 64.9, spike median 67.7).
+  ren%grow = d_ren / d_ms.  pre%grow = d_pre / d_ms.
+  share_ren_of_late below is the ren%late column. Its median, 3.1, is the median of two populations
+  (seven flat rounds in -6..+4 %, three spike rounds in 17-21 %), not a central value of one; a
+  bootstrap 95 % CI over the ten rounds runs 0.1-17.2 %. Quote the two populations, not the median.
+
 run/rd     spike r(ms,dr) r(ren,dr) r(pre,dr) us/draw ren us/draw ms  dr peak(s)  ren s44->pk early->late ms  d_ms d_ren d_pre ren%late ren%grow pre%grow   kb e->l
 base-r1/2  yes       0.96      0.98      0.88        24.0       41.9     503(49)   17.9->27.5     22.8->33.1  10.3   5.7   4.1     17.2       55       40 180.86->273.99
 base-r1/3  no        0.20      0.13      0.20        54.3      204.8      116(5)   16.2->17.1     21.3->24.5   3.2   0.4   2.5      1.6       13       78 183.98->181.7
