@@ -247,9 +247,9 @@ cycles moving twice as fast**. One run, so this is a thing to look at in the
 sweep and not a finding; the obvious hypothesis is that what is drawn is bounded
 by the view frustum rather than by trail length, and `r2-50s.png` — a huge arena
 with the AI trails a long way off at the horizon — is consistent with it.
-**The sweep found the same shape in all eighteen of its measured rounds**
-(Results §3): the plateau is exactly 114.00 draws per frame and it does not
-depend on the trail cap at all. The frustum half of that hypothesis is still
+**The sweep found the same shape in all sixteen of its own measured rounds,
+and in these two** (Results §3): the plateau is exactly 114.00 draws per frame
+and it does not depend on the trail cap at all. The frustum half of that hypothesis is still
 untested — nothing in this task varied the camera or the arena — so what is
 established is the negative: trail *length* does not set the draw count.
 
