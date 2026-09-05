@@ -1,0 +1,64 @@
+[    575ms] [harness] chrome: Chrome/152.0.7977.77
+[    575ms] [harness] navigating to http://localhost:8007/armagetronad.html
+[     27ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     28ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     35ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     35ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     40ms] [page] load event fired
+[     41ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8007/favicon.ico
+[     85ms] [console.log] [PERSIST] populate ok in 29ms
+[    238ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    238ms] [console.log] [CAMERA] stock camera (factor 1)
+[    238ms] [console.log] [SPARKS] stock sparks, nothing written
+[    238ms] [console.log] [BOOT] autostart: calling main
+[    241ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    241ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    241ms] [console.error] 
+[    241ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    241ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    242ms] [console.log] 
+[    363ms] [console.log] [L] ENCODING latin1
+[    370ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    372ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    391ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    394ms] [console.error] TODO: glShadeModel
+[    401ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8007/armagetronad.js
+[    434ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    434ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    435ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    435ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    435ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[   6013ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => "canvas 1024x768"
+[   6013ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   6014ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   6014ms] [harness] until 1x <<[SPARKS] stock sparks, nothing written>> (timeout 30000ms, have 1)
+[   6014ms] [harness] until SATISFIED: saw 1x <<[SPARKS] stock sparks, nothing written>>
+[   6015ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/SPARKS/g)||[]).length:-1;return '[SPARKSGATE] D1 desktop-autoexec-untouched '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_occurrences:n,tail:ok?t.slice(-64):null,PASS:ok&&n===0})})() => "[SPARKSGATE] D1 desktop-autoexec-untouched {\"read\":true,\"err\":null,\"bytes\":12376,\"sparks_occurrences\":0,\"tail\":\"time visitor sees.\\nSP_NUM_AIS 3\\nSP_AUTO_AIS 0\\nSP_LIMIT_ROUNDS 3\\n\",\"PASS\":true}"
+[  11017ms] [harness] === should-be-the-language-menu ===
+[  11037ms] [harness] screenshot -> /tmp/m6c3-desktop/01-language-menu.png
+[  11073ms] [harness] key Down (1/1)
+[  12610ms] [harness] screenshot -> /tmp/m6c3-desktop/02-language-menu-british-english-selected.png
+[  12611ms] [harness] === enter-chooses-a-language-and-leaves-this-menu ===
+[  12649ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  12650ms] [harness] key Enter (1/1)
+[  15987ms] [harness] screenshot -> /tmp/m6c3-desktop/03-first-setup-cursor-on-accept.png
+[  15988ms] [harness] eval (()=>{window.__st=0;const o=window.setTimeout;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => "setTimeout counter installed"
+[  18992ms] [harness] eval (()=>{const dt=(performance.now()-window.__t0)/1000;return 'setTimeout calls/sec='+(window.__st/dt).toFixed(1)+' => ~'+(window.__st/dt/2).toFixed(1)+' FPS (MAX_FPS 60)'})() => "setTimeout calls/sec=138.2 => ~69.1 FPS (MAX_FPS 60)"
+[  19028ms] [harness] key Down (1/1)
+[  20568ms] [harness] screenshot -> /tmp/m6c3-desktop/04-first-setup-cursor-on-name.png
+[  20601ms] [harness] key Down (1/1)
+[  22150ms] [harness] screenshot -> /tmp/m6c3-desktop/05-first-setup-cursor-on-colour.png
+[  22151ms] [harness] === left-right-changes-a-selection-value ===
+[  22184ms] [harness] key Right (1/1)
+[  23733ms] [harness] screenshot -> /tmp/m6c3-desktop/06-first-setup-colour-value-changed.png
+[  23767ms] [harness] key Down (1/1)
+[  25322ms] [harness] screenshot -> /tmp/m6c3-desktop/07-first-setup-cursor-on-controls.png
+[  25355ms] [harness] key Right (1/1)
+[  26902ms] [harness] screenshot -> /tmp/m6c3-desktop/08-first-setup-controls-value-changed.png
+[  26935ms] [harness] key Up (1/1)
+[  28481ms] [harness] screenshot -> /tmp/m6c3-desktop/09-first-setup-cursor-back-on-colour.png
+[  28481ms] [harness] === escape-leaves-the-first-setup-menu-entirely ===
+[  28514ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  28515ms] [harness] key Escape (1/1)
+[  31864ms] [harness] screenshot -> /tmp/m6c3-desktop/10-welcome-message.png
+[  31865ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})() => "{\"VENDOR\":\"WebKit\",\"RENDERER\":\"WebKit WebGL\",\"VERSION\":\"WebGL 1.0 (OpenGL ES 2.0 Chromium)\",\"UNMASKED_VENDOR\":\"Google Inc. (Apple)\",\"UNMASKED_RENDERER\":\"ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)\",\"preserveDrawingBuffer\":true}"

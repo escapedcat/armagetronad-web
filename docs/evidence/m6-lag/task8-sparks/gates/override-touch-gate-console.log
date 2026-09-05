@@ -1,0 +1,372 @@
+[    597ms] [harness] mobile emulation: 915x412 CSS px dpr 3 (= 2745x1236 device px), touch on
+[    599ms] [harness] chrome: Chrome/152.0.7977.77
+[    599ms] [harness] navigating to http://localhost:8007/armagetronad.html
+[     34ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[     34ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     35ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     35ms] [console.log] [TOUCH] play in portrait: false (localStorage aa.portrait)
+[     36ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false, play in portrait: false)
+[     44ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     46ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     47ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false, play in portrait: false)
+[     48ms] [page] load event fired
+[     52ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8007/favicon.ico
+[     95ms] [console.log] [PERSIST] populate ok in 31ms
+[    253ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    254ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    255ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[    255ms] [console.log] [BOOT] autostart: calling main
+[    263ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    264ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    264ms] [console.error] 
+[    264ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    265ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    265ms] [console.log] 
+[    383ms] [console.log] [L] ENCODING latin1
+[    390ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    391ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    410ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    413ms] [console.error] TODO: glShadeModel
+[    416ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8007/armagetronad.js
+[    451ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    452ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    452ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    452ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    452ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[    536ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[   1011ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1012ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})() => "probe installed"
+[   1012ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1013ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1013ms] [harness] === GAME-STARTED ===
+[  10022ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  10023ms] [console.log] [TOUCHGATE] {"phase":"landscape-at-language-menu","save":"saved","ctx":1,"ctx_menu":true,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  10024ms] [harness] eval window.__tg.dump('landscape-at-language-menu') => "landscape-at-language-menu"
+[  10098ms] [harness] screenshot -> /tmp/m6c3-touch/00-language-menu-with-touch-controls.png
+[  10098ms] [harness] until 1x <<[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg>> (timeout 30000ms, have 1)
+[  10098ms] [harness] until SATISFIED: saw 1x <<[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg>>
+[  10099ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 0\n$/.test(t);return '[SPARKSGATE] T1b sparks-off-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,ends_with_sparks_0:ends,tail:ok?t.slice(-96):null,PASS:ok&&n===1&&ends})})() => "[SPARKSGATE] T1b sparks-off-on-touch {\"read\":true,\"err\":null,\"bytes\":12746,\"sparks_lines\":1,\"ends_with_sparks_0\":true,\"tail\":\"ROMSPEED 0.2\\n\\n# appended at runtime by web/shell.html: crash sparks off (touch device)\\nSPARKS 0\\n\",\"PASS\":true}"
+[  10099ms] [harness] eval (()=>{const t=document.getElementById('touch');const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const p=document.getElementById('tapzone').getBoundingClientRect();const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T2b menu-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),turn_zones_have_no_box:z.every(r=>r.width===0&&r.height===0),tap_layer_area:Math.round(p.width*p.height),PASS:!t.classList.contains('aa-driving')&&z.every(r=>r.width===0&&r.height===0)&&p.width>0})})() => "[TOUCHGATE] T2b menu-side collision check {\"ctx\":1,\"driving_class\":false,\"turn_zones_have_no_box\":true,\"tap_layer_area\":376980,\"PASS\":true}"
+[  10100ms] [harness] === TAP-ENTER-ACCEPTS-LANGUAGE ===
+[  10102ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8007/armagetronad.js
+[  10166ms] [harness] tap #tapzone at 458,206 (1/1)
+[  10173ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10468ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10468ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13047ms] [harness] screenshot -> /tmp/m6c3-touch/01-first-setup-reached-by-tapping.png
+[  13047ms] [harness] === TAP-ENTER-ACCEPTS-FIRST-SETUP ===
+[  13111ms] [harness] tap #tapzone at 458,206 (1/1)
+[  13123ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  13287ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  13414ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13414ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16500ms] [harness] screenshot -> /tmp/m6c3-touch/02-welcome-message-reached-by-tapping.png
+[  16500ms] [harness] === TAP-ENTER-DISMISSES-WELCOME ===
+[  16568ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  16569ms] [console.log] [L] TEAM_CREATED web_user
+[  16569ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  16571ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  16572ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  16573ms] [console.log] [L] NEW_ROUND 2026-09-05 17:25:54 UTC+0200
+[  16588ms] [console.log] [L] TEAM_CREATED ai_team
+[  16589ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  16589ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  16589ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  16590ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  16609ms] [harness] tap #tapzone at 458,206 (1/1)
+[  16609ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  16611ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  16611ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  16612ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  16875ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8007/favicon.ico
+[  18913ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 1)
+[  18913ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  18913ms] [harness] === ROUND-1-STARTED-WITHOUT-A-SINGLE-KEYSTROKE ===
+[  21132ms] [harness] screenshot -> /tmp/m6c3-touch/03-round1-driving.png
+[  21136ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  21137ms] [console.log] [TOUCHGATE] {"phase":"round1-before-steering","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  21137ms] [harness] eval window.__tg.dump('round1-before-steering') => "round1-before-steering"
+[  21139ms] [harness] eval (()=>{const t=document.getElementById('touch');const p=document.getElementById('tapzone').getBoundingClientRect();const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T3b round-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),tap_layer_has_no_box:p.width===0&&p.height===0,turn_zone_areas:z.map(r=>Math.round(r.width*r.height)),PASS:t.classList.contains('aa-driving')&&p.width===0&&p.height===0&&z.every(r=>r.width>0)})})() => "[TOUCHGATE] T3b round-side collision check {\"ctx\":2,\"driving_class\":true,\"tap_layer_has_no_box\":true,\"turn_zone_areas\":[197915,197915],\"PASS\":true}"
+[  21139ms] [harness] === TAP-LEFT-HALF ===
+[  21208ms] [harness] tap #tz-left at 240,206 (1/3)
+[  21212ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  21583ms] [harness] tap #tz-left at 240,206 (2/3)
+[  21955ms] [harness] tap #tz-left at 240,206 (3/3)
+[  22599ms] [console.log] [L] DEATH_SUICIDE web_user
+[  22600ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  22789ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  23300ms] [harness] screenshot -> /tmp/m6c3-touch/04-after-tapping-left-half.png
+[  23303ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  23303ms] [console.log] [TOUCHGATE] {"phase":"after-tapping-left-half","save":"saved","ctx":0,"ctx_menu":false,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 3 1 1 1"}
+[  23303ms] [harness] eval window.__tg.dump('after-tapping-left-half') => "after-tapping-left-half"
+[  23303ms] [harness] === TAP-RIGHT-HALF ===
+[  23380ms] [harness] tap #tz-right at 0,0 (1/4)
+[  23540ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  23643ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  23757ms] [harness] tap #tz-right at 0,0 (2/4)
+[  23774ms] [console.log] [PERSISTSAVE] menu-leave n=6
+[  23790ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  24135ms] [harness] tap #tz-right at 0,0 (3/4)
+[  24295ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  24503ms] [harness] tap #tz-right at 0,0 (4/4)
+[  24511ms] [console.log] [PERSISTSAVE] menu-leave n=7
+[  24536ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  25776ms] [harness] screenshot -> /tmp/m6c3-touch/05-after-tapping-right-half.png
+[  25779ms] [console.log] [PERSISTSAVE] js-backstop n=8
+[  25780ms] [console.log] [TOUCHGATE] {"phase":"after-tapping-right-half","save":"saved","ctx":0,"ctx_menu":false,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 3 1 1 1"}
+[  25780ms] [harness] eval window.__tg.dump('after-tapping-right-half') => "after-tapping-right-half"
+[  25780ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 150000ms, have 1)
+[  27713ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  27714ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  27714ms] [console.log] [L] NEW_ROUND 2026-09-05 17:26:05 UTC+0200
+[  27716ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  27716ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  27788ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  27814ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  27815ms] [harness] === ROUND-2-STARTED ===
+[  29880ms] [harness] tap #tz-left at 240,206 (1/3)
+[  30252ms] [harness] tap #tz-left at 240,206 (2/3)
+[  30622ms] [harness] tap #tz-left at 240,206 (3/3)
+[  31701ms] [harness] tap #tz-right at 675,206 (1/4)
+[  32075ms] [harness] tap #tz-right at 675,206 (2/4)
+[  32462ms] [harness] tap #tz-right at 675,206 (3/4)
+[  32834ms] [harness] tap #tz-right at 675,206 (4/4)
+[  34187ms] [harness] screenshot -> /tmp/m6c3-touch/06-after-round2-taps.png
+[  34192ms] [console.log] [PERSISTSAVE] js-backstop n=9
+[  34192ms] [console.log] [TOUCHGATE] {"phase":"after-round2-taps","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  34192ms] [harness] eval window.__tg.dump('after-round2-taps') => "after-round2-taps"
+[  34192ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 150000ms, have 2)
+[  36488ms] [console.log] [L] DEATH_SUICIDE web_user
+[  36541ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  37892ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  41957ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  41957ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  41957ms] [console.log] [L] NEW_ROUND 2026-09-05 17:26:19 UTC+0200
+[  42036ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  42036ms] [harness] === ROUND-3-STARTED-RIGHT-TAPS-ONLY ===
+[  42038ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  44109ms] [harness] tap #tz-right at 675,206 (1/2)
+[  44485ms] [harness] tap #tz-right at 675,206 (2/2)
+[  45558ms] [harness] tap #tz-right at 675,206 (1/2)
+[  45924ms] [harness] tap #tz-right at 675,206 (2/2)
+[  47249ms] [harness] screenshot -> /tmp/m6c3-touch/06b-after-round3-right-taps.png
+[  47252ms] [console.log] [PERSISTSAVE] js-backstop n=10
+[  47252ms] [console.log] [TOUCHGATE] {"phase":"after-round3-right-taps","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  47252ms] [harness] eval window.__tg.dump('after-round3-right-taps') => "after-round3-right-taps"
+[  47252ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  47252ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  47252ms] [harness] === ROTATE-TO-PORTRAIT ===
+[  47254ms] [harness] metrics -> 412x915 dpr 3
+[  47261ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false, boot held: false, play in portrait: false)
+[  47265ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false, boot held: false, play in portrait: false)
+[  48789ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  48836ms] [harness] screenshot -> /tmp/m6c3-touch/07-portrait-shows-rotate-prompt.png
+[  48836ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  48839ms] [console.log] [PERSISTSAVE] js-backstop n=11
+[  48839ms] [console.log] [TOUCHGATE] {"phase":"rotated-to-portrait","save":"saved","ctx":0,"ctx_menu":false,"ctx_cycle":false,"driving_class":false,"box_tapzone":"412x915@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@142,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":412,"css_h":186,"inner":"412x915","dpr":3,"touch_hidden":false,"rotate_hidden":false,"chip_hidden":false,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  48839ms] [harness] eval window.__tg.dump('rotated-to-portrait') => "rotated-to-portrait"
+[  48840ms] [harness] === ROTATE-BACK-TO-LANDSCAPE ===
+[  48842ms] [harness] metrics -> 915x412 dpr 3
+[  48847ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false, play in portrait: false)
+[  48847ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false, play in portrait: false)
+[  50055ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  50582ms] [harness] screenshot -> /tmp/m6c3-touch/08-back-in-landscape.png
+[  50585ms] [console.log] [PERSISTSAVE] js-backstop n=12
+[  50585ms] [console.log] [TOUCHGATE] {"phase":"rotated-back-to-landscape","save":"saved","ctx":0,"ctx_menu":false,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  50585ms] [harness] eval window.__tg.dump('rotated-back-to-landscape') => "rotated-back-to-landscape"
+[  50585ms] [harness] === FRAME-RATE ===
+[  50594ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length,gl_errors:S.gl.length,gl_polls:S.polls};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => "{\"total_frames_sampled\":2906,\"rounds_started\":3,\"rounds_won\":3,\"gl_errors\":0,\"gl_polls\":96,\"overall\":{\"span_s\":33.48,\"frames\":1949,\"mean_fps\":58.21,\"frame_ms\":{\"p50\":16.6,\"p90\":19,\"p99\":25.9,\"max\":87.8},\"inst_fps\":{\"median\":60.24,\"p10\":52.63,\"p01\":38.61,\"min\":11.39},\"fps_per_second\":[58,61,59,60,54,57,57,50,60,60,60,60,60,53,58,49,56,60,60,60,60,60,61,59,60,61,59,54,58,57,60,59,60],\"fps_per_second_min\":49,\"fps_per_second_median\":60},\"per_round\":[{\"span_s\":7.07,\"frames\":409,\"mean_fps\":57.87,\"frame_ms\":{\"p50\":16.6,\"p90\":19.1,\"p99\":30.5,\"max\":81.6},\"inst_fps\":{\"median\":60.24,\"p10\":52.36,\"p01\":32.79,\"min\":12.25},\"fps_per_second\":[58,61,59,60,54,57,57],\"fps_per_second_min\":54,\"fps_per_second_median\":58},{\"span_s\":10.18,\"frames\":587,\"mean_fps\":57.68,\"frame_ms\":{\"p50\":16.7,\"p90\":18.8,\"p99\":66.6,\"max\":87.8},\"inst_fps\":{\"median\":59.88,\"p10\":53.19,\"p01\":15.02,\"min\":11.39},\"fps_per_second\":[60,61,50,57,52,57,60,60,60,60],\"fps_per_second_min\":50,\"fps_per_second_median\":60},{\"span_s\":8.1,\"frames\":474,\"mean_fps\":58.53,\"frame_ms\":{\"p50\":16.6,\"p90\":19,\"p99\":23.1,\"max\":77.4},\"inst_fps\":{\"median\":60.24,\"p10\":52.63,\"p01\":43.29,\"min\":12.92},\"fps_per_second\":[60,61,53,55,60,59,61,59],\"fps_per_second_min\":53,\"fps_per_second_median\":60}]}"
+[  50594ms] [harness] === TAP-ESCAPE-IN-THE-CORNER ===
+[  50595ms] [harness] eval (()=>{const r=document.getElementById('escbtn').getBoundingClientRect();return '[TOUCHGATE] T6 escape corner '+JSON.stringify({rect:Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top),at_least_44px:r.width>=44&&r.height>=44,inset_from_left_px:Math.round(r.left),inset_from_top_px:Math.round(r.top),centre_x_px:Math.round(r.left+r.width/2)})})() => "[TOUCHGATE] T6 escape corner {\"rect\":\"54x46@10,10\",\"at_least_44px\":true,\"inset_from_left_px\":10,\"inset_from_top_px\":10,\"centre_x_px\":37}"
+[  50663ms] [harness] tap #escbtn at 37,33 (1/1)
+[  50786ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  53631ms] [harness] screenshot -> /tmp/m6c3-touch/10-after-tapping-escape-in-the-corner.png
+[  53634ms] [console.log] [PERSISTSAVE] js-backstop n=13
+[  53634ms] [console.log] [TOUCHGATE] {"phase":"after-escape-corner-tap","save":"saved","ctx":1,"ctx_menu":true,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"rotate_hidden":true,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  53634ms] [harness] eval window.__tg.dump('after-escape-corner-tap') => "after-escape-corner-tap"
+[  53635ms] [harness] === P1-ROTATE-TO-PORTRAIT-WITH-THE-GAME-ALREADY-RUNNING ===
+[  53636ms] [harness] metrics -> 412x915 dpr 3
+[  53636ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false, boot held: false, play in portrait: false)
+[  53636ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false, boot held: false, play in portrait: false)
+[  55709ms] [harness] screenshot -> /tmp/m6c3-touch/11-portrait-prompt-after-boot-has-the-button.png
+[  55709ms] [harness] eval (()=>{const r=document.getElementById('rotate'),b=document.getElementById('rotate-play'),h=document.getElementById('rotate-held'),x=document.getElementById('rotate-restart');const bb=b.getBoundingClientRect();const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P1 prompt-after-boot '+JSON.stringify({rotate_hidden:r.hidden,button:Math.round(bb.width)+'x'+Math.round(bb.height)+'@'+Math.round(bb.left)+','+Math.round(bb.top),label:b.textContent,held_note_hidden:h.hidden,restart_note_hidden:x.hidden,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,stored:st,PASS:r.hidden===false&&bb.width>=44&&bb.height>=44&&h.hidden===true&&x.hidden===false&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&st===null})})() => "[PORTRAITGATE] P1 prompt-after-boot {\"rotate_hidden\":false,\"button\":\"128x44@142,528\",\"label\":\"Play in portrait\",\"held_note_hidden\":true,\"restart_note_hidden\":false,\"boot_held\":false,\"stored\":null,\"PASS\":true}"
+[  55709ms] [harness] === P2-TAP-PLAY-IN-PORTRAIT ===
+[  55778ms] [console.log] [TOUCH] play in portrait chosen (stored for next load: true)
+[  55778ms] [console.log] [BOOT] reloading to size the canvas for portrait
+[  55780ms] [console.log] [PERSISTSAVE] js-backstop n=14
+[  55781ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  55783ms] [harness] tap #rotate-play at 206,550 (1/1)
+[  55800ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x2745 aspect 0.4503 gpu-axis-limit 16384
+[  55801ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  55801ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  55801ms] [console.log] [TOUCH] play in portrait: true (localStorage aa.portrait)
+[  55801ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
+[  55803ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  55803ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  55806ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
+[  55808ms] [page] load event fired
+[  55820ms] [console.log] [PERSIST] populate ok in 5ms
+[  55860ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  55861ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[  55861ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[  55862ms] [console.log] [BOOT] autostart: calling main
+[  55862ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  55862ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  55862ms] [console.error] 
+[  55863ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  55863ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  55863ms] [console.log] 
+[  55973ms] [console.log] [L] ENCODING latin1
+[  55976ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  55989ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  55992ms] [console.error] TODO: glShadeModel
+[  55994ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8007/armagetronad.js
+[  56085ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  56085ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  56086ms] [harness] until 1x <<sized for portrait: true>> (timeout 30000ms, have 2)
+[  56086ms] [harness] until SATISFIED: saw 2x <<sized for portrait: true>>
+[  62052ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  65188ms] [harness] screenshot -> /tmp/m6c3-touch/12-portrait-boot-after-choosing-play-in-portrait.png
+[  65189ms] [harness] eval (()=>{const c=document.getElementById('canvas'),r=document.getElementById('rotate'),ch=document.getElementById('reloadchip');const b=c.getBoundingClientRect();const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P2/P3 portrait-boot '+JSON.stringify({stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,chip_hidden:ch.hidden,inner:innerWidth+'x'+innerHeight,canvas:c.width+'x'+c.height,canvas_portrait:c.height>c.width,aspect:Math.round(c.width/c.height*1000)/1000,css:Math.round(b.width)+'x'+Math.round(b.height),touch_hidden:document.getElementById('touch').hidden,PASS:st==='play'&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&r.hidden===true&&ch.hidden===true&&c.height>c.width&&document.getElementById('touch').hidden===false})})() => "[PORTRAITGATE] P2/P3 portrait-boot {\"stored\":\"play\",\"boot_held\":false,\"rotate_hidden\":true,\"chip_hidden\":true,\"inner\":\"412x915\",\"canvas\":\"1236x2745\",\"canvas_portrait\":true,\"aspect\":0.45,\"css\":\"412x915\",\"touch_hidden\":false,\"PASS\":true}"
+[  65189ms] [harness] === P5-ROTATE-TO-LANDSCAPE-WITH-THE-CHOICE-STORED ===
+[  65190ms] [harness] metrics -> 915x412 dpr 3
+[  65194ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: true, boot held: false, play in portrait: true)
+[  65195ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: true, boot held: false, play in portrait: true)
+[  67276ms] [harness] screenshot -> /tmp/m6c3-touch/12b-landscape-with-the-choice-stored.png
+[  67277ms] [harness] eval (()=>{const r=document.getElementById('rotate'),ch=document.getElementById('reloadchip'),c=document.getElementById('canvas');const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P5 rotated-to-landscape '+JSON.stringify({stored:st,rotate_hidden:r.hidden,chip_hidden:ch.hidden,inner:innerWidth+'x'+innerHeight,canvas:c.width+'x'+c.height,PASS:st==='play'&&r.hidden===true&&ch.hidden===false})})() => "[PORTRAITGATE] P5 rotated-to-landscape {\"stored\":\"play\",\"rotate_hidden\":true,\"chip_hidden\":false,\"inner\":\"915x412\",\"canvas\":\"1236x2745\",\"PASS\":true}"
+[  67278ms] [harness] metrics -> 412x915 dpr 3
+[  67286ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
+[  67287ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
+[  68779ms] [harness] === P4-PORTRAIT-ASK-RESTORES-THE-PROMPT ===
+[  68786ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  68787ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  68787ms] [harness] eval location.search='?portrait=ask' => "?portrait=ask"
+[  68787ms] [harness] until 1x <<[BOOT] portrait at load: HOLDING main()>> (timeout 60000ms, have 0)
+[  68804ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x2745 aspect 0.4503 gpu-axis-limit 16384
+[  68804ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  68804ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  68805ms] [console.log] [TOUCH] play in portrait: false (localStorage aa.portrait, cleared by ?portrait=ask)
+[  68805ms] [console.log] [BOOT] portrait at load: HOLDING main() until landscape
+[  68805ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: true, play in portrait: false)
+[  68807ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  68807ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  68808ms] [page] load event fired
+[  68809ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: true, play in portrait: false)
+[  68821ms] [console.log] [PERSIST] populate ok in 5ms
+[  68863ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  68864ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[  68864ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[  68865ms] [console.log] [BOOT] main() HELD in portrait, waiting for landscape
+[  68889ms] [harness] until SATISFIED: saw 1x <<[BOOT] portrait at load: HOLDING main()>>
+[  71955ms] [harness] screenshot -> /tmp/m6c3-touch/13-portrait-ask-restores-the-prompt.png
+[  71955ms] [harness] eval (()=>{const r=document.getElementById('rotate'),h=document.getElementById('rotate-held'),x=document.getElementById('rotate-restart');const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P4 portrait=ask '+JSON.stringify({search:location.search,stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,held_note_hidden:h.hidden,restart_note_hidden:x.hidden,button_present:!!document.getElementById('rotate-play'),PASS:st===null&&window.AA_BOOT_HELD_FOR_PORTRAIT===true&&r.hidden===false&&h.hidden===false&&x.hidden===true})})() => "[PORTRAITGATE] P4 portrait=ask {\"search\":\"?portrait=ask\",\"stored\":null,\"boot_held\":true,\"rotate_hidden\":false,\"held_note_hidden\":false,\"restart_note_hidden\":true,\"button_present\":true,\"PASS\":true}"
+[  71955ms] [harness] === P6-RELEASE-THE-HOLD-SO-THE-GAME-BOOTS-WITH-ASK-STILL-IN-THE-URL ===
+[  71956ms] [harness] metrics -> 915x412 dpr 3
+[  71956ms] [harness] until 3x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  71960ms] [console.log] [DISPLAY] portrait hold released by resize: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[  71960ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false, play in portrait: false)
+[  71960ms] [console.log] [BOOT] portrait hold released by resize
+[  71960ms] [console.log] [BOOT] autostart: calling main
+[  71961ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  71961ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  71961ms] [console.error] 
+[  71961ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  71961ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  71961ms] [console.log] 
+[  72057ms] [harness] until SATISFIED: saw 3x <<[BOOT] autostart>>
+[  72073ms] [console.log] [L] ENCODING latin1
+[  72077ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  72090ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  72093ms] [console.error] TODO: glShadeModel
+[  72095ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8007/armagetronad.js
+[  72103ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false, boot held: false, play in portrait: false)
+[  78309ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  80061ms] [harness] === P6-BACK-TO-PORTRAIT-WITH-THE-GAME-RUNNING ===
+[  80066ms] [harness] metrics -> 412x915 dpr 3
+[  80068ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false, boot held: false, play in portrait: false)
+[  80069ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false, boot held: false, play in portrait: false)
+[  82139ms] [harness] screenshot -> /tmp/m6c3-touch/13b-portrait-prompt-with-ask-still-in-the-url.png
+[  82140ms] [harness] eval '[PORTRAITGATE] P6 precondition '+JSON.stringify({search:location.search,rotate_hidden:document.getElementById('rotate').hidden,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,PASS:location.search==='?portrait=ask'&&document.getElementById('rotate').hidden===false&&!window.AA_BOOT_HELD_FOR_PORTRAIT}) => "[PORTRAITGATE] P6 precondition {\"search\":\"?portrait=ask\",\"rotate_hidden\":false,\"boot_held\":false,\"PASS\":true}"
+[  82140ms] [harness] === P6-TAP-PLAY-IN-PORTRAIT-FROM-AN-ASK-URL ===
+[  82206ms] [console.log] [TOUCH] play in portrait chosen (stored for next load: true)
+[  82206ms] [console.log] [BOOT] reloading to size the canvas for portrait
+[  82208ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  82208ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  82210ms] [harness] tap #rotate-play at 206,550 (1/1)
+[  82225ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x2745 aspect 0.4503 gpu-axis-limit 16384
+[  82226ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  82226ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  82226ms] [console.log] [TOUCH] play in portrait: true (localStorage aa.portrait)
+[  82227ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
+[  82228ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  82228ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  82229ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
+[  82230ms] [page] load event fired
+[  82240ms] [console.log] [PERSIST] populate ok in 4ms
+[  82286ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  82286ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[  82287ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[  82287ms] [console.log] [BOOT] autostart: calling main
+[  82287ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  82288ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  82288ms] [console.error] 
+[  82288ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  82288ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  82288ms] [console.log] 
+[  82398ms] [console.log] [L] ENCODING latin1
+[  82402ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  82415ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  82418ms] [console.error] TODO: glShadeModel
+[  82420ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8007/armagetronad.js
+[  82513ms] [harness] until 4x <<[BOOT] autostart>> (timeout 120000ms, have 4)
+[  82513ms] [harness] until SATISFIED: saw 4x <<[BOOT] autostart>>
+[  88477ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  91596ms] [harness] screenshot -> /tmp/m6c3-touch/14-ask-dropped-and-portrait-kept.png
+[  91597ms] [harness] eval (()=>{const c=document.getElementById('canvas'),r=document.getElementById('rotate');const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P6 ask-dropped '+JSON.stringify({search:location.search,stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,canvas:c.width+'x'+c.height,canvas_portrait:c.height>c.width,PASS:location.search===''&&st==='play'&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&r.hidden===true&&c.height>c.width})})() => "[PORTRAITGATE] P6 ask-dropped {\"search\":\"\",\"stored\":\"play\",\"boot_held\":false,\"rotate_hidden\":true,\"canvas\":\"1236x2745\",\"canvas_portrait\":true,\"PASS\":true}"
+[  91598ms] [harness] === T1c-PRECONDITION-THE-SAVED-CONFIG-HOLDS-SPARKS-0 ===
+[  91598ms] [harness] eval (()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const m=ok?/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(t):null;return '[SPARKSGATE] T1c precondition saved-config-holds-sparks-0 '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,line:m?m[0]:null,value:m?m[1]:null,PASS:!!m&&m[1]==='0'})})() => "[SPARKSGATE] T1c precondition saved-config-holds-sparks-0 {\"read\":true,\"err\":null,\"bytes\":22765,\"line\":\"                      SPARKS 0\",\"value\":\"0\",\"PASS\":true}"
+[  91598ms] [harness] === T1c-RELOAD-WITH-SPARKS-1 ===
+[  91601ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  91602ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  91602ms] [harness] eval location.search='?sparks=1' => "?sparks=1"
+[  91602ms] [harness] until 1x <<[SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg>> (timeout 90000ms, have 0)
+[  91620ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x2745 aspect 0.4503 gpu-axis-limit 16384
+[  91620ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  91620ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  91620ms] [console.log] [TOUCH] play in portrait: true (localStorage aa.portrait)
+[  91621ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
+[  91622ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  91622ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  91623ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true, boot held: false, play in portrait: true)
+[  91624ms] [page] load event fired
+[  91637ms] [console.log] [PERSIST] populate ok in 7ms
+[  91684ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  91685ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[  91685ms] [console.log] [SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg before main() (from ?sparks=1)
+[  91685ms] [console.log] [BOOT] autostart: calling main
+[  91686ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  91686ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  91686ms] [console.error] 
+[  91686ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  91687ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  91687ms] [console.log] 
+[  91703ms] [harness] until SATISFIED: saw 1x <<[SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg>>
+[  91703ms] [harness] until 5x <<[BOOT] autostart>> (timeout 90000ms, have 5)
+[  91703ms] [harness] until SATISFIED: saw 5x <<[BOOT] autostart>>
+[  91796ms] [console.log] [L] ENCODING latin1
+[  91799ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  91812ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  91814ms] [console.error] TODO: glShadeModel
+[  91817ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8007/armagetronad.js
+[  97876ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  99713ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  99714ms] [harness] eval (()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=t!==null&&/\nSPARKS 1\n$/.test(t);return '[SPARKSGATE] T1c sparks-1-overrides-the-saved-0 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,ends_with_sparks_1:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 1'&&ends&&sv==='saved'&&!!um&&um[1]==='1'})})() => "[SPARKSGATE] T1c sparks-1-overrides-the-saved-0 {\"save\":\"saved\",\"autoexec_read\":true,\"autoexec_bytes\":12747,\"autoexec_sparks_lines\":[\"SPARKS 1\"],\"ends_with_sparks_1\":true,\"live_sparks_in_user_cfg\":\"1\",\"tail\":\"EED 0.2\\n\\n# appended at runtime by web/shell.html: crash sparks on (from ?sparks=1)\\nSPARKS 1\\n\",\"PASS\":true}"
+[  99808ms] [harness] screenshot -> /tmp/m6c3-touch/15-booted-with-sparks-1.png
+[  99808ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  99809ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1119
+[  99809ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  99809ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  99810ms] [EXCEPTION] structured stack, 1 frames:
+[  99810ms]     <anonymous> @ :0:27
+[ 101907ms] [harness] screenshot -> /tmp/m6c3-touch/09-after-deliberate-uncaught-error.png
