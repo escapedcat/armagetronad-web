@@ -247,7 +247,7 @@ person holding it a switch and a readout.
 | `?touch=1` / `?touch=0` | media query | forces the touch overlay on or off. |
 | `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
 | `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
-| `?sparks=1` / `?sparks=0` | off on touch, on otherwise | keeps or turns off the crash sparks (`SPARKS`). Off by default on a touch device: the bursts thrown at a wall cost about a quarter of the frame. `?sparks=0` turns them off on a desktop too, which is the only way this rig could measure them. |
+| `?sparks=1` / `?sparks=0` | off on touch, on otherwise | appends `SPARKS 1` or `SPARKS 0` to the runtime config, **on any device**. Off by default on a touch device: the bursts thrown at a wall cost about a quarter of the frame. `?sparks=1` has to *write* rather than stay silent — the game saves `SPARKS` into `user.cfg`, and this appended file is read after it — so it beats both the touch default and anything a previous session saved. `?sparks=0` turns them off on a desktop too, which is the only way this rig could measure them. |
 | `?portrait=ask` | off | clears the remembered "Play in portrait" answer, so the portrait prompt is asked again. The answer lives in `localStorage` under `aa.portrait`; this is the only way back once it is stored. Answering the prompt again drops the parameter from the URL, so the new answer is not cleared by the reload that applies it. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 
@@ -311,8 +311,19 @@ then differs from the desktop page in four ways, all of them in
   the wall — with its condition: the 17.15 arm sparked in 29 of its 40 rim
   seconds, while the second stock run of the same arm sparked in 11 of 40 and read
   14.0 ms median, so the median win is 23.6 % in the one and 2.5 % in the other
-  and the worst second falls 32 % and 18 %. `?sparks=1` restores them; `EXPLOSION`
-  is the same kind of switch, was **not** measured, and is left alone.
+  and the worst second falls 32 % and 18 %. `?sparks=1` restores them — by
+  appending `SPARKS 1`, not by staying quiet, and that difference is the whole of
+  a defect the maintainer found on his phone. `SPARKS` is a `tConfItem` and
+  `tConfItemBase::Save()` returns `true` (`tConfiguration.h:296`), so the game
+  writes it into `/persist/var/user.cfg` on every menu leave; `st_LoadConfig`
+  reads `user.cfg` **first** and this appended file **last**
+  (`tConfiguration.cpp:975` and `992`), so after one touch session a silent
+  `?sparks=1` would leave the saved `0` standing. The `CAMERA_*` items are
+  `tSettingItem`s, whose `Save()` returns `false` (`tConfiguration.h:497`), never
+  reach `user.cfg`, and that is why `?cam=1`'s silence really is stock. The same
+  ordering means the in-game Preferences toggle is overridden on a touch device
+  at the next load, and `?sparks=1` is the way back. `EXPLOSION` is the same kind
+  of switch, was **not** measured, and is left alone.
   `docs/evidence/m6-lag/task8-sparks/`.
 
 A successful run shows the game's language menu on the canvas within a few
