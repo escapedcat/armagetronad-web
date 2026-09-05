@@ -6,7 +6,8 @@ shape the page was built around. (Portrait was offered before M7 — badly, at t
 a remembered answer: [`../portrait-choice/`](../portrait-choice/README.md).)
 
 M7 makes portrait its own layout: a **square picture at the top of the screen
-and a pad below it**, decided once at load, on a touch device only. The square is the point — `rViewport::Perspective` gives an
+and a pad below it**, decided once at load, on a touch device only. The square
+is the point — `rViewport::Perspective` gives an
 aspect-1 viewport 90° × 90°, against ~111° × 67° at a phone's landscape and ~131°
 vertical at the full-portrait load this page used to build
 ([`../phone-round2/fov/`](../phone-round2/fov/README.md)).

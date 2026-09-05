@@ -71,8 +71,8 @@ but reaches no servers. Safari is not a target.
   `SPARKS` into your settings and silence would lose to the saved value. In
   portrait the game is a square at the top of the screen with a Game Boy pad
   below it — a cross for the arrows, A for Enter, B for Escape. The square is the
-  aspect the game's projection was designed near, so it plays at the 90° field of
-  view a 4:3 monitor gets. Rotating after load offers a reload; it never forces
+  aspect the game's projection was designed near, so it plays at the 90° horizontal
+  field of view a 4:3 monitor gets. Rotating after load offers a reload; it never forces
   one. `docs/evidence/phone-round2/`, `docs/evidence/m7-gameboy/`,
   `docs/evidence/m6-lag/task8-sparks/`.
 
