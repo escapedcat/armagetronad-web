@@ -93,6 +93,40 @@ eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8
 
 until:1:90000:[BOOT] autostart
 mark:GAME-STARTED
+
+# ===========================================================================
+# L1: LANDSCAPE IS THE LAYOUT IT ALWAYS WAS. M7 added a second layout (a square
+# picture with a pad below it) for a portrait LOAD. This is the negative half:
+# on the same device held the other way up, none of it turns on.
+#
+# THREE CLAIMS AND A REFERENCE. The claims are the three switches M7 added,
+# each of which can fail on its own: the class the whole layout hangs off
+# (aa-gameboy, absent), the pad (display:none, so its six buttons are not in
+# the tree the player can hit), and --aa-square, which sizeCanvas writes in
+# BOTH branches -- 0px here, its true answer when there is no square. That last
+# one is why a reader can take the variable at face value instead of having to
+# tell "no square" apart from "never set", and no run before this one had
+# proven the 0px half.
+#
+# `visible` is a reference rather than a claim: the id (or class) of every
+# descendant of #touch whose OWN computed display is not none, in document
+# order, snapshotted at the language menu. Committed as
+# docs/evidence/m7-gameboy/landscape-visible-reference.txt; a future run that
+# adds, loses or re-hides a control here changes that string, and a human diff
+# is a better tool for "did the landscape overlay move" than a check that would
+# fail on every legitimate addition.
+#
+# READ IT AS A TREE, NOT AS A PICTURE. getComputedStyle answers for the element
+# it is given, so an element hidden by an ANCESTOR still lists here: the pad's
+# six buttons are in the measured string even though #pad itself is display:none
+# and nothing of it is painted. That is why pad_display is a separate field and
+# is the one in the PASS. What the string does show directly is the elements the
+# cascade hides itself -- tz-left and tz-right are absent, because .aa-driving is
+# off in a menu -- and that is also why it is not in the PASS: it is only stable
+# at a fixed point in the script.
+# ===========================================================================
+eval:(()=>{const t=document.getElementById('touch');const vis=[...t.querySelectorAll('*')].filter(e=>getComputedStyle(e).display!=='none').map(e=>e.id||e.className).join(',');const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',visible:vis,pad_display:getComputedStyle(document.getElementById('pad')).display,square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.layout==='full'&&r.pad_display==='none'&&r.square_var==='0px';console.log('[M7GATE] L1 landscape-unchanged '+JSON.stringify(r));return 'L1 '+r.PASS})()
+
 wait:9000
 
 # T1: the page decided this is a touch device, sized the canvas from the phone

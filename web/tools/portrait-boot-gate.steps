@@ -104,9 +104,11 @@ shot:pb-01-portrait-round
 #
 # THE EXTRA 3 s IS THE ROUND'S COUNTDOWN AND IT IS NOT PADDING. gGame.cpp:1698
 # resets the game timer to -PREPARE_TIME (4, gGame.cpp:1172) at round start, and
-# ePlayer::Act drops every player action while se_GameTime()<0
-# (ePlayer.cpp:4064) -- so a turn tapped during the countdown is discarded by the
-# game and the counter does not move. MEASURED on the first run of this gate:
+# ePlayer::Act drops a player's OBJECT actions -- the turns -- while
+# se_GameTime()<0 (ePlayer.cpp:4065); the camera branch on the line above it is
+# not gated and runs throughout. So a turn tapped during the countdown is
+# discarded by the game and the counter does not move. MEASURED on the first
+# run of this gate:
 # with wait:2500 alone the left tap landed at NEW_ROUND+3.03 s and was dropped
 # (2 -> 2) while the right tap at +4.60 s counted (3 -> 2), which puts game time
 # zero at about NEW_ROUND+3.5 s. 5.5 s of wait puts the first tap at ~+6 s.
@@ -138,8 +140,9 @@ shot:pb-03-after-pad-turns
 # round trip happens in a stopped world. Escape is a global action and is not
 # gated on se_GameTime() the way a turn is, so it opens the menu here exactly as
 # it would mid-round: the state under test is the same ctx 3 (menu on screen,
-# cycle alive) either way. The 900 ms after the last B is the only interval that
-# runs the clock at all, and it is the shortest that lets the menu unwind: the
+# cycle alive) either way. The 900 ms after the last B is the only interval
+# inside the round trip that runs the clock -- the wait:1200 before the first B
+# runs it too -- and it is the shortest that lets the menu unwind: the
 # eval calls aa_web_input_context() itself rather than waiting on the overlay's
 # 250 ms poll.
 until:2:150000:[L] NEW_ROUND
@@ -147,6 +150,11 @@ mark:PORTRAIT-ROUND-2-STARTED
 wait:1200
 tap:.pad-b
 wait:1500
+# THE OPEN HALF OF THE ROUND TRIP. Without this, PB5's final check -- menu bit
+# clear, cycle bit set -- is exactly what a B that did nothing at all would
+# also produce. Snapshotted rather than asserted here so the failure reads as
+# one PASS:false with both ends of the trip in it.
+eval:(()=>{const ctx=Module._aa_web_input_context()|0;window.__pb5={ctx:ctx};console.log('[M7GATE] PB5 menu-opened-via-B '+JSON.stringify({ctx:ctx,menu:(ctx&1)!==0,cycle_alive:(ctx&2)!==0}));return 'PB5 opened ctx '+ctx})()
 shot:pb-04-in-game-menu-via-B
 tap:.pad-down
 wait:800
@@ -154,4 +162,25 @@ tap:.pad-up
 wait:800
 tap:.pad-b
 wait:900
-eval:(()=>{const ctx=Module._aa_web_input_context()|0;const r={ctx:ctx,menu:(ctx&1)!==0,cycle_alive:(ctx&2)!==0,driving_class:document.getElementById('touch').classList.contains('aa-driving')};r.PASS=(ctx&2)!==0&&(ctx&1)===0;console.log('[M7GATE] PB5 menu-roundtrip-via-pad '+JSON.stringify(r));return 'PB5 '+r.PASS})()
+eval:(()=>{const ctx=Module._aa_web_input_context()|0;const o=window.__pb5||{};const r={opened_ctx:o.ctx,opened_menu:typeof o.ctx==='number'&&(o.ctx&1)!==0,ctx:ctx,menu:(ctx&1)!==0,cycle_alive:(ctx&2)!==0,driving_class:document.getElementById('touch').classList.contains('aa-driving')};r.PASS=(ctx&2)!==0&&(ctx&1)===0&&typeof o.ctx==='number'&&(o.ctx&1)!==0;console.log('[M7GATE] PB5 menu-roundtrip-via-pad '+JSON.stringify(r));return 'PB5 '+r.PASS})()
+
+# ===========================================================================
+# PB6: ROTATING AFTER A PORTRAIT BOOT OFFERS THE CHIP AND CHANGES NOTHING ELSE.
+# The mirror of touch-gate.steps T4, which rotates a landscape load into
+# portrait; this rotates a portrait load into landscape. Both directions get
+# the same answer, and it is an offer: the chip appears, and the layout stays
+# the one the page loaded in until the player takes the offer.
+#
+# THE CANVAS STAYING SQUARE IS THE LOAD-BEARING PART, and it is a property of
+# the code rather than a wish -- sizeCanvas() is called once, at parse time, so
+# nothing resizes the backing store after load and the square survives the
+# rotation by construction. Asserting it here is what would catch a later
+# resize handler being added without the reload story being rethought.
+# still_gameboy is the same claim on the CSS side: html.aa-gameboy is set once,
+# beside the touch decision, and no listener clears it.
+# ===========================================================================
+mark:ROTATE-TO-LANDSCAPE-AFTER-PORTRAIT-BOOT
+metrics:915:412:3
+wait:1500
+eval:(()=>{const chip=document.getElementById('reloadchip');const r={chip_visible:!!chip&&!chip.hidden,still_gameboy:document.documentElement.classList.contains('aa-gameboy'),canvas_w:document.getElementById('canvas').width,canvas_h:document.getElementById('canvas').height};r.PASS=r.chip_visible&&r.still_gameboy&&r.canvas_w===r.canvas_h;console.log('[M7GATE] PB6 rotate-after-portrait-boot '+JSON.stringify(r));return 'PB6 '+r.PASS})()
+shot:pb-05-landscape-after-portrait-boot-chip

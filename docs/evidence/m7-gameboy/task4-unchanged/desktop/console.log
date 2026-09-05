@@ -1,0 +1,67 @@
+[    699ms] [harness] chrome: Chrome/152.0.7977.77
+[    699ms] [harness] navigating to http://localhost:8008/armagetronad.html
+[     17ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     19ms] [console.log] [DISPLAY] layout=full
+[     49ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     62ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     63ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     65ms] [page] load event fired
+[     68ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    125ms] [console.log] [PERSIST] populate ok in 35ms
+[    326ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    326ms] [console.log] [CAMERA] stock camera (factor 1)
+[    326ms] [console.log] [SPARKS] stock sparks, nothing written
+[    326ms] [console.log] [BOOT] autostart: calling main
+[    329ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    329ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    329ms] [console.error] 
+[    329ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    329ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    330ms] [console.log] 
+[    458ms] [console.log] [L] ENCODING latin1
+[    466ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    467ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    489ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    492ms] [console.error] TODO: glShadeModel
+[    495ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    539ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    539ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    540ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    540ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    540ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   6009ms] [harness] eval (()=>{const c=document.getElementById('canvas');return 'canvas '+c.width+'x'+c.height})() => "canvas 1024x768"
+[   6010ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   6010ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   6011ms] [harness] until 1x <<[SPARKS] stock sparks, nothing written>> (timeout 30000ms, have 1)
+[   6011ms] [harness] until SATISFIED: saw 1x <<[SPARKS] stock sparks, nothing written>>
+[   6013ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/SPARKS/g)||[]).length:-1;return '[SPARKSGATE] D1 desktop-autoexec-untouched '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_occurrences:n,tail:ok?t.slice(-64):null,PASS:ok&&n===0})})() => "[SPARKSGATE] D1 desktop-autoexec-untouched {\"read\":true,\"err\":null,\"bytes\":12376,\"sparks_occurrences\":0,\"tail\":\"time visitor sees.\\nSP_NUM_AIS 3\\nSP_AUTO_AIS 0\\nSP_LIMIT_ROUNDS 3\\n\",\"PASS\":true}"
+[   6014ms] [console.log] [M7GATE] D2 desktop-unchanged {"layout":"full","pad_display":"none","touch_hidden":true,"PASS":true}
+[   6014ms] [harness] eval (()=>{const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',pad_display:getComputedStyle(document.getElementById('pad')).display,touch_hidden:document.getElementById('touch').hidden};r.PASS=r.layout==='full'&&r.pad_display==='none'&&r.touch_hidden;console.log('[M7GATE] D2 desktop-unchanged '+JSON.stringify(r));return 'D2 '+r.PASS})() => "D2 true"
+[  11015ms] [harness] === should-be-the-language-menu ===
+[  11069ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/01-language-menu.png
+[  11105ms] [harness] key Down (1/1)
+[  12646ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/02-language-menu-british-english-selected.png
+[  12646ms] [harness] === enter-chooses-a-language-and-leaves-this-menu ===
+[  12671ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  12680ms] [harness] key Enter (1/1)
+[  16020ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/03-first-setup-cursor-on-accept.png
+[  16021ms] [harness] eval (()=>{window.__st=0;const o=window.setTimeout;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => "setTimeout counter installed"
+[  19022ms] [harness] eval (()=>{const dt=(performance.now()-window.__t0)/1000;return 'setTimeout calls/sec='+(window.__st/dt).toFixed(1)+' => ~'+(window.__st/dt/2).toFixed(1)+' FPS (MAX_FPS 60)'})() => "setTimeout calls/sec=138.6 => ~69.3 FPS (MAX_FPS 60)"
+[  19055ms] [harness] key Down (1/1)
+[  20603ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/04-first-setup-cursor-on-name.png
+[  20635ms] [harness] key Down (1/1)
+[  22182ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/05-first-setup-cursor-on-colour.png
+[  22182ms] [harness] === left-right-changes-a-selection-value ===
+[  22216ms] [harness] key Right (1/1)
+[  23766ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/06-first-setup-colour-value-changed.png
+[  23799ms] [harness] key Down (1/1)
+[  25364ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/07-first-setup-cursor-on-controls.png
+[  25397ms] [harness] key Right (1/1)
+[  26956ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/08-first-setup-controls-value-changed.png
+[  26988ms] [harness] key Up (1/1)
+[  28533ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/09-first-setup-cursor-back-on-colour.png
+[  28533ms] [harness] === escape-leaves-the-first-setup-menu-entirely ===
+[  28569ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  28571ms] [harness] key Escape (1/1)
+[  31912ms] [harness] screenshot -> docs/evidence/m7-gameboy/task4-unchanged/desktop/10-welcome-message.png
+[  31913ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');const d=g.getExtension('WEBGL_debug_renderer_info');return JSON.stringify({VENDOR:g.getParameter(g.VENDOR),RENDERER:g.getParameter(g.RENDERER),VERSION:g.getParameter(g.VERSION),UNMASKED_VENDOR:d?g.getParameter(d.UNMASKED_VENDOR_WEBGL):null,UNMASKED_RENDERER:d?g.getParameter(d.UNMASKED_RENDERER_WEBGL):null,preserveDrawingBuffer:g.getContextAttributes().preserveDrawingBuffer})})() => "{\"VENDOR\":\"WebKit\",\"RENDERER\":\"WebKit WebGL\",\"VERSION\":\"WebGL 1.0 (OpenGL ES 2.0 Chromium)\",\"UNMASKED_VENDOR\":\"Google Inc. (Apple)\",\"UNMASKED_RENDERER\":\"ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)\",\"preserveDrawingBuffer\":true}"

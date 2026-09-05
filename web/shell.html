@@ -298,12 +298,29 @@
        everything below the square, whatever the menu/round state -- the
        .aa-driving rules above hide the full-screen zones and the strip, and the
        pad replaces them. --aa-square is written by sizeCanvas, so the pad's top
-       edge is the square's bottom edge to the pixel. */
+       edge is the square's bottom edge to the pixel.
+
+       THE DOUBLE align-items IS AN OVERFLOW GUARD, not a typo. The room below
+       the square is viewport height - --aa-square - 1rem - the bottom safe-area
+       inset, and it is not always enough: the cross is the taller column at
+       3 x 4rem + 2 x .25rem = 200 px, and the square is capped at 60 % of the
+       height, so a 375x600 viewport with a 34 px inset leaves 240 px against
+       the 250 the cross plus that padding and inset need. Plain centring
+       overflows a grid track in BOTH directions, so the 10 px missing would put
+       the cross's top row over the picture. `safe center` centres while there
+       is room and falls back to start-alignment when there is not, which pushes
+       the overflow to the bottom edge where the picture is not. The plain
+       `center` stands first for browsers that do not support the `safe`
+       keyword; the second declaration wins wherever it is understood.
+       UNMEASURED, like the 60 % cap's own tablet case: 412x915 (the phone the
+       gates drive) leaves 503 px below the square against the 216 the cross and
+       the padding need, so it never comes near this. */
     #pad { display:none; }
     html.aa-gameboy #pad {
       display:grid; position:absolute; left:0; right:0;
       top:var(--aa-square, 100vw); bottom:0;
-      grid-template-columns: 1fr 1fr; align-items:center; justify-items:center;
+      grid-template-columns: 1fr 1fr; justify-items:center;
+      align-items:center; align-items:safe center;
       padding: 0 4vw calc(1rem + env(safe-area-inset-bottom, 0px));
       background:#111; }
     html.aa-gameboy .tz, html.aa-gameboy #touchpad, html.aa-gameboy #escbtn { display:none !important; }
@@ -329,9 +346,18 @@
                   padding:.5rem .7rem; border-radius:.6rem;
                   background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.25);
                   color:#eee; font:13px/1.3 system-ui, sans-serif; }
+    /* min-height IS THE 44 px TOUCH-TARGET MINIMUM THE MENU PAD ABOVE IS ALSO
+       BUILT TO. The argument used to sit on the rotate prompt's button; M7
+       deleted the prompt, and it moves here because Reload is now the one
+       control a player has to hit while an overlay is over the game. The
+       padding alone does not reach it: the gate measured the prompt's button --
+       which had MORE of it, .6rem/1rem at 14px against .35rem/.6rem at 13px --
+       at 128x38, i.e. 6 px short on the axis a thumb is least accurate on, so
+       this one is shorter still. */
     #reloadchip button { color:#eee; background:rgba(255,255,255,.14);
                          border:1px solid rgba(255,255,255,.3);
-                         border-radius:.4rem; padding:.35rem .6rem; font:13px system-ui, sans-serif; }
+                         border-radius:.4rem; padding:.35rem .6rem; min-height:44px;
+                         font:13px system-ui, sans-serif; }
     /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
        z-index 40 puts it above everything, the reload chip included, because
        the numbers are most interesting exactly when something on the screen
@@ -436,7 +462,7 @@
       already argues for the menu pad -- because these are held with thumbs, not
       tapped with fingertips.
     -->
-    <div id="pad" aria-hidden="true">
+    <div id="pad">
       <div id="pad-cross">
         <button type="button" class="pad-btn pad-up"    data-aakey="ArrowUp"    aria-label="Menu up">&#9650;</button>
         <button type="button" class="pad-btn pad-left"  data-aakey="ArrowLeft"  aria-label="Turn left">&#9664;</button>
@@ -459,10 +485,20 @@
     element makes stretching unrepresentable. What a rotation after load
     actually costs is SIZE and SHARPNESS: the picture is letterboxed into
     whatever fits, at the pixel count the other orientation had.
+
+    M7 MADE THE FIXED THING BIGGER THAN THE PICTURE, which is why the text below
+    now names the LAYOUT rather than the letterboxing. A load decides the whole
+    shape of the page -- a square picture with a pad below it, or full-screen --
+    and nothing after it moves: html.aa-gameboy is set once, before sizing, and
+    sizeCanvas runs once. Letterboxing is still what a rotated picture does; it
+    is no longer the whole of what the reload buys.
+
+    AND THE TEXT NAMES THE PRICE, because that is the half a player is being
+    asked to agree to: a reload is a fresh boot, so the round in progress ends.
   -->
   <div id="reloadchip" hidden>
-    <span>Rotated &mdash; still drawing at the shape and size it loaded at, so it
-          is letterboxed and soft. Reload to redraw for this orientation.</span>
+    <span>Rotated &mdash; the game is still laid out for the shape it loaded in.
+          Reload to lay it out for this one (the round restarts).</span>
     <button type="button" id="reloadchip-go">Reload</button>
     <button type="button" id="reloadchip-x" aria-label="Dismiss">&times;</button>
   </div>
@@ -770,11 +806,11 @@
     // at parse time, ~90 lines before the touch block used to decide. Same
     // inputs (?touch= then the media query), same log line, one place.
     const touchDecision = decideTouch();
-    // Published so the three later blocks that need to know -- the camera
-    // tuning, the sparks default and the diagnostic readout -- ask this
-    // decision rather than re-deriving it and risking a different answer. The
-    // touch overlay is not one of them: it is in this same scope and reads the
-    // lexical touchDecision directly.
+    // Published so the line below and the three later blocks that need to know
+    // -- the Game Boy decision, then the camera tuning, the sparks default and
+    // the diagnostic readout -- ask this decision rather than re-deriving it and
+    // risking a different answer. The touch overlay is not one of them: it is in
+    // this same scope and reads the lexical touchDecision directly.
     window.AA_TOUCH = touchDecision.on;
     // One machine-readable line, so a gate can assert which branch ran rather
     // than inferring it from a screenshot.
@@ -872,9 +908,9 @@
         // read these numbers. Set in BOTH layouts -- 0px when this is not a
         // Game Boy load -- because it is ONE quantity, "how tall the square
         // is", and 0px is its true answer when there is no square. Publishing
-        // it in both branches is what lets a reader (a gate, the diagnostic
-        // readout) take the variable as the page's own answer instead of having
-        // to tell "no square" apart from "never set". The var(--aa-square,
+        // it in both branches is what lets a reader (a gate) take the variable
+        // as the page's own answer instead of having to tell "no square" apart
+        // from "never set". The var(--aa-square,
         // 100vw) fallback the pad's rules carry is for that second case only --
         // sizeCanvas threw before this line -- and not for the full layout,
         // whose rules are all html.aa-gameboy-scoped and never read it.
@@ -1148,17 +1184,23 @@
       let mq = null;
       try { mq = window.matchMedia('(orientation: portrait)'); } catch (e) { mq = null; }
       let chipDismissed = false;
-      const applyOrientation = () => {
+      const applyOrientation = (why) => {
         const portrait = viewportIsPortrait();
         if (!chipDismissed) chipEl.hidden = (portrait === sizedForPortrait);
+        // `why` is logged rather than acted on: all four callers do the same
+        // work, and which event fired is the one thing a transcript cannot
+        // recover afterwards. More than one fires per rotation -- the Task 4
+        // portrait run logged `via resize` then `via media query` back to back
+        // (docs/evidence/m7-gameboy/task4-unchanged/portrait/console.log).
         console.log('[TOUCH] orientation portrait=' + portrait +
-                    ' (sized for portrait: ' + sizedForPortrait + ')');
+                    ' (sized for portrait: ' + sizedForPortrait + ')' +
+                    ' via ' + why);
       };
       document.getElementById('reloadchip-go')
         .addEventListener('click', () => location.reload());
       document.getElementById('reloadchip-x')
         .addEventListener('click', () => { chipDismissed = true; chipEl.hidden = true; });
-      const onOrientationChange = (why) => { applyOrientation(); };
+      const onOrientationChange = (why) => { applyOrientation(why); };
       // addListener is the pre-2019 spelling; Safari needed it until 14. Both
       // are tried because the cost is one line and the failure mode of neither
       // firing is a chip that never appears. resize and orientationchange are
@@ -1168,7 +1210,7 @@
       else if (mq && mq.addListener) mq.addListener(() => onOrientationChange('media query'));
       window.addEventListener('resize', () => onOrientationChange('resize'));
       window.addEventListener('orientationchange', () => onOrientationChange('orientationchange'));
-      applyOrientation();
+      applyOrientation('load');
     })();
 
     // ---- PHONE FEEDBACK: "the bike is tiny" -----------------------------
