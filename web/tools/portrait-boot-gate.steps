@@ -41,7 +41,7 @@ eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8
 # tall squeeze, which is fine -- the claim under test is only "no hold".)
 until:1:90000:[BOOT] autostart
 mark:PORTRAIT-BOOTED
-eval:(()=>{const held=performance.now();const r={rotate_element:document.getElementById('rotate')!==null,touch_visible:!document.getElementById('touch').hidden};r.PASS=!r.rotate_element&&r.touch_visible;console.log('[M7GATE] PB1 portrait-boot-no-hold '+JSON.stringify(r));return 'PB1 '+r.PASS})()
+eval:(()=>{const r={rotate_element:document.getElementById('rotate')!==null,touch_visible:!document.getElementById('touch').hidden};r.PASS=!r.rotate_element&&r.touch_visible;console.log('[M7GATE] PB1 portrait-boot-no-hold '+JSON.stringify(r));return 'PB1 '+r.PASS})()
 
 # M7 TASK 2: THE PICTURE IS A SQUARE AT THE TOP. Measured on the ELEMENT rather
 # than read back out of the variables that set it -- css_w/css_h come from

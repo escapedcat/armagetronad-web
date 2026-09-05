@@ -1,9 +1,12 @@
 # M7 — portrait as a Game Boy
 
 The maintainer's phone plays this game in landscape because that is the only
-shape the page ever offered. M7 makes portrait its own layout: a **square
-picture at the top of the screen and a pad below it**, decided once at load, on
-a touch device only. The square is the point — `rViewport::Perspective` gives an
+shape the page was built around. (Portrait was offered before M7 — badly, at the
+~131° vertical field of view the full-portrait load gave it, behind a prompt and
+a remembered answer: [`../portrait-choice/`](../portrait-choice/README.md).)
+
+M7 makes portrait its own layout: a **square picture at the top of the screen
+and a pad below it**, decided once at load, on a touch device only. The square is the point — `rViewport::Perspective` gives an
 aspect-1 viewport 90° × 90°, against ~111° × 67° at a phone's landscape and ~131°
 vertical at the full-portrait load this page used to build
 ([`../phone-round2/fov/`](../phone-round2/fov/README.md)).
@@ -60,8 +63,9 @@ document, and the touch overlay is not `hidden`. Screenshots
 is the rewritten section of `web/tools/touch-gate.steps`. It used to rotate the
 emulated phone mid-game, dump the overlay's state and take a screenshot named
 `07-portrait-shows-rotate-prompt`; there is no prompt to show any more, so it now
-**asserts** — the chip is visible, the prompt element is absent, the backing store
-is untouched — and the shot is named for what it does show:
+**asserts** — the chip is visible and the prompt element is absent, which is the
+whole of its PASS — and **records** the backing store beside them, and the shot is
+named for what it does show:
 
     [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
     [M7GATE] T4 rotate-to-portrait {"chip_visible":true,"rotate_element":false,"canvas_w":2745,"canvas_h":1236,"PASS":true}
@@ -184,7 +188,10 @@ md5.
 
 ## `landscape-visible-reference.txt`
 
-One line, and it is the reference a future landscape run is compared against:
+One line, and it is the committed reference a future landscape run's L1 string is
+**logged for comparison against**. The gate logs the string and passes on
+`layout`/`pad_display`/`square_var`; the comparison with this file is a diff a
+reader runs, not a check the gate makes:
 
     tapzone,escbtn,touchpad,,,pad-cross,pad-btn pad-up,pad-btn pad-left,pad-btn pad-right,pad-btn pad-down,pad-ab,pad-btn pad-b,pad-btn pad-a
 
@@ -214,17 +221,110 @@ menu where the snapshot is taken.
   removes, and dismissing the chip is sticky for the life of the page. **Live
   re-layout (`sr_ReinitDisplay`) is the follow-up** — it is measured and
   available (M5 task 4c) and has now been declined three times.
+- **A phone rotated DURING THE DOWNLOAD boots into the layout it started in.**
+  `AA_GAMEBOY` and the backing store are both fixed at parse time, seconds before
+  `main()`, and nothing after that re-measures. A page that loads in portrait and
+  is turned to landscape while the ~5 MB wasm is still arriving therefore starts
+  the game as a Game Boy in a landscape viewport — the `pb-05` state above, but on
+  first boot, before the player has done anything — with the chip's Reload as the
+  exit. The portrait hold M7 deleted re-measured before `main()` for exactly that
+  direction. The fix is the live re-layout in the bullet above and not a second
+  `sizeCanvas()` caller.
+- **The spec's A/B glyphs were not shipped.** The layout section asked for
+  "A ⏎" and "B ⎋" on the two round buttons; the pad reads **A** and **B**. ⎋
+  (U+238B) has uncertain font coverage on Android, and the `aria-label`s —
+  `Enter` and `Back or in-game menu` — carry the meaning for anything that reads
+  them.
 - **The 60 % cap and the pad's `align-items: safe center` are unexercised.** At
   412×915 the width wins the cap and the pad has 503 px for the 216 the cross and
   its padding need. A tablet-shaped arm would exercise both; none was run.
-- **The chip's dismiss `×` is 29 px wide** against the 44 px its Reload button
-  clears. That number is an **uncommitted side measurement** — see the
-  `[SMOKE44]` note in [`task4-unchanged/README.md`](task4-unchanged/README.md) —
-  and the narrow target is left as it is: missing it leaves you with the chip,
-  which costs nothing.
+- ~~**The chip's dismiss `×` is 29 px wide**~~ — **closed.** It was 29 px wide
+  against the 44 px its Reload button clears; that number is an **uncommitted
+  side measurement** — see the `[SMOKE44]` note in
+  [`task4-unchanged/README.md`](task4-unchanged/README.md) — but it now has a
+  committed follow-up: [Final fixes](#final-fixes) below gave `#reloadchip
+  button` a `min-width:44px`, so both chip buttons clear 44 px on both axes, and
+  `final-fixes/portrait/pb-05-landscape-after-portrait-boot-chip.png` is the
+  wider `×`.
 - **No brake button.** Phase 3 dropped brake as not minimal and M7 kept the six
   keys; the pad has room for a seventh.
 - **iOS is untested**, as it has been since Phase 3. Every browser there is
   WebKit, which this port does not target.
 - **Chrome device emulation, not a device** — the caveat at the top, and the one
   that bounds every number on this page.
+
+---
+
+## Final fixes
+
+One commit after the branch review, closing its minor findings. **Six changes to
+the code**, none of them a feature:
+
+1. `web/shell.html` — `#reloadchip button` gains `min-width:44px` beside the
+   `min-height:44px` it already had, so the dismiss `×` clears the touch-target
+   minimum on both axes instead of the one it happened to reach. This is the one
+   CSS rule on the branch a landscape page can see — the chip is `hidden` until
+   the orientation stops matching the one the page sized for, but its rules are
+   not `html.aa-gameboy`-scoped — and the comment above it now says so.
+2. `web/shell.html` — `window.AA_RUNTIME_READY = true;` and the comment that
+   explained it are **deleted**. It was write-only:
+   `grep -rn AA_RUNTIME_READY web/ --include='*.html' --include='*.mjs'
+   --include='*.steps'` found the assignment and nothing that read it. The other
+   hits in the tree are historical: the two files under
+   `docs/evidence/phone-feedback/` are transcripts of the pre-M7 portrait hold, in
+   which a harness eval read the flag, and `web/dist-m1/` is the build output —
+   a copy of this same assignment. Nothing live reads it.
+3. `web/tools/touch-gate.steps` — the navigation comment named
+   `touch-portrait-probe.steps`, which Task 5 deleted. It now names what is
+   actually true: T1c is this file's only navigation, and M7's portrait gate
+   (`web/tools/portrait-boot-gate.steps`) has none.
+4. `web/tools/portrait-boot-gate.steps` — PB1's `const held=performance.now();`
+   was unused and is gone. Nothing else in that eval changed.
+5. `web/shell.html` — the `--aa-square` comment said the `var(--aa-square, 100vw)`
+   fallback covers "sizeCanvas threw"; **three** paths reach the pad's rules with
+   the variable unset (the `AA_CANVAS_SIZE` override returns, the
+   no-usable-viewport guard returns, the `catch` swallows a throw), and the
+   comment now names all three.
+6. `web/shell.html` — the comment above `window.AA_TOUCH = touchDecision.on;`
+   said "three later blocks" and then listed four things. It counts what it
+   lists.
+
+**All three gates were re-run against the rebuilt `web/dist-m1`** — the same
+three commands the tasks above used, with `--out docs/evidence/m7-gameboy/final-fixes/…`.
+
+`final-fixes/portrait/console.log` — 412×915 dpr 3, 2 rounds:
+
+    [M7GATE] PB1 portrait-boot-no-hold {"rotate_element":false,"touch_visible":true,"PASS":true}
+    [M7GATE] PB2 square {"backing_w":1236,"backing_h":1236,"css_w":412,"css_h":412,"css_top":0,"inner_w":412,"gameboy":true,"square_var":"412px","PASS":true}
+    [M7GATE] PB3 pad-geometry {"pad_top":412,"square_bottom":412,"pad_bottom":915,"inner_h":915,"buttons":[{"key":"ArrowUp","w":64,"h":64,"top":556},{"key":"ArrowLeft","w":64,"h":64,"top":624},{"key":"ArrowRight","w":64,"h":64,"top":624},{"key":"ArrowDown","w":64,"h":64,"top":692},{"key":"Escape","w":80,"h":80,"top":660},{"key":"Enter","w":80,"h":80,"top":572}],"PASS":true}
+    [M7GATE] PB4 turn-counters-before {"left":2,"right":3}
+    [M7GATE] PB4 pad-turns-sent {"ctx":0,"before":{"left":2,"right":3},"after":{"left":1,"right":2},"PASS":true}
+    [M7GATE] PB5 menu-opened-via-B {"ctx":3,"menu":true,"cycle_alive":true}
+    [M7GATE] PB5 menu-roundtrip-via-pad {"opened_ctx":3,"opened_menu":true,"ctx":2,"menu":false,"cycle_alive":true,"driving_class":true,"PASS":true}
+    [M7GATE] PB6 rotate-after-portrait-boot {"chip_visible":true,"still_gameboy":true,"canvas_w":1236,"canvas_h":1236,"PASS":true}
+
+`final-fixes/landscape/console.log` — 915×412 dpr 3, 3 rounds, `[DISPLAY] layout=full`:
+
+    [M7GATE] L1 landscape-unchanged {"layout":"full","visible":"tapzone,escbtn,touchpad,,,pad-cross,pad-btn pad-up,pad-btn pad-left,pad-btn pad-right,pad-btn pad-down,pad-ab,pad-btn pad-b,pad-btn pad-a","pad_display":"none","square_var":"0px","PASS":true}
+    [M7GATE] T4 rotate-to-portrait {"chip_visible":true,"rotate_element":false,"canvas_w":2745,"canvas_h":1236,"PASS":true}
+    [M7GATE] T4 back-in-landscape {"chip_hidden":true,"PASS":true}
+
+The touch gate's other checks passed in the same run and are returned as eval
+values rather than logged, so they are read from the transcript's `=> "…"`
+column: `T1b` `PASS:true`, `T1c` precondition and override both `PASS:true`,
+`T2b` `PASS:true`, `T3b` `PASS:true`, and `T6 escape corner`
+`{"rect":"54x46@10,10","at_least_44px":true,…}` — that one measures `#escbtn`,
+which this commit did not touch.
+
+`final-fixes/desktop/console.log` — 1024×768, no `--mobile`, no rounds (the M1 menu gate):
+
+    [M7GATE] D2 desktop-unchanged {"layout":"full","pad_display":"none","touch_hidden":true,"PASS":true}
+
+`[SPARKSGATE] D1 desktop-autoexec-untouched` is `PASS:true` in the same
+transcript.
+
+**One screenshot is committed from these runs**,
+`final-fixes/portrait/pb-05-landscape-after-portrait-boot-chip.png`: the rotated
+Game Boy state the open items describe, with the chip's `×` now as wide as it is
+tall. The other screenshots the three runs produced are left uncommitted — they
+are the same pictures the task sections above already commit.

@@ -32,9 +32,10 @@ game tells the page whether a menu is open or a round is running, so a tap never
 means two things at once. **A page loaded in portrait gets a different layout**:
 the game in a square at the top of the screen and a Game Boy pad below it — a
 cross for the arrows, A for Enter, B for Escape. Rotating after load offers a
-reload; it never takes one. It has been played on a real phone and it plays; the
-frame rate on a phone is the open item. iOS is untested; every browser there is
-WebKit, which this port does not target.
+reload; it never forces one — and until you take it or rotate back, the chip's
+Reload is the only control a rotated Game Boy load has. It has been played on a
+real phone and it plays; the frame rate on a phone is the open item. iOS is
+untested; every browser there is WebKit, which this port does not target.
 
 Single-player against AI is the committed scope: the multiplayer menu is present
 but reaches no servers. Safari is not a target.
@@ -69,10 +70,10 @@ but reaches no servers. Safari is not a target.
   and `?sparks=1` brings them back — it writes `SPARKS 1`, because the game saves
   `SPARKS` into your settings and silence would lose to the saved value. In
   portrait the game is a square at the top of the screen with a Game Boy pad
-  below it — a cross for the arrows, A for Enter, B for Escape — and it looks
-  better than landscape does (the square is the aspect the game's projection was
-  designed near). Rotating after load offers a reload; it never forces one.
-  `docs/evidence/phone-round2/`, `docs/evidence/m7-gameboy/`,
+  below it — a cross for the arrows, A for Enter, B for Escape. The square is the
+  aspect the game's projection was designed near, so it plays at the 90° field of
+  view a 4:3 monitor gets. Rotating after load offers a reload; it never forces
+  one. `docs/evidence/phone-round2/`, `docs/evidence/m7-gameboy/`,
   `docs/evidence/m6-lag/task8-sparks/`.
 
 ## Why

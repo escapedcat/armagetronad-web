@@ -280,8 +280,9 @@ The page detects a touch device with `(hover: none) and (pointer: coarse)` and
 then differs from the desktop page in four ways, all of them in
 `web/shell.html`:
 
-- **the touch overlay** — two half-screen steering zones and a four-button menu
-  pad (Phase 3, `docs/evidence/phase3-touch/`);
+- **the touch overlay** — two half-screen steering zones, a two-button menu pad
+  (Up and Down) and an Escape button in the corner (Phase 3,
+  `docs/evidence/phase3-touch/`);
 - **portrait is the Game Boy layout.** A touch device that **loads** in portrait
   gets `window.AA_GAMEBOY` and `html.aa-gameboy`, and with them a different page:
   the game is a square anchored at the top of the screen, and a pad sits below it.

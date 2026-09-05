@@ -797,9 +797,9 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > the picture would eat the pad's half of the screen. The pad is six buttons carrying
 > `data-aakey` — a cross, **B** for Escape, **A** for Enter — riding the pointer-to-`KeyboardEvent`
 > wiring Phase 3 already shipped, so it added **no input code**; measured at 64 and 80 CSS px
-> against the 56 px floor the markup argues for, up in menus and in a round alike. The HUD
-> survived the shrink: the whole bottom bar sits inside the square with about ten pixels to
-> spare.
+> against the 56 px floor the markup argues for — measured in the language menu, where PB3 runs,
+> and visible in a round in the `pb-03` screenshot. The HUD survived the shrink: the whole bottom
+> bar sits inside the square with about ten pixels to spare.
 >
 > **Why a square is the point, in four lines of arithmetic.** `rViewport::Perspective` opens the
 > horizontal field of view on a wide screen and pins the vertical at 67.4° for every aspect at or
@@ -820,11 +820,14 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > rule disagreeing with the buffer would show; **PB3** the pad's geometry — `pad_top 412 ===
 > square_bottom 412`, every button at or below the square; **PB4** the turns are the game's own
 > answer, `uActionTooltip`'s left and right counters each falling by one after a left and a right
-> tap; **PB5** B opens the in-game menu, the cross moves inside it, B closes it; **PB6** a
+> tap; **PB5** the pad walks its B → menu → Down/Up → B round trip, and the gate asserts the
+> ends of it — the menu opened, then closed with the cycle still alive and steering; **PB6** a
 > portrait load rotated to landscape shows the chip and is still Game Boy with a 1236x1236
-> buffer; **T4** the same offer in the other direction; **L1** landscape unchanged, checked
-> against a committed DOM reference string; **D2** desktop unchanged, `#touch` still carrying the
-> `hidden` attribute the shell ships.
+> buffer; **T4** the same offer in the other direction; **L1** landscape unchanged, its overlay
+> DOM string logged for comparison against the committed reference
+> (`landscape-visible-reference.txt`) — the gate logs the string and passes on
+> `layout`/`pad_display`/`square_var`; the comparison is a diff a reader runs; **D2** desktop
+> unchanged, `#touch` still carrying the `hidden` attribute the shell ships.
 >
 > **What stays open.** The rotated Game Boy load is the one real cost and it is named in the
 > evidence rather than hidden: the CSS shrinks the picture to 247 px while the backing store
@@ -833,9 +836,21 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > rotation back. **Live re-layout (`sr_ReinitDisplay`, item 9 above) is the follow-up**, declined
 > here for the third time. A brake button is still not built, as it has not been since Phase 3
 > dropped it as not minimal. The 60 % cap and the pad's `align-items: safe center` overflow guard
-> are both unexercised at 412x915 — a tablet arm would exercise them. The chip's dismiss `x` is
+> are both unexercised at 412x915 — a tablet arm would exercise them. The chip's dismiss `x` was
 > 29 px wide against the 44 px its Reload button clears — a side measurement, not from a
-> committed run, and labelled as such where it is recorded. And the standing two: **iOS is
+> committed run, and labelled as such where it is recorded; the final-fixes commit gave
+> `#reloadchip button` a `min-width:44px` so both buttons now clear it on both axes.
+> **A phone rotated DURING THE DOWNLOAD boots into the layout it started in.** `AA_GAMEBOY` and
+> the backing store are both fixed at parse time, seconds before `main()`, and nothing after
+> that re-measures: a page loaded in portrait and turned to landscape while the ~5 MB wasm is
+> still arriving starts the game as a Game Boy in a landscape viewport — the `pb-05` state, but
+> on first boot, before the player has done anything — with the chip's Reload as the exit. The
+> deleted portrait hold re-measured before `main()` for exactly that direction; the fix is the
+> live re-layout named above and not a second `sizeCanvas()` caller.
+> **The spec's A/B glyphs were not shipped.** The layout section asked for "A ⏎" and "B ⎋" on
+> the two round buttons; the pad reads **"A"** and **"B"**, because ⎋ (U+238B) has uncertain font
+> coverage on Android and the `aria-label`s ("Enter", "Back or in-game menu") carry the meaning
+> for anything that reads them. And the standing two: **iOS is
 > untested**, and every number in this milestone came out of Chrome device emulation, not a
 > device. `docs/evidence/m7-gameboy/README.md`.
 

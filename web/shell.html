@@ -346,17 +346,28 @@
                   padding:.5rem .7rem; border-radius:.6rem;
                   background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.25);
                   color:#eee; font:13px/1.3 system-ui, sans-serif; }
-    /* min-height IS THE 44 px TOUCH-TARGET MINIMUM THE MENU PAD ABOVE IS ALSO
-       BUILT TO. The argument used to sit on the rotate prompt's button; M7
-       deleted the prompt, and it moves here because Reload is now the one
-       control a player has to hit while an overlay is over the game. The
+    /* min-height AND min-width ARE THE 44 px TOUCH-TARGET MINIMUM THE MENU PAD
+       ABOVE IS ALSO BUILT TO. The argument used to sit on the rotate prompt's
+       button; M7 deleted the prompt, and it moves here because Reload is now the
+       one control a player has to hit while an overlay is over the game. The
        padding alone does not reach it: the gate measured the prompt's button --
        which had MORE of it, .6rem/1rem at 14px against .35rem/.6rem at 13px --
        at 128x38, i.e. 6 px short on the axis a thumb is least accurate on, so
-       this one is shorter still. */
+       this one is shorter still. min-width is here for the OTHER axis and the
+       OTHER button: a one-glyph label does not reach 44 px on its own, and the
+       dismiss x measured 29 px wide with its height already cleared (the
+       [SMOKE44] side measurement in
+       docs/evidence/m7-gameboy/task4-unchanged/README.md).
+       THIS RULE IS THE ONE CSS CHANGE ON THE BRANCH A LANDSCAPE PAGE CAN SEE.
+       The chip carries the hidden attribute unless the orientation stops
+       matching the one the page sized for, so it is invisible at load in every
+       layout -- but its rules are not html.aa-gameboy-scoped, so a landscape
+       load that is later rotated raises a chip whose buttons carry this
+       minimum too. */
     #reloadchip button { color:#eee; background:rgba(255,255,255,.14);
                          border:1px solid rgba(255,255,255,.3);
-                         border-radius:.4rem; padding:.35rem .6rem; min-height:44px;
+                         border-radius:.4rem; padding:.35rem .6rem;
+                         min-height:44px; min-width:44px;
                          font:13px system-ui, sans-serif; }
     /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
        z-index 40 puts it above everything, the reload chip included, because
@@ -806,9 +817,9 @@
     // at parse time, ~90 lines before the touch block used to decide. Same
     // inputs (?touch= then the media query), same log line, one place.
     const touchDecision = decideTouch();
-    // Published so the line below and the three later blocks that need to know
-    // -- the Game Boy decision, then the camera tuning, the sparks default and
-    // the diagnostic readout -- ask this decision rather than re-deriving it and
+    // Published so the four blocks that need to know -- the Game Boy decision
+    // on the next lines, then the camera tuning, the sparks default and the
+    // diagnostic readout -- ask this decision rather than re-deriving it and
     // risking a different answer. The touch overlay is not one of them: it is in
     // this same scope and reads the lexical touchDecision directly.
     window.AA_TOUCH = touchDecision.on;
@@ -912,8 +923,11 @@
         // as the page's own answer instead of having to tell "no square" apart
         // from "never set". The var(--aa-square,
         // 100vw) fallback the pad's rules carry is for that second case only --
-        // sizeCanvas threw before this line -- and not for the full layout,
-        // whose rules are all html.aa-gameboy-scoped and never read it.
+        // sizeCanvas returned or threw before this line, which is three paths:
+        // the AA_CANVAS_SIZE override and the no-usable-viewport guard both
+        // return above, and the catch below swallows a throw -- and not for the
+        // full layout, whose rules are all html.aa-gameboy-scoped and never
+        // read it.
         document.documentElement.style.setProperty('--aa-square',
           window.AA_GAMEBOY ? squareCss + 'px' : '0px');
         console.log('[DISPLAY] ' + why + ': viewport ' + vw + 'x' + vh +
@@ -1594,7 +1608,6 @@
         // earlier: the file packager appends ITS preRun callback after this
         // page's, so a preRun hook cannot read /data at all. That is why the
         // touch camera tuning below is here rather than in preRun.
-        window.AA_RUNTIME_READY = true;
         applyTouchCameraTuning();
         applyTouchSparksTuning();
         let manual = false;

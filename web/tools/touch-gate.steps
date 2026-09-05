@@ -73,11 +73,15 @@
 #
 # The driver survives the navigation -- it attaches to a TARGET, not to a
 # document, so the console stream and Runtime.evaluate carry on into the new
-# page (web/tools/touch-portrait-probe.steps has reloaded mid-script since
-# Phase 3). ONE driver run covers the whole cycle. What must not happen is an
-# `eval:` in the window where the old execution context is gone and the new one
-# has not arrived, so every step after a navigation waits on `until:` first --
-# which reads the transcript and touches no execution context at all.
+# page. That has held since Phase 3, when web/tools/touch-portrait-probe.steps
+# reloaded mid-script too; M7 deleted that probe along with the portrait-hold
+# flow it drove, so T1c below is this file's only navigation and M7's portrait
+# gate (web/tools/portrait-boot-gate.steps) has none at all -- it rotates the
+# emulated phone and never reloads. ONE driver run covers the whole cycle. What
+# must not happen is an `eval:` in the window where the old execution context is
+# gone and the new one has not arrived, so every step after a navigation waits on
+# `until:` first -- which reads the transcript and touches no execution context
+# at all.
 #
 # --headed is REQUIRED, for the reason in drive-browser.mjs's header.
 
