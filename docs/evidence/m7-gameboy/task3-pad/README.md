@@ -66,8 +66,11 @@ game timer to `-PREPARE_TIME` (4, `gGame.cpp:1172`) at round start and
 `ePlayer::Act` drops every player action while `se_GameTime()<0`
 (`ePlayer.cpp:4064`). The first run of this gate, with the pre-existing
 `wait:2500` alone, put the left tap at `NEW_ROUND+3.03 s` and it was dropped
-(2 -> 2) while the right tap at `+4.60 s` counted (3 -> 2). The extra `wait:3000`
-in the steps file is that countdown and not padding.
+(2 -> 2) while the right tap at `+4.60 s` counted (3 -> 2). **That run is not
+committed** -- it is the run whose failure produced the fix, and the transcript
+above is the run after it, in which both taps count -- so those two timings are
+a side measurement and not something a file here can be re-read for. The extra
+`wait:3000` in the steps file is that countdown and not padding.
 
 **The human does not live long enough for both proofs in one round.**
 `[L] DEATH_FRAG web_user word` lands at `NEW_ROUND+8.3 s`, about 4.8 s after the

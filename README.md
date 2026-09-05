@@ -25,14 +25,16 @@ the sharpest image.
 **On a desktop** (Chrome or Firefox): arrow keys steer, Escape opens the in-game
 menu, `n` toggles the browser's fullscreen.
 
-**On a phone** (Android Chrome): tap the left or right half of the screen to
-turn. In the menus a tap anywhere is Enter, Up and Down are the two buttons at
-the top centre, and Escape is the button in the top-left corner; the game tells
-the page whether a menu is open or a round is running, so a tap never means two
-things at once. **Rotate to landscape before loading**, or reload after rotating.
-It has been played on a real phone and it plays; the frame rate on a phone is the
-open item. iOS is untested; every browser there is WebKit, which this port does
-not target.
+**On a phone** (Android Chrome), in landscape: tap the left or right half of the
+screen to turn. In the menus a tap anywhere is Enter, Up and Down are the two
+buttons at the top centre, and Escape is the button in the top-left corner; the
+game tells the page whether a menu is open or a round is running, so a tap never
+means two things at once. **A page loaded in portrait gets a different layout**:
+the game in a square at the top of the screen and a Game Boy pad below it — a
+cross for the arrows, A for Enter, B for Escape. Rotating after load offers a
+reload; it never takes one. It has been played on a real phone and it plays; the
+frame rate on a phone is the open item. iOS is untested; every browser there is
+WebKit, which this port does not target.
 
 Single-player against AI is the committed scope: the multiplayer menu is present
 but reaches no servers. Safari is not a target.
@@ -65,12 +67,12 @@ but reaches no servers. Safari is not a target.
   that sparked in only 11 of its 40 rim seconds read 14.0 against 13.65), the
   draw-call spikes at the end of a round went from 3 rounds in 10 to **0 in 10**,
   and `?sparks=1` brings them back — it writes `SPARKS 1`, because the game saves
-  `SPARKS` into your settings and silence would lose to the saved value. Portrait
-  raises a prompt to turn the phone with a **Play in portrait** button that is
-  remembered — portrait still looks wrong today (the view is drawn at a ~131°
-  vertical field of view) and a proper portrait layout, a square game with the
-  controls below it, is planned.
-  `docs/evidence/phone-round2/`, `docs/evidence/portrait-choice/`,
+  `SPARKS` into your settings and silence would lose to the saved value. In
+  portrait the game is a square at the top of the screen with a Game Boy pad
+  below it — a cross for the arrows, A for Enter, B for Escape — and it looks
+  better than landscape does (the square is the aspect the game's projection was
+  designed near). Rotating after load offers a reload; it never forces one.
+  `docs/evidence/phone-round2/`, `docs/evidence/m7-gameboy/`,
   `docs/evidence/m6-lag/task8-sparks/`.
 
 ## Why

@@ -248,7 +248,6 @@ person holding it a switch and a readout.
 | `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
 | `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
 | `?sparks=1` / `?sparks=0` | off on touch, on otherwise | appends `SPARKS 1` or `SPARKS 0` to the runtime config, **on any device**. Off by default on a touch device: the bursts thrown at a wall cost about a quarter of the frame. `?sparks=1` has to *write* rather than stay silent — the game saves `SPARKS` into `user.cfg`, and this appended file is read after it — so it beats both the touch default and anything a previous session saved. `?sparks=0` turns them off on a desktop too, which is the only way this rig could measure them. |
-| `?portrait=ask` | off | clears the remembered "Play in portrait" answer, so the portrait prompt is asked again. The answer lives in `localStorage` under `aa.portrait`; this is the only way back once it is stored. Answering the prompt again drops the parameter from the URL, so the new answer is not cleared by the reload that applies it. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 
 **`?dpr=1` is the experiment that decides the performance question, and it
@@ -283,18 +282,42 @@ then differs from the desktop page in four ways, all of them in
 
 - **the touch overlay** — two half-screen steering zones and a four-button menu
   pad (Phase 3, `docs/evidence/phase3-touch/`);
-- **portrait holds the boot.** A page opened in portrait shows "turn your phone
-  sideways" and does **not** start the game; the wasm keeps downloading, and the
-  moment the phone is turned the backing store is measured for the real
-  orientation and the game starts. Before this, a portrait load built the
-  projection for an aspect near 0.45 — a vertical field of view near 131° — and
-  no amount of CSS afterwards could undo a frame drawn at the wrong shape.
-  **"Play in portrait" is on that prompt in both states and is remembered**
-  (`localStorage` `aa.portrait`, cleared by `?portrait=ask`): before the boot it
-  starts the game at the portrait shape, after it the answer is stored and the
-  page reloads, because the backing store can only be sized before `main()`.
-  Portrait still looks wrong and the prompt says so; the square-viewport layout
-  is the planned fix. `docs/evidence/portrait-choice/`.
+- **portrait is the Game Boy layout.** A touch device that **loads** in portrait
+  gets `window.AA_GAMEBOY` and `html.aa-gameboy`, and with them a different page:
+  the game is a square anchored at the top of the screen, and a pad sits below it.
+  The decision is touch **and** portrait, taken once, before the backing store is
+  sized — a desktop, or a phone held landscape at load, takes the full layout and
+  nothing on the page changes for it. The square's side is `min(100vw, 60dvh)` in
+  CSS and the same number times the device pixel ratio in the backing store
+  (412×915 dpr 3 gives 412 CSS px and 1236×1236); it is published to the
+  stylesheet as `--aa-square`, which is `0px` in the full layout because that is
+  the true answer there rather than an unset one. The **60 % cap** is what keeps
+  at least 40 % of the height for the pad on a tablet wide enough that the width
+  would eat it; on a 412×915 phone the width wins and the cap is inert.
+  Aspect 1 is the point of the whole layout: `rViewport::Perspective` draws a
+  square at 90° × 90°, against ~111° × 67° at a phone's landscape and ~131°
+  vertical at a full-portrait load — the 4:3 desktop the projection was tuned
+  near is 90° horizontal (`docs/evidence/phone-round2/fov/`).
+  The pad is **six `data-aakey` buttons** on the same pointer → `KeyboardEvent`
+  wiring every other control uses, so it adds no input code: a cross
+  (`ArrowUp`/`ArrowLeft`/`ArrowRight`/`ArrowDown`), **B** for `Escape` and **A**
+  for `Enter`, measured at 64 and 80 CSS px. It is up in menus and in a round
+  alike — the cross is Up/Down for the lists and Left/Right for the turns — while
+  the landscape overlay (the two turn zones, the top strip, the corner Escape) is
+  `display:none` under `html.aa-gameboy`; the picture above stays a tap-for-Enter
+  surface in menus, clipped to the square.
+  **A rotation after load is still only the chip.** The layout and the backing
+  store are both decided at load, so turning the phone raises the reload notice
+  and changes nothing else. The boot hold, the "turn your phone sideways" prompt,
+  the "Play in portrait" button and `?portrait=ask` are **gone**, and
+  `localStorage` `aa.portrait` is **no longer read** — a returning visitor's
+  stored answer is inert. What the chip is offering to fix, in the direction that
+  costs most: a Game Boy load rotated to landscape draws its 1236×1236 backing
+  store into a 247 CSS px box (the `min(100vw, 60dvh)` is live CSS, the backing
+  store is not) and the pad's top edge is still at 412 px, below a 412 px-tall
+  viewport, so the chip is the only control left until a reload or a rotation
+  back. `docs/evidence/m7-gameboy/`, `docs/evidence/portrait-choice/` for the
+  flow it replaced.
 - **the camera sits at half the stock distance.** At a phone's landscape
   geometry the player's own cycle measures 23 × 63 backing-store pixels stock
   and 47 × 122 at `?cam=0.5`. `?cam=1` restores stock;
