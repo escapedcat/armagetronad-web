@@ -1,0 +1,218 @@
+# The POST-TUTORIAL arm: the game the phone actually plays.
+# SAMPLER, REPORT, CONFIGLINES, TAGHERE, CPURATE are substituted by run-arm.sh (comment
+# lines are left alone). Not runnable on its own. Run it through run-arm.sh with this
+# file as the 5th argument, or through web/tools/perf/run-posttut.sh, which knows the
+# arms. Score it with `node web/tools/perf/check-arm.mjs --posttut <console.log>`:
+# the DEFAULT gate cannot tell this path from the tutorial one, and says so.
+#
+# WHY THIS TEMPLATE EXISTS. Every arm of M6 Tasks 1-4 measured the TUTORIAL match.
+# drive-browser.mjs boots a fresh browser profile, so st_FirstUse is true, so
+# welcome() (gArmagetron.cpp:269) takes its st_FirstUse branch and runs
+# sg_SinglePlayerGame() itself with six settings forced for the duration
+# (gArmagetron.cpp:375-395): speedFactor -2, autoNum 0, sizeFactor -= 2,
+# wallsLength 400, sg_rubberCycle 5, sg_delayCycle 0.05. wallsLength 400 is the
+# one that matters: it caps every trail, and it is why the draw count in every
+# measured round of Tasks 1-4 plateaus around 107. A returning visitor -- the
+# phone, on every launch after the first -- gets welcome()'s ELSE branch: a splash
+# screen, an early return, the main menu, and SP_ settings that are live, with the
+# shipped SP_WALLS_LENGTH of -1 meaning trails that never expire
+# (gGame.cpp:219, gGame.cpp:601). docs/evidence/m6-lag/README.md section 5.1 and
+# option B.
+#
+# THE CONFIG LINES THIS TEMPLATE ADDS, and the symbol each one comes from. They are
+# prefixed to the arm's own CONFIGLINES inside the autoexec.cfg patch below, so an
+# arm can override any of them by naming it again (autoexec.cfg is read top to
+# bottom and the last assignment wins).
+#
+#   FIRST_USE 0      tConfItem<bool> fu("FIRST_USE", st_FirstUse) --
+#                    tConfiguration.cpp:402. st_LoadConfig reads autoexec.cfg LAST
+#                    (tConfiguration.cpp:991), after user.cfg, settings.cfg and
+#                    default.cfg, and welcome() runs after all of it, so this is
+#                    what puts welcome() on its else branch. Note the ordering
+#                    consequence, which is wanted: default.cfg is loaded under
+#                    `if (st_FirstUse)` at tConfiguration.cpp:983, i.e. BEFORE this
+#                    line is parsed, so the shipped default.cfg (camera keys,
+#                    INGAME_MENU on Escape) still loads exactly as on any boot.
+#
+# The next three are what sr_LoadDefaultConfig() (rScreen.cpp:1007) would have set
+# and PERSISTED on a first-use boot. A returning phone HAS them in its user.cfg:
+# welcome() calls sr_LoadDefaultConfig() on the first-use path (gArmagetron.cpp:296)
+# and st_SaveConfig() writes every tConfItem back. The only other caller,
+# lowlevel_sr_InitDisplay (rScreen.cpp:854), is guarded by
+# `software_renderer && !last_software_renderer` and never fires under WebGL -- which
+# is exactly Task 1's finding that the shipped client swaps with glFinish ONLY
+# because welcome() ran. Emulating a returning visitor therefore means writing them
+# out. They are the only three of the eleven variables sr_LoadDefaultConfig touches
+# that DIFFER from their static initialisers (rScreen.cpp:978-1003 and
+# rTexture.cpp:1143 for the texture modes; checked one by one):
+#
+#   SWAP_MODE 2      rSysDep::swapMode_ = rSysDep::rSwap_glFinish (rScreen.cpp:1029).
+#                    rSwap_glFinish == 2 (rSysdep.h:38); the static default is
+#                    rSwap_glFlush == 1 (rSysdep.cpp:459). tConfItem swapModeCI,
+#                    gMenus.cpp:630. Without this line the arm would swap with
+#                    glFlush and would not be comparable with Tasks 1-4 at all.
+#   FLOOR_DETAIL 3   sr_floorDetail = rFLOOR_TWOTEXTURE (rScreen.cpp:1023).
+#                    rFLOOR_TWOTEXTURE == 3 (rScreen.h:134); the static default is
+#                    rFLOOR_TEXTURE == 2 (rScreen.cpp:984). tConfItem fd,
+#                    gMenus.cpp:169. It is floor geometry, so it is in the draw
+#                    count the gate's floor is calibrated against.
+#   TEXT_OUT 1       sr_textOut = true (rScreen.cpp:1012); the static default is
+#                    false (rScreen.cpp:999). tConfItem to, gMenus.cpp:164. It is
+#                    the HUD/console text, i.e. draw calls in every frame including
+#                    the overlay-only pre-round ones report.js measures the floor
+#                    from.
+#
+# The last two lines are NOT from sr_LoadDefaultConfig, and they are here because of
+# a hole this path has that the tutorial path does not:
+#
+#   KEYBOARD 276 PLAYER_BIND CYCLE_TURN_LEFT 1
+#   KEYBOARD 275 PLAYER_BIND CYCLE_TURN_RIGHT 1
+#                    config/keys_cursor.cfg lines 2-3, verbatim, in the SDL 1.2
+#                    keysym numbering the shipped files use; uInput.cpp's
+#                    su_TranslateSDL12Keysym (case 275/276, uInput.cpp:215-216)
+#                    converts them on read and is idempotent. keys_cursor.cfg is
+#                    loaded by exactly one caller, sg_StartupPlayerMenu
+#                    (gArmagetron.cpp:257), which FIRST_USE 0 skips -- the hazard
+#                    web/webdefaults/autoexec.cfg's closing comment records as the
+#                    reason it does not set FIRST_USE 0 itself. A real returning
+#                    visitor ran that menu once and has these two binds in their
+#                    user.cfg (they are saved: tConfItem_key::WriteVal,
+#                    uInput.cpp:271), so writing them here is what makes this arm a
+#                    returning visitor rather than a visitor with no controls. The
+#                    probe below reports the binds it finds, so the claim is checked
+#                    every run and not assumed.
+#
+# WHAT IS DELIBERATELY NOT SET: nothing else. In particular no SP_SPEED_FACTOR and
+# no SP_SIZE_FACTOR unless an arm asks for one, because the difference between the
+# value the config asked for and the value the game is actually running is the
+# gate's proof that welcome() did not touch this match.
+#
+# THE MENU WALK. With no tutorial there is no automatic match, so the arm has to
+# start one. After welcome()'s else branch returns, gArmagetron.cpp:911 calls
+# MainMenu() (gGame.cpp:2510). uMenu draws its items with the LAST-ADDED at the top
+# and starts with that one selected (uMenu.cpp:67 sets selected huge, :219 clamps it
+# to items.Len()-1; YPos(num) at :111 puts a higher index higher on the screen), and
+# SDLK_DOWN DECREMENTS the index (uMenu.cpp:432), i.e. moves down the screen. The
+# last item added to MainMenu is gamemenuitem (gGame.cpp:2717), which renders as
+# "Play Game", so it is selected at entry; the last item added to game_menu is
+# connect (gGame.cpp:2553), which renders as "Multiplayer", so one Down reaches
+# start (gGame.cpp:2549) -- rendered "Local Game", helptext "Enter the game grid!",
+# function &sg_SinglePlayerGame, the very function welcome() calls on the tutorial
+# path. Hence Enter, Down, Enter, and the two menu screenshots are named for the
+# source symbols while the pictures show those four labels. This is the walk
+# docs/evidence/phase3-touch/synthetic-key-gate.steps.asrun already recorded
+# screenshot by screenshot (synkey-02 main menu, -03 submenu, -04 cursor on Start
+# New Game, -05 round 1 driving), and web/tools/maxfps-precedence.steps uses the
+# same key: steps for the sibling branch of the same menu.
+#
+# ONE ORDERING TRAP, measured in the first run of this template: the driver records
+# a key: step AFTER dispatching keyUp and sleeping 30 ms, while the game acts on the
+# keyDown -- so the closing Enter is written to the transcript AFTER the
+# [L] NEW_ROUND it caused (23187 ms against 23221 ms in
+# docs/evidence/m6-lag/task7-posttutorial/smoke-posttut-base/console.log). A gate
+# that looks for the walk strictly "before the first NEW_ROUND" fails a good run.
+# check-arm.mjs --posttut ends its walk window at the ROUND-1-SETUP-NOT-MEASURED
+# mark below instead.
+#
+# WHY THE WAITS BEFORE THE WALK ARE BLIND. There is no console marker for "the main
+# menu is up": [PERSISTSAVE] fires on menu LEAVE (eWebPersist.cpp:114) and the
+# splash is not a uMenu at all -- it is welcome()'s own 6-second event loop
+# (gArmagetron.cpp:322-341), which ends on a timeout or on any SDL_KEYDOWN and then
+# DRAINS the input queue (gArmagetron.cpp:346), so a key pressed early is both
+# early and eaten. So: 9 s for the boot (the same 9 s arm.steps.tmpl waits for the
+# language menu), then 9 s more for the 6 s splash plus margin. m0-main-menu is the
+# picture that proves the wait was long enough, and it is also the picture the
+# tutorial path can never produce: it never shows the main menu at boot.
+#
+# THE PROBE, and what it is for. check-arm.mjs --posttut has to prove the tutorial's
+# forced settings are ABSENT, and nothing in the transcript says so on its own.
+# window.__posttut(phase) calls Module._aa_web_save_config() -- eWebPersist.cpp:205,
+# the non-yielding EMSCRIPTEN_KEEPALIVE export web/shell.html's unload backstop
+# already calls, and which synthetic-key-gate.steps.asrun already calls mid-round --
+# which runs st_SaveConfig(), which serialises every live tConfItem to
+# /persist/var/user.cfg. It then reads that file back through Module.FS and prints
+# the live values beside the ones the patched autoexec.cfg asked for. SP_WALLS_LENGTH,
+# SP_SPEED_FACTOR and SP_SIZE_FACTOR are tConfItems on singlePlayer.* (gGame.cpp:601,
+# :583, :584) and sg_currentSettings points AT singlePlayer in a single-player game,
+# so these are the very fields welcome() assigns: on the tutorial path a probe taken
+# during the match reads speed -2, size (asked - 2) and walls 400 no matter what the
+# config said. Here they must equal what was asked. The probe runs once in round 1
+# and once inside measured round 2, and the round-2 call is bracketed as r2-probe so
+# report.js drops the frames the ~22 KB serialise disturbs (69 ms, measured). The
+# round-1 call is deliberately NOT bracketed: round 1 is setup and is never a
+# measurement, and leaving its cost visible in round 1's per_second series is how a
+# reader sees what the probe costs at all.
+#
+# Everything from ROUND-1-SETUP-NOT-MEASURED onwards is arm.steps.tmpl's structure
+# unchanged: round 1 is setup and takes the throttle, rounds 2 and 3 are measured
+# with the 06/30/50 s bracketed shots, eval:REPORT at the end. THE TWO KEY PRESSES
+# IN ROUND 1 ARE NOT TUTORIAL KEYS HERE -- there is no tutorial. They are kept for
+# symmetry with arm.steps.tmpl and because check-arm.mjs counts them; with the two
+# KEYBOARD lines above they are live binds rather than the inert presses
+# arm.steps.tmpl's negative control measured, and they land in round 1, which is
+# never measured.
+wait:800
+eval:(() => {  /* One frame = one flush/finish on the WebGL context. rSysDep::SwapGL calls     exactly one of the two per swap, chosen by swapMode_: the static default     is rSwap_glFlush, but sr_LoadDefaultConfig (rScreen.cpp) sets     rSwap_glFinish and welcome() (gArmagetron.cpp) runs it under st_FirstUse     -- and every harness run is a first-use boot (drive-browser.mjs makes a     fresh profile), so the client the harness measures swaps with glFinish,     a synchronous wait for the GPU. S.swaps counts each kind so the [PERF]     line says which fired instead of assuming. Per frame we keep: the     timestamp (taken BEFORE the swap call), the time spent INSIDE the swap     call (the GPU wait), the timestamp of the frame's first draw call, the     number of drawArrays/drawElements calls, and the bytes through     bufferData/bufferSubData. Draw calls and bytes are the direct measure of     "geometry re-submitted through the emulation this frame" (mechanism 1);     the first-draw timestamp lets report.js split a frame interval into     [end of previous swap -> first draw] (event-loop yield, input,     simulation) and [first draw -> swap] (render submission), so a frame that     gets slower in the first part while its draw calls stay flat is NOT the     renderer. */  /* THIS FILE IS ONE EXPRESSION WITH BLOCK COMMENTS ONLY: run-arm.sh strips     every newline to fit it into a single eval: step of drive-browser.mjs, so     a // comment would swallow the rest of the program. */  const N = 600000;  const S = { t: new Float64Array(N), wait: new Float32Array(N), first: new Float64Array(N),              draws: new Uint32Array(N), bytes: new Float64Array(N), n: 0,              swaps: { flush: 0, finish: 0 }, marks: [], shots: [], cur: { draws: 0, bytes: 0, first: 0 } };  window.__fps = S;  /* Screenshot bracket. Page.captureScreenshot spends real time on the page     and can put a hitch INTO a measured window; the driver's own     "[harness] screenshot" line is on the driver's clock, in the driver's     transcript, where report.js cannot see it. The template therefore wraps     every shot: step in eval:__fps.shot('name','begin') and     eval:__fps.shot('name','end'), on the page's clock, and report.js drops     the frames between the two (plus a pad) from every statistic. */  S.shot = (name, edge) => { S.shots.push([performance.now(), name, edge]); return 'shot ' + edge + ' ' + name; };  const wrap = (C) => {    if (!C) return; const P = C.prototype;    for (const m of ['flush', 'finish']) { const o = P[m]; if (!o) continue;      P[m] = function () {        const i = S.n, now = performance.now();        if (i < N) { S.t[i] = now; S.draws[i] = S.cur.draws; S.bytes[i] = S.cur.bytes; S.first[i] = S.cur.first; S.n = i + 1; }        S.swaps[m]++; S.cur.draws = 0; S.cur.bytes = 0; S.cur.first = 0;        const r = o.apply(this, arguments);        if (i < N) S.wait[i] = performance.now() - now;        return r; }; }    for (const m of ['drawArrays', 'drawElements']) { const o = P[m]; if (!o) continue;      P[m] = function () { if (!S.cur.first) S.cur.first = performance.now(); S.cur.draws++; return o.apply(this, arguments); }; }    for (const m of ['bufferData', 'bufferSubData']) { const o = P[m]; if (!o) continue;      P[m] = function () { const d = (m === 'bufferData') ? arguments[1] : arguments[2];        S.cur.bytes += (d && d.byteLength) ? d.byteLength : (typeof d === 'number' ? d : 0);        return o.apply(this, arguments); }; }  };  wrap(window.WebGLRenderingContext); wrap(window.WebGL2RenderingContext);  const cl = console.log.bind(console);  console.log = function () { const s = (arguments.length && typeof arguments[0] === 'string') ? arguments[0] : '';    if (s.indexOf('[L] ') === 0) S.marks.push([performance.now(), s]); return cl.apply(null, arguments); };  return 'sampler armed: frames, swap kind and wait, first draw, draw calls, buffer bytes, shot brackets';})()
+eval:(()=>{const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};const pick=(t,k)=>{if(t===null)return null;let v=null;for(const l of t.split('\n')){const s=l.trim();if(s.indexOf(k)===0&&/\s/.test(s.charAt(k.length)))v=s.slice(k.length).trim().replace(/\s+/g,' ')}return v};const DFLT={FIRST_USE:'1',SP_WALLS_LENGTH:'-1',SP_SPEED_FACTOR:'0',SP_SIZE_FACTOR:'-3',SP_NUM_AIS:'1',SP_AUTO_AIS:'1'};const KEYS=['FIRST_USE','SP_WALLS_LENGTH','SP_SPEED_FACTOR','SP_SIZE_FACTOR','SP_NUM_AIS','SP_AUTO_AIS','MAX_FPS','SWAP_MODE','TEXT_OUT','FLOOR_DETAIL'];window.__posttut=(phase)=>{let sv;try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const a=rd('/data/webdefaults/autoexec.cfg');const c=rd('/persist/var/user.cfg');const asked={},live={},expect={};for(const k of KEYS){asked[k]=pick(a,k);live[k]=pick(c,k);expect[k]=asked[k]!==null?asked[k]:(DFLT[k]!==undefined?DFLT[k]:null)}const K=c===null?[]:c.split('\n').map(l=>l.trim().replace(/\s+/g,' ')).filter(l=>l.indexOf('KEYBOARD ')===0);const bind=(x)=>K.filter(l=>l.indexOf(' PLAYER_BIND '+x+' 1')>0).map(l=>l.split(' ')[1]);console.log('[POSTTUT] '+JSON.stringify({phase:phase,save:sv,user_cfg_bytes:c===null?null:c.length,asked:asked,live:live,expect:expect,turn_left_bound:bind('CYCLE_TURN_LEFT'),turn_right_bound:bind('CYCLE_TURN_RIGHT')}));return 'posttut probe '+phase};return 'posttut probe installed'})()
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';const cur=Module.FS.readFile(p,{encoding:'utf8'});const add='\n# perf arm posttut-nosparks-r2 (post-tutorial path)\nFIRST_USE 0\nSWAP_MODE 2\nFLOOR_DETAIL 3\nTEXT_OUT 1\nKEYBOARD 276 PLAYER_BIND CYCLE_TURN_LEFT 1\nKEYBOARD 275 PLAYER_BIND CYCLE_TURN_RIGHT 1\nMAX_FPS 1000\nSP_SIZE_FACTOR 6\nSP_NUM_AIS 7\nSP_WALLS_LENGTH -1\nSPARKS 0\n';Module.FS.writeFile(p,cur+add);return 'autoexec.cfg patched: '+JSON.stringify(add)})()
+eval:window.AA_START()
+until:1:90000:[BOOT] autostart
+wait:9000
+shot:m0a-splash
+wait:9000
+shot:m0-main-menu
+mark:MENU-WALK-NO-TUTORIAL-ON-THIS-PATH
+key:Enter
+wait:1800
+shot:m1-game-submenu
+key:Down:1
+wait:1200
+shot:m2-cursor-on-start-new-game
+key:Enter
+until:1:120000:[L] NEW_ROUND
+mark:ROUND-1-SETUP-NOT-MEASURED
+wait:3000
+key:Right:1
+key:Left:1
+wait:1500
+eval:__fps.shot('r1-after-keys','begin')
+shot:r1-after-keys
+eval:__fps.shot('r1-after-keys','end')
+eval:window.__posttut('round1-setup')
+cpu:6
+mark:THROTTLE-ON
+until:2:260000:[L] NEW_ROUND
+mark:ROUND-2-MEASURED
+wait:6000
+eval:__fps.shot('r2-06s','begin')
+shot:r2-06s
+eval:__fps.shot('r2-06s','end')
+eval:__fps.shot('r2-probe','begin')
+eval:window.__posttut('round2-measured')
+eval:__fps.shot('r2-probe','end')
+wait:24000
+eval:__fps.shot('r2-30s','begin')
+shot:r2-30s
+eval:__fps.shot('r2-30s','end')
+wait:20000
+eval:__fps.shot('r2-50s','begin')
+shot:r2-50s
+eval:__fps.shot('r2-50s','end')
+until:3:260000:[L] NEW_ROUND
+mark:ROUND-3-MEASURED
+wait:6000
+eval:__fps.shot('r3-06s','begin')
+shot:r3-06s
+eval:__fps.shot('r3-06s','end')
+wait:24000
+eval:__fps.shot('r3-30s','begin')
+shot:r3-30s
+eval:__fps.shot('r3-30s','end')
+wait:20000
+eval:__fps.shot('r3-50s','begin')
+shot:r3-50s
+eval:__fps.shot('r3-50s','end')
+until:3:260000:[L] ROUND_WINNER
+mark:MATCH-OVER
+wait:1000
+eval:(() => {  /* ONE EXPRESSION, BLOCK COMMENTS ONLY: run-arm.sh strips newlines to make     this a single eval: step (see sampler.js). posttut-nosparks-r2 and 6 are     substituted by run-arm.sh. The object this prints after "[PERF] <arm> " is     the schema Tasks 2-4 read; web/tools/perf/README.md documents it. */  const S = window.__fps, n = S.n;  const PAD_BEFORE = 100, PAD_AFTER = 250;  const marks = (p) => S.marks.filter(m => m[1].indexOf(p) === 0);  const nr = marks('[L] NEW_ROUND').map(m => m[0]);  const rw = marks('[L] ROUND_WINNER').map(m => m[0]);  /* The human is the first PLAYER_ENTERED name; the AIs never enter that way.     A DEATH_* line names its victim first, so the human's deaths are the     DEATH_ marks whose first name is that one. */  const pe = marks('[L] PLAYER_ENTERED ');  const human = pe.length ? pe[0][1].split(/\s+/)[2] : 'web_user';  const deaths = S.marks.filter(m => /^\[L\] DEATH_\w+ /.test(m[1]) && m[1].split(/\s+/)[2] === human).map(m => m[0]);  /* Screenshot exclusions: [begin - PAD_BEFORE, end + PAD_AFTER] for every     bracketed shot (sampler.js S.shot); a begin with no end -- the driver died     mid-shot -- excludes two seconds. */  const ex = []; const open = {};  for (const [t, name, edge] of S.shots) {    if (edge === 'begin') open[name] = t;    else if (edge === 'end' && open[name] != null) { ex.push({ a: open[name] - PAD_BEFORE, b: t + PAD_AFTER, name: name, dur: t - open[name] }); delete open[name]; } }  for (const name in open) ex.push({ a: open[name] - PAD_BEFORE, b: open[name] + 2000, name: name, dur: null });  const excluded = (t) => ex.some(e => t >= e.a && t <= e.b);  const q = (a, p) => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y);    return s[Math.min(s.length - 1, Math.max(0, Math.round(p * (s.length - 1))))]; };  const r2 = (x) => (x == null) ? null : Math.round(x * 100) / 100;  /* A window's statistics use only frames outside every exclusion, and only     deltas between frames that were ADJACENT samples, so a gap that straddles     an exclusion is never counted as a frame time. raw_ms_max ignores the     exclusions on purpose: it is where a screenshot hitch stays visible, so a     reader can see what was excluded and that it did not leak into ms_p50.     Each frame interval t[i]-t[p] (p the previous sample) is also split into     the three parts the sampler timestamps: ms_in_swap = the previous swap     call itself (p50, p90 and max: if glFinish waited for the GPU it would     show here, and the first measured run read 0 in every window -- so the     tail is reported too), ms_to_first_draw = from that     call's return to this frame's first draw call (the emscripten_sleep(0)     yield, input, the simulation, render setup), ms_first_draw_to_swap = from     the first draw call to this frame's swap call (render submission). */  const win = (t0, t1) => {    const ix = []; let dropped = 0, rawMax = 0, prev = -1;    for (let i = 0; i < n; i++) { const t = S.t[i]; if (t < t0 || t > t1) continue;      if (prev >= 0) rawMax = Math.max(rawMax, t - S.t[prev]); prev = i;      if (excluded(t)) dropped++; else ix.push(i); }    const d = [], sw = [], pre = [], ren = []; let dr = 0, by = 0;    for (let k = 1; k < ix.length; k++) if (ix[k] === ix[k - 1] + 1) { const i = ix[k], p = ix[k - 1];      d.push(S.t[i] - S.t[p]); sw.push(S.wait[p]);      if (S.first[i] > 0) { pre.push(S.first[i] - (S.t[p] + S.wait[p])); ren.push(S.t[i] - S.first[i]); } }    for (const i of ix) { dr += S.draws[i]; by += S.bytes[i]; }    const f = ix.length || 1;    let exms = 0; for (const e of ex) exms += Math.max(0, Math.min(t1, e.b) - Math.max(t0, e.a));    const span = Math.max(1, (t1 - t0) - exms);    return { frames: ix.length, frames_excluded: dropped, ms_p50: r2(q(d, .5)), ms_p90: r2(q(d, .9)),             fps: r2(ix.length / (span / 1000)), draws_per_frame: r2(dr / f),             kb_per_frame: r2(by / f / 1024), hitches_over_50ms: d.filter(x => x > 50).length,             raw_ms_max: r2(rawMax), ms_in_swap_p50: r2(q(sw, .5)), ms_in_swap_p90: r2(q(sw, .9)), ms_in_swap_max: r2(q(sw, 1)),             ms_to_first_draw_p50: r2(q(pre, .5)), ms_first_draw_to_swap_p50: r2(q(ren, .5)) }; };  const perSec = (t0, t1) => { const ms = [], dr = [], mx = [], pre = [], ren = [];    for (let k = 0; k * 1000 < t1 - t0; k++) { const w = win(t0 + k * 1000, Math.min(t1, t0 + (k + 1) * 1000));      ms.push(w.ms_p50); dr.push(w.draws_per_frame); mx.push(w.raw_ms_max); pre.push(w.ms_to_first_draw_p50); ren.push(w.ms_first_draw_to_swap_p50); }    return { ms_p50: ms, draws_per_frame: dr, raw_ms_max: mx, ms_to_first_draw_p50: pre, ms_first_draw_to_swap_p50: ren }; };  /* Pre-round frames. For the first half second of game time after a round     starts (gGame.cpp GameLoop, the gtime <= -PREPARE_TIME + .5 branch) the     game clears the screen and swaps WITHOUT calling Render: overlay only, no     arena, a handful of draw calls at a fraction of a world frame's cost.     They sit right after NEW_ROUND and would otherwise fill the early window     with frames that have no geometry in them. They are found by their draw     count: the threshold is halfway between the fewest draws of any frame in     the round's first two seconds (an overlay-only frame) and the median of     its second second (world frames); the measured span starts at the first     frame after the last frame under the threshold. The frame that straddles     NEW_ROUND itself (drawn mostly before it) is above the threshold and is     left out of both. */  const preRound = (t0) => {    const a = [], b = [];    for (let i = 0; i < n; i++) { const t = S.t[i]; if (t < t0) continue; if (t >= t0 + 2000) break; a.push(i); if (t >= t0 + 1000) b.push(S.draws[i]); }    const none = { start: t0, stats: { frames: 0, ms_p50: null, draws_per_frame: null, span_ms: 0, split_at_draws: null } };    if (!a.length) return none;    let lo = Infinity; for (const i of a) lo = Math.min(lo, S.draws[i]);    const med = q(b, .5); if (med == null || !(med > lo)) return none;    const thr = (lo + med) / 2; const ov = a.filter(i => S.draws[i] <= thr);    if (!ov.length) return none;    const last = ov[ov.length - 1]; const d = []; let dr = 0;    for (let k = 1; k < ov.length; k++) if (ov[k] === ov[k - 1] + 1) d.push(S.t[ov[k]] - S.t[ov[k - 1]]);    for (const i of ov) dr += S.draws[i];    return { start: (last + 1 < n) ? S.t[last + 1] : t0,             stats: { frames: ov.length, ms_p50: r2(q(d, .5)), draws_per_frame: r2(dr / ov.length),                      span_ms: r2(S.t[last] - S.t[ov[0]]), split_at_draws: r2(thr) } }; };  /* A round is closed by its ROUND_WINNER mark when one is written; a     winnerless round -- a lone cycle with no AI (gGame.cpp Analysis: a winner     needs more than one team) -- writes none and ends when the next NEW_ROUND     starts, and a round still running when this report runs closes here. For     a transcript where every round has its ROUND_WINNER before the next     NEW_ROUND (every base arm), this pairs exactly as nr[i]/rw[i] did. */  const rounds = [];  const tReport = performance.now();  for (let i = 0; i < nr.length; i++) {    const t0 = nr[i], next = (i + 1 < nr.length) ? nr[i + 1] : Infinity;    const won = rw.find(t => t > t0 && t < next);    const t1 = won != null ? won : (next < Infinity ? next : tReport);    const closedBy = won != null ? 'round_winner' : (next < Infinity ? 'next_round' : 'report');    const len = (t1 - t0) / 1000; if (len < 8) continue;    /* The measured span runs from the first world frame to the human's death       when the human dies before ROUND_WINNER (after it the camera shows an       explosion and the AIs' endgame, which is not what the maintainer       plays), else to ROUND_WINNER. */    const death = deaths.find(t => t > t0 && t < t1); const te = death != null ? death : t1;    const pr = preRound(t0); const ts = pr.start;    const e = win(ts, ts + 5000), l = win(te - 5000, te), all = win(ts, te);    const shots = ex.filter(x => x.a >= t0 && x.a <= t1).map(x => ({ name: x.name, at_s: r2((x.a + PAD_BEFORE - t0) / 1000), dur_ms: r2(x.dur) }));    rounds.push({ round: i + 1, length_s: r2(len), closed_by: closedBy,      measured_from_s: r2((ts - t0) / 1000), measured_to_s: r2((te - t0) / 1000),      human_death_s: death != null ? r2((death - t0) / 1000) : null, ends_at: death != null ? 'human_death' : 'round_winner',      pre_round: pr.stats, early_5s: e, late_5s: l,      ratio_ms: e.ms_p50 ? r2(l.ms_p50 / e.ms_p50) : null,      ratio_draws: e.draws_per_frame ? r2(l.draws_per_frame / e.draws_per_frame) : null,      hitches_over_50ms: all.hitches_over_50ms, frames: all.frames, frames_excluded: all.frames_excluded,      raw_ms_max: all.raw_ms_max, shots: shots, per_second: perSec(t0, t1) }); }  return '[PERF] posttut-nosparks-r2 ' + JSON.stringify({ arm: 'posttut-nosparks-r2', cpu_rate: 6, frames: n, human: human,    swaps: S.swaps, rounds_started: nr.length, rounds_won: rw.length,    shots_bracketed: ex.filter(x => x.dur != null).length, shot_pad_ms: [PAD_BEFORE, PAD_AFTER], rounds });})()

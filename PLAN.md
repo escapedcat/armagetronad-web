@@ -760,7 +760,20 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > uncapped, 6 s at 400, 2 s at 150) and still brings the worst frames down with it (late p90
 > 35.6 → 28.5 → 27.05 ms), so option A survives its "untested on the real path" caveat, the
 > shipped configuration turns out to be unmeasurable by this rig at all (8.1-second rounds, an
-> idle human dead 6.5 s in), and the decision is still the maintainer's.)*
+> idle human dead 6.5 s in), and the decision is still the maintainer's. **Task 8 is the first
+> thing this milestone has shipped rather than measured:** the crash sparks thrown while a cycle
+> grinds a wall are worth about a quarter of the frame at the rim in the arm that sparked
+> throughout (17.15 ms median and 20.3 worst with draw bursts to 171, against 13.1/13.65 median,
+> 13.8/15.0 worst and draws flat at 60 with
+> `SPARKS 0`), so `web/shell.html` now appends `SPARKS 0` on touch devices only — a settings
+> change with no C++ in it, `?sparks=1` to restore them, and the desktop autoexec untouched and
+> gated as such -- the second stock run of that arm sparked in only 11 of its 40 rim seconds and
+> read 14.0 ms, so the quarter is what a cycle that is actually sparking gets back, not what
+> every rim second costs. **The same nine runs also close Task 3's open question**: the end-of-round draw
+> spikes, which the skeptics left as "a per-draw-call cost of unknown geometry", are those same
+> sparks — **0 spike rounds of 10 with `SPARKS 0` against 3 of 10** — while the second-45
+> simulation bump arrives on the same second at the same height either way, so what was
+> identified is the *spikes*, not the growth. `docs/evidence/m6-lag/task8-sparks/`.)*
 >
 > The lesson this round adds to M4's P11 and M5's stale gate: **a gate must prove the condition
 > it measures actually held** — a late-round screenshot with trail geometry in it, a non-zero

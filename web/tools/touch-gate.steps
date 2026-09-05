@@ -38,6 +38,13 @@
 # menus are reachable by taps alone, both halves steer, and the game's own
 # tooltip counters are the witness.
 #
+# T1b IS THE M6 SETTINGS CHANGE, AND IT IS ONLY HALF A CHECK ON ITS OWN. The
+# page appends SPARKS 0 to the preloaded autoexec.cfg on a touch device, because
+# the spark bursts thrown at a wall cost about a quarter of the frame
+# (docs/evidence/m6-lag/task8-sparks/). This run asserts the append happened AND
+# reads the file back; web/tools/menu-gate.steps asserts the desktop file is
+# untouched. Read them as a pair -- the claim is "on touch and nowhere else".
+#
 # AND IT GAINED THE ONE CHECK THE NEW LAYOUT NEEDS: that a tap can never mean
 # both things at once. T2b and T3b assert it STRUCTURALLY rather than by
 # sampling behaviour -- in a menu the two turn zones have no box at all, and
@@ -94,6 +101,35 @@ wait:9000
 # viewport, and is showing the controls but not the rotate prompt.
 eval:window.__tg.dump('landscape-at-language-menu')
 shot:00-language-menu-with-touch-controls
+
+# ===========================================================================
+# T1b: THE CRASH SPARKS ARE OFF, AND THE FILE THE GAME PARSES SAYS SO.
+#
+# WHY THE SETTING IS THERE. M6 task 8 measured the spark bursts thrown while a
+# cycle grinds a wall -- which on a phone is not a contrived case, it is what a
+# thumb does by accident every round. Stock: 17.15 ms median frame, 20.3 ms in
+# the worst measured second, the draw count bursting to 171 calls in a frame.
+# The same arm with SPARKS 0, twice: 13.1 and 13.65 ms median, worst 13.8 and
+# 15.0, draws pinned flat at 60. About a quarter of the frame at the wall --
+# read with its condition: that 17.15 is the arm whose cycle sparked in 29 of
+# its 40 rim seconds, and the second stock run of the same arm sparked in only
+# 11 of 40 and read 14.0 ms median (worst 18.3).
+# docs/evidence/m6-lag/task8-sparks/.
+#
+# TWO CHECKS, BECAUSE EITHER ALONE CAN PASS WHILE THE GAME IS UNCHANGED. The
+# `until:` is the page saying it performed the append; the `eval:` READS THE
+# FILE BACK through Module.FS, so what is asserted is what the game's config
+# parser will see and not what the page logged about itself. The count of
+# SPARKS lines is asserted to be exactly one: a second one would mean the
+# append ran twice, which the last-one-wins parser would hide.
+#
+# THE OTHER HALF OF THIS CHECK IS ON THE DESKTOP GATE. It is touch-only by
+# design, so web/tools/menu-gate.steps reads the same file after a desktop boot
+# and asserts the word SPARKS does not appear in it at all. Neither run proves
+# the change on its own; the pair does.
+# ===========================================================================
+until:1:30000:[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 0\n$/.test(t);return '[SPARKSGATE] T1b sparks-off-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,ends_with_sparks_0:ends,tail:ok?t.slice(-96):null,PASS:ok&&n===1&&ends})})()
 
 # ===========================================================================
 # T2: THE MENUS, BY TAPPING ONLY. No key: step appears anywhere below.

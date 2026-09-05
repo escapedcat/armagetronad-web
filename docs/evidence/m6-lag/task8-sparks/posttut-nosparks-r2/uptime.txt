@@ -1,0 +1,2 @@
+before: 17:44  up 5 days,  5:12, 35 users, load averages: 19.24 12.53 11.21
+after:  17:48  up 5 days,  5:16, 35 users, load averages: 9.44 12.62 11.74

@@ -58,11 +58,18 @@ but reaches no servers. Safari is not a target.
   deployed and have been played on a real Android phone. The frame rate falls the
   longer you drive — **CPU-bound, not resolution-bound** (a ninth of the pixels felt
   identical) — and that is the open performance item: it reproduces on a throttled
-  desktop rig and no fix is chosen yet. Portrait raises a prompt to turn the phone
-  with a **Play in portrait** button that is remembered — portrait still looks wrong
-  today (the view is drawn at a ~131° vertical field of view) and a proper portrait
-  layout, a square game with the controls below it, is planned.
-  `docs/evidence/phone-round2/`, `docs/evidence/portrait-choice/`.
+  desktop rig and the general fix is not chosen yet. **The crash sparks are off on
+  touch devices**, the one lever measured and shipped so far: the bursts thrown while
+  you grind a wall cost about a quarter of the frame in the arm that sparked
+  throughout (17.15 ms median stock against 13.1 with them off; a second stock run
+  that sparked in only 11 of its 40 rim seconds read 14.0 against 13.65), the
+  draw-call spikes at the end of a round went from 3 rounds in 10 to **0 in 10**,
+  and `?sparks=1` brings them back. Portrait raises a prompt to
+  turn the phone with a **Play in portrait** button that is remembered — portrait
+  still looks wrong today (the view is drawn at a ~131° vertical field of view) and a
+  proper portrait layout, a square game with the controls below it, is planned.
+  `docs/evidence/phone-round2/`, `docs/evidence/portrait-choice/`,
+  `docs/evidence/m6-lag/task8-sparks/`.
 
 ## Why
 

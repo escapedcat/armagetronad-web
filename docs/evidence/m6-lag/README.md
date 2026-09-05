@@ -4,9 +4,13 @@ The maintainer's report was *"it lags — starts smooth, gets laggier the more
 I drive, and when I'm fast and close to a wall."* M6 built a rig that can
 tell whether that is happening, reproduced it ten times, put a number on both
 candidate mechanisms, A/B'd four settings-only levers against the baseline,
-and priced the one structural fix anybody had proposed. **Nothing was built.
-No source file outside `web/tools/perf/` was changed on this branch, and no
-decision is taken here** — this document ends in three options and stops.
+priced the one structural fix anybody had proposed, measured the game the
+phone actually plays, and — in Task 8 — identified the geometry behind the
+end-of-round spikes and shipped the one lever that removes them. **That last
+thing is the only thing built**: one settings append in `web/shell.html`,
+touch devices only, gated in a browser both ways (§3). Everything else on this
+branch outside `web/tools/perf/` is evidence, and **the general fix is still
+not chosen** — this document ends in three options and stops.
 
 | | what it established | where |
 |---|---|---|
@@ -16,6 +20,7 @@ decision is taken here** — this document ends in three options and stops.
 | Task 4 | four levers, eleven completed runs of twelve: one moves the event, one moves the variance, two are not levers | [`task4-levers/`](task4-levers/README.md) |
 | Task 5 | display lists priced, written before Task 4 ran: **not yet** | [`display-lists-pricing.md`](display-lists-pricing.md) |
 | Task 7 | the game the phone actually plays, measured: unlimited trails do **not** grow the render work, and a trail cap still shortens the second-45 event | [`task7-posttutorial/`](task7-posttutorial/README.md) |
+| Task 8 | the crash sparks A/B'd in nine runs: they are the render half of the grind frame **and** the geometry behind the end-of-round spikes (**0 of 10** rounds against 3 of 10). Shipped, on touch only | [`task8-sparks/`](task8-sparks/README.md) |
 
 **Every millisecond in this milestone is one desktop's**, at `MAX_FPS 1000`
 under a 6× CPU throttle at a phone's pixel count, with a fixed event-loop
@@ -90,6 +95,23 @@ not a point estimate); and its share of the growth itself, Δrender ÷ Δms,
 is **a median 21 %** (12.5 % in the flat rounds, 54–61 % in the spike
 rounds).
 
+**The geometry is now identified, and it is neither walls nor trails: it is
+the crash sparks** ([`task8-sparks/README.md`](task8-sparks/README.md) §3).
+Five runs of the same baseline arm plus one config line, `SPARKS 0`, produce
+**0 spike rounds of 10 against 3 of 10** — peaks 114.7–118.0 against
+112.7–510.6 — and the same-second sound marker of §1.5 reads the flat pattern
+in 5 of 5 runs. Read honestly the binomial is 0.7¹⁰ ≈ 0.028 per round, or
+0.6⁵ ≈ 0.078 per run (rounds within a run are not independent), so it is
+strong evidence and not proof; the mechanism supplies the rest, because
+`gSpark::Render` opens one immediate-mode block per spark
+(`src/tron/gSparks.cpp:110`) and the end of a round is when seven AIs are
+grinding each other's walls. **The per-draw-call coefficient is untouched by
+this** — 24–47 µs stands; what changes is the answer to "extra draw calls of
+*what*". Two things the same arms show it is **not**: with sparks off, a flat
+round's late window is unchanged (§3), and the second-45 pre-draw event still
+arrives on the same second and reaches the same height (7.2 → 12.1 ms with
+sparks, 7.3 → 12.2 without). Mechanism 1 was never the thing that grows.
+
 Together: **the growth this milestone reproduced lives in the simulation, and
 the renderer is most of the frame's cost but, in the seven flat rounds,
 almost none of its growth — in this match.** In the three spike rounds it is
@@ -107,6 +129,26 @@ Task 3 identified — the pre-draw (simulation) part that actually grows:
 | 2 | **`MAX_FPS 30`** | pins the plateau at the cap (33.33 ms median) and removes the *difference* between a spike round and a flat one: `ratio_ms` 1.010 mean and 1.04 worst against 1.264 and 1.63; its one spike round peaked at 39.5 ms against the baseline spikes' 43.0, 45.3 and 51.6. It does not remove the spikes. (4 measured rounds; `fps30-r3` INCOMPLETE, no `[PERF]`. Its pre-draw part carries the limiter's `emscripten_sleep` — plateau 15.70 ms — and is not comparable to the other arms', so this rank rests on `ratio_ms`, not on the pre-draw split.) | half the frames — 29 fps mean over its four late windows against 33.8. Steadier, slower. |
 | 3 | **`FLOOR_MIRROR_INT 0`** | **null.** `sr_floorMirror` is already `rMIRROR_OFF` in this build and the mirrored pass is not rendered; the setting only supplies that pass's alpha. Its six rounds are a second `base` replicate. | nothing gained, nothing lost. Do not ship it as a fix. |
 | 4 | **`SP_WALLS_LENGTH`** | **inert in the match every arm played** — `welcome()` overwrites it with 400. Proved by a probe that read the identical 107.0 draws/frame. | — but see §5: this is the setting the phone's real path actually uses. |
+| — | **`SPARKS 0`** (Task 8, added after the ranking) | not ranked here, because it moves **neither** the plateau nor the pre-draw part: it removes the *spikes* and the render half of a grinding frame. See below. | a visual effect, and only on touch devices. |
+
+**The fifth lever, and the only one that moves the spikes: `SPARKS 0`**
+([`task8-sparks/README.md`](task8-sparks/README.md); nine runs, one config
+line added to each of three earlier arms). At the wall, counting whole seconds
+20–59 of each grind run: with sparks **40 of 80 rim seconds draw more than 60
+calls per frame**, without, **0 of 80**. In the arm whose cycle actually
+sparked for most of its window (29 of its 40 rim seconds) the median rim
+second falls **17.15 → 13.1 ms** and the worst **20.3 → 13.8**; in the arm
+that sparked in 11 of its 40 rim seconds, 14.0 → 13.65 and 18.3 → 15.0 — so
+−23.6 % and −2.5 % at the median, −32 % and −18 % at the worst second. End-of-round spikes: **0 of 10 rounds
+against 3 of 10** (§2). What it does not move: the pre-draw part still rises
++2.5/+2.6 ms at the wall (mechanism 2 intact), the second-45 event is
+unchanged, and a flat round's late window is unchanged — sparks cost nothing
+when nobody grinds. **Its cost to the player is a visual effect**, and upstream
+already turns the same flag off by default on Macs for the same reason
+(`gCycle.cpp:2508-2513`). **This is the one lever that has shipped**: a
+touch-only append of `SPARKS 0` in `web/shell.html`, `?sparks=1` to restore
+them, with both halves gated in a browser — the setting arrives on touch, and
+the desktop config is proved untouched (`task8-sparks/gates/README.md`).
 
 **Nothing cheap touched the flat cost.** Over seconds 15–44 the plateau
 `ms_to_first_draw` is 6.97–7.35 ms in every arm but `fps30` — a 0.38 ms
@@ -235,9 +277,15 @@ be the shrink pair (`CYCLE_DIST_WALL_SHRINK 0.00025`,
 
 *Cost to build:* one or two lines in `web/webdefaults/autoexec.cfg`, which
 the port already ships and which loads after both `user.cfg` and
-`settings.cfg`. No source change, no rebuild of the game. Making it
-conditional on touch rather than global is **not** settings-only and has not
-been designed.
+`settings.cfg`. No source change, no rebuild of the game. **Re-cost by Task
+8:** making it conditional on touch is no longer undesigned — that is exactly
+what `applyTouchSparksTuning()` in `web/shell.html` does, beside the camera's
+own `applyTouchCameraTuning()`, appending to `/data/webdefaults/autoexec.cfg`
+through `Module.FS` before `main()`; a trail cap would be one more line in the
+same shape, with the same two-sided gate (the setting arrives on touch, the
+desktop file is proved untouched) and a `?walls=` escape hatch beside
+`?sparks=`. It is still a page change rather than a config-file change, and it
+still needs its own numbers on the real path.
 
 *Cost to the player:* trails end 150 units behind every cycle, the player's
 and the AIs'. That changes how the game plays for everyone on that build.
@@ -324,18 +372,32 @@ answers the "and growing" half of §4's build-it-if in the negative and makes
 this option's case weaker, not stronger; the wall-versus-floor-versus-model
 split that would answer the other half still does not exist.
 
+**Task 8 weakens it again, from the other side.** The render-side event this
+option was implicitly aimed at — the draw-count spikes that cost 54–61 % of
+the growth in the three spike rounds — turns out to be **sparks**, and sparks
+are one of the two things Task 5 §4 established do *not* own a display list
+(the floor is the other; models and the HUD do). A list manager could not have
+removed them, and one config line already has, in 10 of 10 rounds. What is
+left for lists is the flat render cost — 62–69 % of the late frame, of which
+the wall share has still never been split out — and none of the *growth* this
+milestone measured. The build-it-if is unchanged and still unmeasured.
+
 ## 7. Evidence weight, and the seed
 
-**About 49 MB across the five task directories** — 259 committed files, 93
-of them PNG (`task1-rig` 5.4 MB, `task2-repro` 6.0 MB, `task3-mechanisms`
-7.6 MB, `task4-levers` 16 MB, `task7-posttutorial` 14 MB). Every run keeps its `console.log` (the
+**About 60 MB across the six task directories** — **320 committed files in
+them** (322 counting this document and the pricing note), 113 of them PNG
+(`task1-rig` 5.4 MB, `task2-repro` 6.0 MB, `task3-mechanisms` 7.6 MB,
+`task4-levers` 16 MB, `task7-posttutorial` 14 MB, `task8-sparks` 11 MB, of
+which the two browser gates are 0.9). Every run keeps its `console.log` (the
 transcript, ending in the `[PERF]` JSON that every number here is computed
 from), its `steps.txt` (the exact script that ran, config lines included),
 its `uptime.txt` and its driver log; screenshots were trimmed to the ones
 that prove something — the 50 s picture of each measured round, plus the
 handful that show a lever's or an arm's condition actually holding. Each
 directory's `table.txt` is `web/tools/perf/summarise.py` over it, generated
-on this tree.
+on this tree; `task8-sparks` also keeps `table-posttut.txt` (the same tool in
+the mode that judges its two post-tutorial runs) and `compare.txt`, the
+cross-task comparisons its README quotes, so no number in it is hand-copied.
 
 **The M6 seed stash is still there and still unused**:
 `stash@{0}` — *"On m5-exit: M6 seed: first perf sweep (INVALID: never drove

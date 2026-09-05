@@ -247,6 +247,7 @@ person holding it a switch and a readout.
 | `?touch=1` / `?touch=0` | media query | forces the touch overlay on or off. |
 | `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
 | `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
+| `?sparks=1` / `?sparks=0` | off on touch, on otherwise | keeps or turns off the crash sparks (`SPARKS`). Off by default on a touch device: the bursts thrown at a wall cost about a quarter of the frame. `?sparks=0` turns them off on a desktop too, which is the only way this rig could measure them. |
 | `?portrait=ask` | off | clears the remembered "Play in portrait" answer, so the portrait prompt is asked again. The answer lives in `localStorage` under `aa.portrait`; this is the only way back once it is stored. Answering the prompt again drops the parameter from the URL, so the new answer is not cleared by the reload that applies it. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 
@@ -277,7 +278,7 @@ ever disagree, the game's is right.
 ### On a phone
 
 The page detects a touch device with `(hover: none) and (pointer: coarse)` and
-then differs from the desktop page in three ways, all of them in
+then differs from the desktop page in four ways, all of them in
 `web/shell.html`:
 
 - **the touch overlay** — two half-screen steering zones and a four-button menu
@@ -299,6 +300,20 @@ then differs from the desktop page in three ways, all of them in
   and 47 × 122 at `?cam=0.5`. `?cam=1` restores stock;
   `docs/evidence/phone-feedback/camera/` is the sweep, including why narrowing
   the field of view was the worse lever.
+- **the crash sparks are off.** `SPARKS` is an existing config item, read at the
+  two `crash_sparks` guards in `src/tron/gCycle.cpp` — both in the wall-contact
+  block, so this is the shower a cycle throws while it **grinds a wall** and
+  nothing else (dying is `EXPLOSION`) — and drawing only: no physics, timing,
+  rubber or score consults it. M6 task 8 measured it where it hurts, with a cycle
+  held against the rim: 17.15 ms median frame and 20.3 ms in the worst measured
+  second, draw calls bursting to 171, against 13.1 and 13.65 ms median with
+  `SPARKS 0` and the draw count pinned flat at 60. About a quarter of the frame at
+  the wall — with its condition: the 17.15 arm sparked in 29 of its 40 rim
+  seconds, while the second stock run of the same arm sparked in 11 of 40 and read
+  14.0 ms median, so the median win is 23.6 % in the one and 2.5 % in the other
+  and the worst second falls 32 % and 18 %. `?sparks=1` restores them; `EXPLOSION`
+  is the same kind of switch, was **not** measured, and is left alone.
+  `docs/evidence/m6-lag/task8-sparks/`.
 
 A successful run shows the game's language menu on the canvas within a few
 seconds of the page load. Enter chooses a language, the first-run setup menu
