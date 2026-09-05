@@ -58,34 +58,30 @@
 # display:none's whichever the game is not asking for. Two controls that are
 # never in the box tree at the same time cannot collide.
 #
-# T7 WAS ADDED FOR "I WANT PORTRAIT", AND IT IS LAST FOR TWO REASONS THAT ARE
-# BOTH ABOUT THE RELOAD IT PERFORMS. Tapping "Play in portrait" after the game
-# has started stores the answer and reloads the page -- the only way to reach a
-# portrait-shaped backing store, since it is measured once, before main(). So:
+# T1c RELOADS, AND THAT IS WHY IT IS LAST, for two reasons that are both about
+# the navigation:
 #
 #   1. THE RELOAD DESTROYS BOTH PROBES. window.__fps and window.__tg are page
 #      globals; a navigation takes them with it. Everything that reads them --
 #      T1 to T6, and the frame-rate dump above all -- therefore has to have
-#      already run. T7's own checks are self-contained one-liners for the same
+#      already run. T1c's own checks are self-contained one-liners for the same
 #      reason: there is nothing left to install into after the reload.
 #   2. `until:` COUNTS THE WHOLE TRANSCRIPT, WHICH IS WHAT MAKES IT USEFUL
 #      HERE. It does not reset at a navigation, so the counts run on: this
-#      script boots the game FOUR times (the first load, P2's reload, P6's
-#      release from the held ?portrait=ask page, and P6's reload), and each
-#      `until:` names its own ordinal. That same property is how the ABSENCE is
-#      asserted: "[BOOT] portrait at load: HOLDING main()" has a count of 0 for
-#      the whole run until P4 deliberately restores the prompt with
-#      ?portrait=ask, so P4's `until:1` passing is the proof that the portrait
-#      boot before it held nothing -- and nothing after P4 may raise it again,
-#      which is what P6's `boot_held:false` says from the page's own side.
+#      script boots the game TWICE (the first load and T1c's reload with
+#      ?sparks=1), and each `until:` names its own ordinal.
 #
 # The driver survives the navigation -- it attaches to a TARGET, not to a
 # document, so the console stream and Runtime.evaluate carry on into the new
-# page (web/tools/touch-portrait-probe.steps has reloaded mid-script since
-# Phase 3). ONE driver run covers the whole cycle. What must not happen is an
-# `eval:` in the window where the old execution context is gone and the new one
-# has not arrived, so every step after a navigation waits on `until:` first --
-# which reads the transcript and touches no execution context at all.
+# page. That has held since Phase 3, when web/tools/touch-portrait-probe.steps
+# reloaded mid-script too; M7 deleted that probe along with the portrait-hold
+# flow it drove, so T1c below is this file's only navigation and M7's portrait
+# gate (web/tools/portrait-boot-gate.steps) has none at all -- it rotates the
+# emulated phone and never reloads. ONE driver run covers the whole cycle. What
+# must not happen is an `eval:` in the window where the old execution context is
+# gone and the new one has not arrived, so every step after a navigation waits on
+# `until:` first -- which reads the transcript and touches no execution context
+# at all.
 #
 # --headed is REQUIRED, for the reason in drive-browser.mjs's header.
 
@@ -97,14 +93,48 @@ wait:1000
 eval:(()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})()
 
 # The tooltip-counter probe, as in web/tools/synthetic-key-gate.steps.
-eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,rotate_hidden:document.getElementById('rotate').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})()
+eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})()
 
 until:1:90000:[BOOT] autostart
 mark:GAME-STARTED
+
+# ===========================================================================
+# L1: LANDSCAPE IS THE LAYOUT IT ALWAYS WAS. M7 added a second layout (a square
+# picture with a pad below it) for a portrait LOAD. This is the negative half:
+# on the same device held the other way up, none of it turns on.
+#
+# THREE CLAIMS AND A REFERENCE. The claims are the three switches M7 added,
+# each of which can fail on its own: the class the whole layout hangs off
+# (aa-gameboy, absent), the pad (display:none, so its six buttons are not in
+# the tree the player can hit), and --aa-square, which sizeCanvas writes in
+# BOTH branches -- 0px here, its true answer when there is no square. That last
+# one is why a reader can take the variable at face value instead of having to
+# tell "no square" apart from "never set", and no run before this one had
+# proven the 0px half.
+#
+# `visible` is a reference rather than a claim: the id (or class) of every
+# descendant of #touch whose OWN computed display is not none, in document
+# order, snapshotted at the language menu. Committed as
+# docs/evidence/m7-gameboy/landscape-visible-reference.txt; a future run that
+# adds, loses or re-hides a control here changes that string, and a human diff
+# is a better tool for "did the landscape overlay move" than a check that would
+# fail on every legitimate addition.
+#
+# READ IT AS A TREE, NOT AS A PICTURE. getComputedStyle answers for the element
+# it is given, so an element hidden by an ANCESTOR still lists here: the pad's
+# six buttons are in the measured string even though #pad itself is display:none
+# and nothing of it is painted. That is why pad_display is a separate field and
+# is the one in the PASS. What the string does show directly is the elements the
+# cascade hides itself -- tz-left and tz-right are absent, because .aa-driving is
+# off in a menu -- and that is also why it is not in the PASS: it is only stable
+# at a fixed point in the script.
+# ===========================================================================
+eval:(()=>{const t=document.getElementById('touch');const vis=[...t.querySelectorAll('*')].filter(e=>getComputedStyle(e).display!=='none').map(e=>e.id||e.className).join(',');const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',visible:vis,pad_display:getComputedStyle(document.getElementById('pad')).display,square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.layout==='full'&&r.pad_display==='none'&&r.square_var==='0px';console.log('[M7GATE] L1 landscape-unchanged '+JSON.stringify(r));return 'L1 '+r.PASS})()
+
 wait:9000
 
 # T1: the page decided this is a touch device, sized the canvas from the phone
-# viewport, and is showing the controls but not the rotate prompt.
+# viewport, and is showing the controls.
 eval:window.__tg.dump('landscape-at-language-menu')
 shot:00-language-menu-with-touch-controls
 
@@ -226,20 +256,20 @@ shot:06b-after-round3-right-taps
 eval:window.__tg.dump('after-round3-right-taps')
 
 # ===========================================================================
-# T4: ORIENTATION. Rotating the emulated phone to portrait MID-GAME.
+# T4: ORIENTATION. Rotating the emulated phone to portrait MID-GAME shows the
+# reload chip and nothing else: no prompt, no hold, the game keeps running.
 # ===========================================================================
 until:1:150000:[L] ROUND_WINNER
 mark:ROTATE-TO-PORTRAIT
 metrics:412:915:3
 wait:1500
-shot:07-portrait-shows-rotate-prompt
-eval:window.__tg.dump('rotated-to-portrait')
-
+eval:(()=>{const chip=document.getElementById('reloadchip');const rot=document.getElementById('rotate');const r={chip_visible:!!chip&&!chip.hidden,rotate_element:rot!==null,canvas_w:document.getElementById('canvas').width,canvas_h:document.getElementById('canvas').height};r.PASS=r.chip_visible&&!r.rotate_element;console.log('[M7GATE] T4 rotate-to-portrait '+JSON.stringify(r));return 'T4 '+r.PASS})()
+shot:07-portrait-mid-game-shows-only-the-chip
 mark:ROTATE-BACK-TO-LANDSCAPE
 metrics:915:412:3
 wait:1500
+eval:(()=>{const chip=document.getElementById('reloadchip');const r={chip_hidden:!!chip&&chip.hidden};r.PASS=r.chip_hidden;console.log('[M7GATE] T4 back-in-landscape '+JSON.stringify(r));return 'T4b '+r.PASS})()
 shot:08-back-in-landscape
-eval:window.__tg.dump('rotated-back-to-landscape')
 
 # ===========================================================================
 # T5: the frame rate, dumped exactly as fps-resolution-probe.steps dumps it.
@@ -261,116 +291,6 @@ tap:#escbtn
 wait:2500
 shot:10-after-tapping-escape-in-the-corner
 eval:window.__tg.dump('after-escape-corner-tap')
-
-# ===========================================================================
-# T7: "I WANT PORTRAIT" MEANS THEY GET PORTRAIT.
-#
-# THE DEFECT THIS IS THE REGRESSION TEST FOR, from the maintainer's phone: "i
-# always see 'turn your phone sideways' even when i selected portrait mode."
-# The prompt is raised for any portrait viewport, before the boot AND after it,
-# and the button that dismissed it was hidden once the game had started -- so
-# turning the phone mid-session put a full-screen overlay on the game with no
-# exit but turning back. T4 above rotates into exactly that state and only
-# screenshots it; this section acts on it.
-#
-# The six checks, in the order the player meets them:
-#   P1  the prompt raised AFTER the boot carries the button, it is a real touch
-#       target, the "the game starts by itself" line is NOT shown (it is true
-#       only while the boot is held, and the game is running behind this), and
-#       the line that IS true there -- the game restarts -- is.
-#   P2  tapping it reloads, and the reloaded page boots in portrait: the answer
-#       is stored, nothing is held, no prompt, and the canvas is portrait-shaped
-#       -- i.e. the game is drawn FOR portrait, not letterboxed into it.
-#   P3  the chip does not nag either, because the orientation on screen and the
-#       one the backing store was measured for now agree.
-#   P5  and the chip DOES appear on a rotation away from the chosen orientation,
-#       which is the half P3 cannot show. P3 alone would also pass if the chip
-#       were simply broken, and the claim in the stylesheet's comment is about
-#       both directions.
-#   P4  ?portrait=ask clears the answer and today's behaviour is back.
-#   P6  ...and it does not outlive the next answer. The post-boot path reloads,
-#       and a bare reload() re-runs the query string -- so a page entered at
-#       ?portrait=ask cleared, on the reload, the very answer the tap had just
-#       stored, and came back HELD with the prompt up. Two taps instead of one.
-#       P6 walks that exact path and asserts the parameter is dropped.
-# ===========================================================================
-mark:P1-ROTATE-TO-PORTRAIT-WITH-THE-GAME-ALREADY-RUNNING
-metrics:412:915:3
-wait:2000
-shot:11-portrait-prompt-after-boot-has-the-button
-eval:(()=>{const r=document.getElementById('rotate'),b=document.getElementById('rotate-play'),h=document.getElementById('rotate-held'),x=document.getElementById('rotate-restart');const bb=b.getBoundingClientRect();const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P1 prompt-after-boot '+JSON.stringify({rotate_hidden:r.hidden,button:Math.round(bb.width)+'x'+Math.round(bb.height)+'@'+Math.round(bb.left)+','+Math.round(bb.top),label:b.textContent,held_note_hidden:h.hidden,restart_note_hidden:x.hidden,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,stored:st,PASS:r.hidden===false&&bb.width>=44&&bb.height>=44&&h.hidden===true&&x.hidden===false&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&st===null})})()
-
-# A REAL TOUCH ON THE BUTTON, not element.click(): this is the one control on
-# the page a player reaches while the game is running, and the point of the
-# whole harness is that the tap goes through the browser's input pipeline.
-mark:P2-TAP-PLAY-IN-PORTRAIT
-tap:#rotate-play
-# The second [BOOT] autostart of the run is the reloaded page's. See the header:
-# the count is cumulative across the navigation, deliberately.
-until:2:120000:[BOOT] autostart
-# The page's own words for "the backing store was measured for portrait". It
-# cannot have been printed before: boot 1 was landscape, and T4's rotation
-# printed "sized for portrait: false".
-until:1:30000:sized for portrait: true
-wait:9000
-shot:12-portrait-boot-after-choosing-play-in-portrait
-eval:(()=>{const c=document.getElementById('canvas'),r=document.getElementById('rotate'),ch=document.getElementById('reloadchip');const b=c.getBoundingClientRect();const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P2/P3 portrait-boot '+JSON.stringify({stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,chip_hidden:ch.hidden,inner:innerWidth+'x'+innerHeight,canvas:c.width+'x'+c.height,canvas_portrait:c.height>c.width,aspect:Math.round(c.width/c.height*1000)/1000,css:Math.round(b.width)+'x'+Math.round(b.height),touch_hidden:document.getElementById('touch').hidden,PASS:st==='play'&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&r.hidden===true&&ch.hidden===true&&c.height>c.width&&document.getElementById('touch').hidden===false})})()
-
-# P5: THE OTHER DIRECTION OF THE CHIP, which P3 cannot show. With the answer
-# stored, turning the phone to LANDSCAPE is a rotation AWAY from the orientation
-# the canvas was measured for -- so the prompt stays down (it is a portrait
-# prompt) and the chip comes UP, offering the reload that would redraw for
-# landscape. That is the chip doing its job, not nagging about the choice: it is
-# about the orientation the player is NOT in.
-mark:P5-ROTATE-TO-LANDSCAPE-WITH-THE-CHOICE-STORED
-metrics:915:412:3
-wait:2000
-shot:12b-landscape-with-the-choice-stored
-eval:(()=>{const r=document.getElementById('rotate'),ch=document.getElementById('reloadchip'),c=document.getElementById('canvas');const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P5 rotated-to-landscape '+JSON.stringify({stored:st,rotate_hidden:r.hidden,chip_hidden:ch.hidden,inner:innerWidth+'x'+innerHeight,canvas:c.width+'x'+c.height,PASS:st==='play'&&r.hidden===true&&ch.hidden===false})})()
-
-# Back into portrait before P4: the way-back check is about a HELD boot, and a
-# boot is only held in portrait. Nothing is asserted here.
-metrics:412:915:3
-wait:1500
-
-# P4: THE WAY BACK. location.search rather than a hard-coded URL, so this step
-# does not have to know which port the server was started on. It drops any
-# other query the run was started with, which is why nothing else in this file
-# takes one.
-mark:P4-PORTRAIT-ASK-RESTORES-THE-PROMPT
-eval:location.search='?portrait=ask'
-until:1:60000:[BOOT] portrait at load: HOLDING main()
-wait:3000
-shot:13-portrait-ask-restores-the-prompt
-eval:(()=>{const r=document.getElementById('rotate'),h=document.getElementById('rotate-held'),x=document.getElementById('rotate-restart');const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P4 portrait=ask '+JSON.stringify({search:location.search,stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,held_note_hidden:h.hidden,restart_note_hidden:x.hidden,button_present:!!document.getElementById('rotate-play'),PASS:st===null&&window.AA_BOOT_HELD_FOR_PORTRAIT===true&&r.hidden===false&&h.hidden===false&&x.hidden===true})})()
-
-# ===========================================================================
-# P6: ?portrait=ask MUST NOT OUTLIVE THE NEXT ANSWER.
-#
-# The page is now sitting at ?portrait=ask, held, in portrait. Turning it to
-# landscape releases the hold and boots the game -- with that parameter STILL in
-# the URL, which is the state the defect needs. Turning back into portrait then
-# raises the prompt in its after-boot form, and the tap takes the reload path.
-# A bare location.reload() would carry ?portrait=ask into the new load, where
-# the clear at the top of the choice block would delete the answer the tap had
-# just stored: held again, prompt up, two taps for one decision. The button
-# drops the parameter instead, and this walks the whole path to check it.
-# ===========================================================================
-mark:P6-RELEASE-THE-HOLD-SO-THE-GAME-BOOTS-WITH-ASK-STILL-IN-THE-URL
-metrics:915:412:3
-until:3:120000:[BOOT] autostart
-wait:8000
-mark:P6-BACK-TO-PORTRAIT-WITH-THE-GAME-RUNNING
-metrics:412:915:3
-wait:2000
-shot:13b-portrait-prompt-with-ask-still-in-the-url
-eval:'[PORTRAITGATE] P6 precondition '+JSON.stringify({search:location.search,rotate_hidden:document.getElementById('rotate').hidden,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,PASS:location.search==='?portrait=ask'&&document.getElementById('rotate').hidden===false&&!window.AA_BOOT_HELD_FOR_PORTRAIT})
-mark:P6-TAP-PLAY-IN-PORTRAIT-FROM-AN-ASK-URL
-tap:#rotate-play
-until:4:120000:[BOOT] autostart
-wait:9000
-shot:14-ask-dropped-and-portrait-kept
-eval:(()=>{const c=document.getElementById('canvas'),r=document.getElementById('rotate');const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P6 ask-dropped '+JSON.stringify({search:location.search,stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,canvas:c.width+'x'+c.height,canvas_portrait:c.height>c.width,PASS:location.search===''&&st==='play'&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&r.hidden===true&&c.height>c.width})})()
 
 # ===========================================================================
 # T1c: ?sparks=1 HAS TO BEAT THE VALUE THE GAME HAS ALREADY SAVED.
@@ -402,8 +322,8 @@ eval:(()=>{const c=document.getElementById('canvas'),r=document.getElementById('
 # half would pass against a machine that had never saved anything, which is
 # exactly the state in which this bug is invisible.
 #
-# location.search is assigned rather than a URL typed out, for the reason P4
-# gives: this step does not have to know which port the server was started on.
+# location.search is assigned rather than a URL typed out, so this step does not
+# have to know which port the server was started on.
 # ===========================================================================
 mark:T1c-PRECONDITION-THE-SAVED-CONFIG-HOLDS-SPARKS-0
 eval:(()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const m=ok?/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(t):null;return '[SPARKSGATE] T1c precondition saved-config-holds-sparks-0 '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,line:m?m[0]:null,value:m?m[1]:null,PASS:!!m&&m[1]==='0'})})()
@@ -411,7 +331,7 @@ eval:(()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.r
 mark:T1c-RELOAD-WITH-SPARKS-1
 eval:location.search='?sparks=1'
 until:1:90000:[SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg
-until:5:90000:[BOOT] autostart
+until:2:90000:[BOOT] autostart
 wait:8000
 # THE CHECK ASKS THE GAME, NOT THE PAGE. Module._aa_web_save_config() is
 # st_SaveConfig, which writes every tConfItem's LIVE value into user.cfg -- so

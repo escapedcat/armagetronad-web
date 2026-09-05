@@ -106,6 +106,27 @@ until:1:120000:[BOOT] autostart
 until:1:30000:[SPARKS] stock sparks, nothing written
 eval:(()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/SPARKS/g)||[]).length:-1;return '[SPARKSGATE] D1 desktop-autoexec-untouched '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_occurrences:n,tail:ok?t.slice(-64):null,PASS:ok&&n===0})})()
 
+# ===========================================================================
+# D2: THE DESKTOP IS THE DESKTOP. M7's Game Boy layout is gated on a touch
+# device that LOADED in portrait, and this gate's window is 1024x768, i.e.
+# landscape -- so on shape alone this run would prove only half of it. The
+# other half is not measured here and does not need to be: AA_GAMEBOY is
+# `window.AA_TOUCH && viewportIsPortrait()` (web/shell.html), and the [TOUCH]
+# line in this transcript says enabled=false, so no window shape a desktop
+# visitor can drag reaches the new layout.
+#
+# Two of the three readings are the ones L1 takes in web/tools/touch-gate.steps
+# -- the class the layout hangs off, and the pad. The third is the one only a
+# desktop can make: #touch still carries the `hidden` attribute web/shell.html
+# ships it with, because only the touch branch removes it and this browser
+# never took that branch. That attribute is the whole of "nothing on this page
+# changes for the browsers the Demo currently runs on".
+#
+# No screenshot, for D1's reason: the PASS above is "ten screenshots, all ten
+# different", and a check about three computed values has nothing to show.
+# ===========================================================================
+eval:(()=>{const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',pad_display:getComputedStyle(document.getElementById('pad')).display,touch_hidden:document.getElementById('touch').hidden};r.PASS=r.layout==='full'&&r.pad_display==='none'&&r.touch_hidden;console.log('[M7GATE] D2 desktop-unchanged '+JSON.stringify(r));return 'D2 '+r.PASS})()
+
 wait:5000
 mark:should-be-the-language-menu
 shot:01-language-menu

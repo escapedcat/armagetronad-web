@@ -1,5 +1,11 @@
 # "I want portrait" means they get portrait
 
+> **Superseded on 2026-09-05.** M7 replaced this whole flow with the Game Boy
+> layout: portrait boots straight away into a square picture with a pad below it,
+> and the prompt, the "Play in portrait" button, the remembered `aa.portrait`
+> answer and `?portrait=ask` are all deleted. Nothing below is current behaviour;
+> it is kept as the record of what M7 replaced. `docs/evidence/m7-gameboy/`.
+
 The maintainer, after playing the deployed build on his Android phone:
 **"i always see 'turn your phone sideways' even when i selected portrait
 mode."** He is right, and both halves of it were `web/shell.html`'s orientation

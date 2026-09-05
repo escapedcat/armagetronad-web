@@ -636,6 +636,13 @@ Neither phase below is part of "done." Each gets its own go/no-go decision after
 >    Portrait still looks wrong at that ~131° vertical field of view, the prompt now says so
 >    in a line, and the square-viewport layout in the phone-round-2 notes below is the fix
 >    that is planned. `docs/evidence/portrait-choice/`.)*
+>
+>    *(**M7 built that layout, and the prompt went with it.** Portrait on a touch device is
+>    now a square picture with a pad below it, decided once at load. The hold, the "turn your
+>    phone sideways" prompt, the "Play in portrait" button, the remembered `aa.portrait`
+>    answer and `?portrait=ask` are **deleted**; a rotation after load raises the reload chip
+>    and does nothing else. The two paragraphs above are history and not behaviour — the M7
+>    block at the end of this section is what the page does. `docs/evidence/m7-gameboy/`.)*
 > 9. **`sr_ReinitDisplay` works, which reopens the resize question Phase 3 will need.**
 >    Measured at M5 task 4c: the canvas resizes live, `isContextLost()` stays false, no
 >    `webglcontextlost` fires, 0 GL errors in 3832 polls, and the game then plays two full
@@ -778,6 +785,74 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > The lesson this round adds to M4's P11 and M5's stale gate: **a gate must prove the condition
 > it measures actually held** — a late-round screenshot with trail geometry in it, a non-zero
 > "Rubber Used" for a grind arm — or its numbers are evidence of nothing.
+
+> **M7 — portrait as a Game Boy (2026-09-05): shipped.** A touch device that LOADS the page in
+> portrait now gets a square picture at the top of the screen and a pad below it — the layout
+> phone round 2 parked as "the milestone after M6". The whole of it is `web/shell.html` and its
+> gates: **no C++**, the same shape Phase 3 and M6's one shipped lever had. The square's side is
+> `min(100vw, 60dvh)` in CSS and the same number times the device pixel ratio in the backing
+> store — 412 CSS px and a 1236x1236 buffer at 412x915 dpr 3 — published to the stylesheet as
+> `--aa-square`, which is `0px` in the full layout because that is its true answer there. The
+> 60 % cap is inert on a phone, where the width wins; it exists for a tablet wide enough that
+> the picture would eat the pad's half of the screen. The pad is six buttons carrying
+> `data-aakey` — a cross, **B** for Escape, **A** for Enter — riding the pointer-to-`KeyboardEvent`
+> wiring Phase 3 already shipped, so it added **no input code**; measured at 64 and 80 CSS px
+> against the 56 px floor the markup argues for — measured in the language menu, where PB3 runs,
+> and visible in a round in the `pb-03` screenshot. The HUD survived the shrink: the whole bottom
+> bar sits inside the square with about ten pixels to spare.
+>
+> **Why a square is the point, in four lines of arithmetic.** `rViewport::Perspective` opens the
+> horizontal field of view on a wide screen and pins the vertical at 67.4° for every aspect at or
+> above 1.5. A phone's landscape is therefore ~111° x 67° and a full-portrait load ~131°
+> vertical, while aspect 1 is **90° x 90°** — and 90° horizontal is what the game gives a 4:3
+> desktop. That geometry has been sitting in `docs/evidence/phone-round2/fov/` since the phone
+> round; M7 is it, built.
+>
+> **What was deleted is half the milestone.** The portrait boot hold, the "turn your phone
+> sideways" prompt, the "Play in portrait" button, the remembered answer in `localStorage`
+> `aa.portrait` and the `?portrait=ask` that cleared it, the touch gate's T7 section, and the two
+> probe scripts that drove the removed flow (`web/tools/phone-portrait-hold.steps`,
+> `web/tools/touch-portrait-probe.steps`). Portrait boots straight away. The only rotation
+> handling left is the chip, which **offers** a reload and never takes one, in both directions.
+>
+> **The gates**, all under `docs/evidence/m7-gameboy/`: **PB1** portrait boots with no prompt;
+> **PB2** the square, with the element box and the backing store measured separately so a CSS
+> rule disagreeing with the buffer would show; **PB3** the pad's geometry — `pad_top 412 ===
+> square_bottom 412`, every button at or below the square; **PB4** the turns are the game's own
+> answer, `uActionTooltip`'s left and right counters each falling by one after a left and a right
+> tap; **PB5** the pad walks its B → menu → Down/Up → B round trip, and the gate asserts the
+> ends of it — the menu opened, then closed with the cycle still alive and steering; **PB6** a
+> portrait load rotated to landscape shows the chip and is still Game Boy with a 1236x1236
+> buffer; **T4** the same offer in the other direction; **L1** landscape unchanged, its overlay
+> DOM string logged for comparison against the committed reference
+> (`landscape-visible-reference.txt`) — the gate logs the string and passes on
+> `layout`/`pad_display`/`square_var`; the comparison is a diff a reader runs; **D2** desktop
+> unchanged, `#touch` still carrying the `hidden` attribute the shell ships.
+>
+> **What stays open.** The rotated Game Boy load is the one real cost and it is named in the
+> evidence rather than hidden: the CSS shrinks the picture to 247 px while the backing store
+> stays 1236x1236, and the pad's top edge is still the 412 px the square had, below a 412 px-tall
+> viewport — so a player who rotates has the chip and no other control until a reload or a
+> rotation back. **Live re-layout (`sr_ReinitDisplay`, item 9 above) is the follow-up**, declined
+> here for the third time. A brake button is still not built, as it has not been since Phase 3
+> dropped it as not minimal. The 60 % cap and the pad's `align-items: safe center` overflow guard
+> are both unexercised at 412x915 — a tablet arm would exercise them. The chip's dismiss `x` was
+> 29 px wide against the 44 px its Reload button clears — a side measurement, not from a
+> committed run, and labelled as such where it is recorded; the final-fixes commit gave
+> `#reloadchip button` a `min-width:44px` so both buttons now clear it on both axes.
+> **A phone rotated DURING THE DOWNLOAD boots into the layout it started in.** `AA_GAMEBOY` and
+> the backing store are both fixed at parse time, seconds before `main()`, and nothing after
+> that re-measures: a page loaded in portrait and turned to landscape while the ~5 MB wasm is
+> still arriving starts the game as a Game Boy in a landscape viewport — the `pb-05` state, but
+> on first boot, before the player has done anything — with the chip's Reload as the exit. The
+> deleted portrait hold re-measured before `main()` for exactly that direction; the fix is the
+> live re-layout named above and not a second `sizeCanvas()` caller.
+> **The spec's A/B glyphs were not shipped.** The layout section asked for "A ⏎" and "B ⎋" on
+> the two round buttons; the pad reads **"A"** and **"B"**, because ⎋ (U+238B) has uncertain font
+> coverage on Android and the `aria-label`s ("Enter", "Back or in-game menu") carry the meaning
+> for anything that reads them. And the standing two: **iOS is
+> untested**, and every number in this milestone came out of Chrome device emulation, not a
+> device. `docs/evidence/m7-gameboy/README.md`.
 
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 

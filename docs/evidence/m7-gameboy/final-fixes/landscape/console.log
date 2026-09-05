@@ -1,0 +1,232 @@
+[    720ms] [harness] mobile emulation: 915x412 CSS px dpr 3 (= 2745x1236 device px), touch on
+[    721ms] [harness] chrome: Chrome/152.0.7977.77
+[    721ms] [harness] navigating to http://localhost:8008/armagetronad.html
+[     12ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     19ms] [console.log] [DISPLAY] layout=full
+[     24ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[     24ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     25ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via load
+[     34ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     40ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     41ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via resize
+[     41ms] [page] load event fired
+[     48ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    100ms] [console.log] [PERSIST] populate ok in 36ms
+[    288ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    289ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    289ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[    290ms] [console.log] [BOOT] autostart: calling main
+[    292ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    293ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    293ms] [console.error] 
+[    293ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    293ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    294ms] [console.log] 
+[    429ms] [console.log] [L] ENCODING latin1
+[    437ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    438ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    460ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    464ms] [console.error] TODO: glShadeModel
+[    468ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    508ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    508ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    525ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[   1011ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1012ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})() => "probe installed"
+[   1013ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1013ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1013ms] [harness] === GAME-STARTED ===
+[   1015ms] [console.log] [M7GATE] L1 landscape-unchanged {"layout":"full","visible":"tapzone,escbtn,touchpad,,,pad-cross,pad-btn pad-up,pad-btn pad-left,pad-btn pad-right,pad-btn pad-down,pad-ab,pad-btn pad-b,pad-btn pad-a","pad_display":"none","square_var":"0px","PASS":true}
+[   1015ms] [harness] eval (()=>{const t=document.getElementById('touch');const vis=[...t.querySelectorAll('*')].filter(e=>getComputedStyle(e).display!=='none').map(e=>e.id||e.className).join(',');const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',visible:vis,pad_display:getComputedStyle(document.getElementById('pad')).display,square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.layout==='full'&&r.pad_display==='none'&&r.square_var==='0px';console.log('[M7GATE] L1 landscape-unchanged '+JSON.stringify(r));return 'L1 '+r.PASS})() => "L1 true"
+[  10023ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  10024ms] [console.log] [TOUCHGATE] {"phase":"landscape-at-language-menu","save":"saved","ctx":1,"ctx_menu":true,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  10024ms] [harness] eval window.__tg.dump('landscape-at-language-menu') => "landscape-at-language-menu"
+[  10102ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/00-language-menu-with-touch-controls.png
+[  10103ms] [harness] until 1x <<[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg>> (timeout 30000ms, have 1)
+[  10103ms] [harness] until SATISFIED: saw 1x <<[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg>>
+[  10105ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 0\n$/.test(t);return '[SPARKSGATE] T1b sparks-off-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,ends_with_sparks_0:ends,tail:ok?t.slice(-96):null,PASS:ok&&n===1&&ends})})() => "[SPARKSGATE] T1b sparks-off-on-touch {\"read\":true,\"err\":null,\"bytes\":12746,\"sparks_lines\":1,\"ends_with_sparks_0\":true,\"tail\":\"ROMSPEED 0.2\\n\\n# appended at runtime by web/shell.html: crash sparks off (touch device)\\nSPARKS 0\\n\",\"PASS\":true}"
+[  10105ms] [harness] eval (()=>{const t=document.getElementById('touch');const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const p=document.getElementById('tapzone').getBoundingClientRect();const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T2b menu-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),turn_zones_have_no_box:z.every(r=>r.width===0&&r.height===0),tap_layer_area:Math.round(p.width*p.height),PASS:!t.classList.contains('aa-driving')&&z.every(r=>r.width===0&&r.height===0)&&p.width>0})})() => "[TOUCHGATE] T2b menu-side collision check {\"ctx\":1,\"driving_class\":false,\"turn_zones_have_no_box\":true,\"tap_layer_area\":376980,\"PASS\":true}"
+[  10106ms] [harness] === TAP-ENTER-ACCEPTS-LANGUAGE ===
+[  10114ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[  10178ms] [harness] tap #tapzone at 458,206 (1/1)
+[  10189ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10479ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10480ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13059ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/01-first-setup-reached-by-tapping.png
+[  13059ms] [harness] === TAP-ENTER-ACCEPTS-FIRST-SETUP ===
+[  13124ms] [harness] tap #tapzone at 458,206 (1/1)
+[  13133ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  13283ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  13425ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13426ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16521ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/02-welcome-message-reached-by-tapping.png
+[  16521ms] [harness] === TAP-ENTER-DISMISSES-WELCOME ===
+[  16596ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  16597ms] [console.log] [L] TEAM_CREATED web_user
+[  16597ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  16599ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  16601ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  16601ms] [console.log] [L] NEW_ROUND 2026-09-05 21:30:29 UTC+0200
+[  16619ms] [console.log] [L] TEAM_CREATED ai_team
+[  16619ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  16620ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  16621ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  16621ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  16641ms] [harness] tap #tapzone at 458,206 (1/1)
+[  16642ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  16645ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  16645ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  16645ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  16911ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  18943ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 1)
+[  18944ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  18944ms] [harness] === ROUND-1-STARTED-WITHOUT-A-SINGLE-KEYSTROKE ===
+[  21145ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/03-round1-driving.png
+[  21148ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  21149ms] [console.log] [TOUCHGATE] {"phase":"round1-before-steering","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  21149ms] [harness] eval window.__tg.dump('round1-before-steering') => "round1-before-steering"
+[  21150ms] [harness] eval (()=>{const t=document.getElementById('touch');const p=document.getElementById('tapzone').getBoundingClientRect();const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T3b round-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),tap_layer_has_no_box:p.width===0&&p.height===0,turn_zone_areas:z.map(r=>Math.round(r.width*r.height)),PASS:t.classList.contains('aa-driving')&&p.width===0&&p.height===0&&z.every(r=>r.width>0)})})() => "[TOUCHGATE] T3b round-side collision check {\"ctx\":2,\"driving_class\":true,\"tap_layer_has_no_box\":true,\"turn_zone_areas\":[197915,197915],\"PASS\":true}"
+[  21150ms] [harness] === TAP-LEFT-HALF ===
+[  21214ms] [harness] tap #tz-left at 240,206 (1/3)
+[  21223ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  21584ms] [harness] tap #tz-left at 240,206 (2/3)
+[  21951ms] [harness] tap #tz-left at 240,206 (3/3)
+[  22598ms] [console.log] [L] DEATH_SUICIDE web_user
+[  22599ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  22782ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  23312ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/04-after-tapping-left-half.png
+[  23317ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  23317ms] [console.log] [TOUCHGATE] {"phase":"after-tapping-left-half","save":"saved","ctx":0,"ctx_menu":false,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 3 1 1 1"}
+[  23317ms] [harness] eval window.__tg.dump('after-tapping-left-half') => "after-tapping-left-half"
+[  23317ms] [harness] === TAP-RIGHT-HALF ===
+[  23388ms] [harness] tap #tz-right at 0,0 (1/4)
+[  23526ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  23687ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  23765ms] [harness] tap #tz-right at 0,0 (2/4)
+[  23770ms] [console.log] [PERSISTSAVE] menu-leave n=6
+[  23778ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  24138ms] [harness] tap #tz-right at 0,0 (3/4)
+[  24277ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  24518ms] [harness] tap #tz-right at 0,0 (4/4)
+[  24526ms] [console.log] [PERSISTSAVE] menu-leave n=7
+[  24530ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  25807ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/05-after-tapping-right-half.png
+[  25811ms] [console.log] [PERSISTSAVE] js-backstop n=8
+[  25812ms] [console.log] [TOUCHGATE] {"phase":"after-tapping-right-half","save":"saved","ctx":0,"ctx_menu":false,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 3 1 1 1"}
+[  25812ms] [harness] eval window.__tg.dump('after-tapping-right-half') => "after-tapping-right-half"
+[  25812ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 150000ms, have 1)
+[  27764ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  27764ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  27764ms] [console.log] [L] NEW_ROUND 2026-09-05 21:30:40 UTC+0200
+[  27768ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  27768ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  27775ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  27830ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  27830ms] [harness] === ROUND-2-STARTED ===
+[  29902ms] [harness] tap #tz-left at 240,206 (1/3)
+[  30268ms] [harness] tap #tz-left at 240,206 (2/3)
+[  30636ms] [harness] tap #tz-left at 240,206 (3/3)
+[  31706ms] [harness] tap #tz-right at 675,206 (1/4)
+[  32075ms] [harness] tap #tz-right at 675,206 (2/4)
+[  32442ms] [harness] tap #tz-right at 675,206 (3/4)
+[  32809ms] [harness] tap #tz-right at 675,206 (4/4)
+[  34166ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/06-after-round2-taps.png
+[  34171ms] [console.log] [PERSISTSAVE] js-backstop n=9
+[  34172ms] [console.log] [TOUCHGATE] {"phase":"after-round2-taps","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  34172ms] [harness] eval window.__tg.dump('after-round2-taps') => "after-round2-taps"
+[  34172ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 150000ms, have 2)
+[  36444ms] [console.log] [L] DEATH_SUICIDE web_user
+[  36528ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  37898ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  41960ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  41961ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  41961ms] [console.log] [L] NEW_ROUND 2026-09-05 21:30:55 UTC+0200
+[  42027ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  42062ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  42062ms] [harness] === ROUND-3-STARTED-RIGHT-TAPS-ONLY ===
+[  44128ms] [harness] tap #tz-right at 675,206 (1/2)
+[  44508ms] [harness] tap #tz-right at 675,206 (2/2)
+[  45587ms] [harness] tap #tz-right at 675,206 (1/2)
+[  45960ms] [harness] tap #tz-right at 675,206 (2/2)
+[  47304ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/06b-after-round3-right-taps.png
+[  47308ms] [console.log] [PERSISTSAVE] js-backstop n=10
+[  47308ms] [console.log] [TOUCHGATE] {"phase":"after-round3-right-taps","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  47309ms] [harness] eval window.__tg.dump('after-round3-right-taps') => "after-round3-right-taps"
+[  47309ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  47309ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  47309ms] [harness] === ROTATE-TO-PORTRAIT ===
+[  47310ms] [harness] metrics -> 412x915 dpr 3
+[  47313ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false) via resize
+[  47314ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false) via media query
+[  48812ms] [console.log] [M7GATE] T4 rotate-to-portrait {"chip_visible":true,"rotate_element":false,"canvas_w":2745,"canvas_h":1236,"PASS":true}
+[  48812ms] [harness] eval (()=>{const chip=document.getElementById('reloadchip');const rot=document.getElementById('rotate');const r={chip_visible:!!chip&&!chip.hidden,rotate_element:rot!==null,canvas_w:document.getElementById('canvas').width,canvas_h:document.getElementById('canvas').height};r.PASS=r.chip_visible&&!r.rotate_element;console.log('[M7GATE] T4 rotate-to-portrait '+JSON.stringify(r));return 'T4 '+r.PASS})() => "T4 true"
+[  48941ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/07-portrait-mid-game-shows-only-the-chip.png
+[  48941ms] [harness] === ROTATE-BACK-TO-LANDSCAPE ===
+[  48943ms] [harness] metrics -> 915x412 dpr 3
+[  48946ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via resize
+[  48946ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via media query
+[  49275ms] [console.log] [L] DEATH_SUICIDE web_user
+[  49279ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  50446ms] [console.log] [M7GATE] T4 back-in-landscape {"chip_hidden":true,"PASS":true}
+[  50446ms] [harness] eval (()=>{const chip=document.getElementById('reloadchip');const r={chip_hidden:!!chip&&chip.hidden};r.PASS=r.chip_hidden;console.log('[M7GATE] T4 back-in-landscape '+JSON.stringify(r));return 'T4b '+r.PASS})() => "T4b true"
+[  50713ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/08-back-in-landscape.png
+[  50713ms] [harness] === FRAME-RATE ===
+[  50718ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length,gl_errors:S.gl.length,gl_polls:S.polls};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => "{\"total_frames_sampled\":2912,\"rounds_started\":3,\"rounds_won\":2,\"gl_errors\":0,\"gl_polls\":97,\"overall\":{\"span_s\":21.29,\"frames\":1230,\"mean_fps\":57.76,\"frame_ms\":{\"p50\":16.7,\"p90\":18.6,\"p99\":68,\"max\":87.5},\"inst_fps\":{\"median\":59.88,\"p10\":53.76,\"p01\":14.71,\"min\":11.43},\"fps_per_second\":[58,60,60,60,54,57,56,51,60,60,60,60,60,52,59,50,56,60,60,60,60],\"fps_per_second_min\":50,\"fps_per_second_median\":60},\"per_round\":[{\"span_s\":7.08,\"frames\":410,\"mean_fps\":57.87,\"frame_ms\":{\"p50\":16.7,\"p90\":18.1,\"p99\":38.6,\"max\":81.2},\"inst_fps\":{\"median\":59.88,\"p10\":55.25,\"p01\":25.91,\"min\":12.32},\"fps_per_second\":[58,60,60,60,54,57,56],\"fps_per_second_min\":54,\"fps_per_second_median\":58},{\"span_s\":10.13,\"frames\":585,\"mean_fps\":57.74,\"frame_ms\":{\"p50\":16.8,\"p90\":18.8,\"p99\":73,\"max\":87.5},\"inst_fps\":{\"median\":59.52,\"p10\":53.19,\"p01\":13.7,\"min\":11.43},\"fps_per_second\":[61,60,50,57,52,58,60,60,60,60],\"fps_per_second_min\":50,\"fps_per_second_median\":60}]}"
+[  50718ms] [harness] === TAP-ESCAPE-IN-THE-CORNER ===
+[  50719ms] [harness] eval (()=>{const r=document.getElementById('escbtn').getBoundingClientRect();return '[TOUCHGATE] T6 escape corner '+JSON.stringify({rect:Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top),at_least_44px:r.width>=44&&r.height>=44,inset_from_left_px:Math.round(r.left),inset_from_top_px:Math.round(r.top),centre_x_px:Math.round(r.left+r.width/2)})})() => "[TOUCHGATE] T6 escape corner {\"rect\":\"54x46@10,10\",\"at_least_44px\":true,\"inset_from_left_px\":10,\"inset_from_top_px\":10,\"centre_x_px\":37}"
+[  50783ms] [harness] tap #escbtn at 37,33 (1/1)
+[  51032ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  53816ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/10-after-tapping-escape-in-the-corner.png
+[  53820ms] [console.log] [PERSISTSAVE] js-backstop n=11
+[  53820ms] [console.log] [TOUCHGATE] {"phase":"after-escape-corner-tap","save":"saved","ctx":1,"ctx_menu":true,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  53820ms] [harness] eval window.__tg.dump('after-escape-corner-tap') => "after-escape-corner-tap"
+[  53820ms] [harness] === T1c-PRECONDITION-THE-SAVED-CONFIG-HOLDS-SPARKS-0 ===
+[  53822ms] [harness] eval (()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const m=ok?/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(t):null;return '[SPARKSGATE] T1c precondition saved-config-holds-sparks-0 '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,line:m?m[0]:null,value:m?m[1]:null,PASS:!!m&&m[1]==='0'})})() => "[SPARKSGATE] T1c precondition saved-config-holds-sparks-0 {\"read\":true,\"err\":null,\"bytes\":22767,\"line\":\"                      SPARKS 0\",\"value\":\"0\",\"PASS\":true}"
+[  53822ms] [harness] === T1c-RELOAD-WITH-SPARKS-1 ===
+[  53826ms] [console.log] [PERSISTSAVE] js-backstop n=12
+[  53827ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  53827ms] [harness] eval location.search='?sparks=1' => "?sparks=1"
+[  53827ms] [harness] until 1x <<[SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg>> (timeout 90000ms, have 0)
+[  53849ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  53849ms] [console.log] [DISPLAY] layout=full
+[  53854ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[  53855ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  53855ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via load
+[  53857ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  53858ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  53861ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via resize
+[  53865ms] [page] load event fired
+[  53877ms] [console.log] [PERSIST] populate ok in 5ms
+[  53903ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  53903ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[  53905ms] [console.log] [SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg before main() (from ?sparks=1)
+[  53905ms] [console.log] [BOOT] autostart: calling main
+[  53906ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  53906ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  53906ms] [console.error] 
+[  53906ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  53906ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  53906ms] [console.log] 
+[  53929ms] [harness] until SATISFIED: saw 1x <<[SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg>>
+[  53929ms] [harness] until 2x <<[BOOT] autostart>> (timeout 90000ms, have 2)
+[  53929ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  54030ms] [console.log] [L] ENCODING latin1
+[  54033ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  54049ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  54052ms] [console.error] TODO: glShadeModel
+[  54055ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  60119ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  61941ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  61941ms] [harness] eval (()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=t!==null&&/\nSPARKS 1\n$/.test(t);return '[SPARKSGATE] T1c sparks-1-overrides-the-saved-0 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,ends_with_sparks_1:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 1'&&ends&&sv==='saved'&&!!um&&um[1]==='1'})})() => "[SPARKSGATE] T1c sparks-1-overrides-the-saved-0 {\"save\":\"saved\",\"autoexec_read\":true,\"autoexec_bytes\":12747,\"autoexec_sparks_lines\":[\"SPARKS 1\"],\"ends_with_sparks_1\":true,\"live_sparks_in_user_cfg\":\"1\",\"tail\":\"EED 0.2\\n\\n# appended at runtime by web/shell.html: crash sparks on (from ?sparks=1)\\nSPARKS 1\\n\",\"PASS\":true}"
+[  62031ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/15-booted-with-sparks-1.png
+[  62031ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  62031ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1117
+[  62032ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  62033ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  62033ms] [EXCEPTION] structured stack, 1 frames:
+[  62033ms]     <anonymous> @ :0:27
+[  64117ms] [harness] screenshot -> docs/evidence/m7-gameboy/final-fixes/landscape/09-after-deliberate-uncaught-error.png

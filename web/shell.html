@@ -157,20 +157,33 @@
        the game. Do not "restore" this without also giving the page something
        to tab between. */
     #canvas:focus, #canvas:focus-visible { outline: none; }
+    /* THE GAME BOY LAYOUT. html.aa-gameboy is set by the script before the
+       canvas is sized (see the touch decision above sizeCanvas). The picture is
+       a square at the top: the contain-fit rule above already gives height:auto
+       from the backing store's aspect, which the sizing block made 1, so only the
+       width and the anchoring change. 60dvh is the same cap the sizing block
+       applies, so CSS and backing store agree. The agreement is asserted at
+       load -- PB2 in web/tools/portrait-boot-gate.steps compares the drawn box
+       against the backing store -- but only for the UNCAPPED case a phone
+       gives (412x915: min(100vw, 60dvh) is 100vw). The capped, tablet-shaped
+       case is unmeasured and the two sides can differ by a pixel there: the
+       script floors vh*0.6 to an integer and dvh is dynamic, so a browser UI
+       bar that moves after load moves the CSS side and not the backing store. */
+    html.aa-gameboy body    { align-items:flex-start; }
+    html.aa-gameboy #canvas { width: min(100vw, 60vh); }
+    @supports (height: 100dvh) {
+      html.aa-gameboy #canvas { width: min(100vw, 60dvh); }
+    }
     #overlay { position:fixed; inset:0; z-index:20; display:grid; place-content:center;
                gap:1rem; text-align:center; background:#111; }
     #status.error { color:#f77; max-width:32rem; }
 
     /* ---- PHASE 3: the touch overlay ------------------------------------
-       Every rule below is dead on a desktop: #touch and #rotate are `hidden`
-       in the markup and only the touch-detection block in the script removes
-       that attribute. The z-order is the one thing worth stating up front,
-       because three fixed layers now share the page:
+       Every rule below is dead on a desktop: #touch is `hidden` in the markup
+       and only the touch-detection block in the script removes that attribute.
+       The z-order is the one thing worth stating up front, because three fixed
+       layers now share the page:
 
-           30  #rotate      the portrait prompt -- over everything, including
-                            the loading overlay, because a phone visitor who
-                            loads in portrait should be told to turn the phone
-                            while the 5 MB of wasm is still downloading.
            25  #reloadchip  the "you rotated after load" notice.
            20  #overlay     the loading indicator (removed when main() runs).
            10  #touch       the controls themselves, above the canvas.
@@ -281,14 +294,51 @@
               top:calc(.6rem + env(safe-area-inset-top, 0px));
               left:calc(.6rem + env(safe-area-inset-left, 0px)); }
 
-    /* The portrait prompt. It is a PROMPT and not a resize implementation --
-       see the long comment at the orientation block in the script. */
-    #rotate { position:fixed; inset:0; z-index:30; background:#111; color:#eee;
-              display:grid; place-content:center; gap:1rem; text-align:center;
-              padding:2rem; font:15px/1.5 system-ui, sans-serif; }
-    #rotate .glyph { font-size:3rem; }
-    #rotate p { max-width:26rem; margin:0 auto; }
-    #rotate .dim { color:#999; font-size:13px; }
+    /* THE PAD (M7). Hidden unless the html carries aa-gameboy; then it owns
+       everything below the square, whatever the menu/round state -- the
+       .aa-driving rules above hide the full-screen zones and the strip, and the
+       pad replaces them. --aa-square is written by sizeCanvas, so the pad's top
+       edge is the square's bottom edge to the pixel.
+
+       THE DOUBLE align-items IS AN OVERFLOW GUARD, not a typo. The room below
+       the square is viewport height - --aa-square - 1rem - the bottom safe-area
+       inset, and it is not always enough: the cross is the taller column at
+       3 x 4rem + 2 x .25rem = 200 px, and the square is capped at 60 % of the
+       height, so a 375x600 viewport with a 34 px inset leaves 240 px against
+       the 250 the cross plus that padding and inset need. Plain centring
+       overflows a grid track in BOTH directions, so the 10 px missing would put
+       the cross's top row over the picture. `safe center` centres while there
+       is room and falls back to start-alignment when there is not, which pushes
+       the overflow to the bottom edge where the picture is not. The plain
+       `center` stands first for browsers that do not support the `safe`
+       keyword; the second declaration wins wherever it is understood.
+       UNMEASURED, like the 60 % cap's own tablet case: 412x915 (the phone the
+       gates drive) leaves 503 px below the square against the 216 the cross and
+       the padding need, so it never comes near this. */
+    #pad { display:none; }
+    html.aa-gameboy #pad {
+      display:grid; position:absolute; left:0; right:0;
+      top:var(--aa-square, 100vw); bottom:0;
+      grid-template-columns: 1fr 1fr; justify-items:center;
+      align-items:center; align-items:safe center;
+      padding: 0 4vw calc(1rem + env(safe-area-inset-bottom, 0px));
+      background:#111; }
+    html.aa-gameboy .tz, html.aa-gameboy #touchpad, html.aa-gameboy #escbtn { display:none !important; }
+    html.aa-gameboy #tapzone { bottom:auto; height:var(--aa-square, 100vw); }
+    #pad-cross { display:grid; grid-template-columns:repeat(3, 4rem); grid-template-rows:repeat(3, 4rem); gap:.25rem; }
+    .pad-up    { grid-area:1 / 2; }
+    .pad-left  { grid-area:2 / 1; }
+    .pad-right { grid-area:2 / 3; }
+    .pad-down  { grid-area:3 / 2; }
+    #pad-ab { display:grid; grid-template-columns:repeat(2, 5rem); grid-template-rows:repeat(2, 5rem); gap:.5rem; }
+    .pad-b { grid-area:2 / 1; }
+    .pad-a { grid-area:1 / 2; }
+    .pad-btn { min-width:56px; min-height:56px; width:100%; height:100%;
+               font:700 1.4rem/1 system-ui, sans-serif; color:#eee;
+               background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28);
+               border-radius:.6rem; touch-action:none; -webkit-user-select:none; user-select:none; }
+    .pad-a, .pad-b { border-radius:50%; }
+    .pad-btn.aa-down { background:rgba(255,255,255,.34); }
 
     #reloadchip { position:fixed; z-index:25; left:50%; bottom:.6rem;
                   transform:translateX(-50%);
@@ -296,24 +346,33 @@
                   padding:.5rem .7rem; border-radius:.6rem;
                   background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.25);
                   color:#eee; font:13px/1.3 system-ui, sans-serif; }
+    /* min-height AND min-width ARE THE 44 px TOUCH-TARGET MINIMUM THE MENU PAD
+       ABOVE IS ALSO BUILT TO. The argument used to sit on the rotate prompt's
+       button; M7 deleted the prompt, and it moves here because Reload is now the
+       one control a player has to hit while an overlay is over the game. The
+       padding alone does not reach it: the gate measured the prompt's button --
+       which had MORE of it, .6rem/1rem at 14px against .35rem/.6rem at 13px --
+       at 128x38, i.e. 6 px short on the axis a thumb is least accurate on, so
+       this one is shorter still. min-width is here for the OTHER axis and the
+       OTHER button: a one-glyph label does not reach 44 px on its own, and the
+       dismiss x measured 29 px wide with its height already cleared (the
+       [SMOKE44] side measurement in
+       docs/evidence/m7-gameboy/task4-unchanged/README.md).
+       THIS RULE IS THE ONE CSS CHANGE ON THE BRANCH A LANDSCAPE PAGE CAN SEE.
+       The chip carries the hidden attribute unless the orientation stops
+       matching the one the page sized for, so it is invisible at load in every
+       layout -- but its rules are not html.aa-gameboy-scoped, so a landscape
+       load that is later rotated raises a chip whose buttons carry this
+       minimum too. */
     #reloadchip button { color:#eee; background:rgba(255,255,255,.14);
                          border:1px solid rgba(255,255,255,.3);
-                         border-radius:.4rem; padding:.35rem .6rem; font:13px system-ui, sans-serif; }
-    /* min-height IS THE 44 px TOUCH-TARGET MINIMUM THE MENU PAD ABOVE IS ALSO
-       BUILT TO, and it is here because the gate measured this button at 128x38
-       and failed it: the padding alone leaves it 6 px short on the axis a thumb
-       is least accurate on. This is now the one control on the page a player
-       has to hit while a full-screen overlay is over the game, so it is the
-       last button that should be under the minimum. */
-    #rotate button { color:#eee; background:rgba(255,255,255,.14);
-                     border:1px solid rgba(255,255,255,.3); border-radius:.4rem;
-                     padding:.6rem 1rem; min-height:44px;
-                     font:14px system-ui, sans-serif; }
-
+                         border-radius:.4rem; padding:.35rem .6rem;
+                         min-height:44px; min-width:44px;
+                         font:13px system-ui, sans-serif; }
     /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
-       z-index 40 puts it above everything including the rotate prompt, because
-       the numbers are most interesting exactly when something has gone wrong
-       enough to be showing a prompt. pointer-events:none is load-bearing, not
+       z-index 40 puts it above everything, the reload chip included, because
+       the numbers are most interesting exactly when something on the screen
+       looks wrong enough to ask about. pointer-events:none is load-bearing, not
        tidiness: it sits over the left steering zone, and a panel that ate taps
        would break the game it is there to measure. */
     #diag { position:fixed; z-index:40; left:0; top:0; pointer-events:none;
@@ -402,46 +461,30 @@
       <button type="button" data-aakey="ArrowUp"   aria-label="Menu up">&#9650;</button>
       <button type="button" data-aakey="ArrowDown" aria-label="Menu down">&#9660;</button>
     </div>
-  </div>
-
-  <!--
-    PHONE FEEDBACK: this prompt now HOLDS THE START rather than just advising.
-    See the orientation block in the script for the whole argument; in one line,
-    a portrait boot does not merely look small, it builds the projection for a
-    0.45 aspect (a ~131 degree VERTICAL field of view) and no amount of later
-    CSS can undo that.
-
-    THE BUTTON IS NOT AN ESCAPE HATCH ANY MORE, IT IS THE PLAYER'S ANSWER, AND
-    IT IS ON THE PROMPT IN BOTH STATES. It was written for a device that reports
-    its orientation wrongly, so it was hidden the moment the game started -- and
-    that left a player who turned the phone mid-session under a full-screen
-    overlay with no way out but turning back. Reported from the maintainer's own
-    phone as "i always see 'turn your phone sideways' even when i selected
-    portrait mode", and his rule decides it: the user decides. The id changed
-    with the meaning ("anyway" was the old sentence, not this one); the choice
-    block in the script is the other half.
-
-    TWO OF THE FOUR LINES ARE STATE-DEPENDENT AND ARE THEREFORE THEIR OWN
-    ELEMENTS, one for each side of the boot. "The game starts by itself the
-    moment you turn the phone" is true only while the boot is held and is a lie
-    afterwards -- by then the game is already running behind this overlay. Its
-    mirror is what the button COSTS once the game is running: the answer can
-    only be honoured by a reload (see the choice block in the script), and a
-    reload restarts the session -- the match in progress is gone. That is worth
-    exactly one clause, said before the tap rather than discovered after it.
-    Neither line is reworded into something vague enough to cover both states.
-  -->
-  <div id="rotate" hidden>
-    <div class="glyph">&#128241;&#8635;</div>
-    <p><strong>Turn your phone sideways.</strong></p>
-    <p class="dim">Portrait has no layout yet: the 3D view is squeezed into a tall
-       shape, so everything looks small and distorted. A portrait layout &mdash; a
-       square game with the controls below it &mdash; is planned.</p>
-    <p class="dim" id="rotate-held">The game starts by itself the moment you turn
-       the phone.</p>
-    <p><button type="button" id="rotate-play">Play in portrait</button></p>
-    <p class="dim" id="rotate-restart">The game restarts to redraw at the new
-       shape.</p>
+    <!--
+      M7, THE PAD. Six elements that carry data-aakey and therefore ride the
+      same pointer -> KeyboardEvent wiring as every control above; nothing else
+      about them is new. Shown only under html.aa-gameboy (portrait on a touch
+      device), in BOTH the menu and the round state -- the cross is Up/Down for
+      the menus and Left/Right for the turns, A is Enter, B is Escape. The
+      picture above stays a tap-for-Enter surface in menus (#tapzone, clipped to
+      the square in the stylesheet) and is inert in a round.
+      Every target is >= 56 CSS px on both axes -- above the 44 px this file
+      already argues for the menu pad -- because these are held with thumbs, not
+      tapped with fingertips.
+    -->
+    <div id="pad">
+      <div id="pad-cross">
+        <button type="button" class="pad-btn pad-up"    data-aakey="ArrowUp"    aria-label="Menu up">&#9650;</button>
+        <button type="button" class="pad-btn pad-left"  data-aakey="ArrowLeft"  aria-label="Turn left">&#9664;</button>
+        <button type="button" class="pad-btn pad-right" data-aakey="ArrowRight" aria-label="Turn right">&#9654;</button>
+        <button type="button" class="pad-btn pad-down"  data-aakey="ArrowDown"  aria-label="Menu down">&#9660;</button>
+      </div>
+      <div id="pad-ab">
+        <button type="button" class="pad-btn pad-b" data-aakey="Escape" aria-label="Back or in-game menu">B</button>
+        <button type="button" class="pad-btn pad-a" data-aakey="Enter"  aria-label="Enter">A</button>
+      </div>
+    </div>
   </div>
 
   <!--
@@ -453,10 +496,20 @@
     element makes stretching unrepresentable. What a rotation after load
     actually costs is SIZE and SHARPNESS: the picture is letterboxed into
     whatever fits, at the pixel count the other orientation had.
+
+    M7 MADE THE FIXED THING BIGGER THAN THE PICTURE, which is why the text below
+    now names the LAYOUT rather than the letterboxing. A load decides the whole
+    shape of the page -- a square picture with a pad below it, or full-screen --
+    and nothing after it moves: html.aa-gameboy is set once, before sizing, and
+    sizeCanvas runs once. Letterboxing is still what a rotated picture does; it
+    is no longer the whole of what the reload buys.
+
+    AND THE TEXT NAMES THE PRICE, because that is the half a player is being
+    asked to agree to: a reload is a fresh boot, so the round in progress ends.
   -->
   <div id="reloadchip" hidden>
-    <span>Rotated &mdash; still drawing at the shape and size it loaded at, so it
-          is letterboxed and soft. Reload to redraw for this orientation.</span>
+    <span>Rotated &mdash; the game is still laid out for the shape it loaded in.
+          Reload to lay it out for this one (the round restarts).</span>
     <button type="button" id="reloadchip-go">Reload</button>
     <button type="button" id="reloadchip-x" aria-label="Dismiss">&times;</button>
   </div>
@@ -715,33 +768,89 @@
       } catch (e) { return null; }
     };
 
-    // sizeCanvas() IS CALLED TWICE AT MOST AND ONLY EVER BEFORE main(). It was
-    // an IIFE until the phone feedback; it is a function now because the
-    // portrait boot hold below needs to re-take the measurement after the
-    // player turns the phone, and re-taking it is safe for exactly as long as
-    // the game has not read the canvas. It is NOT a resize handler and must not
-    // become one -- the long paragraph above about sr_ReinitDisplay still
-    // stands.
     // WHICH WAY UP IS THE VIEWPORT? Asked of innerWidth/innerHeight FIRST and
     // of the media query only as a fallback, and the order is a bug fix rather
     // than a preference. innerWidth/innerHeight is the quantity that actually
     // matters -- it is what sizeCanvas() reads and therefore what the game's
     // projection is built from -- and '(orientation: portrait)' is a second
     // opinion about it. Measured: under Chrome's device emulation, on a page
-    // that is holding its own boot and therefore painting nothing, a metrics
-    // override updated innerWidth/innerHeight immediately while the media
-    // query's change event did not arrive for SIXTY-NINE SECONDS, apparently
-    // waiting for a paint that an idle page never produced
+    // that was painting nothing at the time, a metrics override updated
+    // innerWidth/innerHeight immediately while the media query's change event
+    // did not arrive for SIXTY-NINE SECONDS, apparently waiting for a paint
+    // that an idle page never produced
     // (docs/evidence/phone-feedback/README.md has the transcript). Trusting the
-    // query alone made the release of the boot hold depend on something else
-    // repainting the page.
+    // query alone therefore leaves a page's own idea of which way up it is
+    // depending on something else repainting it.
     const viewportIsPortrait = () => {
       const w = window.innerWidth, h = window.innerHeight;
       if (w > 0 && h > 0) return h > w;
       try { return window.matchMedia('(orientation: portrait)').matches; }
       catch (e) { return false; }
     };
+
+    // ---- is this a touch device? ------------------------------------
+    //
+    // '(hover: none) and (pointer: coarse)' is the media query for "the
+    // primary input is a finger", which is the question being asked -- a
+    // touchscreen laptop answers `true` to navigator.maxTouchPoints > 0 and
+    // must NOT get an overlay over its keyboard-driven game.
+    //
+    // ?touch=1 / ?touch=0 override it, for two reasons that are not the same:
+    // a harness needs to force the overlay on under device emulation (whose
+    // media features are not guaranteed to track the metrics override), and a
+    // visitor on a device this query gets wrong needs a way out. Nothing in
+    // the shipped flow sets either.
+    const decideTouch = () => {
+      try {
+        const q = new URLSearchParams(location.search).get('touch');
+        if (q === '1') return { on:true,  why:'?touch=1' };
+        if (q === '0') return { on:false, why:'?touch=0' };
+      } catch (e) { /* a browser without URLSearchParams falls through */ }
+      try {
+        const m = window.matchMedia('(hover: none) and (pointer: coarse)');
+        return { on: m.matches, why: 'media query -> ' + m.matches };
+      } catch (e) { return { on:false, why:'matchMedia threw: ' + e }; }
+    };
+
+    // THE TOUCH DECISION IS MADE HERE, BEFORE SIZING, because the Game Boy
+    // layout is a decision about the backing store's SHAPE and sizeCanvas runs
+    // at parse time, ~90 lines before the touch block used to decide. Same
+    // inputs (?touch= then the media query), same log line, one place.
+    const touchDecision = decideTouch();
+    // Published so the four blocks that need to know -- the Game Boy decision
+    // on the next lines, then the camera tuning, the sparks default and the
+    // diagnostic readout -- ask this decision rather than re-deriving it and
+    // risking a different answer. The touch overlay is not one of them: it is in
+    // this same scope and reads the lexical touchDecision directly.
+    window.AA_TOUCH = touchDecision.on;
+    // One machine-readable line, so a gate can assert which branch ran rather
+    // than inferring it from a screenshot.
+    console.log('[TOUCH] enabled=' + touchDecision.on + ' (' + touchDecision.why + ')' +
+                ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
+    // GAME BOY = a touch device that LOADED in portrait. Landscape keeps the
+    // full-screen layout; a desktop never gets this whatever its window shape.
+    window.AA_GAMEBOY = window.AA_TOUCH && viewportIsPortrait();
+    document.documentElement.classList.toggle('aa-gameboy', !!window.AA_GAMEBOY);
+    console.log('[DISPLAY] layout=' + (window.AA_GAMEBOY ? 'gameboy' : 'full'));
+
     let sizedForPortrait = null;   // the orientation the backing store is FOR
+    // sizeCanvas() IS CALLED ONCE, AT PARSE TIME -- the single call is on the
+    // line right after the function -- AND ONLY EVER BEFORE main(). It is NOT a
+    // resize handler and must not become one: the long paragraph above about
+    // sr_ReinitDisplay still stands.
+    //
+    // IT RUNS AFTER THE TOUCH DECISION ABOVE, AND THAT ORDER IS LOAD-BEARING.
+    // The Game Boy branch inside reads window.AA_GAMEBOY to choose the backing
+    // store's SHAPE, and a shape is not a size: the game reads it once through
+    // SDL_GetVideoInfo and builds glViewport and glFrustum from it, so there is
+    // no later moment at which a wrong one could be corrected. That is the
+    // whole reason the decision was hoisted out of the touch block below.
+    //
+    // It is a named function with exactly ONE caller rather than the IIFE it
+    // started as. Nothing in the code requires that shape any more; what it
+    // still buys is the `why` argument, which names the call site in the
+    // [DISPLAY] line so a transcript says which call produced a given size.
+    // That is not an invitation to add a second caller -- see above.
     function sizeCanvas(why) {
       const canvas = document.getElementById('canvas');
       // Told to the stylesheet rather than derived by it, because CSS has no
@@ -772,6 +881,16 @@
           publishAspect();
           return;
         }
+        // THE GAME BOY SQUARE. Side = the CSS width, capped at 60 % of the CSS
+        // height so the pad below keeps at least 40 % on a tall-but-wide tablet.
+        // Aspect 1 is the best of the three shapes this game gets on a phone:
+        // rViewport::Perspective makes it 90 x 90 degrees (landscape ~111 x 67,
+        // full portrait ~131 vertical). docs/evidence/phone-round2/fov/README.md.
+        let squareCss = 0;
+        if (window.AA_GAMEBOY) {
+          squareCss = Math.min(vw, Math.floor(vh * 0.6));
+          w = h = Math.floor(squareCss * dpr);
+        }
         const px = w * h;
         let capped = false;
         if (px > MAX_CANVAS_PIXELS) {
@@ -796,6 +915,21 @@
         canvas.width  = w;
         canvas.height = h;
         publishAspect();
+        // Told to the stylesheet for the same reason --aa-aspect is: CSS cannot
+        // read these numbers. Set in BOTH layouts -- 0px when this is not a
+        // Game Boy load -- because it is ONE quantity, "how tall the square
+        // is", and 0px is its true answer when there is no square. Publishing
+        // it in both branches is what lets a reader (a gate) take the variable
+        // as the page's own answer instead of having to tell "no square" apart
+        // from "never set". The var(--aa-square,
+        // 100vw) fallback the pad's rules carry is for that second case only --
+        // sizeCanvas returned or threw before this line, which is three paths:
+        // the AA_CANVAS_SIZE override and the no-usable-viewport guard both
+        // return above, and the catch below swallows a throw -- and not for the
+        // full layout, whose rules are all html.aa-gameboy-scoped and never
+        // read it.
+        document.documentElement.style.setProperty('--aa-square',
+          window.AA_GAMEBOY ? squareCss + 'px' : '0px');
         console.log('[DISPLAY] ' + why + ': viewport ' + vw + 'x' + vh +
                     ' dpr ' + dpr +
                     (dprOverride !== null ? ' (?dpr override)' : '') +
@@ -803,7 +937,9 @@
                     ' aspect ' + (w / h).toFixed(4) +
                     (capped ? ' (capped at ' + MAX_CANVAS_PIXELS + ' px)' : '') +
                     ' gpu-axis-limit ' + (axisLimit || 'unknown') +
-                    (axisClamped ? ' (CLAMPED to it)' : ''));
+                    (axisClamped ? ' (CLAMPED to it)' : '') +
+                    (window.AA_GAMEBOY ? ' gameboy square ' + squareCss + 'css'
+                                       : ''));
       } catch (e) {
         // Falling back to the attributes on the element is a working game at
         // 1024x768, so this must never be allowed to escape and turn into
@@ -866,50 +1002,13 @@
         }));
       };
 
-      // ---- is this a touch device? ------------------------------------
-      //
-      // '(hover: none) and (pointer: coarse)' is the media query for "the
-      // primary input is a finger", which is the question being asked -- a
-      // touchscreen laptop answers `true` to navigator.maxTouchPoints > 0 and
-      // must NOT get an overlay over its keyboard-driven game.
-      //
-      // ?touch=1 / ?touch=0 override it, for two reasons that are not the same:
-      // a harness needs to force the overlay on under device emulation (whose
-      // media features are not guaranteed to track the metrics override), and a
-      // visitor on a device this query gets wrong needs a way out. Nothing in
-      // the shipped flow sets either.
-      const decideTouch = () => {
-        try {
-          const q = new URLSearchParams(location.search).get('touch');
-          if (q === '1') return { on:true,  why:'?touch=1' };
-          if (q === '0') return { on:false, why:'?touch=0' };
-        } catch (e) { /* a browser without URLSearchParams falls through */ }
-        try {
-          const m = window.matchMedia('(hover: none) and (pointer: coarse)');
-          return { on: m.matches, why: 'media query -> ' + m.matches };
-        } catch (e) { return { on:false, why:'matchMedia threw: ' + e }; }
-      };
-
       const touchEl = document.getElementById('touch');
-      const rotateEl = document.getElementById('rotate');
-      // The one sentence on the prompt that is only true while the boot is
-      // held -- the <p> itself, so hiding it takes its spacing with it. This
-      // used to be the button's <p>; see the markup comment on #rotate for why
-      // the button is no longer the thing that comes and goes.
-      const heldNoteEl = document.getElementById('rotate-held');
-      // Its mirror: what the button costs after the boot, shown in exactly the
-      // state where it is true.
-      const restartNoteEl = document.getElementById('rotate-restart');
       const chipEl = document.getElementById('reloadchip');
-      const decision = decideTouch();
-      // One machine-readable line, so a gate can assert which branch ran rather
-      // than inferring it from a screenshot.
-      console.log('[TOUCH] enabled=' + decision.on + ' (' + decision.why + ')' +
-                  ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
-      // Published so the two later blocks that need to know -- the camera
-      // tuning and the diagnostic readout -- ask this decision rather than
-      // re-deriving it and risking a different answer.
-      window.AA_TOUCH = decision.on;
+      // REUSED, NOT RE-DERIVED. The decision, its [TOUCH] line and
+      // window.AA_TOUCH all moved above sizeCanvas (see the block there), so
+      // the overlay and the backing store's shape can never disagree about
+      // whether this is a touch device.
+      const decision = touchDecision;
       if (!decision.on) return;
       touchEl.hidden = false;
 
@@ -1082,254 +1181,50 @@
       tapzone.addEventListener('pointerup',     (ev) => endTap(ev, true));
       tapzone.addEventListener('pointercancel', (ev) => endTap(ev, false));
 
-      // ---- orientation: now a BOOT HOLD, not only a prompt ---------------
+      // ---- orientation: an OFFER to reload, never a hold ----------------
       //
-      // STILL NOT A RESIZE. The backing store is sized before boot, from
-      // innerWidth/innerHeight (see the long block above), and a rotation after
-      // main() has started does not move it: the game's viewport, projection
-      // and HUD layout were all computed from what it read at boot, so
-      // following a rotation properly means calling SDL_SetVideoMode again --
-      // sr_ReinitDisplay. That path is known to WORK (M5 task 4c measured the
-      // canvas resizing live with no context loss and two full rounds
-      // afterwards), and it is still not being built here.
-      //
-      // WHAT CHANGED, AND WHY IT IS THE ONE REAL "IT LOOKS STRETCHED" DEFECT
-      // THIS PAGE HAD. A phone is held in portrait. A link opens in portrait.
-      // Phase 3 sized the backing store from that portrait viewport, started
-      // the game, and then asked the player to rotate -- so the game built its
-      // projection for an aspect near 0.45, and rViewport::Perspective below
-      // 1.5 leaves the horizontal fov alone and divides the vertical by the
-      // aspect (ymul = xmul/aspectratio): a VERTICAL field of view near 131
-      // degrees. That is a real distortion in the render, and no CSS afterwards
-      // can undo it -- the picture is drawn wrong before the page lays it out.
-      // Rotating then left a narrow pillarboxed strip of a fisheyed portrait
-      // frame; docs/evidence/phase3-touch/portrait-02-*.png is the picture, and
-      // docs/evidence/phone-feedback/README.md is the arithmetic.
-      //
-      // So portrait no longer starts the game. The prompt HOLDS main(), the
-      // wasm keeps downloading behind it, and the moment the phone is turned
-      // the backing store is re-measured for the real orientation and the game
-      // starts -- once, at the right shape, with no re-init and no reload.
-      // Holding is only possible because sizing and starting are separate steps
-      // on this page. It costs a landscape visitor nothing: the hold is false
-      // and the behaviour is Phase 3's exactly.
-      //
-      // THE ESCAPE HATCH IS NOT DECORATION. If a device answers the orientation
-      // media query wrongly -- and this page cannot test every device -- an
-      // unconditional hold is a game that never starts. "Start in portrait
-      // anyway" sizes for whatever is there and boots.
-      //
-      // The chip's condition is "the orientation differs from the one the
-      // backing store was measured FOR", which is no longer the same sentence
-      // as "differs from the one at load" now that the measurement can happen
-      // after a rotation. sizedForPortrait is written by sizeCanvas() itself,
-      // so the two cannot drift apart.
-      //
-      // ---- "I WANT PORTRAIT" IS AN ANSWER, AND IT IS REMEMBERED -----------
-      //
-      // THE DEFECT, IN THE MAINTAINER'S WORDS AFTER PLAYING THE DEPLOYED
-      // BUILD: "i always see 'turn your phone sideways' even when i selected
-      // portrait mode." Both halves of that were this block's doing -- the
-      // prompt is raised for ANY portrait viewport, before the boot and after
-      // it, and the button that dismissed it was hidden as soon as the game
-      // started. So the state a player reached by turning the phone mid-session
-      // was a full-screen overlay with no exit but turning back. His rule,
-      // stated first about fullscreen and applying here unchanged: the user
-      // decides. If they ask for portrait, they get portrait, and they are not
-      // asked again.
-      //
-      // ONE KEY, WRITTEN BY THE BUTTON AND BY NOTHING ELSE. localStorage rather
-      // than the game's own /persist tree, because this is a property of the
-      // PAGE and is needed several seconds before the game exists: the answer
-      // decides whether main() is held and what shape the backing store is
-      // measured at, both of which happen long before IDBFS is mounted.
-      //
-      // EVERY ACCESS IS IN A try/catch AND THAT IS NOT A FORMALITY: in a
-      // browser set to block site data, touching the `localStorage` property
-      // itself throws a SecurityError -- so the read throws too, not just the
-      // write. The rule here is the same one the sizing block follows: a
-      // failure degrades to the behaviour that shipped, never to a page that
-      // does not start.
-      const PORTRAIT_KEY = 'aa.portrait';
-      const readPortraitChoice = () => {
-        try { return localStorage.getItem(PORTRAIT_KEY) === 'play'; }
-        catch (e) { console.log('[TOUCH] portrait choice unreadable: ' + e); return false; }
-      };
-      // Returns whether the answer will still be there on the NEXT load, which
-      // is what the caller has to know before it reloads the page. Reading it
-      // back is the only way to find out: a quota-exceeded or otherwise
-      // rejected write does not reliably throw.
-      const storePortraitChoice = () => {
-        try { localStorage.setItem(PORTRAIT_KEY, 'play'); }
-        catch (e) { console.log('[TOUCH] portrait choice not stored: ' + e); }
-        return readPortraitChoice();
-      };
-      const clearPortraitChoice = () => {
-        try { localStorage.removeItem(PORTRAIT_KEY); }
-        catch (e) { console.log('[TOUCH] portrait choice not cleared: ' + e); }
-      };
-      // ?portrait=ask IS THE WAY BACK, spelled like every other parameter this
-      // page takes (?touch=, ?cam=, ?dpr=): nothing in the shipped flow sets
-      // it, nothing links to it, and web/README.md's table documents it. It
-      // clears the stored answer and restores the prompt -- which is otherwise
-      // unreachable, because the prompt is the only interface this page has and
-      // a stored answer is exactly what stops it appearing.
-      let playInPortrait = readPortraitChoice();
-      let askPortraitAgain = false;
-      try { askPortraitAgain = new URLSearchParams(location.search).get('portrait') === 'ask'; }
-      catch (e) { /* a browser without URLSearchParams keeps the stored answer */ }
-      if (askPortraitAgain) { clearPortraitChoice(); playInPortrait = false; }
-      // One machine-readable line, for the same reason the [TOUCH] enabled line
-      // above is one: a gate should assert which branch ran.
-      console.log('[TOUCH] play in portrait: ' + playInPortrait +
-                  ' (localStorage ' + PORTRAIT_KEY +
-                  (askPortraitAgain ? ', cleared by ?portrait=ask' : '') + ')');
-
+      // ORIENTATION AFTER LOAD IS A RELOAD, OFFERED, NEVER FORCED. The backing
+      // store and the projection are built once, before main() (see sizeCanvas);
+      // a rotation after that would need sr_ReinitDisplay, which M5 measured to
+      // work and which this page still declines as a larger claim than a reload.
+      // The chip below is the offer. It appears whenever the orientation the page
+      // is in differs from the one it was sized for -- both directions -- and its
+      // text says what the reload costs, which is the round in progress.
+      // WHAT USED TO BE HERE: a boot HOLD in portrait, a full-screen "turn your
+      // phone" prompt, a remembered "Play in portrait" answer (localStorage
+      // aa.portrait) and ?portrait=ask to forget it. M7 made portrait a layout of
+      // its own (a square picture, a pad below), so none of that has a job. A
+      // returning visitor's stored aa.portrait key is simply never read.
       let mq = null;
       try { mq = window.matchMedia('(orientation: portrait)'); } catch (e) { mq = null; }
       let chipDismissed = false;
-      const applyOrientation = () => {
+      const applyOrientation = (why) => {
         const portrait = viewportIsPortrait();
-        // PORTRAIT GETS THE PROMPT IN BOTH STATES -- UNLESS IT HAS ALREADY
-        // BEEN ANSWERED. Showing it after the boot as well is Phase 3's
-        // behaviour and is kept on purpose: an earlier version showed it only
-        // while the boot was held, and that was a regression dressed up as
-        // tidiness, because a player who rotates mid-game gets a letterboxed
-        // sliver and "turn your phone sideways" is more use to them than a chip
-        // at the bottom of it. What is new is the second clause: a question
-        // that has been answered is not asked again.
-        rotateEl.hidden = !portrait || playInPortrait;
-        // The two lines that are not true in both states, and they are exactly
-        // complementary: before the boot the game starts by itself, after it
-        // the answer costs a reload.
-        heldNoteEl.hidden = !window.AA_BOOT_HELD_FOR_PORTRAIT;
-        restartNoteEl.hidden = !!window.AA_BOOT_HELD_FOR_PORTRAIT;
-        // THE CHIP IS DELIBERATELY LEFT ALONE, and it is not the prompt in
-        // miniature. Its sentence is "the backing store is for the other
-        // orientation, so this is letterboxed and soft" and its button is the
-        // reload that fixes exactly that -- true and useful in whichever
-        // orientation the player is not sized for, including for someone who
-        // chose portrait and then turned the phone. On the boot a stored choice
-        // produces, the two agree and it stays hidden; and on a rotation AWAY
-        // from the chosen orientation it appears, which is the useful half.
-        // Both directions are asserted (P3 and P5 in
-        // web/tools/touch-gate.steps), not assumed.
         if (!chipDismissed) chipEl.hidden = (portrait === sizedForPortrait);
+        // `why` is logged rather than acted on: all four callers do the same
+        // work, and which event fired is the one thing a transcript cannot
+        // recover afterwards. More than one fires per rotation -- the Task 4
+        // portrait run logged `via resize` then `via media query` back to back
+        // (docs/evidence/m7-gameboy/task4-unchanged/portrait/console.log).
         console.log('[TOUCH] orientation portrait=' + portrait +
-                    ' (sized for portrait: ' + sizedForPortrait +
-                    ', boot held: ' + !!window.AA_BOOT_HELD_FOR_PORTRAIT +
-                    ', play in portrait: ' + playInPortrait + ')');
+                    ' (sized for portrait: ' + sizedForPortrait + ')' +
+                    ' via ' + why);
       };
-      // The hold lives on window rather than in this closure because its other
-      // half -- startGame(), defined far below and outside this IIFE -- has to
-      // read it, and because a gate should be able to assert on it.
-      //
-      // A stored answer means there is nothing to hold FOR: the player has
-      // already said which orientation they want, and holding would be this
-      // page asking the question a second time in a form that cannot be
-      // answered at all.
-      window.AA_BOOT_HELD_FOR_PORTRAIT = viewportIsPortrait() && !playInPortrait;
-      let holdPoll = 0;
-      window.AA_RELEASE_PORTRAIT_HOLD = (why) => {
-        if (!window.AA_BOOT_HELD_FOR_PORTRAIT) return;
-        window.AA_BOOT_HELD_FOR_PORTRAIT = false;
-        if (holdPoll) { clearInterval(holdPoll); holdPoll = 0; }
-        // Re-measure for the orientation the phone is in NOW. Safe only because
-        // main() has not run: see the header on sizeCanvas().
-        sizeCanvas('portrait hold released by ' + why);
-        applyOrientation();
-        console.log('[BOOT] portrait hold released by ' + why);
-        if (window.AA_RUNTIME_READY) startGame();
-      };
-      if (window.AA_BOOT_HELD_FOR_PORTRAIT) {
-        console.log('[BOOT] portrait at load: HOLDING main() until landscape');
-        // FOUR TRIGGERS FOR ONE EVENT, AND THE POLL IS THE ONE THAT IS ALLOWED
-        // TO BE UGLY. A held page paints nothing, and a rotation that is never
-        // noticed is a game that never starts -- the worst failure this change
-        // can have, and strictly worse than the defect it fixes. Chrome's
-        // device emulation demonstrated it: a metrics override moved
-        // innerWidth/innerHeight at once and the media query's change event did
-        // not arrive for sixty-nine seconds. A 250 ms poll on a page whose only
-        // other job is downloading costs nothing measurable, and it stops the
-        // moment the hold is released, so it does not exist while the game is
-        // running.
-        holdPoll = setInterval(() => {
-          if (!viewportIsPortrait()) window.AA_RELEASE_PORTRAIT_HOLD('poll');
-        }, 250);
-      }
-      // ONE BUTTON, TWO MECHANISMS, AND THE SPLIT IS WHERE main() IS.
-      document.getElementById('rotate-play').addEventListener('click', () => {
-        playInPortrait = true;
-        const stored = storePortraitChoice();
-        console.log('[TOUCH] play in portrait chosen (stored for next load: ' +
-                    stored + ')');
-        if (window.AA_BOOT_HELD_FOR_PORTRAIT) {
-          // BEFORE main(): the path that already existed, unchanged. The hold
-          // release re-measures the backing store for the portrait viewport
-          // that is actually there and starts the game once, at that shape --
-          // no reload, because nothing has been drawn yet.
-          window.AA_RELEASE_PORTRAIT_HOLD('button');
-          return;
-        }
-        // AFTER main(): THE ONLY HONEST ANSWER IS A RELOAD. The canvas is sized
-        // for landscape and this page cannot change that in place --
-        // sizeCanvas() is safe only before main() (see its header), and a live
-        // sr_ReinitDisplay is a much larger claim that PLAN.md has now declined
-        // twice on grounds this button does not alter. So: the answer is
-        // stored, the page is reloaded, and the reloaded boot reads the answer,
-        // holds nothing, shows no prompt, and sizes the backing store for the
-        // portrait viewport it is in. The player asked for portrait and gets
-        // portrait, drawn for portrait, in one tap.
-        //
-        // RELOADING EVEN WHEN THE STORE DID NOT TAKE is deliberate. If it did
-        // not (site data blocked), the reload lands on the prompt again -- but
-        // in its BEFORE-boot state, where this same button releases the hold
-        // and boots portrait at the right size. That is one extra tap, not a
-        // loop, and it is still a better place to be than here, looking at a
-        // picture drawn for the other orientation.
-        //
-        // AND IT MUST NOT BE A BARE reload(), WHICH RE-RUNS THE QUERY STRING.
-        // A bare one carries ?portrait=ask into the new load, where the block
-        // above dutifully clears the answer this click just stored -- so the
-        // page comes back HELD, with the prompt up, and the button has to be
-        // tapped a second time. Traced on this exact path: load with
-        // ?portrait=ask, play, rotate to portrait, tap -> stored, reloaded,
-        // cleared, held. Dropping just that one parameter is what makes the
-        // promise ("tap it and you get portrait") true from every entry point;
-        // replace() rather than assign() so the answered prompt does not become
-        // a back-button destination. URL is ES6 and this is the only use of it
-        // on the page, so a browser without it falls through to the reload that
-        // shipped -- two taps there, which is what that browser had anyway.
-        console.log('[BOOT] reloading to size the canvas for portrait');
-        try {
-          const u = new URL(location.href);
-          u.searchParams.delete('portrait');
-          location.replace(u.href);
-          return;
-        } catch (e) { console.log('[BOOT] URL unavailable, plain reload: ' + e); }
-        location.reload();
-      });
       document.getElementById('reloadchip-go')
         .addEventListener('click', () => location.reload());
       document.getElementById('reloadchip-x')
         .addEventListener('click', () => { chipDismissed = true; chipEl.hidden = true; });
-      const onOrientationChange = (why) => {
-        if (window.AA_BOOT_HELD_FOR_PORTRAIT && !viewportIsPortrait()) {
-          window.AA_RELEASE_PORTRAIT_HOLD(why || 'rotation to landscape');
-          return;
-        }
-        applyOrientation();
-      };
+      const onOrientationChange = (why) => { applyOrientation(why); };
       // addListener is the pre-2019 spelling; Safari needed it until 14. Both
       // are tried because the cost is one line and the failure mode of neither
-      // firing is a prompt that never appears. resize and orientationchange are
-      // here for the same reason the poll is: no single one of these is
-      // trustworthy on every device, and they are all idempotent.
+      // firing is a chip that never appears. resize and orientationchange are
+      // here for the same reason: no single one of these is trustworthy on
+      // every device, and they are all idempotent.
       if (mq && mq.addEventListener) mq.addEventListener('change', () => onOrientationChange('media query'));
       else if (mq && mq.addListener) mq.addListener(() => onOrientationChange('media query'));
       window.addEventListener('resize', () => onOrientationChange('resize'));
       window.addEventListener('orientationchange', () => onOrientationChange('orientationchange'));
-      applyOrientation();
+      applyOrientation('load');
     })();
 
     // ---- PHONE FEEDBACK: "the bike is tiny" -----------------------------
@@ -1713,7 +1608,6 @@
         // earlier: the file packager appends ITS preRun callback after this
         // page's, so a preRun hook cannot read /data at all. That is why the
         // touch camera tuning below is here rather than in preRun.
-        window.AA_RUNTIME_READY = true;
         applyTouchCameraTuning();
         applyTouchSparksTuning();
         let manual = false;
@@ -1726,9 +1620,6 @@
           // containing it as a substring made M4's P14 read the hold as the
           // start. Measured -- it did.
           console.log('[BOOT] main() HELD by ?autostart=0, waiting for AA_START()');
-        } else if (window.AA_BOOT_HELD_FOR_PORTRAIT) {
-          // Same rule about the string: this must not contain '[BOOT] autostart'.
-          console.log('[BOOT] main() HELD in portrait, waiting for landscape');
         } else {
           startGame();
         }
