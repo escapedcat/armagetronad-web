@@ -163,8 +163,10 @@ worth having and re-measurable in two steps, not because it is evidence:
                "all_at_least_44":true}
 
 Reload is 63x44 and clears the minimum on both axes. The dismiss `x` clears it
-on height only -- 29 px wide -- which is left as it is: the failure mode of a
-narrow dismiss is missing it and being left with the chip, not losing anything.
+on height only -- 29 px wide -- at this commit. The final fix commit (76fcc331)
+added `min-width:44px` to the same rule, so both buttons now clear 44 px on
+both axes; `docs/evidence/m7-gameboy/final-fixes/` and the index's "Final
+fixes" section carry that state.
 
 ## What these runs do NOT show
 
