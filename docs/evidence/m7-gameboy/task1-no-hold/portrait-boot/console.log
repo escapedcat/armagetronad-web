@@ -1,0 +1,70 @@
+[    995ms] [harness] mobile emulation: 412x915 CSS px dpr 3 (= 1236x2745 device px), touch on
+[    999ms] [harness] chrome: Chrome/152.0.7977.77
+[    999ms] [harness] navigating to http://localhost:8008/armagetronad.html
+[     68ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x2745 aspect 0.4503 gpu-axis-limit 16384
+[     68ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     69ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     71ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true)
+[     80ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     81ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     83ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true)
+[     88ms] [page] load event fired
+[     98ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    153ms] [console.log] [PERSIST] populate ok in 49ms
+[    344ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    345ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    346ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[    346ms] [console.log] [BOOT] autostart: calling main
+[    349ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    349ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    349ms] [console.error] 
+[    350ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    350ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    350ms] [console.log] 
+[    478ms] [console.log] [L] ENCODING latin1
+[    487ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    490ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    512ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    516ms] [console.error] TODO: glShadeModel
+[    520ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    566ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    566ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    566ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    566ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    567ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    827ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[   1008ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1009ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})() => "probe installed"
+[   1010ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1010ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1010ms] [harness] === PORTRAIT-BOOTED ===
+[   1011ms] [console.log] [M7GATE] PB1 portrait-boot-no-hold {"rotate_element":false,"touch_visible":true,"PASS":true}
+[   1011ms] [harness] eval (()=>{const held=performance.now();const r={rotate_element:document.getElementById('rotate')!==null,touch_visible:!document.getElementById('touch').hidden};r.PASS=!r.rotate_element&&r.touch_visible;console.log('[M7GATE] PB1 portrait-boot-no-hold '+JSON.stringify(r));return 'PB1 '+r.PASS})() => "PB1 true"
+[   1201ms] [harness] screenshot -> docs/evidence/m7-gameboy/task1-no-hold/portrait-boot/pb-00-portrait-boot.png
+[   1206ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1270ms] [harness] tap #tapzone at 206,458 (1/1)
+[   1282ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[   4641ms] [harness] tap #tapzone at 206,458 (1/1)
+[   4651ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[   4821ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[   8523ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[   8524ms] [console.log] [L] TEAM_CREATED web_user
+[   8525ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[   8527ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[   8529ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[   8530ms] [console.log] [L] NEW_ROUND 2026-09-05 19:08:15 UTC+0200
+[   8546ms] [console.log] [L] TEAM_CREATED ai_team
+[   8546ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[   8546ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[   8547ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[   8547ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[   8567ms] [harness] tap #tapzone at 206,458 (1/1)
+[   8570ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[   8571ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[   8571ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[   8576ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[   8802ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[   8869ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[   8869ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[   8869ms] [harness] === PORTRAIT-ROUND-STARTED ===
+[  11606ms] [harness] screenshot -> docs/evidence/m7-gameboy/task1-no-hold/portrait-boot/pb-01-portrait-round.png
