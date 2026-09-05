@@ -162,7 +162,13 @@
        a square at the top: the contain-fit rule above already gives height:auto
        from the backing store's aspect, which the sizing block made 1, so only the
        width and the anchoring change. 60dvh is the same cap the sizing block
-       applies, so CSS and backing store agree. */
+       applies, so CSS and backing store agree. The agreement is asserted at
+       load -- PB2 in web/tools/portrait-boot-gate.steps compares the drawn box
+       against the backing store -- but only for the UNCAPPED case a phone
+       gives (412x915: min(100vw, 60dvh) is 100vw). The capped, tablet-shaped
+       case is unmeasured and the two sides can differ by a pixel there: the
+       script floors vh*0.6 to an integer and dvh is dynamic, so a browser UI
+       bar that moves after load moves the CSS side and not the backing store. */
     html.aa-gameboy body    { align-items:flex-start; }
     html.aa-gameboy #canvas { width: min(100vw, 60vh); }
     @supports (height: 100dvh) {
@@ -288,6 +294,35 @@
               top:calc(.6rem + env(safe-area-inset-top, 0px));
               left:calc(.6rem + env(safe-area-inset-left, 0px)); }
 
+    /* THE PAD (M7). Hidden unless the html carries aa-gameboy; then it owns
+       everything below the square, whatever the menu/round state -- the
+       .aa-driving rules above hide the full-screen zones and the strip, and the
+       pad replaces them. --aa-square is written by sizeCanvas, so the pad's top
+       edge is the square's bottom edge to the pixel. */
+    #pad { display:none; }
+    html.aa-gameboy #pad {
+      display:grid; position:absolute; left:0; right:0;
+      top:var(--aa-square, 100vw); bottom:0;
+      grid-template-columns: 1fr 1fr; align-items:center; justify-items:center;
+      padding: 0 4vw calc(1rem + env(safe-area-inset-bottom, 0px));
+      background:#111; }
+    html.aa-gameboy .tz, html.aa-gameboy #touchpad, html.aa-gameboy #escbtn { display:none !important; }
+    html.aa-gameboy #tapzone { bottom:auto; height:var(--aa-square, 100vw); }
+    #pad-cross { display:grid; grid-template-columns:repeat(3, 4rem); grid-template-rows:repeat(3, 4rem); gap:.25rem; }
+    .pad-up    { grid-area:1 / 2; }
+    .pad-left  { grid-area:2 / 1; }
+    .pad-right { grid-area:2 / 3; }
+    .pad-down  { grid-area:3 / 2; }
+    #pad-ab { display:grid; grid-template-columns:repeat(2, 5rem); grid-template-rows:repeat(2, 5rem); gap:.5rem; }
+    .pad-b { grid-area:2 / 1; }
+    .pad-a { grid-area:1 / 2; }
+    .pad-btn { min-width:56px; min-height:56px; width:100%; height:100%;
+               font:700 1.4rem/1 system-ui, sans-serif; color:#eee;
+               background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28);
+               border-radius:.6rem; touch-action:none; -webkit-user-select:none; user-select:none; }
+    .pad-a, .pad-b { border-radius:50%; }
+    .pad-btn.aa-down { background:rgba(255,255,255,.34); }
+
     #reloadchip { position:fixed; z-index:25; left:50%; bottom:.6rem;
                   transform:translateX(-50%);
                   display:flex; align-items:center; gap:.6rem;
@@ -388,6 +423,30 @@
     <div id="touchpad">
       <button type="button" data-aakey="ArrowUp"   aria-label="Menu up">&#9650;</button>
       <button type="button" data-aakey="ArrowDown" aria-label="Menu down">&#9660;</button>
+    </div>
+    <!--
+      M7, THE PAD. Six elements that carry data-aakey and therefore ride the
+      same pointer -> KeyboardEvent wiring as every control above; nothing else
+      about them is new. Shown only under html.aa-gameboy (portrait on a touch
+      device), in BOTH the menu and the round state -- the cross is Up/Down for
+      the menus and Left/Right for the turns, A is Enter, B is Escape. The
+      picture above stays a tap-for-Enter surface in menus (#tapzone, clipped to
+      the square in the stylesheet) and is inert in a round.
+      Every target is >= 56 CSS px on both axes -- above the 44 px this file
+      already argues for the menu pad -- because these are held with thumbs, not
+      tapped with fingertips.
+    -->
+    <div id="pad" aria-hidden="true">
+      <div id="pad-cross">
+        <button type="button" class="pad-btn pad-up"    data-aakey="ArrowUp"    aria-label="Menu up">&#9650;</button>
+        <button type="button" class="pad-btn pad-left"  data-aakey="ArrowLeft"  aria-label="Turn left">&#9664;</button>
+        <button type="button" class="pad-btn pad-right" data-aakey="ArrowRight" aria-label="Turn right">&#9654;</button>
+        <button type="button" class="pad-btn pad-down"  data-aakey="ArrowDown"  aria-label="Menu down">&#9660;</button>
+      </div>
+      <div id="pad-ab">
+        <button type="button" class="pad-btn pad-b" data-aakey="Escape" aria-label="Back or in-game menu">B</button>
+        <button type="button" class="pad-btn pad-a" data-aakey="Enter"  aria-label="Enter">A</button>
+      </div>
     </div>
   </div>
 
@@ -711,10 +770,11 @@
     // at parse time, ~90 lines before the touch block used to decide. Same
     // inputs (?touch= then the media query), same log line, one place.
     const touchDecision = decideTouch();
-    // Published so the four later blocks that need to know -- the touch
-    // overlay, the camera tuning, the sparks default and the diagnostic
-    // readout -- ask this decision rather than re-deriving it and risking a
-    // different answer.
+    // Published so the three later blocks that need to know -- the camera
+    // tuning, the sparks default and the diagnostic readout -- ask this
+    // decision rather than re-deriving it and risking a different answer. The
+    // touch overlay is not one of them: it is in this same scope and reads the
+    // lexical touchDecision directly.
     window.AA_TOUCH = touchDecision.on;
     // One machine-readable line, so a gate can assert which branch ran rather
     // than inferring it from a screenshot.
@@ -810,8 +870,14 @@
         publishAspect();
         // Told to the stylesheet for the same reason --aa-aspect is: CSS cannot
         // read these numbers. Set in BOTH layouts -- 0px when this is not a
-        // Game Boy load -- so the pad's rules (Task 3) always have a value and
-        // never fall back to a stale one from a previous sizing.
+        // Game Boy load -- because it is ONE quantity, "how tall the square
+        // is", and 0px is its true answer when there is no square. Publishing
+        // it in both branches is what lets a reader (a gate, the diagnostic
+        // readout) take the variable as the page's own answer instead of having
+        // to tell "no square" apart from "never set". The var(--aa-square,
+        // 100vw) fallback the pad's rules carry is for that second case only --
+        // sizeCanvas threw before this line -- and not for the full layout,
+        // whose rules are all html.aa-gameboy-scoped and never read it.
         document.documentElement.style.setProperty('--aa-square',
           window.AA_GAMEBOY ? squareCss + 'px' : '0px');
         console.log('[DISPLAY] ' + why + ': viewport ' + vw + 'x' + vh +

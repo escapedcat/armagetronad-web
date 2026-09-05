@@ -46,19 +46,38 @@ eval:(()=>{const held=performance.now();const r={rotate_element:document.getElem
 # M7 TASK 2: THE PICTURE IS A SQUARE AT THE TOP. Measured on the ELEMENT rather
 # than read back out of the variables that set it -- css_w/css_h come from
 # getBoundingClientRect(), which is the browser's own answer after the cascade,
-# so a CSS rule that disagreed with the backing store would show here. Four
+# so a CSS rule that disagreed with the backing store would show here. Five
 # separate claims, because each can fail without the others: the script took the
 # Game Boy branch (gameboy), the backing store is square (backing_w===backing_h,
 # which is what rViewport::Perspective reads), the drawn box is square to within
 # a rounding pixel, and the box is anchored at the top of the viewport and spans
 # its full width -- i.e. the room below it that Task 3 puts the pad in is real.
-eval:(()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();const r={backing_w:c.width,backing_h:c.height,css_w:Math.round(b.width),css_h:Math.round(b.height),css_top:Math.round(b.top),inner_w:window.innerWidth,gameboy:document.documentElement.classList.contains('aa-gameboy'),square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.gameboy&&r.backing_w===r.backing_h&&Math.abs(r.css_w-r.css_h)<=1&&r.css_top===0&&r.css_w===r.inner_w;console.log('[M7GATE] PB2 square '+JSON.stringify(r));return 'PB2 '+r.PASS})()
+# The fifth claim is --aa-square itself: the pad's top edge is that variable and
+# nothing else, so a variable that disagreed with the drawn box would put the pad
+# over the picture or leave a gap, and PB3 below would be measuring a coincidence.
+eval:(()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();const r={backing_w:c.width,backing_h:c.height,css_w:Math.round(b.width),css_h:Math.round(b.height),css_top:Math.round(b.top),inner_w:window.innerWidth,gameboy:document.documentElement.classList.contains('aa-gameboy'),square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.gameboy&&r.backing_w===r.backing_h&&Math.abs(r.css_w-r.css_h)<=1&&r.css_top===0&&r.css_w===r.inner_w&&r.square_var===r.css_w+'px';console.log('[M7GATE] PB2 square '+JSON.stringify(r));return 'PB2 '+r.PASS})()
 shot:pb-00-portrait-boot
-tap:#tapzone
+
+# M7 TASK 3: THE PAD IS BELOW THE SQUARE. Measured on the elements, like PB2,
+# and the load-bearing number is pad_top vs square_bottom: the pad's top edge is
+# var(--aa-square) and the square's bottom edge is where the canvas actually
+# ends, so the two agreeing to within a rounding pixel is the whole "the pad
+# occupies the room below the picture and does not cover it" claim. The rest is
+# the pad being complete and hittable: six buttons, all six keys the game needs,
+# every one at least 56 CSS px on both axes and none of them above the square.
+eval:(()=>{const sq=document.getElementById('canvas').getBoundingClientRect();const pad=document.getElementById('pad').getBoundingClientRect();const btns=[...document.querySelectorAll('#pad .pad-btn')].map(b=>{const r=b.getBoundingClientRect();return {key:b.dataset.aakey,w:Math.round(r.width),h:Math.round(r.height),top:Math.round(r.top)}});const r={pad_top:Math.round(pad.top),square_bottom:Math.round(sq.bottom),pad_bottom:Math.round(pad.bottom),inner_h:window.innerHeight,buttons:btns};r.PASS=Math.abs(r.pad_top-r.square_bottom)<=1&&btns.length===6&&btns.every(b=>b.w>=56&&b.h>=56&&b.top>=r.square_bottom)&&['ArrowUp','ArrowLeft','ArrowRight','ArrowDown','Escape','Enter'].every(k=>btns.some(b=>b.key===k));console.log('[M7GATE] PB3 pad-geometry '+JSON.stringify(r));return 'PB3 '+r.PASS})()
+shot:pb-02-pad
+
+# THE MENUS ARE REACHED BY A ALONE. These three taps were tap:#tapzone before
+# Task 3; they are the pad's A button now, because "the picture is a square and
+# the pad drives it" is only true if the first-run flow can be walked from the
+# pad. The picture is still a tap-for-Enter surface in menus -- #tapzone is
+# clipped to the square rather than removed -- but nothing here relies on it.
+tap:.pad-a
 wait:3000
-tap:#tapzone
+tap:.pad-a
 wait:3500
-tap:#tapzone
+tap:.pad-a
 until:1:120000:[L] NEW_ROUND
 mark:PORTRAIT-ROUND-STARTED
 # The same 2 s the landscape gate waits before its round-1 screenshot: [L]
@@ -66,3 +85,73 @@ mark:PORTRAIT-ROUND-STARTED
 # that line shows the splash rather than the round it is evidence for.
 wait:2500
 shot:pb-01-portrait-round
+
+# PB4: THE CROSS ACTUALLY TURNS THE CYCLE. The witness is the game's own, the
+# one web/tools/touch-gate.steps T3 uses: uActionTooltip::Count decrements
+# activationsLeft_[player] once per turn the local player's cycle ACCEPTED and
+# executed (src/ui/uInput.cpp:1299), and uActionTooltip is a tConfItemBase, so
+# forcing st_SaveConfig writes the live counters into /persist/var/user.cfg
+# where they can be read back. Field 1 of the five is player 1, the local one.
+# A page-side check -- a [TOUCH] line, an aa-down class, a KeyboardEvent that
+# was dispatched -- would prove only that the button was pressed; this proves
+# the key reached the game and the cycle turned. ctx is logged beside them and
+# is NOT part of the PASS: the counters record turns that already happened, so
+# an AI that frags the human in the 1.2 s before the read-back changes ctx to 0
+# without making the two turns any less real.
+# The counters are snapshotted HERE rather than assumed to start at 2 and 3: a
+# rerun against a profile that has already spent them would otherwise pass by
+# comparing 0 with 0.
+#
+# THE EXTRA 3 s IS THE ROUND'S COUNTDOWN AND IT IS NOT PADDING. gGame.cpp:1698
+# resets the game timer to -PREPARE_TIME (4, gGame.cpp:1172) at round start, and
+# ePlayer::Act drops every player action while se_GameTime()<0
+# (ePlayer.cpp:4064) -- so a turn tapped during the countdown is discarded by the
+# game and the counter does not move. MEASURED on the first run of this gate:
+# with wait:2500 alone the left tap landed at NEW_ROUND+3.03 s and was dropped
+# (2 -> 2) while the right tap at +4.60 s counted (3 -> 2), which puts game time
+# zero at about NEW_ROUND+3.5 s. 5.5 s of wait puts the first tap at ~+6 s.
+wait:3000
+eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const r={left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')};window.__pb4=r;console.log('[M7GATE] PB4 turn-counters-before '+JSON.stringify(r));return 'PB4 before '+JSON.stringify(r)})()
+tap:.pad-left
+wait:1200
+tap:.pad-right
+wait:1200
+eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const b=window.__pb4||{};const r={ctx:Module._aa_web_input_context()|0,before:b,after:{left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')}};r.PASS=typeof b.left==='number'&&typeof b.right==='number'&&r.after.left===b.left-1&&r.after.right===b.right-1;console.log('[M7GATE] PB4 pad-turns-sent '+JSON.stringify(r));return 'PB4 '+r.PASS})()
+shot:pb-03-after-pad-turns
+
+# PB5: B OPENS THE IN-GAME MENU AND B CLOSES IT, WITH THE CROSS WORKING INSIDE
+# IT. Escape mid-round is the one place where a cycle is alive AND a menu is on
+# screen, which is exactly the state the overlay's isDriving() rule exists for,
+# so the round trip is worth walking rather than assuming.
+#
+# IN A SECOND ROUND, for the reason web/tools/touch-gate.steps already has one:
+# the human here never steers away from anything and the AI frags them in a few
+# seconds. MEASURED on the previous run of this gate: [L] DEATH_FRAG web_user
+# word at NEW_ROUND+8.3 s, i.e. about 4.8 s after the countdown ended, against a
+# round trip that needs ~4 s -- PB4 spends most of that window, so the two
+# proofs do not fit in one round and PB5 got a dead cycle.
+#
+# AND IN THAT ROUND'S COUNTDOWN, which is the part that makes this repeatable
+# rather than lucky. gGame.cpp:1698 starts each round at game time -4, nothing
+# moves and nobody can be fragged until it reaches 0, and gGame.cpp:2801 PAUSES
+# the game timer for as long as a standalone in-game menu is up -- so the whole
+# round trip happens in a stopped world. Escape is a global action and is not
+# gated on se_GameTime() the way a turn is, so it opens the menu here exactly as
+# it would mid-round: the state under test is the same ctx 3 (menu on screen,
+# cycle alive) either way. The 900 ms after the last B is the only interval that
+# runs the clock at all, and it is the shortest that lets the menu unwind: the
+# eval calls aa_web_input_context() itself rather than waiting on the overlay's
+# 250 ms poll.
+until:2:150000:[L] NEW_ROUND
+mark:PORTRAIT-ROUND-2-STARTED
+wait:1200
+tap:.pad-b
+wait:1500
+shot:pb-04-in-game-menu-via-B
+tap:.pad-down
+wait:800
+tap:.pad-up
+wait:800
+tap:.pad-b
+wait:900
+eval:(()=>{const ctx=Module._aa_web_input_context()|0;const r={ctx:ctx,menu:(ctx&1)!==0,cycle_alive:(ctx&2)!==0,driving_class:document.getElementById('touch').classList.contains('aa-driving')};r.PASS=(ctx&2)!==0&&(ctx&1)===0;console.log('[M7GATE] PB5 menu-roundtrip-via-pad '+JSON.stringify(r));return 'PB5 '+r.PASS})()

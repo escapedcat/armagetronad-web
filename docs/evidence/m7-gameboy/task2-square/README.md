@@ -80,7 +80,7 @@ Landscape is the proof that nothing outside the Game Boy branch moved:
 2745x1236 aspect 2.2209 is the number `web/tools/touch-gate.steps` has named
 since Phase 3, unchanged. The only new line in this transcript is
 `[DISPLAY] layout=full`, and the `[TOUCH] enabled=` line moved earlier in the
-page (18 ms rather than after the sizing) because the decision was hoisted --
+page (22 ms rather than after the sizing) because the decision was hoisted --
 same text, same inputs.
 
 T4 rotates the emulated phone to portrait MID-GAME and still reads canvas
