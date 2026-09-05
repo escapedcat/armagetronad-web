@@ -45,6 +45,12 @@
 # reads the file back; web/tools/menu-gate.steps asserts the desktop file is
 # untouched. Read them as a pair -- the claim is "on touch and nowhere else".
 #
+# T1c IS THE OTHER HALF OF THE SAME SETTING, ADDED AFTER THE MAINTAINER FOUND
+# THAT ?sparks=1 DID NOT BRING THEM BACK. SPARKS persists to user.cfg, so the
+# override has to WRITE rather than stay quiet; T1c runs last, on a session that
+# has already saved SPARKS 0, and checks that a reload with ?sparks=1 puts
+# SPARKS 1 in the file the game reads after user.cfg. Its own section says why.
+#
 # AND IT GAINED THE ONE CHECK THE NEW LAYOUT NEEDS: that a tap can never mean
 # both things at once. T2b and T3b assert it STRUCTURALLY rather than by
 # sampling behaviour -- in a menu the two turn zones have no box at all, and
@@ -365,6 +371,57 @@ until:4:120000:[BOOT] autostart
 wait:9000
 shot:14-ask-dropped-and-portrait-kept
 eval:(()=>{const c=document.getElementById('canvas'),r=document.getElementById('rotate');const st=(()=>{try{return localStorage.getItem('aa.portrait')}catch(e){return 'THREW'}})();return '[PORTRAITGATE] P6 ask-dropped '+JSON.stringify({search:location.search,stored:st,boot_held:!!window.AA_BOOT_HELD_FOR_PORTRAIT,rotate_hidden:r.hidden,canvas:c.width+'x'+c.height,canvas_portrait:c.height>c.width,PASS:location.search===''&&st==='play'&&!window.AA_BOOT_HELD_FOR_PORTRAIT&&r.hidden===true&&c.height>c.width})})()
+
+# ===========================================================================
+# T1c: ?sparks=1 HAS TO BEAT THE VALUE THE GAME HAS ALREADY SAVED.
+#
+# THE DEFECT THIS IS THE REGRESSION TEST FOR, from the maintainer's phone:
+# "?sparks=1 does not bring the sparks back". The first version of this change
+# read ?sparks=1 as "skip the touch default", i.e. write NOTHING -- which is
+# how ?cam=1 works and is wrong here, because SPARKS is not the camera.
+#
+# SPARKS is a tConfItem and tConfItemBase::Save() returns true
+# (src/tools/tConfiguration.h:296), so st_SaveConfig writes it into
+# /persist/var/user.cfg -- SaveAll right-aligns the title in a 28-column field
+# (tConfiguration.cpp:473), so the line reads "                      SPARKS 0",
+# which is why the check below matches with leading whitespace allowed. This
+# page saves on every menu leave, so ONE session with the touch append in
+# effect is enough to put SPARKS 0 in the player's own config. After that,
+# writing nothing is not an override: st_LoadConfig reads user.cfg FIRST
+# (tConfiguration.cpp:975) and the userconfigdir autoexec.cfg near the END
+# (line 992), so silence leaves the saved 0 standing and the sparks stay off.
+# The CAMERA_* items are tSettingItems, Save() returns false (line 497), they
+# never reach user.cfg, and that is the whole reason ?cam=1's silence works.
+#
+# SO THE ORDER OF THIS SECTION IS THE TEST. It runs LAST, after a run that has
+# already left several menus with the touch append in effect, and it checks the
+# saved config FIRST: the precondition is that user.cfg really does hold
+# SPARKS 0. Only then does it reload with ?sparks=1, and then it asks the GAME
+# rather than the page -- it forces st_SaveConfig and reads the live value back
+# out of user.cfg, where it comes back 1. A gate that only checked the second
+# half would pass against a machine that had never saved anything, which is
+# exactly the state in which this bug is invisible.
+#
+# location.search is assigned rather than a URL typed out, for the reason P4
+# gives: this step does not have to know which port the server was started on.
+# ===========================================================================
+mark:T1c-PRECONDITION-THE-SAVED-CONFIG-HOLDS-SPARKS-0
+eval:(()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const m=ok?/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(t):null;return '[SPARKSGATE] T1c precondition saved-config-holds-sparks-0 '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,line:m?m[0]:null,value:m?m[1]:null,PASS:!!m&&m[1]==='0'})})()
+
+mark:T1c-RELOAD-WITH-SPARKS-1
+eval:location.search='?sparks=1'
+until:1:90000:[SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg
+until:5:90000:[BOOT] autostart
+wait:8000
+# THE CHECK ASKS THE GAME, NOT THE PAGE. Module._aa_web_save_config() is
+# st_SaveConfig, which writes every tConfItem's LIVE value into user.cfg -- so
+# forcing it here and reading SPARKS back out of that file is a reading of what
+# the running game believes, not of what this page wrote a moment earlier. If
+# the persisted 0 had won (the defect), the live value would be 0 and this line
+# would say so. Forcing the save also makes the check deterministic: the game
+# saves on its own schedule, on menu leaves, and a gate must not race it.
+eval:(()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=t!==null&&/\nSPARKS 1\n$/.test(t);return '[SPARKSGATE] T1c sparks-1-overrides-the-saved-0 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,ends_with_sparks_1:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 1'&&ends&&sv==='saved'&&!!um&&um[1]==='1'})})()
+shot:15-booted-with-sparks-1
 
 # CONTROL: can this transcript see a browser-reported JS error at all?
 mark:positive-control-deliberate-uncaught-error-follows

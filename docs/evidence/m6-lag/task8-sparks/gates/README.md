@@ -68,3 +68,76 @@ The desktop run's ten screenshots have ten distinct checksums.
 frame-time numbers this change was made for are in the directories beside this
 one, and they were measured on a desktop rig at a phone's pixel count. Nothing
 here is a phone.
+
+---
+
+# Round 2: `?sparks=1` had to write, and T1c is the proof
+
+**The defect, from the maintainer's phone: "`?sparks=1` does not bring the
+sparks back."** The version above shipped `?sparks=1` as *silence* — skip the
+touch default, write nothing — on the model of `?cam=1`. That is wrong for this
+setting, and the reason is a one-word difference in the C++:
+
+- `SPARKS` is a `tConfItem`, and `tConfItemBase::Save()` returns **true**
+  (`src/tools/tConfiguration.h:296`), so `st_SaveConfig` writes it into
+  `/persist/var/user.cfg`. `SaveAll` right-aligns the title in a 28-column field
+  (`tConfiguration.cpp:473`), so the line reads `"                      SPARKS 0"`.
+  This page saves on every menu leave, so **one** touch session is enough to put
+  `SPARKS 0` in the player's own config.
+- `st_LoadConfig` reads `user.cfg` **first** (`tConfiguration.cpp:975`) and the
+  userconfigdir `autoexec.cfg` near the **end** (line 992). So silence is not an
+  override: it leaves the saved `0` standing and the sparks stay off forever.
+- The `CAMERA_*` items are `tSettingItem`s, whose `Save()` returns **false**
+  (`tConfiguration.h:497`); they never reach `user.cfg`, which is exactly why
+  `?cam=1`'s silence really is stock. The two functions are not the same shape.
+
+**The fix**: `?sparks=1` appends `SPARKS 1`, on any device. `?sparks=0` appends
+`SPARKS 0`, on any device (unchanged). No parameter: touch appends `SPARKS 0`,
+desktop writes nothing (unchanged).
+
+| file | what it proves |
+|---|---|
+| `override-touch-gate-console.log` | the touch run on the fixed build: `T1b` and the two `T1c` checks, plus every check the gate already had. |
+| `override-desktop-menu-gate-console.log` | the desktop gate on the same build: `D1` still true, ten screenshots, all ten different. |
+| `override-15-booted-with-sparks-1.png` | the fifth boot of the touch run, entered at `?sparks=1`. |
+
+## T1c, and why it is two checks and not one
+
+The bug is invisible on a machine that has never saved anything, so the gate
+establishes the precondition **before** it tests the override. T1c runs last,
+after a session that has already left several menus with the touch append in
+effect:
+
+    [SPARKSGATE] T1c precondition saved-config-holds-sparks-0 {"read":true,"err":null,
+      "bytes":22765,"line":"                      SPARKS 0","value":"0","PASS":true}
+
+That is the state the maintainer was in. Then the page is reloaded at
+`?sparks=1` (`eval:location.search='?sparks=1'`, as P4 does), and the check
+**asks the game rather than the page**: it forces `st_SaveConfig` through
+`Module._aa_web_save_config()`, which writes every `tConfItem`'s *live* value,
+and reads `SPARKS` back out of `user.cfg`:
+
+    [   91626ms] [SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg before main() (from ?sparks=1)
+    [SPARKSGATE] T1c sparks-1-overrides-the-saved-0 {"save":"saved","autoexec_read":true,
+      "autoexec_bytes":12747,"autoexec_sparks_lines":["SPARKS 1"],"ends_with_sparks_1":true,
+      "live_sparks_in_user_cfg":"1",
+      "tail":"EED 0.2\n\n# appended at runtime by web/shell.html: crash sparks on (from ?sparks=1)\nSPARKS 1\n",
+      "PASS":true}
+
+`live_sparks_in_user_cfg":"1"` is the load-bearing field: the running game's own
+value for `SPARKS` is 1, in the very session whose saved config said 0 a moment
+earlier. Forcing the save is also what makes it deterministic — the game saves
+on its own schedule and a gate must not race it.
+
+## The rest of both runs, on the fixed build
+
+Eleven `PASS` flags in the touch run, all true — `T1b`, `T2b`, `T3b`, `P1`,
+`P2/P3`, `P5`, `P4`, `P6 precondition`, `P6 ask-dropped`, and the two `T1c`
+checks. Ten rounds; `CYCLE_TURN_LEFT_TOOLTIP` and `CYCLE_TURN_RIGHT_TOOLTIP`
+both reach `0 0 1 1 1` from taps alone; the two `[EXCEPTION]` lines are the
+script's own positive control; every 404 in both runs is `/favicon.ico`. The
+desktop run: `D1` `"sparks_occurrences":0` on a 12376-byte file, zero
+`[EXCEPTION]`, ten screenshots with ten distinct checksums.
+
+**Still not a phone.** These are correctness runs under device emulation, and
+the frame-time numbers remain the ones measured on this desktop rig.

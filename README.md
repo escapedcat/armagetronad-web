@@ -64,10 +64,12 @@ but reaches no servers. Safari is not a target.
   throughout (17.15 ms median stock against 13.1 with them off; a second stock run
   that sparked in only 11 of its 40 rim seconds read 14.0 against 13.65), the
   draw-call spikes at the end of a round went from 3 rounds in 10 to **0 in 10**,
-  and `?sparks=1` brings them back. Portrait raises a prompt to
-  turn the phone with a **Play in portrait** button that is remembered — portrait
-  still looks wrong today (the view is drawn at a ~131° vertical field of view) and a
-  proper portrait layout, a square game with the controls below it, is planned.
+  and `?sparks=1` brings them back — it writes `SPARKS 1`, because the game saves
+  `SPARKS` into your settings and silence would lose to the saved value. Portrait
+  raises a prompt to turn the phone with a **Play in portrait** button that is
+  remembered — portrait still looks wrong today (the view is drawn at a ~131°
+  vertical field of view) and a proper portrait layout, a square game with the
+  controls below it, is planned.
   `docs/evidence/phone-round2/`, `docs/evidence/portrait-choice/`,
   `docs/evidence/m6-lag/task8-sparks/`.
 

@@ -327,8 +327,10 @@ A **touch-only** append, already on this branch, gated in a browser both ways
   `Module.FS` when `window.AA_TOUCH` is true. It follows the camera
   precedent exactly, and a throw is logged and swallowed — a failure here is a
   game with sparks in it, never a broken game.
-- `?sparks=0` forces the append on any device; **`?sparks=1` keeps the stock
-  sparks on any device**, which is how a phone player gets the effect back.
+- `?sparks=0` appends `SPARKS 0` on any device; **`?sparks=1` appends `SPARKS 1`
+  on any device**, which is how a phone player gets the effect back. Both
+  directions *write* — see "the override has to write", below, for why the one
+  that first shipped as silence was a defect.
 - The touch gate's **T1b** reads the file back through `Module.FS` — what the
   config parser will see, not what the page logged — on the first of the run's
   four boots (the `[SPARKS]` line itself prints on all four, at 286, 56020,
@@ -354,12 +356,24 @@ A **touch-only** append, already on this branch, gated in a browser both ways
   the touch path writes above it. The 370-byte difference (12746 − 12376) is
   the camera block plus the sparks block, both touch-only.
 
-**One consequence worth knowing.** `st_LoadConfig` reads the config directory's
-`autoexec.cfg` **last** — after `user.cfg`, `settings.cfg` and `default.cfg`
-(`src/tools/tConfiguration.cpp:991`) — so the append wins over the game's own
-Preferences toggle on every boot: a touch player who switches sparks back on
-in the menu gets them for that session, and the next launch turns them off
-again. `?sparks=1` is the durable way to keep them.
+**One consequence worth knowing, and the override has to write.**
+`st_LoadConfig` reads the config directory's `autoexec.cfg` **last** — after
+`user.cfg`, `settings.cfg` and `default.cfg` (`src/tools/tConfiguration.cpp:992`,
+with `user.cfg` at 975) — so the append wins over the game's own Preferences
+toggle on every boot: a touch player who switches sparks back on in the menu
+gets them for that session, and the next launch turns them off again.
+`?sparks=1` is the durable way to keep them — **and it only works because it
+writes `SPARKS 1`**. It first shipped writing nothing, on the model of `?cam=1`,
+and the maintainer found the hole on his phone: `SPARKS` is a `tConfItem` and
+`tConfItemBase::Save()` returns `true` (`tConfiguration.h:296`), so
+`st_SaveConfig` puts it in `/persist/var/user.cfg` — right-aligned in a
+28-column field by `SaveAll` (`tConfiguration.cpp:473`), i.e.
+`"                      SPARKS 0"`. One session with the touch append in effect
+is enough. After that, silence is not an override: `user.cfg` is read first and
+its `0` stands. The `CAMERA_*` items are `tSettingItem`s, whose `Save()` returns
+`false` (`tConfiguration.h:497`), so they never reach `user.cfg` at all — which
+is why the camera could get away with the silence that sparks could not.
+`gates/README.md` has the run that proves the fix, `T1c`.
 
 **`EXPLOSION` is deliberately untouched.** It is the neighbouring setting in
 the same file (`tConfItem<bool> crexp("EXPLOSION", sg_crashExplosion)`,
