@@ -1471,45 +1471,78 @@
     // byte for byte the file the build shipped, and web/tools/menu-gate.steps
     // reads it back and asserts the word SPARKS does not appear in it.
     //
-    // ?sparks=0 / ?sparks=1 OVERRIDE IT, ON ANY DEVICE, and the two directions
-    // are not the same request. ?sparks=0 turns them off on a desktop, which is
-    // how the numbers above were measured here at all -- the rig has no phone.
-    // ?sparks=1 keeps them on a phone, which is how a player who would rather
-    // have the sparks than the milliseconds says so without a rebuild.
+    // ?sparks=0 / ?sparks=1 OVERRIDE IT, ON ANY DEVICE, AND BOTH DIRECTIONS
+    // WRITE. ?sparks=0 appends SPARKS 0 on a desktop, which is how the numbers
+    // above were measured here at all -- the rig has no phone. ?sparks=1
+    // appends SPARKS 1, and why it cannot simply stay quiet is the whole point
+    // of the next paragraph.
+    //
+    // WHY SILENCE IS NOT AN OVERRIDE: SPARKS PERSISTS, AND THE CAMERA DOES NOT.
+    // This first shipped with "?sparks=1 writes nothing, the device default is
+    // simply skipped", and the maintainer found it on his phone: the sparks did
+    // not come back. SPARKS is a tConfItem, and tConfItemBase::Save() returns
+    // true (src/tools/tConfiguration.h:296), so st_SaveConfig() WRITES IT INTO
+    // /persist/var/user.cfg -- and this page saves on every menu leave, 21
+    // times in one gate run. So after the FIRST session with this append in
+    // effect, the player's own saved config holds SPARKS 0. st_LoadConfig
+    // (src/tools/tConfiguration.cpp:959) then reads user.cfg FIRST (line 975)
+    // and the userconfigdir autoexec.cfg near the END (line 992), so the file
+    // this page appends to always wins -- which is exactly why a silent
+    // ?sparks=1 lost: it left the persisted 0 standing and appended nothing to
+    // beat it. An override against a saved setting has to write.
+    //
+    // THE CAMERA NEVER HAD THIS PROBLEM, and the difference is one word in the
+    // type: the CAMERA_* items are tSettingItems, whose Save() returns FALSE
+    // (tConfiguration.h:497), so they never reach user.cfg at all and ?cam=1's
+    // silence really is stock. Do not read the two functions as the same shape.
+    //
+    // AND THE PRICE OF THAT ORDERING, STATED PLAINLY: on a touch device the
+    // append re-applies on EVERY boot, so a player who turns the sparks back on
+    // in the in-game Preferences menu is overridden the next time the page
+    // loads -- the menu writes user.cfg, and user.cfg is read before this file.
+    // ?sparks=1 is the way back, and it is a URL rather than a setting because
+    // a URL is the only thing here that outranks a file loaded after user.cfg.
     const SPARKS_OFF_LINE = 'SPARKS 0';
+    const SPARKS_ON_LINE  = 'SPARKS 1';
     function applyTouchSparksTuning() {
-      let off = false;
+      let value = null;   // null = write nothing at all
       try {
-        // 0 = off, 1 = keep. SPARKS is a bool, so anything else is a typo and
-        // is ignored out loud rather than silently half-answering the question.
-        // WHICH TAG SAYS SO DEPENDS ON THE VALUE, because readNumberParam
-        // screens the range first: ?sparks=2 is out of range, so IT logs
-        // "[DISPLAY] ?sparks=2 ignored ..." and returns null (exactly as with
-        // ?cam), and the [SPARKS] line below fires only for a value that is in
-        // range but not 0 or 1, e.g. ?sparks=0.5. Either way the device default
-        // stands. Grep for both tags when chasing a ?sparks= that did nothing.
+        // 0 = off, 1 = on, and BOTH are written -- see the paragraph above for
+        // why 1 cannot be silence. SPARKS is a bool, so anything else is a typo
+        // and is ignored out loud rather than silently half-answering the
+        // question. WHICH TAG SAYS SO DEPENDS ON THE VALUE, because
+        // readNumberParam screens the range first: ?sparks=2 is out of range,
+        // so IT logs "[DISPLAY] ?sparks=2 ignored ..." and returns null
+        // (exactly as with ?cam), and the [SPARKS] line below fires only for a
+        // value that is in range but not 0 or 1, e.g. ?sparks=0.5. Either way
+        // the device default stands. Grep for both tags when chasing a
+        // ?sparks= that did nothing.
         const q = readNumberParam('sparks', 0, 1);
-        if (q !== null && q !== 0 && q !== 1) {
+        const fromParam = (q === 0 || q === 1);
+        if (q !== null && !fromParam) {
           console.log('[SPARKS] ?sparks=' + q + ' ignored (want 0 or 1)');
         }
-        off = (q === 0 || q === 1) ? (q === 0) : !!window.AA_TOUCH;
-        if (!off) {
-          console.log('[SPARKS] stock sparks, nothing written' +
-                      (q === 1 ? ' (from ?sparks=1)' : ''));
+        value = fromParam ? q : (window.AA_TOUCH ? 0 : null);
+        if (value === null) {
+          // The desktop, with no parameter: the file the build shipped is left
+          // exactly as it is, which web/tools/menu-gate.steps asserts by
+          // reading it back and finding no SPARKS in it.
+          console.log('[SPARKS] stock sparks, nothing written');
           return;
         }
-        const why = q === 0 ? ' (from ?sparks=0)' : ' (touch device)';
+        const why = fromParam ? ' (from ?sparks=' + q + ')' : ' (touch device)';
+        const line = value === 0 ? SPARKS_OFF_LINE : SPARKS_ON_LINE;
         const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: crash sparks off' +
-                       why, SPARKS_OFF_LINE, ''];
+        const lines = ['', '# appended at runtime by web/shell.html: crash sparks ' +
+                       (value === 0 ? 'off' : 'on') + why, line, ''];
         Module.FS.writeFile(
           path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[SPARKS] ' + SPARKS_OFF_LINE + ' written to ' + path +
+        console.log('[SPARKS] ' + line + ' written to ' + path +
                     ' before main()' + why);
       } catch (e) {
-        // A failure here is a game with sparks in it, not a broken game; like
-        // the camera above, it must never reach showFailure.
-        console.log('[SPARKS] tuning skipped (off ' + off + '): ' + e);
+        // A failure here is whatever the saved config already says, not a
+        // broken game; like the camera above, it must never reach showFailure.
+        console.log('[SPARKS] tuning skipped (value ' + value + '): ' + e);
       }
     }
 
