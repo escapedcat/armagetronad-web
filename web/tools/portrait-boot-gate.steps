@@ -42,6 +42,17 @@ eval:(()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8
 until:1:90000:[BOOT] autostart
 mark:PORTRAIT-BOOTED
 eval:(()=>{const held=performance.now();const r={rotate_element:document.getElementById('rotate')!==null,touch_visible:!document.getElementById('touch').hidden};r.PASS=!r.rotate_element&&r.touch_visible;console.log('[M7GATE] PB1 portrait-boot-no-hold '+JSON.stringify(r));return 'PB1 '+r.PASS})()
+
+# M7 TASK 2: THE PICTURE IS A SQUARE AT THE TOP. Measured on the ELEMENT rather
+# than read back out of the variables that set it -- css_w/css_h come from
+# getBoundingClientRect(), which is the browser's own answer after the cascade,
+# so a CSS rule that disagreed with the backing store would show here. Four
+# separate claims, because each can fail without the others: the script took the
+# Game Boy branch (gameboy), the backing store is square (backing_w===backing_h,
+# which is what rViewport::Perspective reads), the drawn box is square to within
+# a rounding pixel, and the box is anchored at the top of the viewport and spans
+# its full width -- i.e. the room below it that Task 3 puts the pad in is real.
+eval:(()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();const r={backing_w:c.width,backing_h:c.height,css_w:Math.round(b.width),css_h:Math.round(b.height),css_top:Math.round(b.top),inner_w:window.innerWidth,gameboy:document.documentElement.classList.contains('aa-gameboy'),square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.gameboy&&r.backing_w===r.backing_h&&Math.abs(r.css_w-r.css_h)<=1&&r.css_top===0&&r.css_w===r.inner_w;console.log('[M7GATE] PB2 square '+JSON.stringify(r));return 'PB2 '+r.PASS})()
 shot:pb-00-portrait-boot
 tap:#tapzone
 wait:3000

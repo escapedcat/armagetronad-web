@@ -157,6 +157,17 @@
        the game. Do not "restore" this without also giving the page something
        to tab between. */
     #canvas:focus, #canvas:focus-visible { outline: none; }
+    /* THE GAME BOY LAYOUT. html.aa-gameboy is set by the script before the
+       canvas is sized (see the touch decision above sizeCanvas). The picture is
+       a square at the top: the contain-fit rule above already gives height:auto
+       from the backing store's aspect, which the sizing block made 1, so only the
+       width and the anchoring change. 60dvh is the same cap the sizing block
+       applies, so CSS and backing store agree. */
+    html.aa-gameboy body    { align-items:flex-start; }
+    html.aa-gameboy #canvas { width: min(100vw, 60vh); }
+    @supports (height: 100dvh) {
+      html.aa-gameboy #canvas { width: min(100vw, 60dvh); }
+    }
     #overlay { position:fixed; inset:0; z-index:20; display:grid; place-content:center;
                gap:1rem; text-align:center; background:#111; }
     #status.error { color:#f77; max-width:32rem; }
@@ -651,11 +662,6 @@
       } catch (e) { return null; }
     };
 
-    // sizeCanvas() IS CALLED ONCE AND ONLY EVER BEFORE main(). It is a function
-    // rather than the IIFE it started as, and calling it a second time is safe
-    // for exactly as long as the game has not read the canvas. It is NOT a
-    // resize handler and must not become one -- the long paragraph above about
-    // sr_ReinitDisplay still stands.
     // WHICH WAY UP IS THE VIEWPORT? Asked of innerWidth/innerHeight FIRST and
     // of the media query only as a fallback, and the order is a bug fix rather
     // than a preference. innerWidth/innerHeight is the quantity that actually
@@ -675,7 +681,69 @@
       try { return window.matchMedia('(orientation: portrait)').matches; }
       catch (e) { return false; }
     };
+
+    // ---- is this a touch device? ------------------------------------
+    //
+    // '(hover: none) and (pointer: coarse)' is the media query for "the
+    // primary input is a finger", which is the question being asked -- a
+    // touchscreen laptop answers `true` to navigator.maxTouchPoints > 0 and
+    // must NOT get an overlay over its keyboard-driven game.
+    //
+    // ?touch=1 / ?touch=0 override it, for two reasons that are not the same:
+    // a harness needs to force the overlay on under device emulation (whose
+    // media features are not guaranteed to track the metrics override), and a
+    // visitor on a device this query gets wrong needs a way out. Nothing in
+    // the shipped flow sets either.
+    const decideTouch = () => {
+      try {
+        const q = new URLSearchParams(location.search).get('touch');
+        if (q === '1') return { on:true,  why:'?touch=1' };
+        if (q === '0') return { on:false, why:'?touch=0' };
+      } catch (e) { /* a browser without URLSearchParams falls through */ }
+      try {
+        const m = window.matchMedia('(hover: none) and (pointer: coarse)');
+        return { on: m.matches, why: 'media query -> ' + m.matches };
+      } catch (e) { return { on:false, why:'matchMedia threw: ' + e }; }
+    };
+
+    // THE TOUCH DECISION IS MADE HERE, BEFORE SIZING, because the Game Boy
+    // layout is a decision about the backing store's SHAPE and sizeCanvas runs
+    // at parse time, ~90 lines before the touch block used to decide. Same
+    // inputs (?touch= then the media query), same log line, one place.
+    const touchDecision = decideTouch();
+    // Published so the four later blocks that need to know -- the touch
+    // overlay, the camera tuning, the sparks default and the diagnostic
+    // readout -- ask this decision rather than re-deriving it and risking a
+    // different answer.
+    window.AA_TOUCH = touchDecision.on;
+    // One machine-readable line, so a gate can assert which branch ran rather
+    // than inferring it from a screenshot.
+    console.log('[TOUCH] enabled=' + touchDecision.on + ' (' + touchDecision.why + ')' +
+                ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
+    // GAME BOY = a touch device that LOADED in portrait. Landscape keeps the
+    // full-screen layout; a desktop never gets this whatever its window shape.
+    window.AA_GAMEBOY = window.AA_TOUCH && viewportIsPortrait();
+    document.documentElement.classList.toggle('aa-gameboy', !!window.AA_GAMEBOY);
+    console.log('[DISPLAY] layout=' + (window.AA_GAMEBOY ? 'gameboy' : 'full'));
+
     let sizedForPortrait = null;   // the orientation the backing store is FOR
+    // sizeCanvas() IS CALLED ONCE, AT PARSE TIME -- the single call is on the
+    // line right after the function -- AND ONLY EVER BEFORE main(). It is NOT a
+    // resize handler and must not become one: the long paragraph above about
+    // sr_ReinitDisplay still stands.
+    //
+    // IT RUNS AFTER THE TOUCH DECISION ABOVE, AND THAT ORDER IS LOAD-BEARING.
+    // The Game Boy branch inside reads window.AA_GAMEBOY to choose the backing
+    // store's SHAPE, and a shape is not a size: the game reads it once through
+    // SDL_GetVideoInfo and builds glViewport and glFrustum from it, so there is
+    // no later moment at which a wrong one could be corrected. That is the
+    // whole reason the decision was hoisted out of the touch block below.
+    //
+    // It is a named function with exactly ONE caller rather than the IIFE it
+    // started as. Nothing in the code requires that shape any more; what it
+    // still buys is the `why` argument, which names the call site in the
+    // [DISPLAY] line so a transcript says which call produced a given size.
+    // That is not an invitation to add a second caller -- see above.
     function sizeCanvas(why) {
       const canvas = document.getElementById('canvas');
       // Told to the stylesheet rather than derived by it, because CSS has no
@@ -706,6 +774,16 @@
           publishAspect();
           return;
         }
+        // THE GAME BOY SQUARE. Side = the CSS width, capped at 60 % of the CSS
+        // height so the pad below keeps at least 40 % on a tall-but-wide tablet.
+        // Aspect 1 is the best of the three shapes this game gets on a phone:
+        // rViewport::Perspective makes it 90 x 90 degrees (landscape ~111 x 67,
+        // full portrait ~131 vertical). docs/evidence/phone-round2/fov/README.md.
+        let squareCss = 0;
+        if (window.AA_GAMEBOY) {
+          squareCss = Math.min(vw, Math.floor(vh * 0.6));
+          w = h = Math.floor(squareCss * dpr);
+        }
         const px = w * h;
         let capped = false;
         if (px > MAX_CANVAS_PIXELS) {
@@ -730,6 +808,12 @@
         canvas.width  = w;
         canvas.height = h;
         publishAspect();
+        // Told to the stylesheet for the same reason --aa-aspect is: CSS cannot
+        // read these numbers. Set in BOTH layouts -- 0px when this is not a
+        // Game Boy load -- so the pad's rules (Task 3) always have a value and
+        // never fall back to a stale one from a previous sizing.
+        document.documentElement.style.setProperty('--aa-square',
+          window.AA_GAMEBOY ? squareCss + 'px' : '0px');
         console.log('[DISPLAY] ' + why + ': viewport ' + vw + 'x' + vh +
                     ' dpr ' + dpr +
                     (dprOverride !== null ? ' (?dpr override)' : '') +
@@ -737,7 +821,9 @@
                     ' aspect ' + (w / h).toFixed(4) +
                     (capped ? ' (capped at ' + MAX_CANVAS_PIXELS + ' px)' : '') +
                     ' gpu-axis-limit ' + (axisLimit || 'unknown') +
-                    (axisClamped ? ' (CLAMPED to it)' : ''));
+                    (axisClamped ? ' (CLAMPED to it)' : '') +
+                    (window.AA_GAMEBOY ? ' gameboy square ' + squareCss + 'css'
+                                       : ''));
       } catch (e) {
         // Falling back to the attributes on the element is a working game at
         // 1024x768, so this must never be allowed to escape and turn into
@@ -800,41 +886,13 @@
         }));
       };
 
-      // ---- is this a touch device? ------------------------------------
-      //
-      // '(hover: none) and (pointer: coarse)' is the media query for "the
-      // primary input is a finger", which is the question being asked -- a
-      // touchscreen laptop answers `true` to navigator.maxTouchPoints > 0 and
-      // must NOT get an overlay over its keyboard-driven game.
-      //
-      // ?touch=1 / ?touch=0 override it, for two reasons that are not the same:
-      // a harness needs to force the overlay on under device emulation (whose
-      // media features are not guaranteed to track the metrics override), and a
-      // visitor on a device this query gets wrong needs a way out. Nothing in
-      // the shipped flow sets either.
-      const decideTouch = () => {
-        try {
-          const q = new URLSearchParams(location.search).get('touch');
-          if (q === '1') return { on:true,  why:'?touch=1' };
-          if (q === '0') return { on:false, why:'?touch=0' };
-        } catch (e) { /* a browser without URLSearchParams falls through */ }
-        try {
-          const m = window.matchMedia('(hover: none) and (pointer: coarse)');
-          return { on: m.matches, why: 'media query -> ' + m.matches };
-        } catch (e) { return { on:false, why:'matchMedia threw: ' + e }; }
-      };
-
       const touchEl = document.getElementById('touch');
       const chipEl = document.getElementById('reloadchip');
-      const decision = decideTouch();
-      // One machine-readable line, so a gate can assert which branch ran rather
-      // than inferring it from a screenshot.
-      console.log('[TOUCH] enabled=' + decision.on + ' (' + decision.why + ')' +
-                  ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
-      // Published so the two later blocks that need to know -- the camera
-      // tuning and the diagnostic readout -- ask this decision rather than
-      // re-deriving it and risking a different answer.
-      window.AA_TOUCH = decision.on;
+      // REUSED, NOT RE-DERIVED. The decision, its [TOUCH] line and
+      // window.AA_TOUCH all moved above sizeCanvas (see the block there), so
+      // the overlay and the backing store's shape can never disagree about
+      // whether this is a touch device.
+      const decision = touchDecision;
       if (!decision.on) return;
       touchEl.hidden = false;
 
