@@ -64,8 +64,11 @@ shot:pb-00-portrait-boot
 # ends, so the two agreeing to within a rounding pixel is the whole "the pad
 # occupies the room below the picture and does not cover it" claim. The rest is
 # the pad being complete and hittable: six buttons, all six keys the game needs,
-# every one at least 56 CSS px on both axes and none of them above the square.
-eval:(()=>{const sq=document.getElementById('canvas').getBoundingClientRect();const pad=document.getElementById('pad').getBoundingClientRect();const btns=[...document.querySelectorAll('#pad .pad-btn')].map(b=>{const r=b.getBoundingClientRect();return {key:b.dataset.aakey,w:Math.round(r.width),h:Math.round(r.height),top:Math.round(r.top)}});const r={pad_top:Math.round(pad.top),square_bottom:Math.round(sq.bottom),pad_bottom:Math.round(pad.bottom),inner_h:window.innerHeight,buttons:btns};r.PASS=Math.abs(r.pad_top-r.square_bottom)<=1&&btns.length===6&&btns.every(b=>b.w>=56&&b.h>=56&&b.top>=r.square_bottom)&&['ArrowUp','ArrowLeft','ArrowRight','ArrowDown','Escape','Enter'].every(k=>btns.some(b=>b.key===k));console.log('[M7GATE] PB3 pad-geometry '+JSON.stringify(r));return 'PB3 '+r.PASS})()
+# every one at least 56 CSS px on both axes at 412 px wide (44 px is the floor
+# below 400 px, where the cells shrink with the viewport), none of them above the
+# square, every one -- and the legend -- inside the viewport (M7.1: the first cut
+# overflowed the right edge on a narrower phone), Enter and Esc labelled by name.
+eval:(()=>{const sq=document.getElementById('canvas').getBoundingClientRect();const pad=document.getElementById('pad').getBoundingClientRect();const iw=window.innerWidth;const minSz=iw>=400?56:44;const btns=[...document.querySelectorAll('#pad .pad-btn')].map(b=>{const r=b.getBoundingClientRect();return {key:b.dataset.aakey,label:b.textContent.trim(),w:Math.round(r.width),h:Math.round(r.height),top:Math.round(r.top),left:Math.round(r.left),right:Math.round(r.right)}});const lg=document.getElementById('pad-legend');const lr=lg?lg.getBoundingClientRect():null;const r={inner_w:iw,inner_h:window.innerHeight,min_size:minSz,pad_top:Math.round(pad.top),square_bottom:Math.round(sq.bottom),pad_bottom:Math.round(pad.bottom),legend:lr?{shown:getComputedStyle(lg).display!=='none',left:Math.round(lr.left),right:Math.round(lr.right),bottom:Math.round(lr.bottom)}:null,buttons:btns};r.PASS=Math.abs(r.pad_top-r.square_bottom)<=1&&btns.length===6&&btns.every(b=>b.w>=minSz&&b.h>=minSz&&b.top>=r.square_bottom&&b.left>=0&&b.right<=iw)&&['ArrowUp','ArrowLeft','ArrowRight','ArrowDown','Escape','Enter'].every(k=>btns.some(b=>b.key===k))&&btns.some(b=>b.key==='Enter'&&b.label==='Enter')&&btns.some(b=>b.key==='Escape'&&b.label==='Esc')&&!!r.legend&&r.legend.shown&&r.legend.left>=0&&r.legend.right<=iw&&r.legend.bottom<=window.innerHeight;console.log('[M7GATE] PB3 pad-geometry '+JSON.stringify(r));return 'PB3 '+r.PASS})()
 shot:pb-02-pad
 
 # THE MENUS ARE REACHED BY A ALONE. These three taps were tap:#tapzone before
@@ -80,10 +83,25 @@ wait:3500
 tap:.pad-a
 until:1:120000:[L] NEW_ROUND
 mark:PORTRAIT-ROUND-STARTED
+# PB7 (M7.1): ENTER ON THE PAD DOES NOT OPEN THE CHAT LINE. The game binds Enter
+# to CHAT in a round; before M7.1 a mid-round Enter opened "Say:" and the arrows
+# typed into it (probed 2026-09-06: ctx went 2 -> 1 and the turn counters froze
+# until Escape). The pad now suppresses Enter while driving and counts the
+# suppression in window.AA_PAD_ENTER_SUPPRESSED. Witnesses: ctx stays "cycle
+# alive, no menu" (a chat line reads as a menu), CHAT_TOOLTIP does not move
+# (it counts Enter-as-chat the way the turn tooltips count turns), and the
+# counter went up by exactly one. Runs in the countdown, 1.2 s after NEW_ROUND,
+# where the cycle is alive and the clock has not started.
+wait:1200
+eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0};window.__pb7=r;console.log('[M7GATE] PB7 enter-in-round-before '+JSON.stringify(r));return 'PB7 before'})()
+tap:.pad-a
+wait:500
+eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const b=window.__pb7||{};const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0,before:b};r.PASS=(b.ctx&2)!==0&&(b.ctx&1)===0&&(r.ctx&2)!==0&&(r.ctx&1)===0&&r.chat===b.chat&&r.suppressed===(b.suppressed|0)+1;console.log('[M7GATE] PB7 enter-in-round-suppressed '+JSON.stringify(r));return 'PB7 '+r.PASS})()
 # The same 2 s the landscape gate waits before its round-1 screenshot: [L]
 # NEW_ROUND is printed while "New Match" is still on screen, and a shot taken on
-# that line shows the splash rather than the round it is evidence for.
-wait:2500
+# that line shows the splash rather than the round it is evidence for. PB7 has
+# already spent 1.7 s, so this lands at ~+2.7 s.
+wait:900
 shot:pb-01-portrait-round
 
 # PB4: THE CROSS ACTUALLY TURNS THE CYCLE. The witness is the game's own, the
@@ -108,11 +126,14 @@ shot:pb-01-portrait-round
 # se_GameTime()<0 (ePlayer.cpp:4065); the camera branch on the line above it is
 # not gated and runs throughout. So a turn tapped during the countdown is
 # discarded by the game and the counter does not move. MEASURED on the first
-# run of this gate:
+# run of this gate (uncommitted):
 # with wait:2500 alone the left tap landed at NEW_ROUND+3.03 s and was dropped
 # (2 -> 2) while the right tap at +4.60 s counted (3 -> 2), which puts game time
-# zero at about NEW_ROUND+3.5 s. 5.5 s of wait puts the first tap at ~+6 s.
-wait:3000
+# zero at about NEW_ROUND+3.5 s. Since M7.1 the budget is shared with PB7 and
+# the shot above (2.7 s spent), so 1.8 s more puts the first tap at ~+4.5 s --
+# a second past game-time zero -- and the read-back at ~+7 s, ahead of the
+# ~+8.3 s at which the AI frags an idle human.
+wait:1800
 eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const r={left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')};window.__pb4=r;console.log('[M7GATE] PB4 turn-counters-before '+JSON.stringify(r));return 'PB4 before '+JSON.stringify(r)})()
 tap:.pad-left
 wait:1200

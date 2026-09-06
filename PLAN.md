@@ -848,11 +848,29 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > deleted portrait hold re-measured before `main()` for exactly that direction; the fix is the
 > live re-layout named above and not a second `sizeCanvas()` caller.
 > **The spec's A/B glyphs were not shipped.** The layout section asked for "A ⏎" and "B ⎋" on
-> the two round buttons; the pad reads **"A"** and **"B"**, because ⎋ (U+238B) has uncertain font
-> coverage on Android and the `aria-label`s ("Enter", "Back or in-game menu") carry the meaning
-> for anything that reads them. And the standing two: **iOS is
+> the two round buttons; the pad read **"A"** and **"B"**, because ⎋ (U+238B) has uncertain font
+> coverage on Android and the `aria-label`s carried the meaning — superseded a day later by
+> M7.1 below, which labels them **Enter** and **Esc** outright. And the standing two: **iOS is
 > untested**, and every number in this milestone came out of Chrome device emulation, not a
 > device. `docs/evidence/m7-gameboy/README.md`.
+>
+> **M7.1 — the pad, second cut (2026-09-06).** The maintainer's phone, narrower than the
+> 412 px the gates drove, cut Esc/Enter off at the right edge: the pad was sized in `rem`
+> (3 × 4rem + 2 × 5rem = 368 px side by side) and nothing measured below 412. The cells are
+> now `min(4rem, 15vw)` and the buttons `min(5rem, 18vw)` — unchanged at 412, 337 px of pad
+> against 360, 301 against 320 — and PB3 asserts every button and the legend inside the
+> viewport at 412, 360 and 320 wide. "A" and "B" meant nothing to him, so the buttons read
+> **Enter** and **Esc** with a legend line (Left/Right turn, Down brakes — the game's own
+> cursor-keys binding, which the probe confirmed — Enter, Esc = menu). Probing the labels
+> found the real defect: **the game binds Enter to CHAT in a round**, so a mid-round Enter
+> opened the "Say:" line and every arrow after it typed into the chat instead of steering,
+> until Escape (`ctx` went 2 → 1, the turn counters froze). The pad now sends Enter only when
+> not driving — the picture's tap already had that rule — and **PB7** proves it: Enter in
+> the countdown leaves `ctx` at "cycle alive, no menu", `CHAT_TOOLTIP` unmoved, and
+> `AA_PAD_ENTER_SUPPRESSED` up by one. The look he picked from three studies is raised keys
+> in the arena's colours: cool-blue plastic, cyan arrows and Enter, magenta Esc, 5 px of
+> travel on press. Landscape (L1) and desktop (D2) re-proven unchanged.
+> `docs/evidence/m7-gameboy/m7.1-pad/`.
 
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 

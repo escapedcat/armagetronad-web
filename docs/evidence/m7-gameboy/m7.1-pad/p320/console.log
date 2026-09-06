@@ -1,0 +1,123 @@
+[    593ms] [harness] mobile emulation: 320x568 CSS px dpr 2 (= 640x1136 device px), touch on
+[    595ms] [harness] chrome: Chrome/152.0.7977.77
+[    595ms] [harness] navigating to http://localhost:8008/armagetronad.html
+[     14ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     17ms] [console.log] [DISPLAY] layout=gameboy
+[     23ms] [console.log] [DISPLAY] at load: viewport 320x568 dpr 2 -> canvas 640x640 aspect 1.0000 gpu-axis-limit 16384 gameboy square 320css
+[     23ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     29ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true) via load
+[     37ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     38ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     38ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: true) via resize
+[     40ms] [page] load event fired
+[     49ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    104ms] [console.log] [PERSIST] populate ok in 38ms
+[    282ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    283ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    283ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[    284ms] [console.log] [BOOT] autostart: calling main
+[    286ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    293ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    294ms] [console.error] 
+[    294ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    294ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    294ms] [console.log] 
+[    412ms] [console.log] [L] ENCODING latin1
+[    420ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    421ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    441ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    444ms] [console.error] TODO: glShadeModel
+[    448ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    484ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    485ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    485ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    485ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    485ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    532ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[   1009ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1009ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})() => "probe installed"
+[   1010ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1010ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1010ms] [harness] === PORTRAIT-BOOTED ===
+[   1011ms] [console.log] [M7GATE] PB1 portrait-boot-no-hold {"rotate_element":false,"touch_visible":true,"PASS":true}
+[   1011ms] [harness] eval (()=>{const r={rotate_element:document.getElementById('rotate')!==null,touch_visible:!document.getElementById('touch').hidden};r.PASS=!r.rotate_element&&r.touch_visible;console.log('[M7GATE] PB1 portrait-boot-no-hold '+JSON.stringify(r));return 'PB1 '+r.PASS})() => "PB1 true"
+[   1012ms] [console.log] [M7GATE] PB2 square {"backing_w":640,"backing_h":640,"css_w":320,"css_h":320,"css_top":0,"inner_w":320,"gameboy":true,"square_var":"320px","PASS":true}
+[   1013ms] [harness] eval (()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();const r={backing_w:c.width,backing_h:c.height,css_w:Math.round(b.width),css_h:Math.round(b.height),css_top:Math.round(b.top),inner_w:window.innerWidth,gameboy:document.documentElement.classList.contains('aa-gameboy'),square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.gameboy&&r.backing_w===r.backing_h&&Math.abs(r.css_w-r.css_h)<=1&&r.css_top===0&&r.css_w===r.inner_w&&r.square_var===r.css_w+'px';console.log('[M7GATE] PB2 square '+JSON.stringify(r));return 'PB2 '+r.PASS})() => "PB2 true"
+[   1118ms] [harness] screenshot -> docs/evidence/m7-gameboy/m7.1-pad/p320/pb-00-portrait-boot.png
+[   1120ms] [console.log] [M7GATE] PB3 pad-geometry {"inner_w":320,"inner_h":568,"min_size":44,"pad_top":320,"square_bottom":320,"pad_bottom":568,"legend":{"shown":true,"left":35,"right":285,"bottom":558},"buttons":[{"key":"ArrowUp","label":"▲","w":48,"h":48,"top":353,"left":65,"right":113},{"key":"ArrowLeft","label":"◀","w":48,"h":48,"top":405,"left":13,"right":61},{"key":"ArrowRight","label":"▶","w":48,"h":48,"top":405,"left":117,"right":165},{"key":"ArrowDown","label":"▼","w":48,"h":48,"top":457,"left":65,"right":113},{"key":"Escape","label":"Esc","w":58,"h":58,"top":433,"left":174,"right":232},{"key":"Enter","label":"Enter","w":58,"h":58,"top":367,"left":240,"right":298}],"PASS":true}
+[   1120ms] [harness] eval (()=>{const sq=document.getElementById('canvas').getBoundingClientRect();const pad=document.getElementById('pad').getBoundingClientRect();const iw=window.innerWidth;const minSz=iw>=400?56:44;const btns=[...document.querySelectorAll('#pad .pad-btn')].map(b=>{const r=b.getBoundingClientRect();return {key:b.dataset.aakey,label:b.textContent.trim(),w:Math.round(r.width),h:Math.round(r.height),top:Math.round(r.top),left:Math.round(r.left),right:Math.round(r.right)}});const lg=document.getElementById('pad-legend');const lr=lg?lg.getBoundingClientRect():null;const r={inner_w:iw,inner_h:window.innerHeight,min_size:minSz,pad_top:Math.round(pad.top),square_bottom:Math.round(sq.bottom),pad_bottom:Math.round(pad.bottom),legend:lr?{shown:getComputedStyle(lg).display!=='none',left:Math.round(lr.left),right:Math.round(lr.right),bottom:Math.round(lr.bottom)}:null,buttons:btns};r.PASS=Math.abs(r.pad_top-r.square_bottom)<=1&&btns.length===6&&btns.every(b=>b.w>=minSz&&b.h>=minSz&&b.top>=r.square_bottom&&b.left>=0&&b.right<=iw)&&['ArrowUp','ArrowLeft','ArrowRight','ArrowDown','Escape','Enter'].every(k=>btns.some(b=>b.key===k))&&btns.some(b=>b.key==='Enter'&&b.label==='Enter')&&btns.some(b=>b.key==='Escape'&&b.label==='Esc')&&!!r.legend&&r.legend.shown&&r.legend.left>=0&&r.legend.right<=iw&&r.legend.bottom<=window.innerHeight;console.log('[M7GATE] PB3 pad-geometry '+JSON.stringify(r));return 'PB3 '+r.PASS})() => "PB3 true"
+[   1210ms] [harness] screenshot -> docs/evidence/m7-gameboy/m7.1-pad/p320/pb-02-pad.png
+[   1222ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1223ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1289ms] [harness] tap .pad-a at 269,396 (1/1)
+[   1313ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[   4673ms] [harness] tap .pad-a at 269,396 (1/1)
+[   4697ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[   4778ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[   8557ms] [harness] tap .pad-a at 269,396 (1/1)
+[   8574ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[   8576ms] [console.log] [L] TEAM_CREATED web_user
+[   8576ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[   8578ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[   8580ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[   8580ms] [console.log] [L] NEW_ROUND 2026-09-06 12:37:57 UTC+0200
+[   8597ms] [console.log] [L] TEAM_CREATED ai_team
+[   8597ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[   8597ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[   8597ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[   8598ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[   8618ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[   8859ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 120000ms, have 1)
+[   8859ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[   8859ms] [harness] === PORTRAIT-ROUND-STARTED ===
+[  10065ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  10066ms] [console.log] [M7GATE] PB7 enter-in-round-before {"ctx":2,"chat":"0 1 0 0 0","suppressed":0}
+[  10066ms] [harness] eval (()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0};window.__pb7=r;console.log('[M7GATE] PB7 enter-in-round-before '+JSON.stringify(r));return 'PB7 before'})() => "PB7 before"
+[  10071ms] [console.log] [TOUCH] pad Enter suppressed while driving (Enter is CHAT in a round)
+[  10140ms] [harness] tap .pad-a at 269,396 (1/1)
+[  10946ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  10946ms] [console.log] [M7GATE] PB7 enter-in-round-suppressed {"ctx":2,"chat":"0 1 0 0 0","suppressed":1,"before":{"ctx":2,"chat":"0 1 0 0 0","suppressed":0},"PASS":true}
+[  10947ms] [harness] eval (()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const b=window.__pb7||{};const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0,before:b};r.PASS=(b.ctx&2)!==0&&(b.ctx&1)===0&&(r.ctx&2)!==0&&(r.ctx&1)===0&&r.chat===b.chat&&r.suppressed===(b.suppressed|0)+1;console.log('[M7GATE] PB7 enter-in-round-suppressed '+JSON.stringify(r));return 'PB7 '+r.PASS})() => "PB7 true"
+[  11941ms] [harness] screenshot -> docs/evidence/m7-gameboy/m7.1-pad/p320/pb-01-portrait-round.png
+[  13746ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  13747ms] [console.log] [M7GATE] PB4 turn-counters-before {"left":2,"right":3}
+[  13748ms] [harness] eval (()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const r={left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')};window.__pb4=r;console.log('[M7GATE] PB4 turn-counters-before '+JSON.stringify(r));return 'PB4 before '+JSON.stringify(r)})() => "PB4 before {\"left\":2,\"right\":3}"
+[  13823ms] [harness] tap .pad-left at 37,429 (1/1)
+[  13839ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  15407ms] [harness] tap .pad-right at 141,429 (1/1)
+[  16906ms] [console.log] [L] DEATH_FRAG web_user word
+[  16907ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  16913ms] [console.log] [PERSISTSAVE] js-backstop n=6
+[  16914ms] [console.log] [M7GATE] PB4 pad-turns-sent {"ctx":0,"before":{"left":2,"right":3},"after":{"left":1,"right":2},"PASS":true}
+[  16914ms] [harness] eval (()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const b=window.__pb4||{};const r={ctx:Module._aa_web_input_context()|0,before:b,after:{left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')}};r.PASS=typeof b.left==='number'&&typeof b.right==='number'&&r.after.left===b.left-1&&r.after.right===b.right-1;console.log('[M7GATE] PB4 pad-turns-sent '+JSON.stringify(r));return 'PB4 '+r.PASS})() => "PB4 true"
+[  17012ms] [harness] screenshot -> docs/evidence/m7-gameboy/m7.1-pad/p320/pb-03-after-pad-turns.png
+[  17013ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 150000ms, have 1)
+[  17025ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  18707ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  22759ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  22760ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  22760ms] [console.log] [L] NEW_ROUND 2026-09-06 12:38:11 UTC+0200
+[  22762ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  22763ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  22764ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  22764ms] [harness] === PORTRAIT-ROUND-2-STARTED ===
+[  22780ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  24041ms] [harness] tap .pad-b at 203,462 (1/1)
+[  24277ms] [console.log] [TOUCH] context 3 (menu yes, cycle alive) -> TAP=ENTER
+[  25845ms] [console.log] [M7GATE] PB5 menu-opened-via-B {"ctx":3,"menu":true,"cycle_alive":true}
+[  25846ms] [harness] eval (()=>{const ctx=Module._aa_web_input_context()|0;window.__pb5={ctx:ctx};console.log('[M7GATE] PB5 menu-opened-via-B '+JSON.stringify({ctx:ctx,menu:(ctx&1)!==0,cycle_alive:(ctx&2)!==0}));return 'PB5 opened ctx '+ctx})() => "PB5 opened ctx 3"
+[  25951ms] [harness] screenshot -> docs/evidence/m7-gameboy/m7.1-pad/p320/pb-04-in-game-menu-via-B.png
+[  26024ms] [harness] tap .pad-down at 89,481 (1/1)
+[  27208ms] [harness] tap .pad-up at 89,377 (1/1)
+[  28391ms] [harness] tap .pad-b at 203,462 (1/1)
+[  28427ms] [console.log] [PERSISTSAVE] menu-leave n=7
+[  28525ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  29597ms] [console.log] [M7GATE] PB5 menu-roundtrip-via-pad {"opened_ctx":3,"opened_menu":true,"ctx":2,"menu":false,"cycle_alive":true,"driving_class":true,"PASS":true}
+[  29597ms] [harness] eval (()=>{const ctx=Module._aa_web_input_context()|0;const o=window.__pb5||{};const r={opened_ctx:o.ctx,opened_menu:typeof o.ctx==='number'&&(o.ctx&1)!==0,ctx:ctx,menu:(ctx&1)!==0,cycle_alive:(ctx&2)!==0,driving_class:document.getElementById('touch').classList.contains('aa-driving')};r.PASS=(ctx&2)!==0&&(ctx&1)===0&&typeof o.ctx==='number'&&(o.ctx&1)!==0;console.log('[M7GATE] PB5 menu-roundtrip-via-pad '+JSON.stringify(r));return 'PB5 '+r.PASS})() => "PB5 true"
+[  29598ms] [harness] === ROTATE-TO-LANDSCAPE-AFTER-PORTRAIT-BOOT ===
+[  29602ms] [harness] metrics -> 915x412 dpr 3
+[  29607ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: true) via resize
+[  29608ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: true) via media query
+[  31106ms] [console.log] [M7GATE] PB6 rotate-after-portrait-boot {"chip_visible":true,"still_gameboy":true,"canvas_w":640,"canvas_h":640,"PASS":true}
+[  31106ms] [harness] eval (()=>{const chip=document.getElementById('reloadchip');const r={chip_visible:!!chip&&!chip.hidden,still_gameboy:document.documentElement.classList.contains('aa-gameboy'),canvas_w:document.getElementById('canvas').width,canvas_h:document.getElementById('canvas').height};r.PASS=r.chip_visible&&r.still_gameboy&&r.canvas_w===r.canvas_h;console.log('[M7GATE] PB6 rotate-after-portrait-boot '+JSON.stringify(r));return 'PB6 '+r.PASS})() => "PB6 true"
+[  31245ms] [harness] screenshot -> docs/evidence/m7-gameboy/m7.1-pad/p320/pb-05-landscape-after-portrait-boot-chip.png
