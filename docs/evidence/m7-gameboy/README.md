@@ -128,7 +128,8 @@ Full write-up, including the two timing facts the run measured:
 - **PB3** is the geometry: `pad_top 412 === square_bottom 412`, and every
   button's `top` is at or below 412, so nothing the pad adds is over the picture.
   64 px is the cross's `4rem` and 80 px is A/B's `5rem`, both above the 56 px
-  floor.
+  floor. (Superseded by M7.1 below: the cells are sized from the viewport width
+  now, and PB3 also asserts the fit at 360 and 320 wide.)
 - **PB4** is the game's answer, not the page's: `uActionTooltip::Count`
   decrements a counter once per turn the local cycle actually executed, and one
   tap on the cross's left and one on its right moved 2 → 1 and 3 → 2.
@@ -232,10 +233,10 @@ menu where the snapshot is taken.
   direction. The fix is the live re-layout in the bullet above and not a second
   `sizeCanvas()` caller.
 - **The spec's A/B glyphs were not shipped.** The layout section asked for
-  "A ⏎" and "B ⎋" on the two round buttons; the pad reads **A** and **B**. ⎋
-  (U+238B) has uncertain font coverage on Android, and the `aria-label`s —
-  `Enter` and `Back or in-game menu` — carry the meaning for anything that reads
-  them.
+  "A ⏎" and "B ⎋" on the two round buttons; the pad read **A** and **B**. ⎋
+  (U+238B) has uncertain font coverage on Android, and the `aria-label`s
+  carried the meaning. Superseded by M7.1 (below): the buttons read **Enter**
+  and **Esc**.
 - **The 60 % cap and the pad's `align-items: safe center` are unexercised.** At
   412×915 the width wins the cap and the pad has 503 px for the 216 the cross and
   its padding need. A tablet-shaped arm would exercise both; none was run.
@@ -329,3 +330,54 @@ transcript.
 Game Boy state the open items describe, with the chip's `×` now as wide as it is
 tall. The other screenshots the three runs produced are left uncommitted — they
 are the same pictures the task sections above already commit.
+
+## M7.1 — the pad, second cut (2026-09-06)
+
+The maintainer's phone (narrower than the 412 px the gates drove) cut Esc/Enter
+off at the right edge, and "A"/"B" meant nothing to him. Three depth studies
+were mocked up at real size; he picked the raised keys and asked for the game's
+own colours. What changed, all in `web/shell.html` and the gate:
+
+- **Sized from the viewport width.** `--pad-cell: min(4rem, 15vw)`,
+  `--pad-ab: min(5rem, 18vw)`; the 44 px floor stays. PB3 now asserts every
+  button's `left >= 0` and `right <= innerWidth`, the labels, and the legend
+  inside the viewport, and the gate ran at three widths:
+  - 412x915: cells 62 px, buttons 74 px, rightmost edge 381 of 412, legend 59..353 (bottom 905 of 915), min asserted 56, PASS true
+  - 360x780: cells 54 px, buttons 65 px, rightmost edge 334 of 360, legend 39..321 (bottom 770 of 780), min asserted 44, PASS true
+  - 320x568: cells 48 px, buttons 58 px, rightmost edge 298 of 320, legend 35..285 (bottom 558 of 568), min asserted 44, PASS true
+- **Labels and a legend.** The round buttons read **Enter** and **Esc**; the
+  line under the pad says `◀ ▶ turn · ▼ brake · Enter · Esc menu`. Down brakes
+  because the game's cursor-keys binding says so, and the 2026-09-06 probe
+  confirmed it (`CYCLE_BRAKE_TOOLTIP` went 0 1 → 0 0 on one Down in a round).
+- **Enter on the pad is a menu key only.** The probe that checked the labels
+  found the defect: the game binds Enter to CHAT in a round
+  (`config/default.cfg`, `KEYBOARD 13 PLAYER_BIND CHAT 1`), so a mid-round Enter
+  opened the "Say:" line — `ctx` went 2 → 1 — and the next Left did not move the
+  turn counter. The pad now suppresses Enter while driving (the rule the
+  picture's tap already followed) and counts it in
+  `window.AA_PAD_ENTER_SUPPRESSED`. **PB7**, run in the countdown 1.2 s after
+  NEW_ROUND, verbatim from the 412 run:
+
+      [M7GATE] PB7 enter-in-round-before {"ctx":2,"chat":"0 1 0 0 0","suppressed":0}
+      [TOUCH] pad Enter suppressed while driving (Enter is CHAT in a round)
+      [M7GATE] PB7 enter-in-round-suppressed {"ctx":2,"chat":"0 1 0 0 0","suppressed":1,"before":{"ctx":2,"chat":"0 1 0 0 0","suppressed":0},"PASS":true}
+
+  The same three lines with the same values are in the 360 and 320 runs.
+- **The look.** Raised cool-blue keys, a cyan rim light, cyan arrows and Enter,
+  magenta Esc, 5 px of travel on press (a transform, no re-layout), the press
+  brightens the glyph. `p412/pb-02-pad.png`, `p360/pb-02-pad.png`,
+  `p320/pb-02-pad.png` are the pad at the three widths; `p412/pb-01-portrait-round.png`
+  is a round.
+
+Every earlier portrait gate still passes at all three widths (PB1, PB2, PB4,
+PB5, PB6 — PB2's backing store is 1080² at 360 and 640² at 320 at DPR 2), the
+round started twice in each portrait run. Landscape and desktop re-proven
+unchanged on the same build:
+
+      [M7GATE] L1 landscape-unchanged {"layout":"full","visible":"tapzone,escbtn,touchpad,,,pad-cross,pad-btn pad-up,pad-btn pad-left,pad-btn pad-right,pad-… "PASS":true   (abridged; the visible string is the reference's)
+      [M7GATE] D2 desktop-unchanged {"layout":"full","pad_display":"none","touch_hidden":true,"PASS":true}
+
+with T1b, T1c ×2, T2b, T3b, T4 ×2 PASS and T6 `at_least_44px:true` in the
+landscape log (three rounds), D1 PASS in the desktop log. Logs:
+`m7.1-pad/{p412,p360,p320,landscape,desktop}/console.log`. Chrome device
+emulation, as everything above; the maintainer's own phone is the real test.

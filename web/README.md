@@ -301,12 +301,24 @@ then differs from the desktop page in four ways, all of them in
   near is 90° horizontal (`docs/evidence/phone-round2/fov/`).
   The pad is **six `data-aakey` buttons** on the same pointer → `KeyboardEvent`
   wiring every other control uses, so it adds no input code: a cross
-  (`ArrowUp`/`ArrowLeft`/`ArrowRight`/`ArrowDown`), **B** for `Escape` and **A**
-  for `Enter`, measured at 64 and 80 CSS px. It is up in menus and in a round
-  alike — the cross is Up/Down for the lists and Left/Right for the turns — while
-  the landscape overlay (the two turn zones, the top strip, the corner Escape) is
-  `display:none` under `html.aa-gameboy`; the picture above stays a tap-for-Enter
-  surface in menus, clipped to the square.
+  (`ArrowUp`/`ArrowLeft`/`ArrowRight`/`ArrowDown`), **Esc** for `Escape` and
+  **Enter** for `Enter`, labelled with the key names since M7.1 (they read "A"
+  and "B" for one day), with a one-line legend under them: Left/Right turn, Down
+  brakes (the game's own cursor-keys binding), Enter, Esc = menu. **Sized from
+  the viewport width**, `min(4rem, 15vw)` cells and `min(5rem, 18vw)` buttons:
+  61.8 and 74 CSS px at 412 wide, 54/65 at 360, 48/58 at 320 — the first cut
+  was fixed `rem` and overflowed the right edge on anything narrower than
+  ~400 px. The look is raised keys in the arena's colours (cyan arrows and
+  Enter, magenta Esc, 5 px of travel on press). It is up in menus and in a
+  round alike — the cross is Up/Down for the lists and Left/Right for the turns
+  — while the landscape overlay (the two turn zones, the top strip, the corner
+  Escape) is `display:none` under `html.aa-gameboy`; the picture above stays a
+  tap-for-Enter surface in menus, clipped to the square.
+  **Enter on the pad is a menu key only.** The game binds Enter to CHAT in a
+  round, so a mid-round Enter used to open the "Say:" line and swallow every
+  arrow after it until Escape; the pad now sends Enter only while a menu is up
+  or no cycle is alive, the rule the picture's tap already followed, and counts
+  what it dropped in `window.AA_PAD_ENTER_SUPPRESSED` for the gate.
   **A rotation after load is still only the chip.** The layout and the backing
   store are both decided at load, so turning the phone raises the reload notice
   and changes nothing else. The boot hold, the "turn your phone sideways" prompt,
