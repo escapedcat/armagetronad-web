@@ -139,7 +139,10 @@ eval:window.__tg.dump('landscape-at-language-menu')
 shot:00-language-menu-with-touch-controls
 
 # ===========================================================================
-# T1b: THE CRASH SPARKS ARE OFF, AND THE FILE THE GAME PARSES SAYS SO.
+# T1b: THE CRASH SPARKS ARE ON BUT PRICED FOR A PHONE (M8), AND THE FILE THE
+# GAME PARSES SAYS SO. M6 wrote `SPARKS 0` here; M8 replaced it with the three
+# lines SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05, and the assertion
+# is the exact tail of the file, so a drift in any of the three numbers fails.
 #
 # WHY THE SETTING IS THERE. M6 task 8 measured the spark bursts thrown while a
 # cycle grinds a wall -- which on a phone is not a contrived case, it is what a
@@ -164,8 +167,8 @@ shot:00-language-menu-with-touch-controls
 # and asserts the word SPARKS does not appear in it at all. Neither run proves
 # the change on its own; the pair does.
 # ===========================================================================
-until:1:30000:[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg
-eval:(()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 0\n$/.test(t);return '[SPARKSGATE] T1b sparks-off-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,ends_with_sparks_0:ends,tail:ok?t.slice(-96):null,PASS:ok&&n===1&&ends})})()
+until:1:30000:[SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 1\nSPARKS_LIFETIME 1\nSPARKS_INTERVAL 0.05\n$/.test(t);return '[SPARKSGATE] T1b cheap-sparks-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,ends_with_cheap_block:ends,tail:ok?t.slice(-128):null,PASS:ok&&n===1&&ends})})()
 
 # ===========================================================================
 # T2: THE MENUS, BY TAPPING ONLY. No key: step appears anywhere below.
@@ -293,7 +296,13 @@ shot:10-after-tapping-escape-in-the-corner
 eval:window.__tg.dump('after-escape-corner-tap')
 
 # ===========================================================================
-# T1c: ?sparks=1 HAS TO BEAT THE VALUE THE GAME HAS ALREADY SAVED.
+# T1c: THE ?sparks= OVERRIDE HAS TO BEAT THE VALUE THE GAME HAS ALREADY SAVED.
+#
+# M8 FLIPPED THE DIRECTION. The touch default is SPARKS 1 now (cheap sparks,
+# see T1b), so after one session the saved value is 1, and the override that
+# has to beat it is ?sparks=0. Same mechanism, same defect class -- silence
+# loses to the saved value -- mirror image. The M6 history below is kept as it
+# was written; read 1 for 0 and 0 for 1 for today's direction.
 #
 # THE DEFECT THIS IS THE REGRESSION TEST FOR, from the maintainer's phone:
 # "?sparks=1 does not bring the sparks back". The first version of this change
@@ -325,12 +334,12 @@ eval:window.__tg.dump('after-escape-corner-tap')
 # location.search is assigned rather than a URL typed out, so this step does not
 # have to know which port the server was started on.
 # ===========================================================================
-mark:T1c-PRECONDITION-THE-SAVED-CONFIG-HOLDS-SPARKS-0
-eval:(()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const m=ok?/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(t):null;return '[SPARKSGATE] T1c precondition saved-config-holds-sparks-0 '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,line:m?m[0]:null,value:m?m[1]:null,PASS:!!m&&m[1]==='0'})})()
+mark:T1c-PRECONDITION-THE-SAVED-CONFIG-HOLDS-SPARKS-1
+eval:(()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const m=ok?/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(t):null;return '[SPARKSGATE] T1c precondition saved-config-holds-sparks-1 '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,line:m?m[0]:null,value:m?m[1]:null,PASS:!!m&&m[1]==='1'})})()
 
-mark:T1c-RELOAD-WITH-SPARKS-1
-eval:location.search='?sparks=1'
-until:1:90000:[SPARKS] SPARKS 1 written to /data/webdefaults/autoexec.cfg
+mark:T1c-RELOAD-WITH-SPARKS-0
+eval:location.search='?sparks=0'
+until:1:90000:[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg
 until:2:90000:[BOOT] autostart
 wait:8000
 # THE CHECK ASKS THE GAME, NOT THE PAGE. Module._aa_web_save_config() is
@@ -340,8 +349,8 @@ wait:8000
 # the persisted 0 had won (the defect), the live value would be 0 and this line
 # would say so. Forcing the save also makes the check deterministic: the game
 # saves on its own schedule, on menu leaves, and a gate must not race it.
-eval:(()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=t!==null&&/\nSPARKS 1\n$/.test(t);return '[SPARKSGATE] T1c sparks-1-overrides-the-saved-0 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,ends_with_sparks_1:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 1'&&ends&&sv==='saved'&&!!um&&um[1]==='1'})})()
-shot:15-booted-with-sparks-1
+eval:(()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=t!==null&&/\nSPARKS 0\n$/.test(t);return '[SPARKSGATE] T1c sparks-0-overrides-the-saved-1 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,ends_with_sparks_0:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 0'&&ends&&sv==='saved'&&!!um&&um[1]==='0'})})()
+shot:15-booted-with-sparks-0
 
 # CONTROL: can this transcript see a browser-reported JS error at all?
 mark:positive-control-deliberate-uncaught-error-follows

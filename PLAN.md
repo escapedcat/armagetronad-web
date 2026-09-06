@@ -881,6 +881,36 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > asserts a suppressed Enter adds none, **PB8** that two turns add exactly two of 12 ms and
 > that three menu Enters plus two turns make five. `docs/evidence/m7-gameboy/m7.2-haptics/`.
 
+### M8 — cheap sparks (2026-09-06): the shower is back on the phone, at the price of none
+
+> He liked the sparks ("kinda nice to show the users that they are getting faster") and M6
+> had switched them off on touch because they cost a quarter of the frame at the wall. **The
+> cost was never the sparks, it was their lifetime**: one `gSpark` is ten particles in one
+> draw call and lives four seconds although its particles fade in two or three, and a
+> grinding cycle throws up to two per frame — some 480 alive at once, each simulated and
+> each drawn. Two client-only settings in `gSparks.cpp`, `SPARKS_LIFETIME` (default 4 s)
+> and `SPARKS_INTERVAL` (a global minimum between spawns, default 0), keep the upstream
+> behaviour unless set; the touch page sets 1 s and 0.05 s, a ceiling of twenty live spark
+> objects. All of it under `#ifndef DEDICATED`, and the dedicated wasm came out
+> byte-identical to the pin (2,488,298 B, md5 9718a2a6…), measured locally and by CI.
+> **Measured on a new arm**, because the M6 grind arm turned out to throw no sparks at all:
+> it drives head-on into the rim, and `gCycle`'s spark condition is
+> `fabs(skew) < fabs(lr*.8)` with `lr` the asymmetry of the two side sensors, which head-on
+> is zero — four grind arms, draws flat at 60 for all forty rim seconds, whatever `SPARKS`
+> said. The **hug arm** (`web/tools/perf/hug.steps.tmpl`) adds one Left at the wall so the
+> cycle runs along the rim with the wall on its right, and then it sparks every frame until
+> the corner. CPU throttled 6×, per-second medians while the sparks fly: **stock 14.4 → 25.0
+> ms with 111 → 456 draw calls a frame** (the M6 measurement had seen 171 at most; a hug is
+> worse than a press), **cheap 12.7–14.3 ms with 66–73**, off 13.3 ms with 62. Over the whole
+> rim window cheap reads 13.45 ms against off's 13.30 and stock's 13.70 with a 25 ms second in
+> it; run-to-run noise on the free-driving window is about 1 ms. Cheap sparks cost what no
+> sparks cost. `?sparks=1` is the stock shower for the comparison, `?sparks=0` off; T1b now
+> asserts the three-line block and T1c is flipped (the saved value is 1 now, so `?sparks=0` is the
+> override that has to beat it). Open: the "cheaper" arm (0.6 s / 0.1 s) read 12.30 ms, the same
+> within noise — the two settings trade visible density, not cost, and 1 s / 0.05 s is the
+> maintainer's to move; the AIs' end-of-round spark spikes M6 saw are capped by the same global
+> interval but were not re-measured. `docs/evidence/m8-cheap-sparks/`.
+
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 
 Shipping this changes the maintainer's role from developer to **service operator** (VPS, TLS, abuse policy, coordination with server admins, indefinitely) — the main reason it is not committed. The verified design is preserved below.

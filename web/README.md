@@ -247,7 +247,7 @@ person holding it a switch and a readout.
 | `?touch=1` / `?touch=0` | media query | forces the touch overlay on or off. |
 | `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
 | `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
-| `?sparks=1` / `?sparks=0` | off on touch, on otherwise | appends `SPARKS 1` or `SPARKS 0` to the runtime config, **on any device**. Off by default on a touch device: the bursts thrown at a wall cost about a quarter of the frame. `?sparks=1` has to *write* rather than stay silent — the game saves `SPARKS` into `user.cfg`, and this appended file is read after it — so it beats both the touch default and anything a previous session saved. `?sparks=0` turns them off on a desktop too, which is the only way this rig could measure them. |
+| `?sparks=1` / `?sparks=0` | cheap sparks on touch, stock otherwise | `1` appends `SPARKS 1` (the stock sparks: four-second bursts, one per frame while grinding — the M6 lag, kept for the comparison), `0` appends `SPARKS 0`. With no parameter a touch device gets **cheap sparks** (M8): `SPARKS 1`, `SPARKS_LIFETIME 1`, `SPARKS_INTERVAL 0.05`, two client-only settings whose defaults are the upstream behaviour, so a desktop with no parameter is untouched — `web/tools/menu-gate.steps` D1 asserts the shipped file has no SPARKS line. `docs/evidence/m8-cheap-sparks/` for the price. |
 | `?haptics=0` | on wherever `navigator.vibrate` exists | turns off the 12 ms vibration pulse on every press of a touch control that sends a key (pad, turn zones, strip, tap-for-Enter); a press that sends nothing never pulses. Android Chrome vibrates; iOS Safari has no Vibration API and is silent either way. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 
@@ -341,20 +341,28 @@ then differs from the desktop page in four ways, all of them in
   and 47 × 122 at `?cam=0.5`. `?cam=1` restores stock;
   `docs/evidence/phone-feedback/camera/` is the sweep, including why narrowing
   the field of view was the worse lever.
-- **the crash sparks are off.** `SPARKS` is an existing config item, read at the
-  two `crash_sparks` guards in `src/tron/gCycle.cpp` — both in the wall-contact
-  block, so this is the shower a cycle throws while it **grinds a wall** and
-  nothing else (dying is `EXPLOSION`) — and drawing only: no physics, timing,
-  rubber or score consults it. M6 task 8 measured it where it hurts, with a cycle
-  held against the rim: 17.15 ms median frame and 20.3 ms in the worst measured
-  second, draw calls bursting to 171, against 13.1 and 13.65 ms median with
-  `SPARKS 0` and the draw count pinned flat at 60. About a quarter of the frame at
-  the wall — with its condition: the 17.15 arm sparked in 29 of its 40 rim
-  seconds, while the second stock run of the same arm sparked in 11 of 40 and read
-  14.0 ms median, so the median win is 23.6 % in the one and 2.5 % in the other
-  and the worst second falls 32 % and 18 %. `?sparks=1` restores them — by
-  appending `SPARKS 1`, not by staying quiet, and that difference is the whole of
-  a defect the maintainer found on his phone. `SPARKS` is a `tConfItem` and
+- **the crash sparks are on, priced for a phone (M8).** `SPARKS` is an
+  existing config item, read at the two `crash_sparks` guards in
+  `src/tron/gCycle.cpp` — both in the wall-contact block, so this is the shower a
+  cycle throws while it **grinds a wall** and nothing else (dying is
+  `EXPLOSION`) — and drawing only: no physics, timing, rubber or score consults
+  it. What it costs: one spark object is ten particles in one `glBegin`/`glEnd`
+  (one draw call under the GL emulation) that **lives four seconds** although
+  its particles have faded after two or three, and a grinding cycle throws up to
+  two per frame — so hundreds are alive at once. M6 switched them off on touch
+  (`SPARKS 0`, a quarter of the frame at the rim). M8 added two client-only
+  settings to `src/tron/gSparks.cpp`, `SPARKS_LIFETIME` (s, default 4) and
+  `SPARKS_INTERVAL` (s between spawns, global, default 0), whose defaults are
+  the upstream behaviour, and the page writes `SPARKS 1` / `SPARKS_LIFETIME 1` /
+  `SPARKS_INTERVAL 0.05` on a touch device: at most twenty live spark objects.
+  Measured on the M6 rig with a cycle turned at the rim and driving along it
+  (the "hug" arm, `web/tools/perf/hug.steps.tmpl`, CPU throttled 6×): while
+  the sparks fly, stock is **22–25 ms** a frame with **111–456 draw calls**,
+  cheap is **12.7–14.3 ms with 66–73**, and off is 13.3 ms with 62 — cheap
+  sparks cost what no sparks cost, and the shower is still on screen.
+  `?sparks=1` restores the stock sparks and `?sparks=0` switches them off —
+  each by **appending** its line, not by staying quiet, and that difference is
+  the whole of a defect the maintainer found on his phone. `SPARKS` is a `tConfItem` and
   `tConfItemBase::Save()` returns `true` (`tConfiguration.h:296`), so the game
   writes it into `/persist/var/user.cfg` on every menu leave; `st_LoadConfig`
   reads `user.cfg` **first** and this appended file **last**

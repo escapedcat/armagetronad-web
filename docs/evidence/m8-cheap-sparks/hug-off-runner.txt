@@ -1,0 +1,6 @@
+run-arm.sh: arm=hug-off cpu=6 port=8008 load1=5.60 cfg='SP_SIZE_FACTOR 0\nSP_NUM_AIS 0\nCYCLE_RUBBER_TIME 0.1\nTIMESTEP_MAX 10\nSPARKS 0' template=web/tools/perf/hug.steps.tmpl
+before: 16:44  up 7 days,  4:12, 36 users, load averages: 5.60 8.05 8.47
+after:  16:45  up 7 days,  4:13, 36 users, load averages: 8.35 8.86 8.78
+[PERF] hug-off {\"arm\":\"hug-off\",\"cpu_rate\":6,\"frames\":9266,\"human\":\"web_user\",\"swaps\":{\"flush\":0,\"finish\":9266},\"rounds_started\":1,\"rounds_won\":0,\"shots_bracketed\":8,\"shot_pad
+check-arm.mjs: mode default -- the tutorial match (the default; it cannot tell that match from any other)
+INVALID [default]: 0 measured round(s) with a span >= 30 s (need rounds 2 and 3)

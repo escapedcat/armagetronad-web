@@ -32,6 +32,40 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 bool white_sparks=false;
 
+#ifndef DEDICATED
+#include "tConfiguration.h"
+
+// M8 (web port): WHAT A SPARK COSTS, AND THE TWO KNOBS THAT PRICE IT.
+// One gSpark is ten particles drawn as one glBegin/glEnd -- under
+// -sLEGACY_GL_EMULATION one draw call -- and it lives four seconds although
+// its particles have faded on their own "heat" after two or three. A cycle
+// grinding a wall creates up to two per frame, so at 60 fps some 480 are
+// alive at once, each a draw call and each stepped every frame: measured on
+// the M6 rig as a quarter of the frame at the rim (17.1 ms against 13.1 with
+// SPARKS 0, draw bursts to 171 against a flat 60). The defaults below ARE the
+// upstream behaviour, so a desktop that sets nothing draws exactly what it
+// always drew; the web page sets them for a touch device, where the ceiling
+// on live sparks becomes lifetime / interval instead of 4 s x 120 per second.
+static REAL sg_sparkLifetime = 4;
+static tSettingItem<REAL> sg_sparkLifetimeConf( "SPARKS_LIFETIME", sg_sparkLifetime );
+static REAL sg_sparkInterval = 0;
+static tSettingItem<REAL> sg_sparkIntervalConf( "SPARKS_INTERVAL", sg_sparkInterval );
+
+// The throttle is GLOBAL, not per cycle, on purpose: what the phone pays for
+// is the total number of live sparks, whoever threw them (the end-of-round
+// draw spikes M6 traced to the AIs' sparks included), and a global cap bounds
+// that total directly. Game time runs backwards at a round start; a negative
+// gap simply allows the spark, which is right.
+bool gSpark::MayCreate( REAL time )
+{
+    static REAL lastCreate = -1e9;
+    if ( sg_sparkInterval > 0 && time - lastCreate < sg_sparkInterval )
+        return false;
+    lastCreate = time;
+    return true;
+}
+#endif
+
 gSpark::gSpark(eGrid *grid, const eCoord &pos,const eCoord &dir,REAL time,REAL ocolor_r,REAL ocolor_g,REAL ocolor_b,REAL ecolor_r,REAL ecolor_g,REAL ecolor_b)
         :eReferencableGameObject(grid, pos, dir , NULL, true),
         //   sound(scrap),
@@ -93,7 +127,11 @@ bool gSpark::Timestep(REAL currentTime){
         }
     }
 
+#ifndef DEDICATED
+    if (currentTime>createTime+sg_sparkLifetime)
+#else
     if (currentTime>createTime+4)
+#endif
         return true;
     else
         return false;
