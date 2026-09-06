@@ -1,0 +1,235 @@
+[    894ms] [harness] mobile emulation: 915x412 CSS px dpr 3 (= 2745x1236 device px), touch on
+[    896ms] [harness] chrome: Chrome/152.0.7977.77
+[    896ms] [harness] navigating to http://localhost:8008/armagetronad.html
+[     17ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     19ms] [console.log] [DISPLAY] layout=full
+[     27ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[     31ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[     31ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     31ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via load
+[     43ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     47ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     47ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via resize
+[     48ms] [page] load event fired
+[     48ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    101ms] [console.log] [PERSIST] populate ok in 36ms
+[    280ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    281ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    281ms] [console.log] [SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[    281ms] [console.log] [BOOT] autostart: calling main
+[    284ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    284ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    284ms] [console.error] 
+[    285ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    285ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    285ms] [console.log] 
+[    414ms] [console.log] [L] ENCODING latin1
+[    421ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    422ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    443ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    447ms] [console.error] TODO: glShadeModel
+[    450ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    488ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    489ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    489ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    492ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    492ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    534ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[   1011ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1012ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})() => "probe installed"
+[   1013ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1013ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1013ms] [harness] === GAME-STARTED ===
+[   1014ms] [console.log] [M7GATE] L1 landscape-unchanged {"layout":"full","visible":"tapzone,escbtn,touchpad,,,pad-cross,pad-btn pad-up,pad-btn pad-left,pad-btn pad-right,pad-btn pad-down,pad-ab,pad-btn pad-b,pad-btn pad-a,pad-legend,,,,","pad_display":"none","square_var":"0px","PASS":true}
+[   1014ms] [harness] eval (()=>{const t=document.getElementById('touch');const vis=[...t.querySelectorAll('*')].filter(e=>getComputedStyle(e).display!=='none').map(e=>e.id||e.className).join(',');const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',visible:vis,pad_display:getComputedStyle(document.getElementById('pad')).display,square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.layout==='full'&&r.pad_display==='none'&&r.square_var==='0px';console.log('[M7GATE] L1 landscape-unchanged '+JSON.stringify(r));return 'L1 '+r.PASS})() => "L1 true"
+[  10022ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  10022ms] [console.log] [TOUCHGATE] {"phase":"landscape-at-language-menu","save":"saved","ctx":1,"ctx_menu":true,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  10023ms] [harness] eval window.__tg.dump('landscape-at-language-menu') => "landscape-at-language-menu"
+[  10135ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/00-language-menu-with-touch-controls.png
+[  10135ms] [harness] until 1x <<[SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg>> (timeout 30000ms, have 1)
+[  10135ms] [harness] until SATISFIED: saw 1x <<[SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg>>
+[  10137ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 1\nSPARKS_LIFETIME 1\nSPARKS_INTERVAL 0.05\n$/.test(t);return '[SPARKSGATE] T1b cheap-sparks-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,ends_with_cheap_block:ends,tail:ok?t.slice(-128):null,PASS:ok&&n===1&&ends})})() => "[SPARKSGATE] T1b cheap-sparks-on-touch {\"read\":true,\"err\":null,\"bytes\":12804,\"sparks_lines\":1,\"ends_with_cheap_block\":true,\"tail\":\"t runtime by web/shell.html: crash sparks on, priced for a phone (touch device)\\nSPARKS 1\\nSPARKS_LIFETIME 1\\nSPARKS_INTERVAL 0.05\\n\",\"PASS\":true}"
+[  10137ms] [harness] eval (()=>{const t=document.getElementById('touch');const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const p=document.getElementById('tapzone').getBoundingClientRect();const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T2b menu-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),turn_zones_have_no_box:z.every(r=>r.width===0&&r.height===0),tap_layer_area:Math.round(p.width*p.height),PASS:!t.classList.contains('aa-driving')&&z.every(r=>r.width===0&&r.height===0)&&p.width>0})})() => "[TOUCHGATE] T2b menu-side collision check {\"ctx\":1,\"driving_class\":false,\"turn_zones_have_no_box\":true,\"tap_layer_area\":376980,\"PASS\":true}"
+[  10138ms] [harness] === TAP-ENTER-ACCEPTS-LANGUAGE ===
+[  10146ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[  10210ms] [harness] tap #tapzone at 458,206 (1/1)
+[  10218ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10517ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10517ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13133ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/01-first-setup-reached-by-tapping.png
+[  13133ms] [harness] === TAP-ENTER-ACCEPTS-FIRST-SETUP ===
+[  13209ms] [harness] tap #tapzone at 458,206 (1/1)
+[  13216ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  13282ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  13511ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13511ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16621ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/02-welcome-message-reached-by-tapping.png
+[  16622ms] [harness] === TAP-ENTER-DISMISSES-WELCOME ===
+[  16695ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  16696ms] [console.log] [L] TEAM_CREATED web_user
+[  16696ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  16698ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  16700ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  16701ms] [console.log] [L] NEW_ROUND 2026-09-06 16:51:58 UTC+0200
+[  16718ms] [console.log] [L] TEAM_CREATED ai_team
+[  16718ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  16718ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  16718ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  16719ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  16739ms] [harness] tap #tapzone at 458,206 (1/1)
+[  16740ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  16741ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  16741ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  16778ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  17003ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  19042ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 1)
+[  19042ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  19042ms] [harness] === ROUND-1-STARTED-WITHOUT-A-SINGLE-KEYSTROKE ===
+[  21268ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/03-round1-driving.png
+[  21273ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  21273ms] [console.log] [TOUCHGATE] {"phase":"round1-before-steering","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 2 1 1 1","tip_right":"0 3 1 1 1"}
+[  21273ms] [harness] eval window.__tg.dump('round1-before-steering') => "round1-before-steering"
+[  21276ms] [harness] eval (()=>{const t=document.getElementById('touch');const p=document.getElementById('tapzone').getBoundingClientRect();const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T3b round-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),tap_layer_has_no_box:p.width===0&&p.height===0,turn_zone_areas:z.map(r=>Math.round(r.width*r.height)),PASS:t.classList.contains('aa-driving')&&p.width===0&&p.height===0&&z.every(r=>r.width>0)})})() => "[TOUCHGATE] T3b round-side collision check {\"ctx\":2,\"driving_class\":true,\"tap_layer_has_no_box\":true,\"turn_zone_areas\":[197915,197915],\"PASS\":true}"
+[  21276ms] [harness] === TAP-LEFT-HALF ===
+[  21342ms] [harness] tap #tz-left at 240,206 (1/3)
+[  21347ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  21727ms] [harness] tap #tz-left at 240,206 (2/3)
+[  22109ms] [harness] tap #tz-left at 240,206 (3/3)
+[  22767ms] [console.log] [L] DEATH_SUICIDE web_user
+[  22768ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  22783ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  23481ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/04-after-tapping-left-half.png
+[  23486ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  23487ms] [console.log] [TOUCHGATE] {"phase":"after-tapping-left-half","save":"saved","ctx":0,"ctx_menu":false,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 3 1 1 1"}
+[  23487ms] [harness] eval window.__tg.dump('after-tapping-left-half') => "after-tapping-left-half"
+[  23487ms] [harness] === TAP-RIGHT-HALF ===
+[  23567ms] [harness] tap #tz-right at 0,0 (1/4)
+[  23784ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  23798ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  23946ms] [harness] tap #tz-right at 0,0 (2/4)
+[  23954ms] [console.log] [PERSISTSAVE] menu-leave n=6
+[  24028ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  24330ms] [harness] tap #tz-right at 0,0 (3/4)
+[  24529ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  24715ms] [harness] tap #tz-right at 0,0 (4/4)
+[  24723ms] [console.log] [PERSISTSAVE] menu-leave n=7
+[  24780ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  26087ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/05-after-tapping-right-half.png
+[  26092ms] [console.log] [PERSISTSAVE] js-backstop n=8
+[  26092ms] [console.log] [TOUCHGATE] {"phase":"after-tapping-right-half","save":"saved","ctx":0,"ctx_menu":false,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 3 1 1 1"}
+[  26093ms] [harness] eval window.__tg.dump('after-tapping-right-half') => "after-tapping-right-half"
+[  26093ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 150000ms, have 1)
+[  27858ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  27859ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  27859ms] [console.log] [L] NEW_ROUND 2026-09-06 16:52:09 UTC+0200
+[  27864ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  27864ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  27912ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  27913ms] [harness] === ROUND-2-STARTED ===
+[  28032ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  29994ms] [harness] tap #tz-left at 240,206 (1/3)
+[  30359ms] [harness] tap #tz-left at 240,206 (2/3)
+[  30727ms] [harness] tap #tz-left at 240,206 (3/3)
+[  31811ms] [harness] tap #tz-right at 675,206 (1/4)
+[  32196ms] [harness] tap #tz-right at 675,206 (2/4)
+[  32577ms] [harness] tap #tz-right at 675,206 (3/4)
+[  32960ms] [harness] tap #tz-right at 675,206 (4/4)
+[  34336ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/06-after-round2-taps.png
+[  34340ms] [console.log] [PERSISTSAVE] js-backstop n=9
+[  34340ms] [console.log] [TOUCHGATE] {"phase":"after-round2-taps","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  34340ms] [harness] eval window.__tg.dump('after-round2-taps') => "after-round2-taps"
+[  34340ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 150000ms, have 2)
+[  36609ms] [console.log] [L] DEATH_SUICIDE web_user
+[  36783ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  38027ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  42114ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  42121ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  42124ms] [console.log] [L] NEW_ROUND 2026-09-06 16:52:23 UTC+0200
+[  42158ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  42159ms] [harness] === ROUND-3-STARTED-RIGHT-TAPS-ONLY ===
+[  42279ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  44230ms] [harness] tap #tz-right at 675,206 (1/2)
+[  44611ms] [harness] tap #tz-right at 675,206 (2/2)
+[  45697ms] [harness] tap #tz-right at 675,206 (1/2)
+[  46080ms] [harness] tap #tz-right at 675,206 (2/2)
+[  47426ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/06b-after-round3-right-taps.png
+[  47429ms] [console.log] [PERSISTSAVE] js-backstop n=10
+[  47430ms] [console.log] [TOUCHGATE] {"phase":"after-round3-right-taps","save":"saved","ctx":2,"ctx_menu":false,"ctx_cycle":true,"driving_class":true,"box_tapzone":"0x0@0,0","box_tzleft":"480x412@0,0","box_tzright":"480x412@435,0","box_escbtn":"54x46@10,10","box_touchpad":"0x0@0,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  47430ms] [harness] eval window.__tg.dump('after-round3-right-taps') => "after-round3-right-taps"
+[  47430ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  47430ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  47430ms] [harness] === ROTATE-TO-PORTRAIT ===
+[  47432ms] [harness] metrics -> 412x915 dpr 3
+[  47448ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false) via resize
+[  47449ms] [console.log] [TOUCH] orientation portrait=true (sized for portrait: false) via media query
+[  48934ms] [console.log] [M7GATE] T4 rotate-to-portrait {"chip_visible":true,"rotate_element":false,"canvas_w":2745,"canvas_h":1236,"PASS":true}
+[  48935ms] [harness] eval (()=>{const chip=document.getElementById('reloadchip');const rot=document.getElementById('rotate');const r={chip_visible:!!chip&&!chip.hidden,rotate_element:rot!==null,canvas_w:document.getElementById('canvas').width,canvas_h:document.getElementById('canvas').height};r.PASS=r.chip_visible&&!r.rotate_element;console.log('[M7GATE] T4 rotate-to-portrait '+JSON.stringify(r));return 'T4 '+r.PASS})() => "T4 true"
+[  48943ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  49080ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/07-portrait-mid-game-shows-only-the-chip.png
+[  49080ms] [harness] === ROTATE-BACK-TO-LANDSCAPE ===
+[  49080ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  49082ms] [harness] metrics -> 915x412 dpr 3
+[  49098ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via resize
+[  49099ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via media query
+[  50226ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  50584ms] [console.log] [M7GATE] T4 back-in-landscape {"chip_hidden":true,"PASS":true}
+[  50584ms] [harness] eval (()=>{const chip=document.getElementById('reloadchip');const r={chip_hidden:!!chip&&chip.hidden};r.PASS=r.chip_hidden;console.log('[M7GATE] T4 back-in-landscape '+JSON.stringify(r));return 'T4b '+r.PASS})() => "T4b true"
+[  50834ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/08-back-in-landscape.png
+[  50835ms] [harness] === FRAME-RATE ===
+[  50841ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length,gl_errors:S.gl.length,gl_polls:S.polls};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => "{\"total_frames_sampled\":2920,\"rounds_started\":3,\"rounds_won\":3,\"gl_errors\":0,\"gl_polls\":97,\"overall\":{\"span_s\":33.52,\"frames\":1952,\"mean_fps\":58.23,\"frame_ms\":{\"p50\":16.7,\"p90\":18.2,\"p99\":26.7,\"max\":83.3},\"inst_fps\":{\"median\":59.88,\"p10\":54.95,\"p01\":37.45,\"min\":12},\"fps_per_second\":[58,60,60,60,55,55,58,50,60,60,60,60,60,52,59,50,57,60,60,60,60,60,60,60,60,60,60,53,57,57,60,60,60],\"fps_per_second_min\":50,\"fps_per_second_median\":60},\"per_round\":[{\"span_s\":7.1,\"frames\":411,\"mean_fps\":57.92,\"frame_ms\":{\"p50\":16.6,\"p90\":18.4,\"p99\":38.2,\"max\":77.1},\"inst_fps\":{\"median\":60.24,\"p10\":54.35,\"p01\":26.18,\"min\":12.97},\"fps_per_second\":[58,60,60,60,55,55,58],\"fps_per_second_min\":55,\"fps_per_second_median\":58},{\"span_s\":10.17,\"frames\":588,\"mean_fps\":57.84,\"frame_ms\":{\"p50\":16.7,\"p90\":18.2,\"p99\":74.8,\"max\":81},\"inst_fps\":{\"median\":59.88,\"p10\":54.95,\"p01\":13.37,\"min\":12.35},\"fps_per_second\":[61,60,51,56,54,56,60,61,60,59],\"fps_per_second_min\":51,\"fps_per_second_median\":60},{\"span_s\":8.12,\"frames\":474,\"mean_fps\":58.39,\"frame_ms\":{\"p50\":16.7,\"p90\":18.2,\"p99\":20.9,\"max\":83.3},\"inst_fps\":{\"median\":59.88,\"p10\":54.95,\"p01\":47.85,\"min\":12},\"fps_per_second\":[60,60,54,53,60,60,60,60],\"fps_per_second_min\":53,\"fps_per_second_median\":60}]}"
+[  50842ms] [harness] === TAP-ESCAPE-IN-THE-CORNER ===
+[  50843ms] [harness] eval (()=>{const r=document.getElementById('escbtn').getBoundingClientRect();return '[TOUCHGATE] T6 escape corner '+JSON.stringify({rect:Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top),at_least_44px:r.width>=44&&r.height>=44,inset_from_left_px:Math.round(r.left),inset_from_top_px:Math.round(r.top),centre_x_px:Math.round(r.left+r.width/2)})})() => "[TOUCHGATE] T6 escape corner {\"rect\":\"54x46@10,10\",\"at_least_44px\":true,\"inset_from_left_px\":10,\"inset_from_top_px\":10,\"centre_x_px\":37}"
+[  50912ms] [harness] tap #escbtn at 37,33 (1/1)
+[  51029ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  53899ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/10-after-tapping-escape-in-the-corner.png
+[  53903ms] [console.log] [PERSISTSAVE] js-backstop n=11
+[  53903ms] [console.log] [TOUCHGATE] {"phase":"after-escape-corner-tap","save":"saved","ctx":1,"ctx_menu":true,"ctx_cycle":false,"driving_class":false,"box_tapzone":"915x412@0,0","box_tzleft":"0x0@0,0","box_tzright":"0x0@0,0","box_escbtn":"54x46@10,10","box_touchpad":"128x59@394,0","canvas_w":2745,"canvas_h":1236,"mpx":3.39,"css_w":915,"css_h":412,"inner":"915x412","dpr":3,"touch_hidden":false,"chip_hidden":true,"maxTouchPoints":5,"coarse":true,"tip_left":"0 0 1 1 1","tip_right":"0 0 1 1 1"}
+[  53903ms] [harness] eval window.__tg.dump('after-escape-corner-tap') => "after-escape-corner-tap"
+[  53903ms] [harness] === T1c-PRECONDITION-THE-SAVED-CONFIG-HOLDS-SPARKS-1 ===
+[  53904ms] [harness] eval (()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const m=ok?/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(t):null;return '[SPARKSGATE] T1c precondition saved-config-holds-sparks-1 '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,line:m?m[0]:null,value:m?m[1]:null,PASS:!!m&&m[1]==='1'})})() => "[SPARKSGATE] T1c precondition saved-config-holds-sparks-1 {\"read\":true,\"err\":null,\"bytes\":22767,\"line\":\"                      SPARKS 1\",\"value\":\"1\",\"PASS\":true}"
+[  53905ms] [harness] === T1c-RELOAD-WITH-SPARKS-0 ===
+[  53909ms] [console.log] [PERSISTSAVE] js-backstop n=12
+[  53910ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  53910ms] [harness] eval location.search='?sparks=0' => "?sparks=0"
+[  53910ms] [harness] until 1x <<[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg>> (timeout 90000ms, have 0)
+[  53927ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  53928ms] [console.log] [DISPLAY] layout=full
+[  53930ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[  53930ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[  53930ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  53931ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via load
+[  53933ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  53933ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  53936ms] [console.log] [TOUCH] orientation portrait=false (sized for portrait: false) via resize
+[  53939ms] [page] load event fired
+[  53951ms] [console.log] [PERSIST] populate ok in 6ms
+[  53975ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  53975ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[  53976ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (from ?sparks=0)
+[  53976ms] [console.log] [BOOT] autostart: calling main
+[  53977ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  53977ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  53977ms] [console.error] 
+[  53977ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  53977ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  53978ms] [console.log] 
+[  54012ms] [harness] until SATISFIED: saw 1x <<[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg>>
+[  54012ms] [harness] until 2x <<[BOOT] autostart>> (timeout 90000ms, have 2)
+[  54012ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  54095ms] [console.log] [L] ENCODING latin1
+[  54097ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  54114ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  54116ms] [console.error] TODO: glShadeModel
+[  54119ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  60181ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  62020ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  62021ms] [harness] eval (()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=t!==null&&/\nSPARKS 0\n$/.test(t);return '[SPARKSGATE] T1c sparks-0-overrides-the-saved-1 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,ends_with_sparks_0:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 0'&&ends&&sv==='saved'&&!!um&&um[1]==='0'})})() => "[SPARKSGATE] T1c sparks-0-overrides-the-saved-1 {\"save\":\"saved\",\"autoexec_read\":true,\"autoexec_bytes\":12748,\"autoexec_sparks_lines\":[\"SPARKS 0\"],\"ends_with_sparks_0\":true,\"live_sparks_in_user_cfg\":\"0\",\"tail\":\"ED 0.2\\n\\n# appended at runtime by web/shell.html: crash sparks off (from ?sparks=0)\\nSPARKS 0\\n\",\"PASS\":true}"
+[  62131ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/15-booted-with-sparks-0.png
+[  62131ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  62133ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1122
+[  62134ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  62134ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  62134ms] [EXCEPTION] structured stack, 1 frames:
+[  62134ms]     <anonymous> @ :0:27
+[  64242ms] [harness] screenshot -> docs/evidence/m8-cheap-sparks/gates/landscape/09-after-deliberate-uncaught-error.png

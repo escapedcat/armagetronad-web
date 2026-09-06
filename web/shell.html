@@ -1484,6 +1484,16 @@
     // a URL is the only thing here that outranks a file loaded after user.cfg.
     const SPARKS_OFF_LINE = 'SPARKS 0';
     const SPARKS_ON_LINE  = 'SPARKS 1';
+    // M8: CHEAP SPARKS ARE THE TOUCH DEFAULT NOW, not silence. M6 switched
+    // sparks off on a phone because a grinding cycle threw up to two spark
+    // objects per frame, each alive four seconds and each its own draw call
+    // -- a quarter of the frame at the rim. gSparks.cpp (client-only, the
+    // dedicated pin untouched) gained SPARKS_LIFETIME and SPARKS_INTERVAL,
+    // whose defaults are the upstream 4 s and "every frame", so a desktop
+    // that sets nothing is unchanged; these three lines are what a touch
+    // device sets. The numbers are the M8 rig's, see docs/evidence/m8-cheap-sparks/.
+    // ?sparks=1 is still the stock sparks (for the comparison), ?sparks=0 off.
+    const SPARKS_CHEAP_LINES = ['SPARKS 1', 'SPARKS_LIFETIME 1', 'SPARKS_INTERVAL 0.05'];
     function applyTouchSparksTuning() {
       let value = null;   // null = write nothing at all
       try {
@@ -1502,7 +1512,7 @@
         if (q !== null && !fromParam) {
           console.log('[SPARKS] ?sparks=' + q + ' ignored (want 0 or 1)');
         }
-        value = fromParam ? q : (window.AA_TOUCH ? 0 : null);
+        value = fromParam ? q : (window.AA_TOUCH ? 'cheap' : null);
         if (value === null) {
           // The desktop, with no parameter: the file the build shipped is left
           // exactly as it is, which web/tools/menu-gate.steps asserts by
@@ -1511,13 +1521,16 @@
           return;
         }
         const why = fromParam ? ' (from ?sparks=' + q + ')' : ' (touch device)';
-        const line = value === 0 ? SPARKS_OFF_LINE : SPARKS_ON_LINE;
+        const body = value === 0 ? [SPARKS_OFF_LINE]
+                   : value === 1 ? [SPARKS_ON_LINE]
+                   : SPARKS_CHEAP_LINES;
+        const what = value === 0 ? 'off' : value === 1 ? 'on' : 'on, priced for a phone';
         const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: crash sparks ' +
-                       (value === 0 ? 'off' : 'on') + why, line, ''];
+        const lines = ['', '# appended at runtime by web/shell.html: crash sparks ' + what + why]
+                      .concat(body, ['']);
         Module.FS.writeFile(
           path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[SPARKS] ' + line + ' written to ' + path +
+        console.log('[SPARKS] ' + body.join(' / ') + ' written to ' + path +
                     ' before main()' + why);
       } catch (e) {
         // A failure here is whatever the saved config already says, not a

@@ -1,0 +1,6 @@
+run-arm.sh: arm=hug-cheap cpu=6 port=8008 load1=7.81 cfg='SP_SIZE_FACTOR 0\nSP_NUM_AIS 0\nCYCLE_RUBBER_TIME 0.1\nTIMESTEP_MAX 10\nSPARKS 1\nSPARKS_LIFETIME 1\nSPARKS_INTERVAL 0.05' template=web/tools/perf/hug.steps.tmpl
+before: 16:41  up 7 days,  4:09, 36 users, load averages: 7.81 9.75 9.05
+after:  16:42  up 7 days,  4:10, 36 users, load averages: 7.13 8.92 8.79
+[PERF] hug-cheap {\"arm\":\"hug-cheap\",\"cpu_rate\":6,\"frames\":8841,\"human\":\"web_user\",\"swaps\":{\"flush\":0,\"finish\":8841},\"rounds_started\":1,\"rounds_won\":0,\"shots_bracketed\":8,\"shot
+check-arm.mjs: mode default -- the tutorial match (the default; it cannot tell that match from any other)
+INVALID [default]: 0 measured round(s) with a span >= 30 s (need rounds 2 and 3)

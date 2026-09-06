@@ -1,0 +1,20 @@
+== hug-stock: cpu 6x, frames 8745, round 1 span 0.53-66.34 s (death 66.34), hitches>50ms 0, per-second entries 69
+   before (free)   10s  ms  9.35 (9.1-10.4)  pre  5.2  ren  4.2  draws   53.0 (52-55)  worst-frame 24.5
+   rim, all        40s  ms 13.70 (13.2-25.0)  pre  8.6  ren  4.9  draws   62.0 (62-456)  worst-frame 34.5
+   rim, draws<=70  27s  ms 13.60 (13.2-13.9)  pre  8.6  ren  4.9  draws   62.0 (62-62)  worst-frame 34.5
+   rim seconds with draws >= 100: 13 of 40;  rim-free = 4.35 ms
+== hug-cheap: cpu 6x, frames 8841, round 1 span 0.54-66.35 s (death 66.35), hitches>50ms 0, per-second entries 69
+   before (free)   10s  ms 10.20 (10.0-10.7)  pre  5.7  ren  4.5  draws   53.0 (52-55)  worst-frame 14.5
+   rim, all        40s  ms 13.45 (12.7-15.5)  pre  8.6  ren  4.9  draws   62.0 (62-73)  worst-frame 30.9
+   rim, draws<=70  31s  ms 13.40 (12.7-15.5)  pre  8.6  ren  4.9  draws   62.0 (62-66)  worst-frame 30.9
+   rim seconds with draws >= 100: 0 of 40;  rim-free = 3.25 ms
+== hug-cheaper: cpu 6x, frames 9180, round 1 span 0.54-66.3 s (death 66.3), hitches>50ms 0, per-second entries 69
+   before (free)   10s  ms  9.85 (9.3-10.7)  pre  5.5  ren  4.4  draws   53.0 (52-55)  worst-frame 21.3
+   rim, all        40s  ms 12.30 (10.8-13.9)  pre  7.8  ren  4.4  draws   62.0 (60-63)  worst-frame 29.5
+   rim, draws<=70  40s  ms 12.30 (10.8-13.9)  pre  7.8  ren  4.4  draws   62.0 (60-63)  worst-frame 29.5
+   rim seconds with draws >= 100: 0 of 40;  rim-free = 2.45 ms
+== hug-off: cpu 6x, frames 9266, round 1 span 0.53-66.26 s (death 66.26), hitches>50ms 0, per-second entries 69
+   before (free)   10s  ms  9.40 (8.9-10.5)  pre  5.2  ren  4.2  draws   53.0 (52-55)  worst-frame 21.4
+   rim, all        40s  ms 13.30 (11.1-13.9)  pre  8.5  ren  4.8  draws   62.0 (54-62)  worst-frame 32.4
+   rim, draws<=70  40s  ms 13.30 (11.1-13.9)  pre  8.5  ren  4.8  draws   62.0 (54-62)  worst-frame 32.4
+   rim seconds with draws >= 100: 0 of 40;  rim-free = 3.90 ms

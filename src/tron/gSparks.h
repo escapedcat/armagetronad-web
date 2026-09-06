@@ -64,6 +64,12 @@ public:
     virtual void Kill();
 
 #ifndef DEDICATED
+    // M8 (web port): sparks priced for a phone. SPARKS_LIFETIME and
+    // SPARKS_INTERVAL live in gSparks.cpp; this is the spawn throttle gCycle
+    // asks before creating one. Client-only, so the dedicated build compiles
+    // this class byte-for-byte as before.
+    static bool MayCreate( REAL time );
+
     virtual void Render(const eCamera *cam);
 
     virtual void SoundMix(Uint8 *dest,unsigned int len,
