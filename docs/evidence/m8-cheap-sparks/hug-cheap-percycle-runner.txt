@@ -1,0 +1,6 @@
+run-arm.sh: arm=hug-cheap-percycle cpu=6 port=8008 load1=9.59 cfg='SP_SIZE_FACTOR 0\nSP_NUM_AIS 0\nCYCLE_RUBBER_TIME 0.1\nTIMESTEP_MAX 10\nSPARKS 1\nSPARKS_LIFETIME 1\nSPARKS_INTERVAL 0.05' template=web/tools/perf/hug.steps.tmpl
+before: 20:11  up 7 days,  7:39, 36 users, load averages: 9.59 7.58 7.33
+after:  20:12  up 7 days,  7:40, 36 users, load averages: 7.37 7.55 7.35
+[PERF] hug-cheap-percycle {\"arm\":\"hug-cheap-percycle\",\"cpu_rate\":6,\"frames\":8979,\"human\":\"web_user\",\"swaps\":{\"flush\":0,\"finish\":8979},\"rounds_started\":1,\"rounds_won\":0,\"shots_br
+check-arm.mjs: mode default -- the tutorial match (the default; it cannot tell that match from any other)
+INVALID [default]: 0 measured round(s) with a span >= 30 s (need rounds 2 and 3)

@@ -93,7 +93,7 @@ hug; `g-34s-grinding.png` is after the corner.
 
 `src/tron/gSparks.cpp`, client-only (`#ifndef DEDICATED`): `SPARKS_LIFETIME`
 (seconds, default 4 = upstream) and `SPARKS_INTERVAL` (seconds between spawns,
-global across cycles, default 0 = upstream), and `gSpark::MayCreate(time)`,
+per cycle since M8.1 — see the last section — default 0 = upstream), and `gSpark::MayCreate(time)`,
 which `gCycle.cpp`'s two spawn sites ask. A desktop that sets nothing draws
 exactly what it always drew. The dedicated wasm built from the same tree:
 
@@ -119,3 +119,29 @@ class, mirror image. PASS tallies over the three logs: landscape 8 true /
 0 false (L1, T1b, T1c ×2, T2b, T3b, T4 ×2; T6 reports `at_least_44px:true`),
 desktop 2 / 0 (D1: the shipped file has no SPARKS line — `[SPARKSGATE] D1 desktop-autoexec-untouched {"read":true,"err":null,"bytes":12376,"sparks_occurrences":0,"PASS":true}…`; D2),
 portrait 8 / 0 (PB1–PB8). Logs only; nothing visual changed on the page.
+
+## M8.1 — the interval is per cycle (same day)
+
+The first cut's `SPARKS_INTERVAL` was global: one spawn per 50 ms whoever
+asked. The maintainer's phone showed the flaw within the hour — sparks on the
+AIs' cycles, none on his own. `eGameObject.cpp` steps the grid's objects from
+the END of the list (the `Len()-1` loops at lines 848 and 871); the human's
+cycle is the first object made and therefore the last one stepped, and three
+AIs hugging walls had spent the budget before his turn came, every frame.
+`gSpark::MayCreate(time, owner)` now keeps one timestamp per cycle (keyed by
+address, compared only, cleared past 256 entries): twenty live spark objects
+per grinding cycle, eighty if four grind at once, against the ~480 the stock
+rules give a single cycle. The single-cycle arm, re-run on the rebuilt client
+(`hug-cheap-percycle/`), reads the same as the first cut:
+
+```
+== hug-cheap-percycle: cpu 6x, frames 8979, round 1 span 0.53-66.27 s (death 66.27), hitches>50ms 0, per-second entries 69
+   before (free)   10s  ms  9.90 (9.7-10.2)  pre  5.5  ren  4.3  draws   53.0 (52-55)  worst-frame 26.1
+   rim, all        40s  ms 13.00 (12.3-14.6)  pre  8.4  ren  4.8  draws   62.0 (62-72)  worst-frame 34.6
+   rim, draws<=70  31s  ms 13.30 (12.3-14.6)  pre  8.5  ren  4.7  draws   62.0 (62-68)  worst-frame 34.6
+   rim seconds with draws >= 100: 0 of 40;  rim-free = 3.10 ms
+```
+
+The dedicated wasm built from the same tree is still the pin
+(2488298 bytes, md5 9718a2a64978cb6e9b95ea2f0454cca5). Not measured: four
+cycles grinding at once on a phone — the ceiling is arithmetic, not a run.
