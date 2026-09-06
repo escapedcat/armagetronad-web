@@ -1061,6 +1061,23 @@
       if (!decision.on) return;
       touchEl.hidden = false;
 
+      // HAPTICS (M7.2). One 12 ms pulse on every press that SENDS a key -- the
+      // pad, the turn zones, the strip, the tap-for-Enter on the picture -- and
+      // none on a press that sends nothing (a suppressed Enter, an ignored
+      // tap), so the buzz means "the game got it". navigator.vibrate is the
+      // whole mechanism: Android Chrome vibrates, iOS Safari has no Vibration
+      // API and stays silent, a desktop Chrome has the function and no motor.
+      // It needs a user gesture, and the pointerdown that carries the key is
+      // one. Twelve milliseconds is a tick, not a rumble; the maintainer asked
+      // for it on 2026-09-06 after the pad's second cut. `?haptics=0` turns it
+      // off; the [TOUCH] line says which of the three states this load is in.
+      const HAPTIC_MS = 12;
+      const hapticsWanted = readNumberParam('haptics', 0, 1) !== 0;
+      const haptics = hapticsWanted && typeof navigator.vibrate === 'function';
+      const pulse = () => { if (haptics) { try { navigator.vibrate(HAPTIC_MS); } catch (e) { /* not fatal */ } } };
+      console.log('[TOUCH] haptics=' + (haptics ? 'on' : (hapticsWanted ? 'unsupported' : 'off')) +
+                  ' (' + HAPTIC_MS + ' ms per sent press)');
+
       // ---- wiring ------------------------------------------------------
       //
       // Pointer events rather than touch events: they are what Chrome emits for
@@ -1102,6 +1119,7 @@
           console.log('[TOUCH] pad Enter suppressed while driving (Enter is CHAT in a round)');
           return;
         }
+        pulse();
         sendKey('keydown', name);
       };
       const up = (ev) => {
@@ -1241,6 +1259,7 @@
           console.log('[TOUCH] tap ignored: the game is asking for steering');
           return;
         }
+        pulse();
         sendKey('keydown', 'Enter');
         sendKey('keyup', 'Enter');
       };
