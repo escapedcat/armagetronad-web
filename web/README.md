@@ -248,6 +248,7 @@ person holding it a switch and a readout.
 | `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
 | `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
 | `?sparks=1` / `?sparks=0` | off on touch, on otherwise | appends `SPARKS 1` or `SPARKS 0` to the runtime config, **on any device**. Off by default on a touch device: the bursts thrown at a wall cost about a quarter of the frame. `?sparks=1` has to *write* rather than stay silent — the game saves `SPARKS` into `user.cfg`, and this appended file is read after it — so it beats both the touch default and anything a previous session saved. `?sparks=0` turns them off on a desktop too, which is the only way this rig could measure them. |
+| `?haptics=0` | on wherever `navigator.vibrate` exists | turns off the 12 ms vibration pulse on every press of a touch control that sends a key (pad, turn zones, strip, tap-for-Enter); a press that sends nothing never pulses. Android Chrome vibrates; iOS Safari has no Vibration API and is silent either way. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 
 **`?dpr=1` is the experiment that decides the performance question, and it
@@ -319,6 +320,10 @@ then differs from the desktop page in four ways, all of them in
   arrow after it until Escape; the pad now sends Enter only while a menu is up
   or no cycle is alive, the rule the picture's tap already followed, and counts
   what it dropped in `window.AA_PAD_ENTER_SUPPRESSED` for the gate.
+  **Every press that sends a key vibrates for 12 ms** (`navigator.vibrate`,
+  M7.2): Android Chrome buzzes, iOS Safari has no Vibration API, and a press
+  that sends nothing — a suppressed Enter, an ignored tap — never pulses, so
+  the buzz means the game got the key. `?haptics=0` turns it off.
   **A rotation after load is still only the chip.** The layout and the backing
   store are both decided at load, so turning the phone raises the reload notice
   and changes nothing else. The boot hold, the "turn your phone sideways" prompt,

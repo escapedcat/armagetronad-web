@@ -70,6 +70,13 @@ shot:pb-00-portrait-boot
 # overflowed the right edge on a narrower phone), Enter and Esc labelled by name.
 eval:(()=>{const sq=document.getElementById('canvas').getBoundingClientRect();const pad=document.getElementById('pad').getBoundingClientRect();const iw=window.innerWidth;const minSz=iw>=400?56:44;const btns=[...document.querySelectorAll('#pad .pad-btn')].map(b=>{const r=b.getBoundingClientRect();return {key:b.dataset.aakey,label:b.textContent.trim(),w:Math.round(r.width),h:Math.round(r.height),top:Math.round(r.top),left:Math.round(r.left),right:Math.round(r.right)}});const lg=document.getElementById('pad-legend');const lr=lg?lg.getBoundingClientRect():null;const r={inner_w:iw,inner_h:window.innerHeight,min_size:minSz,pad_top:Math.round(pad.top),square_bottom:Math.round(sq.bottom),pad_bottom:Math.round(pad.bottom),legend:lr?{shown:getComputedStyle(lg).display!=='none',left:Math.round(lr.left),right:Math.round(lr.right),bottom:Math.round(lr.bottom)}:null,buttons:btns};r.PASS=Math.abs(r.pad_top-r.square_bottom)<=1&&btns.length===6&&btns.every(b=>b.w>=minSz&&b.h>=minSz&&b.top>=r.square_bottom&&b.left>=0&&b.right<=iw)&&['ArrowUp','ArrowLeft','ArrowRight','ArrowDown','Escape','Enter'].every(k=>btns.some(b=>b.key===k))&&btns.some(b=>b.key==='Enter'&&b.label==='Enter')&&btns.some(b=>b.key==='Escape'&&b.label==='Esc')&&!!r.legend&&r.legend.shown&&r.legend.left>=0&&r.legend.right<=iw&&r.legend.bottom<=window.innerHeight;console.log('[M7GATE] PB3 pad-geometry '+JSON.stringify(r));return 'PB3 '+r.PASS})()
 shot:pb-02-pad
+# HAPTICS (M7.2): navigator.vibrate is stubbed HERE, after the page has decided
+# haptics=on (it tests typeof navigator.vibrate at load; desktop Chrome has the
+# function and no motor) and before the first press. Every pulse the page asks
+# for lands in window.__vib; PB7 asserts a suppressed Enter adds none, PB8 that
+# the two turns add exactly two of 12 ms and that the count at that point is 5
+# (three Enters through the menus + two turns).
+eval:(()=>{window.__vib=[];navigator.vibrate=(p)=>{window.__vib.push(p);return true};return 'vibrate stubbed'})()
 
 # THE MENUS ARE REACHED BY A ALONE. These three taps were tap:#tapzone before
 # Task 3; they are the pad's A button now, because "the picture is a square and
@@ -93,10 +100,10 @@ mark:PORTRAIT-ROUND-STARTED
 # counter went up by exactly one. Runs in the countdown, 1.2 s after NEW_ROUND,
 # where the cycle is alive and the clock has not started.
 wait:1200
-eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0};window.__pb7=r;console.log('[M7GATE] PB7 enter-in-round-before '+JSON.stringify(r));return 'PB7 before'})()
+eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0,vib:(window.__vib||[]).length};window.__pb7=r;console.log('[M7GATE] PB7 enter-in-round-before '+JSON.stringify(r));return 'PB7 before'})()
 tap:.pad-a
 wait:500
-eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const b=window.__pb7||{};const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0,before:b};r.PASS=(b.ctx&2)!==0&&(b.ctx&1)===0&&(r.ctx&2)!==0&&(r.ctx&1)===0&&r.chat===b.chat&&r.suppressed===(b.suppressed|0)+1;console.log('[M7GATE] PB7 enter-in-round-suppressed '+JSON.stringify(r));return 'PB7 '+r.PASS})()
+eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const b=window.__pb7||{};const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0,vib:(window.__vib||[]).length,before:b};r.PASS=(b.ctx&2)!==0&&(b.ctx&1)===0&&(r.ctx&2)!==0&&(r.ctx&1)===0&&r.chat===b.chat&&r.suppressed===(b.suppressed|0)+1&&r.vib===b.vib;console.log('[M7GATE] PB7 enter-in-round-suppressed '+JSON.stringify(r));return 'PB7 '+r.PASS})()
 # The same 2 s the landscape gate waits before its round-1 screenshot: [L]
 # NEW_ROUND is printed while "New Match" is still on screen, and a shot taken on
 # that line shows the splash rather than the round it is evidence for. PB7 has
@@ -135,11 +142,13 @@ shot:pb-01-portrait-round
 # ~+8.3 s at which the AI frags an idle human.
 wait:1800
 eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const r={left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')};window.__pb4=r;console.log('[M7GATE] PB4 turn-counters-before '+JSON.stringify(r));return 'PB4 before '+JSON.stringify(r)})()
+eval:(()=>{window.__vib0=(window.__vib||[]).length;return "vib0 "+window.__vib0})()
 tap:.pad-left
 wait:1200
 tap:.pad-right
 wait:1200
 eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const b=window.__pb4||{};const r={ctx:Module._aa_web_input_context()|0,before:b,after:{left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')}};r.PASS=typeof b.left==='number'&&typeof b.right==='number'&&r.after.left===b.left-1&&r.after.right===b.right-1;console.log('[M7GATE] PB4 pad-turns-sent '+JSON.stringify(r));return 'PB4 '+r.PASS})()
+eval:(()=>{const v=window.__vib||[];const b=window.__vib0|0;const r={before:b,after:v.length,values:v.slice(b)};r.PASS=r.after===b+2&&r.after===5&&r.values.every(x=>x===12);console.log('[M7GATE] PB8 haptic-pulse-per-press '+JSON.stringify(r));return 'PB8 '+r.PASS})()
 shot:pb-03-after-pad-turns
 
 # PB5: B OPENS THE IN-GAME MENU AND B CLOSES IT, WITH THE CROSS WORKING INSIDE

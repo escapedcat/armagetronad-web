@@ -871,6 +871,15 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > in the arena's colours: cool-blue plastic, cyan arrows and Enter, magenta Esc, 5 px of
 > travel on press. Landscape (L1) and desktop (D2) re-proven unchanged.
 > `docs/evidence/m7-gameboy/m7.1-pad/`.
+>
+> **M7.2 — haptics (2026-09-06).** He asked for vibration on the buttons: every press of a
+> touch control that sends a key now calls `navigator.vibrate(12)` — the pad, the landscape
+> turn zones and strip, the tap-for-Enter — and a press that sends nothing (a suppressed
+> Enter, an ignored tap) never pulses, so the buzz means the game got the key. Android Chrome
+> vibrates, iOS Safari has no Vibration API, `?haptics=0` turns it off. The gate stubs
+> `navigator.vibrate` after the page has decided it is available and counts the calls: PB7
+> asserts a suppressed Enter adds none, **PB8** that two turns add exactly two of 12 ms and
+> that three menu Enters plus two turns make five. `docs/evidence/m7-gameboy/m7.2-haptics/`.
 
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 

@@ -381,3 +381,31 @@ with T1b, T1c ×2, T2b, T3b, T4 ×2 PASS and T6 `at_least_44px:true` in the
 landscape log (three rounds), D1 PASS in the desktop log. Logs:
 `m7.1-pad/{p412,p360,p320,landscape,desktop}/console.log`. Chrome device
 emulation, as everything above; the maintainer's own phone is the real test.
+
+## M7.2 — haptics (2026-09-06)
+
+The maintainer asked for vibration on the buttons. Every press of a touch
+control that sends a key now calls `navigator.vibrate(12)` — the pad, the
+landscape turn zones and strip, the tap-for-Enter on the picture — and a press
+that sends nothing (a suppressed Enter, an ignored tap) never pulses, so the
+buzz means the game got the key. Android Chrome vibrates; iOS Safari has no
+Vibration API; a desktop Chrome has the function and no motor. `?haptics=0`
+turns it off. The page logs which of the three states a load is in:
+
+      [TOUCH] haptics=on (12 ms per sent press)
+
+The gate stubs `navigator.vibrate` right after PB3 — after the page has decided
+haptics are available, before the first press — and counts every call. PB7
+gained a `vib` field and asserts the suppressed Enter added nothing; PB8 is new:
+
+      [M7GATE] PB7 enter-in-round-suppressed {"ctx":2,"chat":"0 1 0 0 0","suppressed":1,"vib":3,"before":{"ctx":2,"chat":"0 1 0 0 0","suppressed":0,"vib":3},"PASS":true}
+      [M7GATE] PB8 haptic-pulse-per-press {"before":3,"after":5,"values":[12,12],"PASS":true}
+
+`before 3` is the three Enters through the menus, `after 5` those plus the two
+turns, and the two values are the 12 ms each. Everything else in the portrait
+run passes as before (PB1–PB6, two rounds). Landscape (L1, T1b, T1c ×2, T2b,
+T3b, T4 ×2 PASS, T6 44 px, three rounds) and desktop (D1, D2 PASS) re-proven
+unchanged; the desktop log carries no `haptics=` line because the touch block
+returns before it on a desktop, which is the point. Logs only, no screenshots —
+nothing visual changed. `m7.2-haptics/{p412,landscape,desktop}/console.log`.
+The motor itself is unmeasured here; the maintainer's phone is the test.
