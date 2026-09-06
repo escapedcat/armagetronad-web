@@ -352,9 +352,13 @@ then differs from the desktop page in four ways, all of them in
   two per frame — so hundreds are alive at once. M6 switched them off on touch
   (`SPARKS 0`, a quarter of the frame at the rim). M8 added two client-only
   settings to `src/tron/gSparks.cpp`, `SPARKS_LIFETIME` (s, default 4) and
-  `SPARKS_INTERVAL` (s between spawns, global, default 0), whose defaults are
+  `SPARKS_INTERVAL` (s between spawns, per cycle, default 0), whose defaults are
   the upstream behaviour, and the page writes `SPARKS 1` / `SPARKS_LIFETIME 1` /
-  `SPARKS_INTERVAL 0.05` on a touch device: at most twenty live spark objects.
+  `SPARKS_INTERVAL 0.05` on a touch device: at most twenty live spark objects per
+  grinding cycle. (The first cut's interval was global, one spawn per 50 ms
+  whoever asked, and the maintainer's phone showed the flaw: the AIs, stepped
+  before the human's cycle, spent the budget every frame and his own bike never
+  sparked. Per cycle since M8.1.)
   Measured on the M6 rig with a cycle turned at the rim and driving along it
   (the "hug" arm, `web/tools/perf/hug.steps.tmpl`, CPU throttled 6×): while
   the sparks fly, stock is **22–25 ms** a frame with **111–456 draw calls**,

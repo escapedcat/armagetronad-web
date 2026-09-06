@@ -51,17 +51,32 @@ static tSettingItem<REAL> sg_sparkLifetimeConf( "SPARKS_LIFETIME", sg_sparkLifet
 static REAL sg_sparkInterval = 0;
 static tSettingItem<REAL> sg_sparkIntervalConf( "SPARKS_INTERVAL", sg_sparkInterval );
 
-// The throttle is GLOBAL, not per cycle, on purpose: what the phone pays for
-// is the total number of live sparks, whoever threw them (the end-of-round
-// draw spikes M6 traced to the AIs' sparks included), and a global cap bounds
-// that total directly. Game time runs backwards at a round start; a negative
-// gap simply allows the spark, which is right.
-bool gSpark::MayCreate( REAL time )
+// THE THROTTLE IS PER CYCLE. The first cut made it global -- one spawn per
+// interval whoever asks -- and the maintainer's phone showed why that is
+// wrong: he saw sparks on the AIs' cycles and none on his own. The game steps
+// its objects from the end of the list (eGameObject.cpp, the Len()-1 loops),
+// the human's cycle is the first object made and therefore the last one
+// stepped, and three AIs hugging walls had spent the 50 ms budget before his
+// turn came, every frame. Per cycle, each gets its own interval: with the
+// shipped 1 s / 0.05 s that is at most 20 live spark objects per grinding
+// cycle, so four cycles all grinding at once could reach 80 -- still well
+// under the ~480 the stock rules allow one cycle. Keyed by the cycle's
+// address, compared only; a round's dead cycles leave stale keys behind, so
+// the table is cleared when it grows past a size no round reaches. Game time
+// runs backwards at a round start; a negative gap simply allows the spark,
+// which is right.
+#include <map>
+bool gSpark::MayCreate( REAL time, void const * owner )
 {
-    static REAL lastCreate = -1e9;
-    if ( sg_sparkInterval > 0 && time - lastCreate < sg_sparkInterval )
+    static std::map< void const *, REAL > lastCreate;
+    if ( sg_sparkInterval <= 0 )
+        return true;
+    if ( lastCreate.size() > 256 )
+        lastCreate.clear();
+    std::map< void const *, REAL >::iterator it = lastCreate.find( owner );
+    if ( it != lastCreate.end() && time - it->second < sg_sparkInterval )
         return false;
-    lastCreate = time;
+    lastCreate[ owner ] = time;
     return true;
 }
 #endif

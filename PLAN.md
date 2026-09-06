@@ -889,9 +889,9 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > draw call and lives four seconds although its particles fade in two or three, and a
 > grinding cycle throws up to two per frame — some 480 alive at once, each simulated and
 > each drawn. Two client-only settings in `gSparks.cpp`, `SPARKS_LIFETIME` (default 4 s)
-> and `SPARKS_INTERVAL` (a global minimum between spawns, default 0), keep the upstream
+> and `SPARKS_INTERVAL` (a minimum between spawns, default 0), keep the upstream
 > behaviour unless set; the touch page sets 1 s and 0.05 s, a ceiling of twenty live spark
-> objects. All of it under `#ifndef DEDICATED`, and the dedicated wasm came out
+> objects per grinding cycle. All of it under `#ifndef DEDICATED`, and the dedicated wasm came out
 > byte-identical to the pin (2,488,298 B, md5 9718a2a6…), measured locally and by CI.
 > **Measured on a new arm**, because the M6 grind arm turned out to throw no sparks at all:
 > it drives head-on into the rim, and `gCycle`'s spark condition is
@@ -908,8 +908,19 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > asserts the three-line block and T1c is flipped (the saved value is 1 now, so `?sparks=0` is the
 > override that has to beat it). Open: the "cheaper" arm (0.6 s / 0.1 s) read 12.30 ms, the same
 > within noise — the two settings trade visible density, not cost, and 1 s / 0.05 s is the
-> maintainer's to move; the AIs' end-of-round spark spikes M6 saw are capped by the same global
-> interval but were not re-measured. `docs/evidence/m8-cheap-sparks/`.
+> maintainer's to move; the AIs' end-of-round spark spikes M6 saw are capped by the same interval, per
+> AI, but were not re-measured. `docs/evidence/m8-cheap-sparks/`.
+>
+> **M8.1 (2026-09-06, same day): the interval is per cycle, not global.** The first cut had one
+> spawn per 50 ms whoever asked, and his phone showed the flaw at once: sparks on the AIs'
+> cycles, none on his own. The game steps its objects from the end of the list
+> (`eGameObject.cpp`), the human's cycle is the first object made and so the last one stepped,
+> and three AIs hugging walls had spent the budget before his turn came, every frame.
+> `gSpark::MayCreate(time, owner)` now keeps one timestamp per cycle: twenty live spark objects
+> per grinding cycle, eighty if four grind at once, against the ~480 the stock rules give one.
+> The single-cycle hug arm re-measured the same (`hug-cheap-percycle`: 13.0 ms over the rim,
+> 12.3–14.6, draws 62–72, against the first cut's 13.45 and off's 13.3), the dedicated wasm is
+> still the pin.
 
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 

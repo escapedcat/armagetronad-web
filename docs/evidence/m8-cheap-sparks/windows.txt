@@ -18,3 +18,8 @@
    rim, all        40s  ms 13.30 (11.1-13.9)  pre  8.5  ren  4.8  draws   62.0 (54-62)  worst-frame 32.4
    rim, draws<=70  40s  ms 13.30 (11.1-13.9)  pre  8.5  ren  4.8  draws   62.0 (54-62)  worst-frame 32.4
    rim seconds with draws >= 100: 0 of 40;  rim-free = 3.90 ms
+== hug-cheap-percycle: cpu 6x, frames 8979, round 1 span 0.53-66.27 s (death 66.27), hitches>50ms 0, per-second entries 69
+   before (free)   10s  ms  9.90 (9.7-10.2)  pre  5.5  ren  4.3  draws   53.0 (52-55)  worst-frame 26.1
+   rim, all        40s  ms 13.00 (12.3-14.6)  pre  8.4  ren  4.8  draws   62.0 (62-72)  worst-frame 34.6
+   rim, draws<=70  31s  ms 13.30 (12.3-14.6)  pre  8.5  ren  4.7  draws   62.0 (62-68)  worst-frame 34.6
+   rim seconds with draws >= 100: 0 of 40;  rim-free = 3.10 ms

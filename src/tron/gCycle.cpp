@@ -3082,7 +3082,7 @@ bool gCycle::TimestepCore(REAL currentTime, bool calculateAcceleration ){
 
         if (fabs(skew)<fabs(lr*.8) ){
             skewDot-=lr*1000*animts;
-            if (crash_sparks && animts>0 && gSpark::MayCreate(currentTime))   // M8: see gSparks.cpp
+            if (crash_sparks && animts>0 && gSpark::MayCreate(currentTime, this))   // M8: per cycle, see gSparks.cpp
             {
                 gPlayerWall *tmpplayerWall=0;
 
@@ -3105,7 +3105,7 @@ bool gCycle::TimestepCore(REAL currentTime, bool calculateAcceleration ){
 
         if (fabs(skew)<fabs(lr*.9) ){
             skewDot-=lr*100*animts;
-            if (crash_sparks && animts>0 && gSpark::MayCreate(currentTime))   // M8: see gSparks.cpp
+            if (crash_sparks && animts>0 && gSpark::MayCreate(currentTime, this))   // M8: per cycle, see gSparks.cpp
             {
                 gPlayerWall *tmpplayerWall=0;
 
