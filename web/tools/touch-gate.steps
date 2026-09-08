@@ -259,19 +259,23 @@ shot:06b-after-round3-right-taps
 eval:window.__tg.dump('after-round3-right-taps')
 
 # ===========================================================================
-# T4: ORIENTATION. Rotating the emulated phone to portrait MID-GAME shows the
-# reload chip and nothing else: no prompt, no hold, the game keeps running.
+# T4: ORIENTATION. Rotating the emulated phone to portrait MID-GAME changes
+# NOTHING (M9): no chip, no prompt, no re-layout. The backing store the game
+# read at main() stays, the layout class stays, and the layout switch
+# (#layoutbtn) is hidden while driving -- it is a menu control. The canvas is
+# snapshotted before the rotation and compared after it, both ways.
 # ===========================================================================
 until:1:150000:[L] ROUND_WINNER
+eval:(()=>{const c=document.getElementById('canvas');window.__t4={w:c.width,h:c.height,layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full'};return 'T4 snapshot '+JSON.stringify(window.__t4)})()
 mark:ROTATE-TO-PORTRAIT
 metrics:412:915:3
 wait:1500
-eval:(()=>{const chip=document.getElementById('reloadchip');const rot=document.getElementById('rotate');const r={chip_visible:!!chip&&!chip.hidden,rotate_element:rot!==null,canvas_w:document.getElementById('canvas').width,canvas_h:document.getElementById('canvas').height};r.PASS=r.chip_visible&&!r.rotate_element;console.log('[M7GATE] T4 rotate-to-portrait '+JSON.stringify(r));return 'T4 '+r.PASS})()
-shot:07-portrait-mid-game-shows-only-the-chip
+eval:(()=>{const c=document.getElementById('canvas');const s=window.__t4||{};const lb=document.getElementById('layoutbtn');const r={chip_element:document.getElementById('reloadchip')!==null,rotate_element:document.getElementById('rotate')!==null,layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',canvas_w:c.width,canvas_h:c.height,before:s,layoutbtn_display:lb?getComputedStyle(lb).display:null,ctx:Module._aa_web_input_context()|0};r.PASS=!r.chip_element&&!r.rotate_element&&r.layout===s.layout&&r.canvas_w===s.w&&r.canvas_h===s.h;console.log('[M7GATE] T4 rotate-to-portrait '+JSON.stringify(r));return 'T4 '+r.PASS})()
+shot:07-portrait-mid-game-changes-nothing
 mark:ROTATE-BACK-TO-LANDSCAPE
 metrics:915:412:3
 wait:1500
-eval:(()=>{const chip=document.getElementById('reloadchip');const r={chip_hidden:!!chip&&chip.hidden};r.PASS=r.chip_hidden;console.log('[M7GATE] T4 back-in-landscape '+JSON.stringify(r));return 'T4b '+r.PASS})()
+eval:(()=>{const c=document.getElementById('canvas');const s=window.__t4||{};const r={chip_element:document.getElementById('reloadchip')!==null,layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',canvas_w:c.width,canvas_h:c.height};r.PASS=!r.chip_element&&r.layout===s.layout&&r.canvas_w===s.w&&r.canvas_h===s.h;console.log('[M7GATE] T4 back-in-landscape '+JSON.stringify(r));return 'T4b '+r.PASS})()
 shot:08-back-in-landscape
 
 # ===========================================================================

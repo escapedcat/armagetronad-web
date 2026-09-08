@@ -31,9 +31,10 @@ buttons at the top centre, and Escape is the button in the top-left corner; the
 game tells the page whether a menu is open or a round is running, so a tap never
 means two things at once. **A page loaded in portrait gets a different layout**:
 the game in a square at the top of the screen and a Game Boy pad below it — a
-cross for the arrows, an Enter and an Esc button (Down on the cross brakes, as on the keyboard). Rotating after load offers a
-reload; it never forces one — and until you take it or rotate back, the chip's
-Reload is the only control a rotated Game Boy load has. It has been played on a
+cross for the arrows, an Enter and an Esc button (Down on the cross brakes, as on the keyboard). The layout is decided when the
+game starts and stays: tilting the phone mid-game changes nothing, and a
+"Portrait layout" / "Landscape layout" button in the menus switches with a
+one-second reload. It has been played on a
 real phone and it plays; the frame rate on a phone is the open item. iOS is
 untested; every browser there is WebKit, which this port does not target.
 
@@ -72,8 +73,8 @@ but reaches no servers. Safari is not a target.
   portrait the game is a square at the top of the screen with a Game Boy pad
   below it — a cross for the arrows, an Enter and an Esc button (Down on the cross brakes, as on the keyboard). The square is the
   aspect the game's projection was designed near, so it plays at the 90° horizontal
-  field of view a 4:3 monitor gets. Rotating after load offers a reload; it never forces
-  one. `docs/evidence/phone-round2/`, `docs/evidence/m7-gameboy/`,
+  field of view a 4:3 monitor gets. The layout is chosen when the game
+  starts and stays; the menus carry a button to switch it. `docs/evidence/phone-round2/`, `docs/evidence/m7-gameboy/`,
   `docs/evidence/m6-lag/task8-sparks/`.
 
 ## Why

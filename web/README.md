@@ -250,6 +250,7 @@ person holding it a switch and a readout.
 | `?sparks=1` / `?sparks=0` | cheap sparks on touch, stock otherwise | `1` appends `SPARKS 1` (the stock sparks: four-second bursts, one per frame while grinding — the M6 lag, kept for the comparison), `0` appends `SPARKS 0`. With no parameter a touch device gets **cheap sparks** (M8): `SPARKS 1`, `SPARKS_LIFETIME 1`, `SPARKS_INTERVAL 0.05`, two client-only settings whose defaults are the upstream behaviour, so a desktop with no parameter is untouched — `web/tools/menu-gate.steps` D1 asserts the shipped file has no SPARKS line. `docs/evidence/m8-cheap-sparks/` for the price. |
 | `?haptics=0` | on wherever `navigator.vibrate` exists | turns off the 12 ms vibration pulse on every press of a touch control that sends a key (pad, turn zones, strip, tap-for-Enter); a press that sends nothing never pulses. Android Chrome vibrates; iOS Safari has no Vibration API and is silent either way. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
+| `?layout=portrait` / `?layout=landscape` | the orientation at start | forces the Game Boy or the full layout on a touch device regardless of how the phone is held (a desktop ignores it). The in-menu layout button sets it on a reload; nothing stores it. |
 
 **`?dpr=1` is the experiment that decides the performance question, and it
 decides it in one comparison.** On a desktop this port is CPU-bound, not
@@ -324,18 +325,24 @@ then differs from the desktop page in four ways, all of them in
   M7.2): Android Chrome buzzes, iOS Safari has no Vibration API, and a press
   that sends nothing — a suppressed Enter, an ignored tap — never pulses, so
   the buzz means the game got the key. `?haptics=0` turns it off.
-  **A rotation after load is still only the chip.** The layout and the backing
-  store are both decided at load, so turning the phone raises the reload notice
-  and changes nothing else. The boot hold, the "turn your phone sideways" prompt,
-  the "Play in portrait" button and `?portrait=ask` are **gone**, and
-  `localStorage` `aa.portrait` is **no longer read** — a returning visitor's
-  stored answer is inert. What the chip is offering to fix, in the direction that
-  costs most: a Game Boy load rotated to landscape draws its 1236×1236 backing
-  store into a 247 CSS px box (the `min(100vw, 60dvh)` is live CSS, the backing
-  store is not) and the pad's top edge is still at 412 px, below a 412 px-tall
-  viewport, so the chip is the only control left until a reload or a rotation
-  back. `docs/evidence/m7-gameboy/`, `docs/evidence/portrait-choice/` for the
-  flow it replaced.
+  **A rotation after start changes nothing (M9).** The layout is decided when
+  the game starts and stays: the backing store is the game's (read once at
+  `main()`), the square's CSS side is the number the page published
+  (`--aa-square`) rather than a live percentage, and `html.aa-gameboy` is never
+  toggled after `startGame()`. A Game Boy held sideways is a Game Boy held
+  sideways — the pad sits below the bottom edge until the phone is tilted
+  back. The decision is made twice, both before `main()`: at parse time, so the
+  first paint has the right shape, and again inside `startGame()`, so a phone
+  turned while the ~5 MB wasm downloads boots into the orientation it is held
+  in. **The switch is a button**, `#layoutbtn`, top-right, shown only while the
+  game is not driving: it reloads with `?layout=portrait` or `?layout=landscape`,
+  the other of the two, which in a menu costs a second and no round. The choice
+  rides on the URL for that visit and is remembered nowhere. `?layout=` sizes
+  for the layout asked for, not the viewport held: a phone held landscape that
+  asked for the Game Boy gets a square as if upright, and the player turns it.
+  What used to be here: M7's reload chip, offered on any orientation mismatch
+  (`docs/evidence/m7-gameboy/`), and before it the M5 boot hold and the "turn
+  your phone" prompt (`docs/evidence/portrait-choice/`). `docs/evidence/m9-layout-lock/`.
 - **the camera sits at half the stock distance.** At a phone's landscape
   geometry the player's own cycle measures 23 × 63 backing-store pixels stock
   and 47 × 122 at `?cam=0.5`. `?cam=1` restores stock;
