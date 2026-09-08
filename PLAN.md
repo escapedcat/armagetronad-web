@@ -922,6 +922,42 @@ Armagetron's gameplay is four keys and its menus are arrows+enter, so minimal mo
 > 12.3–14.6, draws 62–72, against the first cut's 13.45 and off's 13.3), the dedicated wasm is
 > still the pin.
 
+### M9 — the layout is decided at start (2026-09-08): no re-layout, a switch in the menus, a progress bar
+
+> M7 shipped the Game Boy with "rotation after load offers a reload" and two known costs: a
+> Game Boy load tilted to landscape shrank to a 247 px picture with the pad off-screen, and
+> a phone turned during the download booted into the wrong layout. The plan for M9 was a
+> live re-layout (a web-only export setting `sr_screenWidth/Height`; the game's own
+> `sr_ReinitDisplay` was ruled out — M5 measured it re-initialising into a stored 640×480).
+> **The maintainer rejected the premise**: "if I decide to start in portrait I stay; if I
+> tilt the phone, just stay in portrait", and a switch "as an obvious button on the start
+> screen". That is what shipped, and it is page-only — no C++, the pin never in play.
+> **The rule:** the layout is decided when the game starts and stays. The square's CSS
+> width is `var(--aa-square)`, the number `sizeCanvas` published, not `min(100vw, 60dvh)`,
+> so a tilted phone keeps its 412 px square (as tall as the landscape viewport, the pad
+> below the edge until tilted back) and nothing reshapes; the reload chip is gone.
+> **The decision is made twice, both before `main()`:** at parse time and again inside
+> `startGame()` right before `Module.callMain` — the second call is what makes a phone
+> turned during the download boot into the orientation it is held in (the M5 hold used to
+> do this for one direction). **The switch** is `#layoutbtn`, top-right, inside `#touch`,
+> shown only while the game is not driving: a reload with `?layout=portrait|landscape`,
+> the other of the two; the parameter sizes for the layout asked for (vw/vh swapped when
+> the held viewport disagrees), rides on the URL for the visit, and is stored nowhere.
+> **The loading screen is a bar**, not bytes: `setStatus` parses Emscripten's
+> "Downloading data... (loaded/total)" into a `<progress>`, indeterminate before the
+> first such line, styled in the pad's palette (a dark trough with a cyan rim, a cyan
+> fill with the pressed keys' glow, a magenta sweep while no total is known). The switch
+> carries an inline-SVG screen outline that stands in the orientation the tap goes to.
+> **Gates:** `web/tools/layout-boot-gate.steps` (new): LB3 opens in portrait, holds
+> `main()` with `?autostart=0`, rotates to landscape, releases — the game comes up full with
+> a wide backing store; LB4 taps the switch in that menu — the page reloads with
+> `?layout=portrait` and comes up as a Game Boy with a square backing store while still
+> held landscape. In the portrait gate, LB1 (switch visible in the menu, labelled
+> "Landscape layout"), LB2 (hidden while driving), PB6 rewritten (rotate mid-game: no chip,
+> canvas and drawn box identical to a snapshot taken before); in the touch gate, T4
+> rewritten the same way for a landscape load. Landscape and desktop otherwise unchanged
+> (L1, D2). `docs/evidence/m9-layout-lock/`.
+
 ### Phase 2 — multiplayer bridge (go/no-go after M5)
 
 Shipping this changes the maintainer's role from developer to **service operator** (VPS, TLS, abuse policy, coordination with server admins, indefinitely) — the main reason it is not committed. The verified design is preserved below.

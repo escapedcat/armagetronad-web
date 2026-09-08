@@ -158,25 +158,63 @@
        to tab between. */
     #canvas:focus, #canvas:focus-visible { outline: none; }
     /* THE GAME BOY LAYOUT. html.aa-gameboy is set by the script before the
-       canvas is sized (see the touch decision above sizeCanvas). The picture is
+       canvas is sized (see the layout decision above sizeCanvas). The picture is
        a square at the top: the contain-fit rule above already gives height:auto
        from the backing store's aspect, which the sizing block made 1, so only the
-       width and the anchoring change. 60dvh is the same cap the sizing block
-       applies, so CSS and backing store agree. The agreement is asserted at
-       load -- PB2 in web/tools/portrait-boot-gate.steps compares the drawn box
-       against the backing store -- but only for the UNCAPPED case a phone
-       gives (412x915: min(100vw, 60dvh) is 100vw). The capped, tablet-shaped
-       case is unmeasured and the two sides can differ by a pixel there: the
-       script floors vh*0.6 to an integer and dvh is dynamic, so a browser UI
-       bar that moves after load moves the CSS side and not the backing store. */
+       width and the anchoring change. THE WIDTH IS THE NUMBER sizeCanvas
+       PUBLISHED (--aa-square, min(100vw, 60 % of the height) at the moment it
+       ran), NOT A LIVE PERCENTAGE OF THE SCREEN. M7 wrote min(100vw, 60dvh) here,
+       and a phone tilted to landscape mid-round shrank the picture to 247 px
+       while the pad fell off the bottom. M9's rule is that the layout is decided
+       when the game starts and stays: a tilted phone keeps its 412 px square (as
+       tall as the landscape viewport, the pad below it off-screen until the
+       phone is tilted back), and nothing on the page reshapes. The fallback is
+       only for a page whose script never ran. */
     html.aa-gameboy body    { align-items:flex-start; }
-    html.aa-gameboy #canvas { width: min(100vw, 60vh); }
-    @supports (height: 100dvh) {
-      html.aa-gameboy #canvas { width: min(100vw, 60dvh); }
-    }
+    html.aa-gameboy #canvas { width: var(--aa-square, min(100vw, 60vh)); }
     #overlay { position:fixed; inset:0; z-index:20; display:grid; place-content:center;
                gap:1rem; text-align:center; background:#111; }
     #status.error { color:#f77; max-width:32rem; }
+    /* THE LOADING BAR (M9), IN THE PAD'S PALETTE. The touch buttons are cool-blue
+       plastic with a cyan rim light and cyan glyphs, Esc in the opponents'
+       magenta (see .pad-btn), and this is the same three colours: a dark trough
+       lit from inside, a cyan fill with the glow the pressed keys have, and the
+       magenta only for the state that has no number yet. appearance:none is
+       what makes ::-webkit-progress-value ours rather than the platform's; the
+       -moz rule is the same fill for Firefox, and a browser that honours
+       neither still shows the trough and the accent colour. */
+    #progress { -webkit-appearance:none; appearance:none;
+                width:min(62vw, 320px); height:12px; accent-color:#35d6ff;
+                border:1px solid rgba(53,214,255,.35); border-radius:6px;
+                background:linear-gradient(180deg, #15181f, #1c2029);
+                box-shadow:inset 0 2px 5px rgba(0,0,0,.6), 0 0 10px rgba(53,214,255,.12);
+                overflow:hidden; }
+    #progress::-webkit-progress-bar { background:transparent; }
+    #progress::-webkit-progress-value {
+                background:linear-gradient(180deg, #7ee6ff, #35d6ff 55%, #0f9fd0);
+                box-shadow:0 0 12px rgba(53,214,255,.75); border-radius:5px; }
+    #progress::-moz-progress-bar {
+                background:linear-gradient(180deg, #7ee6ff, #35d6ff 55%, #0f9fd0);
+                border-radius:5px; }
+    /* INDETERMINATE = the wasm is still arriving and no total is known yet. A
+       magenta scan across the trough says "working" without claiming a
+       fraction; the moment setStatus sees its first (loaded/total) the bar
+       takes a value and this rule stops matching. */
+    #progress:indeterminate {
+                background-image:linear-gradient(90deg, transparent 30%, rgba(255,63,164,.55) 50%, transparent 70%),
+                                 linear-gradient(180deg, #15181f, #1c2029);
+                background-size:220% 100%, 100% 100%;
+                animation:aa-scan 1.15s linear infinite; }
+    @keyframes aa-scan { from { background-position:130% 0, 0 0; }
+                         to   { background-position:-130% 0, 0 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      #progress:indeterminate { animation:none;
+                background-image:linear-gradient(90deg, rgba(255,63,164,.35), rgba(255,63,164,.35)),
+                                 linear-gradient(180deg, #15181f, #1c2029); }
+    }
+    #status { margin:0; color:#8a8f9c; font:14px/1.4 system-ui, sans-serif; }
+    #overlay h1 { margin:0; font:600 clamp(1.3rem, 5vw, 1.9rem)/1.2 system-ui, sans-serif;
+                  color:#e8eaf0; letter-spacing:.01em; }
 
     /* ---- PHASE 3: the touch overlay ------------------------------------
        Every rule below is dead on a desktop: #touch is `hidden` in the markup
@@ -184,7 +222,8 @@
        The z-order is the one thing worth stating up front, because three fixed
        layers now share the page:
 
-           25  #reloadchip  the "you rotated after load" notice.
+           (25 was #reloadchip, the "you rotated" notice; M9 removed it -- the
+            layout is chosen at start and the switch is #layoutbtn inside #touch.)
            20  #overlay     the loading indicator (removed when main() runs).
            10  #touch       the controls themselves, above the canvas.
 
@@ -381,35 +420,47 @@
     .pad-b.aa-down { text-shadow:0 0 14px rgba(255,63,164,.9); }
     @media (prefers-reduced-motion: reduce) { .pad-btn { transition:none; } }
 
-    #reloadchip { position:fixed; z-index:25; left:50%; bottom:.6rem;
-                  transform:translateX(-50%);
-                  display:flex; align-items:center; gap:.6rem;
-                  padding:.5rem .7rem; border-radius:.6rem;
-                  background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.25);
-                  color:#eee; font:13px/1.3 system-ui, sans-serif; }
-    /* min-height AND min-width ARE THE 44 px TOUCH-TARGET MINIMUM THE MENU PAD
-       ABOVE IS ALSO BUILT TO. The argument used to sit on the rotate prompt's
-       button; M7 deleted the prompt, and it moves here because Reload is now the
-       one control a player has to hit while an overlay is over the game. The
-       padding alone does not reach it: the gate measured the prompt's button --
-       which had MORE of it, .6rem/1rem at 14px against .35rem/.6rem at 13px --
-       at 128x38, i.e. 6 px short on the axis a thumb is least accurate on, so
-       this one is shorter still. min-width is here for the OTHER axis and the
-       OTHER button: a one-glyph label does not reach 44 px on its own, and the
-       dismiss x measured 29 px wide with its height already cleared (the
-       [SMOKE44] side measurement in
-       docs/evidence/m7-gameboy/task4-unchanged/README.md).
-       THIS RULE IS THE ONE CSS CHANGE ON THE BRANCH A LANDSCAPE PAGE CAN SEE.
-       The chip carries the hidden attribute unless the orientation stops
-       matching the one the page sized for, so it is invisible at load in every
-       layout -- but its rules are not html.aa-gameboy-scoped, so a landscape
-       load that is later rotated raises a chip whose buttons carry this
-       minimum too. */
-    #reloadchip button { color:#eee; background:rgba(255,255,255,.14);
-                         border:1px solid rgba(255,255,255,.3);
-                         border-radius:.4rem; padding:.35rem .6rem;
-                         min-height:44px; min-width:44px;
-                         font:13px system-ui, sans-serif; }
+    /* THE LAYOUT SWITCH (M9). One button, inside #touch so a desktop never
+       sees it, shown only while the game is NOT driving (a menu is up, or no
+       cycle is alive) -- the same .aa-driving class that hides the tap layer
+       in rounds hides this in rounds. It reloads the page with ?layout=
+       portrait|landscape, the other of the two, which costs a second or two in
+       a menu and nothing else; the choice rides on the URL for this visit and
+       is remembered nowhere, so no stored answer fights a later one. 44 px
+       both ways, the same floor as every other control here; top-right,
+       where neither layout puts anything (the strip is top-centre, Esc
+       top-left, the pad below the square). */
+    /* The icon is a screen outline that stands in the orientation the tap GOES
+       TO: upright in the full layout (tap = go portrait), turned on its side
+       under html.aa-gameboy (tap = go landscape). One <rect>, rotated about its
+       own centre, plus a static curved arrow that says "this rotates". Inline
+       SVG rather than a glyph: the arrows on the pad are U+25C0 and friends,
+       but there is no dependable single character for "rotate the screen", and
+       an emoji would arrive in the platform's colours instead of the pad's
+       cyan. currentColor ties it to the button's own colour. */
+    #layoutbtn svg { flex:none; }
+    #layoutbtn .lb-screen { transform-box:fill-box; transform-origin:center;
+                            transition:transform 140ms ease-out; }
+    html.aa-gameboy #layoutbtn .lb-screen { transform:rotate(90deg); }
+    @media (prefers-reduced-motion: reduce) { #layoutbtn .lb-screen { transition:none; } }
+    #layoutbtn { display:none; position:absolute; align-items:center; gap:.4rem;
+                 top:calc(.6rem + env(safe-area-inset-top, 0px));
+                 right:calc(.6rem + env(safe-area-inset-right, 0px));
+                 min-height:44px; min-width:44px; padding:.35rem .7rem;
+                 color:#cfd3dc; background:rgba(0,0,0,.55);
+                 border:1px solid rgba(255,255,255,.3); border-radius:.5rem;
+                 font:600 .8rem/1.2 ui-monospace, Menlo, "Roboto Mono", monospace;
+                 -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+    /* IN THE GAME BOY IT SITS BELOW THE PICTURE, NOT ON IT. Top-right is free
+       in the full layout (the strip is top-centre, Esc top-left), but in the
+       Game Boy the top of the screen IS the picture, and the button covered the
+       menu's own title there -- measured in the first run's pb-02-pad.png. The
+       black pad area below the square has room to spare: at 412x915 the pad
+       needs about 230 px of the 503 below the square, and the cross is centred
+       in what is left. --aa-square is the square's CSS side, the same number
+       the pad's own top edge uses. */
+    html.aa-gameboy #layoutbtn { top:calc(var(--aa-square, 100vw) + .5rem); }
+    #touch:not(.aa-driving) #layoutbtn { display:inline-flex; }
     /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
        z-index 40 puts it above everything, the reload chip included, because
        the numbers are most interesting exactly when something on the screen
@@ -434,6 +485,11 @@
   -->
   <div id="overlay">
     <h1>Armagetron Advanced</h1>
+    <!-- M9: a bar, not bytes. setStatus below parses Emscripten's
+         "Downloading data... (loaded/total)" into value/max; before the first
+         such line the bar has no value attribute and is indeterminate, which is
+         the browser's own "busy" animation. The words stay for a failure. -->
+    <progress id="progress" aria-label="Loading"></progress>
     <p id="status">Loading&hellip;</p>
   </div>
   <!--
@@ -534,34 +590,30 @@
       </div>
       <div id="pad-legend" aria-hidden="true"><b>&#9664; &#9654;</b> turn &middot; <b>&#9660;</b> brake &middot; <b>Enter</b> &middot; <b>Esc</b> menu</div>
     </div>
+    <!--
+      M9, THE LAYOUT SWITCH. No data-aakey: it is a page control, not a key.
+      Its label is set by the script from the layout the page is in; the
+      stylesheet shows it only while the game is not driving.
+    -->
+    <button type="button" id="layoutbtn" aria-label="Switch layout">
+      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+        <rect class="lb-screen" x="9.5" y="4.5" width="9" height="15" rx="1.8"
+              fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M6.2 10.5 A6.4 6.4 0 0 1 11.6 3.3" fill="none" stroke="currentColor"
+              stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M3.6 8.2 L6.2 10.9 L8.9 8.9" fill="none" stroke="currentColor"
+              stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="layoutbtn-label">Layout</span>
+    </button>
   </div>
 
   <!--
-    THE WORD "STRETCHED" WAS WRONG AND IS NOW GONE, which matters because it is
-    the only place this port ever used it and the maintainer's phone report used
-    it back. Measured (docs/evidence/phone-feedback/aspect/): the displayed box
-    keeps the backing store's aspect ratio to 0.00 % in every configuration,
-    including a deliberately falsified one -- `height:auto` on a replaced
-    element makes stretching unrepresentable. What a rotation after load
-    actually costs is SIZE and SHARPNESS: the picture is letterboxed into
-    whatever fits, at the pixel count the other orientation had.
-
-    M7 MADE THE FIXED THING BIGGER THAN THE PICTURE, which is why the text below
-    now names the LAYOUT rather than the letterboxing. A load decides the whole
-    shape of the page -- a square picture with a pad below it, or full-screen --
-    and nothing after it moves: html.aa-gameboy is set once, before sizing, and
-    sizeCanvas runs once. Letterboxing is still what a rotated picture does; it
-    is no longer the whole of what the reload buys.
-
-    AND THE TEXT NAMES THE PRICE, because that is the half a player is being
-    asked to agree to: a reload is a fresh boot, so the round in progress ends.
+    WHAT USED TO BE HERE: the reload chip ("Rotated -- reload to lay it out for
+    this one, the round restarts"). M9 removed it: the layout is decided when
+    the game starts and a rotation after that changes nothing; the switch is
+    the layout button (id layoutbtn) inside the touch overlay, in menus only.
   -->
-  <div id="reloadchip" hidden>
-    <span>Rotated &mdash; the game is still laid out for the shape it loaded in.
-          Reload to lay it out for this one (the round restarts).</span>
-    <button type="button" id="reloadchip-go">Reload</button>
-    <button type="button" id="reloadchip-x" aria-label="Dismiss">&times;</button>
-  </div>
 
   <!--
     ?diag=1 ONLY. Empty, display:none and untouched unless the query parameter is
@@ -876,30 +928,52 @@
     // than inferring it from a screenshot.
     console.log('[TOUCH] enabled=' + touchDecision.on + ' (' + touchDecision.why + ')' +
                 ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
-    // GAME BOY = a touch device that LOADED in portrait. Landscape keeps the
-    // full-screen layout; a desktop never gets this whatever its window shape.
-    window.AA_GAMEBOY = window.AA_TOUCH && viewportIsPortrait();
-    document.documentElement.classList.toggle('aa-gameboy', !!window.AA_GAMEBOY);
-    console.log('[DISPLAY] layout=' + (window.AA_GAMEBOY ? 'gameboy' : 'full'));
+    // GAME BOY = a touch device in portrait when the game STARTS -- or told to
+    // be, by ?layout=portrait; ?layout=landscape is the full layout regardless
+    // of how the phone is held. A desktop never gets the Game Boy whatever its
+    // window shape or parameter. THE DECISION IS MADE TWICE AND THEN NEVER
+    // AGAIN (M9): here at parse time, so the first paint has the right shape,
+    // and once more inside startGame() right before main(), so a phone turned
+    // while the ~5 MB wasm downloads boots into the orientation it is actually
+    // held in. After main() nothing on this page re-decides: a rotation
+    // mid-game changes nothing, and the switch is #layoutbtn, a reload with the
+    // parameter, offered in menus only.
+    const layoutParam = (() => {
+      try {
+        const v = new URLSearchParams(location.search).get('layout');
+        return (v === 'portrait' || v === 'landscape') ? v : null;
+      } catch (e) { return null; }
+    })();
+    const decideGameboy = () =>
+      window.AA_TOUCH && (layoutParam ? layoutParam === 'portrait' : viewportIsPortrait());
+    const applyLayoutDecision = (why) => {
+      window.AA_GAMEBOY = decideGameboy();
+      document.documentElement.classList.toggle('aa-gameboy', !!window.AA_GAMEBOY);
+      console.log('[DISPLAY] layout=' + (window.AA_GAMEBOY ? 'gameboy' : 'full') +
+                  (layoutParam ? ' (from ?layout=' + layoutParam + ')' : ' (from the orientation)') +
+                  ' ' + why);
+    };
+    applyLayoutDecision('at parse');
 
-    let sizedForPortrait = null;   // the orientation the backing store is FOR
-    // sizeCanvas() IS CALLED ONCE, AT PARSE TIME -- the single call is on the
-    // line right after the function -- AND ONLY EVER BEFORE main(). It is NOT a
-    // resize handler and must not become one: the long paragraph above about
-    // sr_ReinitDisplay still stands.
+    // sizeCanvas() IS CALLED TWICE, BOTH TIMES BEFORE main(), AND NEVER AFTER.
+    // Once at parse time (the line right after the function), so the first
+    // paint has the right shape; once from startGame() right before
+    // Module.callMain, so a phone turned during the download boots into the
+    // orientation it is held in (M9 -- the deleted M5 hold did the same for
+    // one direction). It is NOT a resize handler and must not become one: the
+    // long paragraph above about sr_ReinitDisplay still stands, and a call
+    // after main() would resize a backing store the game has already read.
     //
-    // IT RUNS AFTER THE TOUCH DECISION ABOVE, AND THAT ORDER IS LOAD-BEARING.
+    // IT RUNS AFTER THE LAYOUT DECISION ABOVE, AND THAT ORDER IS LOAD-BEARING.
     // The Game Boy branch inside reads window.AA_GAMEBOY to choose the backing
     // store's SHAPE, and a shape is not a size: the game reads it once through
     // SDL_GetVideoInfo and builds glViewport and glFrustum from it, so there is
-    // no later moment at which a wrong one could be corrected. That is the
-    // whole reason the decision was hoisted out of the touch block below.
+    // no later moment at which a wrong one could be corrected. relayoutBeforeMain
+    // below re-runs the decision and then this, in that order, for the same
+    // reason.
     //
-    // It is a named function with exactly ONE caller rather than the IIFE it
-    // started as. Nothing in the code requires that shape any more; what it
-    // still buys is the `why` argument, which names the call site in the
-    // [DISPLAY] line so a transcript says which call produced a given size.
-    // That is not an invitation to add a second caller -- see above.
+    // The `why` argument names the call site in the [DISPLAY] line so a
+    // transcript says which call produced a given size.
     function sizeCanvas(why) {
       const canvas = document.getElementById('canvas');
       // Told to the stylesheet rather than derived by it, because CSS has no
@@ -907,7 +981,6 @@
       const publishAspect = () => document.documentElement.style
         .setProperty('--aa-aspect', String(canvas.width / canvas.height));
       try {
-        sizedForPortrait = viewportIsPortrait();
         const forced = window.AA_CANVAS_SIZE;
         if (Array.isArray(forced) && forced.length === 2 &&
             forced[0] > 0 && forced[1] > 0) {
@@ -921,7 +994,15 @@
         const dprOverride = readNumberParam('dpr', 0.05, 8);
         const dpr = dprOverride !== null ? dprOverride
                                          : (window.devicePixelRatio || 1);
-        const vw = window.innerWidth, vh = window.innerHeight;
+        // ?layout= SIZES FOR THE LAYOUT ASKED FOR, NOT FOR THE VIEWPORT HELD:
+        // a phone held landscape that asked for the Game Boy gets a square
+        // sized as if it were upright (and the player turns it), a phone held
+        // upright that asked for landscape gets the wide backing store it will
+        // have once turned. Without the parameter the viewport is the truth.
+        let vw = window.innerWidth, vh = window.innerHeight;
+        if ((layoutParam === 'landscape' && vh > vw) || (layoutParam === 'portrait' && vw > vh)) {
+          const t = vw; vw = vh; vh = t;
+        }
         let w = Math.floor(vw * dpr);
         let h = Math.floor(vh * dpr);
         if (!(w > 0 && h > 0)) {
@@ -998,6 +1079,12 @@
       }
     }
     sizeCanvas('at load');
+    // THE SECOND AND LAST SIZING, from startGame() and nowhere else (M9). The
+    // decision first, then the size, in the order the comments above argue.
+    const relayoutBeforeMain = () => {
+      applyLayoutDecision('before main');
+      sizeCanvas('before main');
+    };
 
     // ---- PHASE 3: TOUCH INPUT ------------------------------------------
     //
@@ -1052,7 +1139,6 @@
       };
 
       const touchEl = document.getElementById('touch');
-      const chipEl = document.getElementById('reloadchip');
       // REUSED, NOT RE-DERIVED. The decision, its [TOUCH] line and
       // window.AA_TOUCH all moved above sizeCanvas (see the block there), so
       // the overlay and the backing store's shape can never disagree about
@@ -1266,50 +1352,61 @@
       tapzone.addEventListener('pointerup',     (ev) => endTap(ev, true));
       tapzone.addEventListener('pointercancel', (ev) => endTap(ev, false));
 
-      // ---- orientation: an OFFER to reload, never a hold ----------------
+      // ---- orientation: NOTHING HAPPENS, and the switch is a button (M9) ---
       //
-      // ORIENTATION AFTER LOAD IS A RELOAD, OFFERED, NEVER FORCED. The backing
-      // store and the projection are built once, before main() (see sizeCanvas);
-      // a rotation after that would need sr_ReinitDisplay, which M5 measured to
-      // work and which this page still declines as a larger claim than a reload.
-      // The chip below is the offer. It appears whenever the orientation the page
-      // is in differs from the one it was sized for -- both directions -- and its
-      // text says what the reload costs, which is the round in progress.
-      // WHAT USED TO BE HERE: a boot HOLD in portrait, a full-screen "turn your
-      // phone" prompt, a remembered "Play in portrait" answer (localStorage
-      // aa.portrait) and ?portrait=ask to forget it. M7 made portrait a layout of
-      // its own (a square picture, a pad below), so none of that has a job. A
-      // returning visitor's stored aa.portrait key is simply never read.
+      // THE LAYOUT IS DECIDED WHEN THE GAME STARTS AND STAYS. A rotation after
+      // that changes nothing on this page: the backing store is the game's
+      // (read once at main()), the square's CSS side is the number sizeCanvas
+      // published rather than a live percentage, and html.aa-gameboy is never
+      // toggled after startGame(). A Game Boy held sideways is a Game Boy held
+      // sideways -- the pad is below the bottom edge until the phone is tilted
+      // back -- and that is the design the maintainer chose over a live
+      // re-layout (2026-09-08): "if I start in portrait I stay; if I tilt,
+      // just stay". What rotation still does is print one line, because the
+      // gates read it and a transcript cannot recover the event afterwards.
+      // More than one fires per rotation -- resize, then the media query.
+      //
+      // THE SWITCH IS #layoutbtn, in menus only: a reload with ?layout= set to
+      // the other layout, which in a menu costs a second or two and no round.
+      // WHAT USED TO BE HERE: M7's reload chip, offered on any orientation
+      // mismatch, and before it the M5 boot hold and the "turn your phone"
+      // prompt. None of them has a job now.
       let mq = null;
       try { mq = window.matchMedia('(orientation: portrait)'); } catch (e) { mq = null; }
-      let chipDismissed = false;
-      const applyOrientation = (why) => {
-        const portrait = viewportIsPortrait();
-        if (!chipDismissed) chipEl.hidden = (portrait === sizedForPortrait);
-        // `why` is logged rather than acted on: all four callers do the same
-        // work, and which event fired is the one thing a transcript cannot
-        // recover afterwards. More than one fires per rotation -- the Task 4
-        // portrait run logged `via resize` then `via media query` back to back
-        // (docs/evidence/m7-gameboy/task4-unchanged/portrait/console.log).
-        console.log('[TOUCH] orientation portrait=' + portrait +
-                    ' (sized for portrait: ' + sizedForPortrait + ')' +
+      const onOrientationChange = (why) => {
+        console.log('[TOUCH] orientation portrait=' + viewportIsPortrait() +
+                    ' (layout stays ' + (window.AA_GAMEBOY ? 'gameboy' : 'full') + ')' +
                     ' via ' + why);
       };
-      document.getElementById('reloadchip-go')
-        .addEventListener('click', () => location.reload());
-      document.getElementById('reloadchip-x')
-        .addEventListener('click', () => { chipDismissed = true; chipEl.hidden = true; });
-      const onOrientationChange = (why) => { applyOrientation(why); };
-      // addListener is the pre-2019 spelling; Safari needed it until 14. Both
-      // are tried because the cost is one line and the failure mode of neither
-      // firing is a chip that never appears. resize and orientationchange are
-      // here for the same reason: no single one of these is trustworthy on
-      // every device, and they are all idempotent.
       if (mq && mq.addEventListener) mq.addEventListener('change', () => onOrientationChange('media query'));
       else if (mq && mq.addListener) mq.addListener(() => onOrientationChange('media query'));
       window.addEventListener('resize', () => onOrientationChange('resize'));
       window.addEventListener('orientationchange', () => onOrientationChange('orientationchange'));
-      applyOrientation('load');
+      const layoutBtn = document.getElementById('layoutbtn');
+      // The label names the layout the tap GOES TO, set once startGame has made
+      // the final decision; before that the parse-time one is shown, and the
+      // button is behind the loading overlay anyway.
+      const labelLayoutButton = () => {
+        // The SPAN, not the button: the button also holds the icon, and
+        // assigning textContent to it would delete that. The aria-label says
+        // the same thing for anything that reads the button rather than sees it.
+        const text = window.AA_GAMEBOY ? 'Landscape layout' : 'Portrait layout';
+        document.getElementById('layoutbtn-label').textContent = text;
+        layoutBtn.setAttribute('aria-label', 'Switch to the ' + text.toLowerCase());
+      };
+      labelLayoutButton();
+      window.AA_LABEL_LAYOUT_BUTTON = labelLayoutButton;   // startGame calls it after its relayout
+      layoutBtn.addEventListener('click', () => {
+        const other = window.AA_GAMEBOY ? 'landscape' : 'portrait';
+        console.log('[TOUCH] layout switch -> ?layout=' + other + ' (reload)');
+        try {
+          const u = new URL(location.href);
+          u.searchParams.set('layout', other);
+          location.href = u.toString();
+        } catch (e) {
+          location.search = '?layout=' + other;
+        }
+      });
     })();
 
     // ---- PHONE FEEDBACK: "the bike is tiny" -----------------------------
@@ -1687,7 +1784,21 @@
       // every AudioContext state seen in the measured window is 'running', and
       // its A7c asserts the menus before round 1 are exactly silent.
       noInitialRun: true,
-      setStatus: (text) => { statusEl.textContent = text || 'Ready'; },
+      // M9: the bar reads the numbers, the text does not show them. Emscripten's
+      // file packager reports "Downloading data... (loaded/total)" in bytes as
+      // the .data package streams; anything else ("Running...", an error) is
+      // shown as words. The bar is removed with the overlay when main() runs.
+      setStatus: (text) => {
+        const m = /^([^(]*)\((\d+)\/(\d+)\)/.exec(text || '');
+        const bar = document.getElementById('progress');
+        if (m && bar) {
+          bar.max = Number(m[3]) || 1;
+          bar.value = Number(m[2]) || 0;
+          statusEl.textContent = 'Loading\u2026';
+        } else {
+          statusEl.textContent = text || 'Ready';
+        }
+      },
       print:    (text) => console.log(text),
       printErr: (text) => console.error(text),
       // Fires on the runtime's own abort() (assertion failures, OOM, a
@@ -1767,6 +1878,8 @@
     function startGame() {
       if (gameStarted) return;
       gameStarted = true;             // also arms the backstop below
+      relayoutBeforeMain();           // M9: the orientation held NOW, see sizeCanvas
+      if (window.AA_LABEL_LAYOUT_BUTTON) window.AA_LABEL_LAYOUT_BUTTON();
       overlayEl.remove();
       Module.canvas.focus();          // so the menu receives key events
       console.log('[BOOT] autostart: calling main');

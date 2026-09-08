@@ -70,6 +70,9 @@ shot:pb-00-portrait-boot
 # overflowed the right edge on a narrower phone), Enter and Esc labelled by name.
 eval:(()=>{const sq=document.getElementById('canvas').getBoundingClientRect();const pad=document.getElementById('pad').getBoundingClientRect();const iw=window.innerWidth;const minSz=iw>=400?56:44;const btns=[...document.querySelectorAll('#pad .pad-btn')].map(b=>{const r=b.getBoundingClientRect();return {key:b.dataset.aakey,label:b.textContent.trim(),w:Math.round(r.width),h:Math.round(r.height),top:Math.round(r.top),left:Math.round(r.left),right:Math.round(r.right)}});const lg=document.getElementById('pad-legend');const lr=lg?lg.getBoundingClientRect():null;const r={inner_w:iw,inner_h:window.innerHeight,min_size:minSz,pad_top:Math.round(pad.top),square_bottom:Math.round(sq.bottom),pad_bottom:Math.round(pad.bottom),legend:lr?{shown:getComputedStyle(lg).display!=='none',left:Math.round(lr.left),right:Math.round(lr.right),bottom:Math.round(lr.bottom)}:null,buttons:btns};r.PASS=Math.abs(r.pad_top-r.square_bottom)<=1&&btns.length===6&&btns.every(b=>b.w>=minSz&&b.h>=minSz&&b.top>=r.square_bottom&&b.left>=0&&b.right<=iw)&&['ArrowUp','ArrowLeft','ArrowRight','ArrowDown','Escape','Enter'].every(k=>btns.some(b=>b.key===k))&&btns.some(b=>b.key==='Enter'&&b.label==='Enter')&&btns.some(b=>b.key==='Escape'&&b.label==='Esc')&&!!r.legend&&r.legend.shown&&r.legend.left>=0&&r.legend.right<=iw&&r.legend.bottom<=window.innerHeight;console.log('[M7GATE] PB3 pad-geometry '+JSON.stringify(r));return 'PB3 '+r.PASS})()
 shot:pb-02-pad
+# LB1 (M9): THE LAYOUT SWITCH IS UP IN A MENU and names the layout a tap goes
+# to. In the Game Boy that is "Landscape layout".
+eval:(()=>{const lb=document.getElementById('layoutbtn');const b=lb?lb.getBoundingClientRect():null;const sq=document.getElementById('canvas').getBoundingClientRect();const r={present:!!lb,display:lb?getComputedStyle(lb).display:null,label:lb?lb.textContent.trim():null,top:b?Math.round(b.top):null,square_bottom:Math.round(sq.bottom),ctx:Module._aa_web_input_context()|0};r.PASS=r.present&&r.display!=='none'&&r.label==='Landscape layout'&&r.top>=r.square_bottom;console.log('[M9GATE] LB1 layout-button-in-menu '+JSON.stringify(r));return 'LB1 '+r.PASS})()
 # HAPTICS (M7.2): navigator.vibrate is stubbed HERE, after the page has decided
 # haptics=on (it tests typeof navigator.vibrate at load; desktop Chrome has the
 # function and no motor) and before the first press. Every pulse the page asks
@@ -104,6 +107,9 @@ eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');co
 tap:.pad-a
 wait:500
 eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const b=window.__pb7||{};const r={ctx:Module._aa_web_input_context()|0,chat:S.line(c,'CHAT_TOOLTIP'),suppressed:window.AA_PAD_ENTER_SUPPRESSED|0,vib:(window.__vib||[]).length,before:b};r.PASS=(b.ctx&2)!==0&&(b.ctx&1)===0&&(r.ctx&2)!==0&&(r.ctx&1)===0&&r.chat===b.chat&&r.suppressed===(b.suppressed|0)+1&&r.vib===b.vib;console.log('[M7GATE] PB7 enter-in-round-suppressed '+JSON.stringify(r));return 'PB7 '+r.PASS})()
+# LB2 (M9): AND HIDDEN WHILE DRIVING -- the same .aa-driving class that hides
+# the tap layer hides it, so a thumb cannot reload the page mid-round.
+eval:(()=>{const lb=document.getElementById('layoutbtn');const r={present:!!lb,display:lb?getComputedStyle(lb).display:null,ctx:Module._aa_web_input_context()|0};r.PASS=r.present&&r.display==='none'&&(r.ctx&2)!==0&&(r.ctx&1)===0;console.log('[M9GATE] LB2 layout-button-hidden-in-round '+JSON.stringify(r));return 'LB2 '+r.PASS})()
 # The same 2 s the landscape gate waits before its round-1 screenshot: [L]
 # NEW_ROUND is printed while "New Match" is still on screen, and a shot taken on
 # that line shows the splash rather than the round it is evidence for. PB7 has
@@ -195,22 +201,18 @@ wait:900
 eval:(()=>{const ctx=Module._aa_web_input_context()|0;const o=window.__pb5||{};const r={opened_ctx:o.ctx,opened_menu:typeof o.ctx==='number'&&(o.ctx&1)!==0,ctx:ctx,menu:(ctx&1)!==0,cycle_alive:(ctx&2)!==0,driving_class:document.getElementById('touch').classList.contains('aa-driving')};r.PASS=(ctx&2)!==0&&(ctx&1)===0&&typeof o.ctx==='number'&&(o.ctx&1)!==0;console.log('[M7GATE] PB5 menu-roundtrip-via-pad '+JSON.stringify(r));return 'PB5 '+r.PASS})()
 
 # ===========================================================================
-# PB6: ROTATING AFTER A PORTRAIT BOOT OFFERS THE CHIP AND CHANGES NOTHING ELSE.
-# The mirror of touch-gate.steps T4, which rotates a landscape load into
-# portrait; this rotates a portrait load into landscape. Both directions get
-# the same answer, and it is an offer: the chip appears, and the layout stays
-# the one the page loaded in until the player takes the offer.
-#
-# THE CANVAS STAYING SQUARE IS THE LOAD-BEARING PART, and it is a property of
-# the code rather than a wish -- sizeCanvas() is called once, at parse time, so
-# nothing resizes the backing store after load and the square survives the
-# rotation by construction. Asserting it here is what would catch a later
-# resize handler being added without the reload story being rethought.
-# still_gameboy is the same claim on the CSS side: html.aa-gameboy is set once,
-# beside the touch decision, and no listener clears it.
+# PB6: ROTATING AFTER A PORTRAIT BOOT CHANGES NOTHING (M9). The mirror of
+# touch-gate.steps T4: a portrait load rotated into landscape. No chip (M7's
+# is gone), the layout class stays, the backing store stays square, and the
+# drawn box stays the square the page published -- its CSS width is
+# var(--aa-square), not a live percentage, so the picture does not shrink to
+# 60 % of a 412 px-tall viewport the way M7's did. A Game Boy held sideways is
+# a Game Boy held sideways: the pad sits below the bottom edge until the phone
+# is tilted back. Snapshotted before, compared after.
 # ===========================================================================
+eval:(()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();window.__pb6={w:c.width,h:c.height,css_w:Math.round(b.width),css_h:Math.round(b.height)};return 'PB6 snapshot '+JSON.stringify(window.__pb6)})()
 mark:ROTATE-TO-LANDSCAPE-AFTER-PORTRAIT-BOOT
 metrics:915:412:3
 wait:1500
-eval:(()=>{const chip=document.getElementById('reloadchip');const r={chip_visible:!!chip&&!chip.hidden,still_gameboy:document.documentElement.classList.contains('aa-gameboy'),canvas_w:document.getElementById('canvas').width,canvas_h:document.getElementById('canvas').height};r.PASS=r.chip_visible&&r.still_gameboy&&r.canvas_w===r.canvas_h;console.log('[M7GATE] PB6 rotate-after-portrait-boot '+JSON.stringify(r));return 'PB6 '+r.PASS})()
-shot:pb-05-landscape-after-portrait-boot-chip
+eval:(()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();const s=window.__pb6||{};const pad=document.getElementById('pad').getBoundingClientRect();const r={chip_element:document.getElementById('reloadchip')!==null,still_gameboy:document.documentElement.classList.contains('aa-gameboy'),canvas_w:c.width,canvas_h:c.height,css_w:Math.round(b.width),css_h:Math.round(b.height),before:s,inner:window.innerWidth+'x'+window.innerHeight,pad_top:Math.round(pad.top)};r.PASS=!r.chip_element&&r.still_gameboy&&r.canvas_w===s.w&&r.canvas_h===s.h&&r.css_w===s.css_w&&r.css_h===s.css_h;console.log('[M7GATE] PB6 rotate-after-portrait-boot '+JSON.stringify(r));return 'PB6 '+r.PASS})()
+shot:pb-05-landscape-after-portrait-boot-stays
