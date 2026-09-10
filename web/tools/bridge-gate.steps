@@ -1,11 +1,17 @@
-# M-A: the multiplayer bridge. Requires TWO helpers running:
+# M-A: the multiplayer bridge. Requires THREE helpers running:
 #
+#   docker run --rm -d --name aa-server -p 4534:4534/udp aa-dedicated
 #   node bridge/relay.mjs --port 8010 --allow-private > /tmp/relay.log 2>&1 &
 #   python3 -m http.server 8008 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --out /tmp/bridge-gate \
 #        --url 'http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010' \
 #        --script-file web/tools/bridge-gate.steps
-#   kill %1 %2
+#   docker logs aa-server > /tmp/bridge-gate/server.log
+#   kill %1 %2 ; docker rm -f aa-server
+#
+# The container is Task 3's addition and the section further down headed
+# "THE REST OF THIS FILE NEEDS A THIRD HELPER" says how to build it. B0, B1
+# and A1 do not need it; B2 and B3 are nothing without it.
 #
 # 127.0.0.1 AND NOT localhost, IN THE ?bridge= VALUE. bridge/relay.mjs binds
 # 127.0.0.1 on IPv4 only. A browser that resolves `localhost` to ::1 first gets
@@ -63,12 +69,20 @@
 # the master listings are both IP literals, so Task 3 would have met it at
 # once, as a mysterious no-response rather than an address bug.
 #
-# THE VERDICT, which is three lines and not a grep of the whole file:
+# THE VERDICT, which is five lines and not a grep of the whole file:
 #   grep -c '\[console.log\].*BRIDGEGATE.*"PASS":true' /tmp/bridge-gate/console.log
-# Expected: 3. Count the [console.log] lines only -- the `[harness] until`
-# echoes repeat every needle, so a raw grep over-counts roughly threefold.
-# /tmp/relay.log is the far end's half of the same claim and must show one
-# `bind` and the port it answered with.
+# Expected: 5 -- B0, B1, A1 (Task 2) and B2, B3 (Task 3). It was 3 before
+# Task 3 appended the two server gates; if a run of the first three alone is
+# what is wanted, that number is still 3. Count the [console.log] lines only
+# -- the `[harness] until` echoes repeat every needle, so a raw grep
+# over-counts roughly threefold. /tmp/relay.log is the far end's half of the
+# same claim and must show a `bind` and the port it answered with for each.
+#
+# AND, FOR B2/B3 ONLY, ONE MORE GREP THAT IS NOT OPTIONAL:
+#   grep -iE 'Received login|entered the game' /tmp/bridge-gate/server.log
+# The five PASS lines above are all statements the client makes about itself.
+# This one is the server saying a datagram arrived from somewhere and it gave
+# that somewhere a player. Without it the run has not been checked.
 
 until:1:90000:[PERSIST] populate ok
 wait:1000
@@ -162,3 +176,259 @@ key:Escape
 wait:3000
 shot:09-back-in-the-network-menu
 eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})()
+
+# ===========================================================================
+# THE REST OF THIS FILE NEEDS A THIRD HELPER: A REAL SERVER.
+#
+#   docker build -f bridge/test-server/Dockerfile -t aa-dedicated .   # repo root
+#   docker run --rm -d --name aa-server -p 4534:4534/udp aa-dedicated
+#   ... run the driver as at the top of this file ...
+#   docker logs aa-server > /tmp/bridge-gate/server.log
+#   docker rm -f aa-server
+#
+# Everything above this line runs without it and still passes; B2 and B3
+# below cannot, and they are the milestone's actual gate. See
+# bridge/test-server/README.md.
+#
+# IF B2 TIMES OUT, CHECK THE CONTAINER IS STILL ALIVE BEFORE SUSPECTING THE
+# BRIDGE. It happened once while this gate was being written: every reading in
+# the page was correct -- WebSocket open, a handle bound, the relay logging the
+# udp port -- and the connect simply got no answer, because `aa-server` had
+# exited part way through the run and `--rm` had already deleted it, log and
+# all. `docker ps -a` said "No such container". Start it WITHOUT `--rm` when
+# investigating, so the corpse and its log survive to be read:
+#   docker run -d --name aa-server -p 4534:4534/udp aa-dedicated
+#   docker inspect -f '{{.State.Status}} {{.State.ExitCode}}' aa-server
+# The same run repeated with no --rm passed, and the container stayed up
+# through it, so this is not a known failure with a known cause -- which is
+# precisely why the first thing to rule out is the server having gone away.
+#
+# THE NAMES ARE B2 AND B3, NOT B1 AND B2. Task 3's brief called these two
+# verdicts B1 and B2, written before Task 2 had used B0/B1/A1 in this same
+# file. Renaming Task 2's B1 to free the name would have falsified the labels
+# in docs/evidence/m-a-bridge/task2/, which is worse than a gap in the
+# numbering, so the new verdicts continue the sequence instead.
+#
+# THE VERDICT FOR THE WHOLE FILE IS THEREFORE FIVE, NOT THREE:
+#   grep -c '\[console.log\].*BRIDGEGATE.*"PASS":true' /tmp/bridge-gate/console.log
+# Expected: 5 -- B0, B1, A1, B2, B3. The header's "Expected: 3" applied to
+# the file before this block existed and has been corrected there too.
+#
+# ---------------------------------------------------------------------------
+# THE MENU PATH TO A BOOKMARKED SERVER. Recorded because it is a fact about
+# this build, and rediscovering it by trial and error is how gates rot. Read
+# off the constructors first and then confirmed screen by screen with a
+# throwaway driver run that shot every level (Down 1..4 and the bookmark list
+# separately); the screens are named below so a future reader checks the
+# shots rather than trusting the count.
+#
+#   net_menu (net_game(), src/tron/gGame.cpp:2397) constructs, in order:
+#       cust, mas, fav, bud, opt, lan, inter
+#   and uMenu renders the highest index at the top and opens on the LAST
+#   constructed item, so top to bottom the screen reads
+#       Online Multiplayer   (inter)   <- where the menu opens
+#       LAN Multiplayer      (lan)     <- where the walk above left it
+#       Network Setup        (opt)
+#       Mates                (bud)
+#       Server Bookmarks     (fav)     <- where we are going
+#       Subcultures          (mas)
+#       Custom Connect       (cust)
+#       Exit Menu                      (uMenu's own, always last on screen)
+#
+#   FROM THE TOP that is Down x4. This script arrives with `lan` still
+#   selected, because the LAN walk above entered it and came back and
+#   net_menu keeps its `selected` across a submenu, so from HERE it is
+#   Down x3. Those two numbers are both correct and are not the same number;
+#   shot 10 is what says which situation the run is actually in.
+#
+#   Then Enter opens gServerFavorites::FavoritesMenu, and the menu that
+#   appears reads
+#       Connect to 127.0.0.1   <- SELECTED, so no Down at all
+#       Edit Bookmarks
+#   so ONE MORE Enter connects. Why the bookmark is there and why it is
+#   already selected is in web/webdefaults/autoexec.cfg next to
+#   CUSTOM_SERVER_NAME: opening this menu runs sg_TransferCustomServer(),
+#   AddFavorite fills the HIGHEST empty slot (9, not 0), and
+#   sg_GenerateConnectionItems walks 9..0 so slot 9's item is constructed
+#   last -- which is the item uMenu opens on. "Connect to 127.0.0.1" is the
+#   $bookmarks_menu_connect template with the slot's name_, and name_ is
+#   nServerInfoBase::DoGetName(), which for a bookmark is its connection
+#   name; that is why the address shows up as the label with nothing typed.
+#
+# WHY NOT CUSTOM CONNECT, THE MENU THAT LOOKS RIGHT FOR THIS. Its address
+# field is a uMenuItemString: reaching a server through it means TYPING an
+# address, and the driver's vocabulary is key:NAME -- there is no step that
+# enters text. The bookmark route needs only Enter and Down, which is why
+# CUSTOM_SERVER_NAME's legacy transfer is the mechanism this gate uses.
+#
+# AND WHY THERE IS NO ?connect= OR CONSOLE COMMAND. The refusal that keeps a
+# bridge-less page alive lives at the head of net_game() -- the single menu
+# door, see web/tools/bridge-absent-gate.steps for the two fix rounds it
+# cost. Any path that opened a socket without passing through that door would
+# put the crash back for every visitor who has no ?bridge=. So the gate walks
+# the menus, and that is a requirement, not an inconvenience.
+# ===========================================================================
+
+# The [L] ladder-log lines B2 and B3 read are console.log lines from
+# se_SaveToLadderLog (CONSOLE_LADDER_LOG 1, set in autoexec.cfg), so they have
+# to be counted as they happen, the same way the peer tap above works. The tap
+# only COUNTS -- it must not re-log, or the `until:` counts below would double.
+eval:(()=>{if(window.__lTap)return 'already';window.__lTap=true;window.__L={};const o=console.log;const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[L] ')===0){const k=s.slice(4).split(' ')[0];window.__L[k]=(window.__L[k]||0)+1}}catch(e){}return o.apply(console,arguments)};console.log=w;return 'ladder-log tap installed'})()
+
+# AND A BASELINE OF THE ERROR COUNTERS, BECAUSE THEY ARE NOT ZERO HERE AND
+# ASKING FOR ZERO WOULD BE AN ASSERTION THAT CAN NEVER PASS. The LAN walk
+# above leaves AABridge.dataErrors at 8 on this build, every one of them
+#   [BRIDGE] error on handle N: port 0 is outside the allowed range 4533-4599
+# and they are NOT the broadcast, which is the obvious guess and is wrong:
+# nSocket::Broadcast returns -1 under __EMSCRIPTEN__ && !DEDICATED
+# (src/network/nSocket.cpp:2210), so a broadcast never reaches the relay at
+# all. They come from the line ABOVE it in nServerInfo::GetFromLAN
+# (src/network/nServerInfo.cpp:1649), whose per-port loop over 4534..4540 does
+#     m->SendImmediately(0, false);          <- plain unicast to peer 0
+#     nMessage::BroadcastCollected(0, port);
+# and peer 0's nAddress was never given a port -- the LAN browse has no server
+# to point it at -- so the port on the wire is 0 and bridge/policy.mjs refuses
+# it against its 4533-4599 range. Correct on both sides, and the bursts land
+# exactly at the nSTANDALONE<->nCLIENT transitions (four on handle 1, then
+# handle 2 binds; four on handle 2, then handle 3 binds). Four rather than
+# seven because the send buffer coalesces the iterations. It means "no errors"
+# has to mean "no NEW errors".
+# Measured, so the number is a reading and not a guess: 8 before this line,
+# 8 at B2, 8 at B3 -- the connect and the whole round added none. A delta is
+# also the stronger claim: a fixed `=== 8` would silently accept a real
+# datagram error appearing while the eighth broadcast error went away.
+eval:(()=>{const b=window.AABridge;window.__base={dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0};return 'error-counter baseline '+JSON.stringify(window.__base)})()
+
+mark:B2-DOWN-3-FROM-LAN-TO-SERVER-BOOKMARKS
+key:Down:3
+wait:1500
+shot:10-network-menu-server-bookmarks-selected
+mark:B2-ENTER-OPENS-BOOKMARKS-AND-TRANSFERS-CUSTOM_SERVER_NAME
+key:Enter
+wait:3000
+shot:11-bookmarks-menu-opens-on-connect-to-127-0-0-1
+mark:B2-ENTER-CONNECTS
+key:Enter
+
+# THERE IS DELIBERATELY NO `until:...:[BRIDGE] handle` HERE, AND THE FIRST
+# DRAFT HAD ONE. It read `until:2:30000:[BRIDGE] handle` on the theory that
+# the LAN walk bound one handle and the connect would be the second. Run, the
+# harness printed
+#     until 2x <<[BRIDGE] handle>> (timeout 30000ms, have 3)
+# -- the LAN walk binds TWICE (handles 1 and 2, as sn_SetNetState cycles), so
+# the needle was already satisfied before the Enter above did anything, and
+# `until:` does not throw, so the verdict after it would have printed PASS on
+# a run where the connect never happened. Any fixed count here is a count of
+# how many times an unrelated part of the walk happens to rebind, which is
+# exactly the kind of number that rots. The two needles below cannot be
+# satisfied by anything but a real server, at any count.
+#
+# The client cannot invent either of them. A team roster and a round number
+# come from the server's game state over the wire; nothing local produces them
+# -- the walk above never starts a game, and a grep of the transcript up to
+# this point finds zero [L] NEW_ROUND. What the socket did is checked in the
+# verdict below from AABridge instead, where it is a reading of the live
+# handle rather than a count of log lines: exactly one live handle, because
+# aa_bridge_close deleted the LAN one's queue, bound and sentSinceBind.
+until:1:60000:[L] TEAM_PLAYER_ADDED
+until:1:60000:[L] NEW_ROUND
+wait:4000
+shot:12-on-the-grid-of-a-real-network-game
+
+# ===========================================================================
+# B2: THE CLIENT REACHED THE BOOKMARKED SERVER THROUGH THE BRIDGE.
+#
+# Read from AABridge and from the ladder-log tap, not from the screen. The
+# screen saying "connected" is a statement about what the client believes;
+# TEAM_PLAYER_ADDED naming a roster and NEW_ROUND naming a round are
+# statements about what the server sent.
+#
+# handles: exactly one live handle, its bound entry 1 (the relay answered
+#   BOUND, not ERROR), and sentSinceBind > 0 on it -- datagrams left the page
+#   on the handle the game is actually using.
+# new_dropped / new_sendFailures / new_dataErrors: all 0, counted as deltas
+#   from the baseline taken before the Downs above -- see the comment on that
+#   baseline for why an absolute zero is unreachable here. new_dataErrors is
+#   the one that would catch the relay refusing the destination by policy,
+#   which is what happens without --allow-private and looks like silence
+#   otherwise.
+# pending 0: C++ drained everything the relay delivered, so eWebNet::Recv ran
+#   rather than the queue merely filling up.
+#
+# THE ASSERTION THAT MATTERS IS NOT IN HERE AND CANNOT BE. It is
+#   docker logs aa-server | grep -iE 'entered|Received login'
+# which must name the player and the source address of its datagrams. If the
+# server's log and this verdict ever disagree, the server's log wins and the
+# client is what is broken.
+# ===========================================================================
+eval:(()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:live,bound:bound,sent:sent,pending:live.reduce((n,h)=>n+b.queues[h].length,0),baseline:B,dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,lastDataError:b.lastDataError,rosters:L.TEAM_PLAYER_ADDED|0,rounds_started:L.NEW_ROUND|0};r.PASS=b.state===1&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.pending===0&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.rosters>0&&r.rounds_started>0;console.log('[BRIDGEGATE] B2 reached-the-bookmarked-server-through-the-bridge '+JSON.stringify(r));return 'B2 '+r.PASS})()
+
+mark:B3-STEER-WHILE-A-NETWORK-ROUND-IS-LIVE
+key:Left
+wait:500
+key:Right
+
+# WHY NOT [L] ROUND_WINNER, WHICH IS WHAT THE BRIEF ASKED FOR. This build
+# never prints it on a client. It is written from gGame::Analysis
+# (src/tron/gGame.cpp:3610), whose first two lines are
+#     if ( nCLIENT == sn_GetNetState() )
+#         return;
+# so the whole round-end analysis, ROUND_WINNER and MATCH_WINNER included, is
+# server-only. Measured: a three-round run of this exact walk produced
+# 0x ROUND_WINNER and 4x NEW_ROUND in the browser transcript. Waiting for it
+# here would have timed out, and `until:` does not throw, so the PASS after
+# it would still have printed -- a gate that measured nothing.
+#
+# TWO NEEDLES INSTEAD, BOTH OF WHICH REQUIRE A ROUND TO HAVE FINISHED:
+#
+# [L] ROUND_SCORE_TEAM is eTeam::LogScoreDifference (src/engine/eTeam.cpp:564)
+#   reached from ePlayerNetID::LogScoreDifferences() in the GS_CREATED /
+#   GS_TRANSFER_SETTINGS arm of gGame::StateUpdate (gGame.cpp:3189) -- NOT
+#   inside that arm's `if ( nCLIENT != sn_GetNetState() )` block, which is why
+#   it fires on a client where ROUND_WINNER does not. It reports
+#   `score - lastScore_` for the round that just ENDED and names the player's
+#   team, so it is simultaneously "a round completed" and "the browser player
+#   was in it, and the server scored it": the score it prints is the server's
+#   number, arriving over this socket. Observed: `-2 web_user`, the browser
+#   player having been killed by an AI each round.
+#
+# [L] NEW_ROUND twice is the state machine having gone all the way round. One
+#   is what B2 already asserted; a second one cannot happen unless the first
+#   round ran to its end. Measured cadence on this machine: NEW_ROUND at
+#   41.7s, 54.5s, 67.3s, 80.1s -- one per round, ~13 s apart, so 180 s is
+#   many rounds of headroom rather than a lucky fit. Counting is safe here
+#   because the harness excludes its own lines from `until:` (drive-browser.mjs
+#   countMatches) -- a raw grep of the transcript does NOT, which is what the
+#   header's "count the [console.log] lines only" is about.
+#
+# WHAT THE TWO KEYPRESSES DO AND DO NOT PROVE, stated plainly rather than
+# dressed up. They drive the real input path -- uInput to gCycle to a message
+# on the same socket the round is running over -- while a network game is
+# live, and a path that threw or wedged there would stop the round finishing
+# and time these needles out. They do NOT prove a specific turn reached the
+# server: neither end logs anything per turn, and a round's duration is not a
+# measurement of one keypress. If a later task needs that claim it needs a new
+# instrument, not a longer wait here.
+until:1:180000:[L] ROUND_SCORE_TEAM
+until:2:180000:[L] NEW_ROUND
+wait:2000
+shot:13-a-round-has-completed-with-the-browser-player-scored-in-it
+
+# ===========================================================================
+# B3: A FULL ROUND COMPLETED WITH THE BROWSER PLAYER ON THE GRID.
+#
+# rounds_started >= 2 and rounds_scored >= 1 are the tap's own counts of the
+# two needles above, so the verdict does not depend on the harness having
+# waited correctly. The bridge readings are repeated because a round that
+# finished on a socket that has since died would not be the claim being made:
+# the same handle must still be the only live one, still bound, still sending,
+# with nothing newly dropped (deltas again, same baseline as B2) and nothing
+# left undrained. `sent` is worth reading rather than only asserting: it was
+# 73 datagrams at B2 and 206 at B3 on the measured run, i.e. the round is a
+# live two-way stream on this handle and not a login followed by silence.
+#
+# still_alive is the port's standing check -- the canvas has a size and GL
+# reports no error -- because every reading above is compatible with a module
+# that has since exited.
+# ===========================================================================
+eval:(()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,rosters:L.TEAM_PLAYER_ADDED|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending:live.reduce((n,h)=>n+b.queues[h].length,0),baseline:B,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.PASS=r.rounds_started>=2&&r.rounds_scored>=1&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.pending===0&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.still_alive;console.log('[BRIDGEGATE] B3 a-full-round-completed-with-the-browser-player-scored-in-it '+JSON.stringify(r));return 'B3 '+r.PASS})()

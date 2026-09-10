@@ -1,0 +1,40 @@
+How the menu route to a bookmarked server was found, rather than guessed.
+
+The order was PREDICTED FIRST from the source, so that the screenshots were a
+check and not a search:
+
+  net_game() (src/tron/gGame.cpp:2397) constructs cust, mas, fav, bud, opt,
+  lan, inter -- and uMenu renders the highest index at the top and opens on
+  its last-constructed item, so the screen reads Online Multiplayer, LAN
+  Multiplayer, Network Setup, Mates, Server Bookmarks, Subcultures, Custom
+  Connect, Exit Menu, with the cursor on the first of those.
+
+  gServerFavoritesHolder::AddFavorite (src/tron/gServerFavorites.cpp:149)
+  scans slots NUM_FAVORITES-1 .. 0 and takes the FIRST EMPTY one, so on a
+  fresh profile CUSTOM_SERVER_NAME lands in slot 9, not slot 0. And
+  sg_GenerateConnectionItems walks 9 .. 0, so slot 9's item is constructed
+  last -- which is the item uMenu opens on.
+
+Then this script was run once against the same build, shooting every level:
+
+  drive-browser.mjs --headed --script-file discover.steps
+
+and the shots confirmed the prediction exactly:
+
+  05-network-menu-top.png              Online Multiplayer selected
+  06-down1.png                         LAN Multiplayer
+  07-down2.png                         Network Setup
+  08-down3.png                         Mates
+  09-down4-expect-bookmarks.png        Server Bookmarks       <- 4 Downs
+  10-bookmarks-menu-expect-127-0-0-1   "Connect to 127.0.0.1" ALREADY selected
+
+So from the top of the network menu it is Enter, Enter, Down x4, Enter, Enter.
+web/tools/bridge-gate.steps uses Down x3 because it arrives with LAN
+Multiplayer selected, having entered LAN Multiplayer earlier in the same run;
+that is recorded in the steps file next to the count so the two numbers are
+not read as a contradiction.
+
+WHY NOT CUSTOM CONNECT, which is the menu that looks made for this: its
+address field is a uMenuItemString, so using it means TYPING an address, and
+the driver's vocabulary is key:NAME with no text-entry step. The bookmark
+route needs only Enter and Down.

@@ -1,0 +1,91 @@
+Gate B1 of Task 3 -- A BROWSER CLIENT JOINED A REAL ARMAGETRON SERVER.
+
+THE DIRECTORY IS b1/ AND THE VERDICT IN THE LOG IS CALLED B2. Not a mismatch
+to fix: the task brief numbered its two new gates B1 and B2, and by the time
+they were written web/tools/bridge-gate.steps already had B0, B1 and A1 from
+Task 2. Renaming Task 2's B1 would have falsified the labels in
+docs/evidence/m-a-bridge/task2/, so the verdicts continue the sequence as B2
+and B3 while the directories keep the brief's names. b1/ = the join, b2/ =
+the round.
+
+WHAT WAS RUN, exactly, from the repo root of this worktree:
+
+  docker build -f bridge/test-server/Dockerfile -t aa-dedicated .
+  docker run -d --name aa-server -p 4534:4534/udp aa-dedicated
+  node bridge/relay.mjs --port 8010 --allow-private > relay.log 2>&1 &
+  python3 -m http.server 8008 --directory web/dist-m1 &
+  node web/tools/drive-browser.mjs --headed --out /tmp/bridge-gate \
+       --url 'http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010' \
+       --script-file web/tools/bridge-gate.steps
+  docker logs aa-server > server.log 2>&1
+
+`docker run` WITHOUT --rm, deliberately. The committed recipe in
+bridge-gate.steps uses --rm; this run did not, because an earlier run's
+container exited part way through and --rm had already deleted it along with
+its log. See the note in bridge-gate.steps headed "IF B2 TIMES OUT".
+
+THE FIVE VERDICTS, counted the way the steps file says to:
+
+  $ grep -c '\[console.log\].*BRIDGEGATE.*"PASS":true' console.log
+  5
+
+  B0 configured-and-idle-until-asked                 PASS  (Task 2)
+  B1 socket-open-and-bound                           PASS  (Task 2)
+  A1 address-text-maps-the-way-the-game-maps-it      PASS  (Task 2)
+  B2 reached-the-bookmarked-server-through-the-bridge PASS  <- this directory
+  B3 a-full-round-completed-...                      PASS  <- ../b2/
+
+B2's reading in full, from console.log:
+
+  {"ws_readyState":1,"state":1,"live_handles":[3],"bound":[[3,1]],
+   "sent":[[3,78]],"pending":0,
+   "baseline":{"dropped":0,"sendFailures":0,"dataErrors":8},
+   "dropped":0,"sendFailures":0,"dataErrors":8,
+   "new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,
+   "lastDataError":"port 0 is outside the allowed range 4533-4599",
+   "rosters":4,"rounds_started":1,"PASS":true}
+
+The dataErrors of 8 come from the LAN walk and are present before this gate
+begins, which is why the assertion is on the delta. They are NOT the
+broadcast: nSocket::Broadcast returns -1 under __EMSCRIPTEN__ && !DEDICATED
+(src/network/nSocket.cpp:2210) and never reaches the relay. They are the
+unicast on the line above it in nServerInfo::GetFromLAN -- SendImmediately(0,
+false) to peer 0, whose nAddress has no port because the LAN browse has no
+server to point it at -- refused by bridge/policy.mjs against its 4533-4599
+range. Correct on both sides, zero of them appear during either round
+(new_dataErrors 0 at both B2 and B3), and the full argument is in the
+baseline comment in bridge-gate.steps.
+
+AND THE ASSERTION THAT ACTUALLY SETTLES IT, from server.log, which is the
+server's own console and not the client's:
+
+  [1] Received login from 192.168.215.1:41554 via socket *.*.*.*:4534,
+      network version: 0.2.9_alpha (ID: 17).
+  [1] web_user entered the game.
+
+  $ grep -c 'Received login' server.log
+  1
+
+EXACTLY ONE LOGIN IS THE POINT OF THAT COUNT, not a formality. Docker
+Desktop's UDP proxy sits between the relay's socket and the server, and the
+source endpoint it presents is NOT the relay's: the relay bound udp port
+58639 (relay.log) and the server saw 192.168.215.1:41554. So the proxy does
+rewrite the source. What it does not do on this machine is rewrite it
+INCONSISTENTLY: a server identifies a client by source ip:port, and a proxy
+that picked a new port per datagram would show up here as a stream of logins
+from ascending ports, each treated as a fresh client. One login, one player,
+one completed round. Re-measure this on any other host before assuming it;
+the fallback is a native dedicated build with no Docker in the path.
+
+THE MENU ROUTE IS IN menu-discovery/. It was predicted from the constructor
+order in net_game() (src/tron/gGame.cpp:2397) and gServerFavorites.cpp, then
+confirmed screen by screen with the throwaway script in that directory:
+05 is the network menu as it opens (on Online Multiplayer), 06-09 are one
+Down each, and 09 shows Server Bookmarks selected -- FOUR Downs from the top.
+10 is the bookmark list, which opens already on "Connect to 127.0.0.1", so
+one further Enter connects and no Down is needed there.
+
+The gate itself uses THREE Downs, not four, and both numbers are right: it
+arrives at the network menu with LAN Multiplayer still selected, because the
+Task 2 walk above it entered LAN and came back. 10-*.png and 11-*.png in this
+directory are that route as the gate actually walked it.
