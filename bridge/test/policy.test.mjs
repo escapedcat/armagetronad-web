@@ -15,13 +15,17 @@ test('ports outside 4533-4599 are refused', () => {
 });
 
 test('private, loopback, link-local and multicast ranges are refused by default', () => {
-  for (const ip of ['127.0.0.1', '10.0.0.5', '192.168.1.10', '172.16.0.1', '172.31.255.254', '169.254.1.1', '0.0.0.0', '224.0.0.1', '239.1.2.3']) {
+  for (const ip of ['127.0.0.1', '10.0.0.5', '192.168.1.10', '172.16.0.1', '172.31.255.254', '169.254.1.1', '0.0.0.0', '224.0.0.1', '239.1.2.3', '100.64.0.1', '100.127.255.254']) {
     assert.match(checkDestination(ip, 4534), /not allowed/, ip + ' should be refused');
   }
 });
 
 test('172.32.0.1 is public and must not be caught by the 172.16/12 rule', () => {
   assert.equal(checkDestination('172.32.0.1', 4534), null);
+});
+
+test('100.128.0.1 is public and must not be caught by the 100.64/10 rule', () => {
+  assert.equal(checkDestination('100.128.0.1', 4534), null);
 });
 
 test('allowPrivate lifts the address rule but never the port rule', () => {

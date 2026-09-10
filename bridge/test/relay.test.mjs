@@ -59,6 +59,25 @@ test('a datagram reaches the server and the reply comes back with the address ec
   assert.equal(f.payload.toString(), 'pong:ping');
 });
 
+test('a hostname is resolved to send but echoed back exactly as the client wrote it', async (t) => {
+  const server = await echoServer(4536);
+  t.after(() => server.close());
+  const relay = startRelay({ port: 0, allowPrivate: true });
+  t.after(() => relay.close());
+  await relay.ready;
+  const ws = await open('ws://127.0.0.1:' + relay.port);
+  t.after(() => ws.close());
+
+  ws.send(encode({ type: TYPE.BIND, handle: 1, port: 0, addr: '' }));
+  assert.equal((await next(ws)).type, TYPE.BOUND);
+
+  ws.send(encode({ type: TYPE.DATA, handle: 1, port: 4536, addr: 'localhost', payload: Buffer.from('ping') }));
+  const f = await next(ws);
+  assert.equal(f.type, TYPE.DATA);
+  assert.equal(f.payload.toString(), 'pong:ping');
+  assert.equal(f.addr, 'localhost', 'the browser client cannot resolve names, so the text it sent is the only thing it can match a reply against');
+});
+
 test('two handles get two different source ports, as two native clients would', async (t) => {
   const seen = new Set();
   const sock = dgram.createSocket('udp4');
