@@ -1,0 +1,116 @@
+# M-A: the NEGATIVE half of the multiplayer bridge -- what the network menu does
+# on a page with NO ?bridge=, which is every page this project deploys today.
+#
+#   python3 -m http.server 8008 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/bridge-absent \
+#        --url 'http://localhost:8008/armagetronad.html' \
+#        --script-file web/tools/bridge-absent-gate.steps
+#   kill %1
+#
+# NO RELAY, and no ?bridge= on the URL. That is the whole point, and it is why
+# this is a second file rather than more steps in web/tools/bridge-gate.steps:
+# the two cases differ in the URL.
+#
+# WHAT WENT WRONG AND WHAT THIS PINS DOWN. The first cut of Task 2 let the menu
+# items fail deep in the network stack. nSocket::Create returned -1, so
+# nBasicNetworkSystem::Init() reached Sys_Error(), which is `con << x; exit(-1)`
+# (nSocket.cpp:228) -- the wasm module exited, the canvas went black, and the
+# visit was over. Measured before the fix, in the same walk this file does:
+#
+#     [  36631ms] [harness] key Enter (1/1)
+#     [  36666ms] [console.error] program exited (with status: -1), but
+#                 keepRuntimeAlive() is set ... halting execution
+#
+# The pre-change client did NOT do that: docs/evidence/m5-https walks the same
+# menu and ends "alive, gl err=0x0". So it was a regression against the port's
+# standing rule that the browser work must not change the experience of anyone
+# not using it, and the deployed page has no ?bridge= at all.
+#
+# The fix refuses at the door -- AA_NET_MENU_REQUIRES_BRIDGE at the head of
+# net_game(), src/tron/gGame.cpp -- rather than anywhere deeper. Deeper does
+# not work even with an exception instead of exit(): sn_SetNetState() sets a
+# static `reentry` flag before it asks for the socket and clears it after, so a
+# throw out of the middle leaves it set and every LATER state change becomes a
+# silent no-op. The second refusal this gate asserts is what would catch that.
+#
+# WHY THE ASSERTION IS NOT "no error string appeared". A dead module produces no
+# error strings either. Three readings, all of which a dead module fails:
+#
+#   refusals >= 2   the refusal ran TWICE, the second time after a keypress
+#                   this script sent. C++ ran, so the module is alive, and the
+#                   refusal is repeatable rather than a one-shot that bricks.
+#   timeouts/sec    the game's main loop yields through emscripten_sleep(),
+#                   which is setTimeout underneath, twice per frame -- ~120/s
+#                   at MAX_FPS 60 (the same instrument web/tools/menu-gate.steps
+#                   uses as a frame-rate proxy). A halted module yields nothing.
+#   canvas + gl     the drawing surface still has a size and GL reports no error.
+#
+# The refusal counter wraps console.log rather than grepping the transcript,
+# because the count has to be readable from inside the page at assert time.
+# The needle is the emscripten_console_log line from eWebNet::ReportNoBridge;
+# the con << line it prints alongside goes to the game's own on-screen console
+# and deliberately never reaches the browser (rConsole::DoPrint forwards to
+# stdout only in a DEBUG build).
+#
+# THE VERDICT:
+#   grep -c '\[console.log\].*BRIDGEGATE.*"PASS":true' /tmp/bridge-absent/console.log
+# Expected: 1. And, for the same reason bridge-gate.steps says so, count the
+# [console.log] lines only.
+
+until:1:90000:[PERSIST] populate ok
+wait:1000
+until:1:120000:[BOOT] autostart
+wait:9000
+shot:01-boot1-language-menu
+key:Enter
+wait:3000
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+mark:RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+wait:12000
+shot:02-boot2-main-menu
+
+mark:INSTRUMENT-BEFORE-TOUCHING-ANYTHING
+eval:(()=>{const o=console.log;if(console.log.__aa)return 'already';window.__refusals=0;const w=function(){try{if(String(arguments[0]).indexOf('network menu refused')>=0)window.__refusals++}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'refusal counter installed'})()
+eval:(()=>{const o=window.setTimeout;window.__st=0;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})()
+wait:3000
+eval:(()=>{window.__tpsBefore=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec before = '+window.__tpsBefore})()
+
+# The route is MainMenu -> Play Game -> Multiplayer, i.e. two Enters, for the
+# reason web/tools/bridge-gate.steps sets out: every uMenu opens on its
+# last-constructed item.
+mark:ENTER-1-PLAY-GAME-SUBMENU
+key:Enter
+wait:2500
+shot:03-play-game-menu-opens-on-multiplayer
+mark:ENTER-2-MULTIPLAYER-IS-REFUSED-INSTEAD-OF-OPENING
+key:Enter
+until:1:30000:network menu refused
+wait:2000
+shot:04-refusal-message
+
+mark:DISMISS-THE-MESSAGE-AND-ASK-AGAIN-SO-THE-MODULE-HAS-TO-BE-ALIVE
+key:Enter
+wait:3000
+shot:05-back-in-the-play-game-menu
+key:Enter
+until:2:30000:network menu refused
+wait:2000
+shot:06-refused-a-second-time
+
+mark:STILL-RUNNING
+eval:(()=>{window.__st=0;window.__t0=performance.now();return 'resampling'})()
+wait:3000
+eval:(()=>{window.__tpsAfter=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec after = '+window.__tpsAfter})()
+key:Enter
+wait:3000
+shot:07-message-dismissed-menu-still-there
+
+# ===========================================================================
+# N1: THE NETWORK MENU IS REFUSED AND THE MODULE IS STILL RUNNING.
+# ===========================================================================
+eval:(()=>{const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const r={canvas:!!c,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl',refusals:window.__refusals|0,tps_before:window.__tpsBefore,tps_after:window.__tpsAfter,ctx:(typeof Module!=='undefined'&&Module._aa_web_input_context)?Module._aa_web_input_context()|0:null,bridge_url:window.AABridge?window.AABridge.url:'no-AABridge',ws:!!(window.AABridge&&window.AABridge.ws)};r.PASS=r.canvas&&r.canvas_w>0&&r.refusals>=2&&r.tps_after>20&&r.gl_err===0&&!r.ws;console.log('[BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive '+JSON.stringify(r));return 'N1 '+r.PASS})()

@@ -53,6 +53,14 @@ namespace eWebNet
     //! nAddress comparisons keep working without DNS in the page.
     unsigned int FakeAddressFor( const char * host );
 
+    //! Tell the player, in the game's own message screen, that this page has
+    //! no bridge and network play is therefore unavailable. Called from
+    //! net_game() BEFORE anything touches the network stack: every item in
+    //! that menu ends in sn_SetNetState(), and failing inside it leaves its
+    //! static reentry flag set, which silently disables every later state
+    //! change. Refusing at the door has no such cost.
+    void ReportNoBridge();
+
     //! FakeAddressFor() wrapped in a hostent, so that nAddress::SetHostname
     //! can reach it through the AA_GETHOSTBYNAME macro in nSocket.h without a
     //! single line being inserted into nSocket.cpp above nAddress::SetAddress.

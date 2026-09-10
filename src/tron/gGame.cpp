@@ -2394,7 +2394,7 @@ public:
 };
 #endif
 
-void net_game(){
+void net_game(){ AA_NET_MENU_REQUIRES_BRIDGE
 #ifndef DEDICATED
     uMenu net_menu("$network_menu_text");
 

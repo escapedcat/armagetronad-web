@@ -11,6 +11,10 @@ mergeInto(LibraryManager.library, {
     state: 0,            // 0 connecting, 1 open, 2 closed or failed
     queues: {},          // handle -> array of {addr, port, bytes}
     bound: {},           // handle -> 1 bound, -1 refused, undefined pending
+    binding: {},         // handle -> 1 while a BIND is outstanding
+    sentSinceBind: {},   // handle -> DATA frames sent since that BIND
+    dataErrors: 0,       // ERROR frames that answered a datagram, not a BIND
+    lastDataError: null,
     url: null,
     urlChecked: false,
     VERSION: 1,
@@ -52,6 +56,7 @@ mergeInto(LibraryManager.library, {
       var addr = '';
       for (var i = 0; i < addrLen; i++) addr += String.fromCharCode(b[7 + i]);
       if (type === AABridge.TYPE.BOUND) {
+        delete AABridge.binding[handle];
         AABridge.bound[handle] = 1;
         console.log('[BRIDGE] handle ' + handle + ' bound to udp port ' + port);
         return;
@@ -59,8 +64,29 @@ mergeInto(LibraryManager.library, {
       if (type === AABridge.TYPE.ERROR) {
         var reason = '';
         for (var j = 7 + addrLen; j < b.length; j++) reason += String.fromCharCode(b[j]);
-        if (AABridge.bound[handle] === undefined) AABridge.bound[handle] = -1;
-        console.log('[BRIDGE] error on handle ' + handle + ': ' + reason);
+        // WHICH ERRORS ANSWER A BIND, AND WHY THE TEST IS STATE AND NOT TEXT.
+        // bridge/relay.mjs emits ERROR from four places: a BIND naming a handle
+        // it already holds, and three DATA failures -- handle not bound, cannot
+        // resolve, destination refused by policy. The frame carries no request
+        // id and the wire format is committed, so the only discriminator
+        // available here is our own state: while a BIND is outstanding on this
+        // handle and no DATA has been sent on it since, an ERROR naming it can
+        // only be the relay answering that BIND.
+        //
+        // Anything else is a datagram error and must NOT touch bound[handle].
+        // The old code wrote -1 whenever the entry was undefined, which is
+        // exactly the state a BIND in flight is in -- so a refused datagram
+        // could fail an unrelated bind, and an ERROR arriving after a close
+        // could resurrect a stale entry for a dead handle.
+        if (AABridge.binding[handle] && !AABridge.sentSinceBind[handle]) {
+          delete AABridge.binding[handle];
+          AABridge.bound[handle] = -1;
+          console.log('[BRIDGE] bind refused on handle ' + handle + ': ' + reason);
+        } else {
+          AABridge.dataErrors++;
+          AABridge.lastDataError = reason;
+          console.log('[BRIDGE] error on handle ' + handle + ': ' + reason);
+        }
         return;
       }
       if (type === AABridge.TYPE.DATA) {
@@ -98,9 +124,17 @@ mergeInto(LibraryManager.library, {
   aa_bridge_state__deps: ['$AABridge'],
 
   aa_bridge_bind: function (handle) {
-    if (AABridge.state !== 1) return;
     delete AABridge.bound[handle];
     AABridge.queues[handle] = [];
+    AABridge.sentSinceBind[handle] = 0;
+    if (AABridge.state !== 1) {
+      // No socket to send the BIND on, so the bind has already failed. Saying
+      // so now rather than staying silent saves eWebNet::Bind five seconds of
+      // emscripten_sleep() -- five seconds during which the game is frozen.
+      AABridge.bound[handle] = -1;
+      return;
+    }
+    AABridge.binding[handle] = 1;
     AABridge.ws.send(AABridge.frame(AABridge.TYPE.BIND, handle, 0, '', null));
   },
   aa_bridge_bind__deps: ['$AABridge'],
@@ -116,6 +150,8 @@ mergeInto(LibraryManager.library, {
     if (AABridge.state === 1) AABridge.ws.send(AABridge.frame(AABridge.TYPE.CLOSE, handle, 0, '', null));
     delete AABridge.queues[handle];
     delete AABridge.bound[handle];
+    delete AABridge.binding[handle];
+    delete AABridge.sentSinceBind[handle];
   },
   aa_bridge_close__deps: ['$AABridge'],
 
@@ -123,6 +159,9 @@ mergeInto(LibraryManager.library, {
     if (AABridge.state !== 1) return -1;
     var addr = UTF8ToString(addrPtr);
     var payload = HEAPU8.subarray(bufPtr, bufPtr + len);
+    // counted so that an ERROR provoked by this datagram cannot be mistaken
+    // for the answer to a BIND -- see onmessage
+    AABridge.sentSinceBind[handle] = (AABridge.sentSinceBind[handle] || 0) + 1;
     AABridge.ws.send(AABridge.frame(AABridge.TYPE.DATA, handle, port, addr, payload));
     return len;
   },

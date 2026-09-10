@@ -16,8 +16,11 @@ comparison inside the game holds, and no DNS ever happens in the page.
 
 #include "eWebNet.h"
 #include "nSocket.h"
+#include "tConsole.h"
+#include "tLocale.h"
 
 #include <emscripten/emscripten.h>
+#include <emscripten/console.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -80,6 +83,26 @@ unsigned int FakeAddressFor( const char * host )
     HostToFake()[ key ] = ip;
     FakeToHost()[ ip ] = key;
     return ip;
+}
+
+void ReportNoBridge()
+{
+    tOutput title, message;
+    title   << "Network play unavailable";
+    message << "This page was loaded without a bridge, so there is no way to "
+               "send UDP from a browser. Reload with "
+               "?bridge=ws://host:port -- with a relay listening there -- to "
+               "play online. Single player is unaffected.";
+
+    // TWO lines, on purpose. con << reaches the game's own on-screen console,
+    // which is what the player can scroll back to. It does NOT reach the
+    // browser's: rConsole::DoPrint forwards to stdout only in a DEBUG build or
+    // when there is no screen, so a gate cannot see it. The
+    // emscripten_console_log is the greppable half, and
+    // web/tools/bridge-absent-gate.steps counts it.
+    con << "Network menu refused: no ?bridge= on this page.\n";
+    emscripten_console_log( "[BRIDGE] network menu refused: this page has no ?bridge=" );
+    tConsole::Message( title, message, 20 );
 }
 
 hostent * FakeHostent( const char * host )
