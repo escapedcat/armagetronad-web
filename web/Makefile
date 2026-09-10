@@ -163,6 +163,10 @@ CLIENT_OBJDIR := web/build-m1
 #                                  aa_web_input_context(), the two bits
 #                                  web/shell.html's touch overlay reads to
 #                                  decide whether a tap means Enter or a turn.
+#   src/emscripten/eWebNet.cpp     M-A: the browser end of the multiplayer
+#                                  bridge. Named here, not added to $(SRCS),
+#                                  for exactly the reason the paragraph below
+#                                  gives -- the dedicated wasm is byte-pinned.
 #
 # They have to be named here because $(SRCS) above wildcards the six game
 # source directories only, and src/emscripten/ is not one of them (it holds
@@ -180,7 +184,8 @@ CLIENT_OBJDIR := web/build-m1
 CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eCompat.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebPersist.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebInput.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebInput.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebNet.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
@@ -410,6 +415,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   --exclude-file '*/polish_transliterated.txt' \
                   --exclude-file '*/spanish.txt' --exclude-file '*/french.txt' \
                   --exclude-file '*/portugese.txt' \
+                  --js-library web/library_bridge.js \
                   --shell-file web/shell.html
 
 # The primary output is the .html page (Task 6's actual deliverable); the
@@ -456,7 +462,8 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
 # earlier milestone's build; verify after touching this rule by running
 # `clean-data` first.
 web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/webdefaults/autoexec.cfg \
+                                web/shell.html web/library_bridge.js \
+                                web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion
 	@mkdir -p web/dist-m1

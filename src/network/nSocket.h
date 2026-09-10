@@ -347,4 +347,27 @@ nSocket & nSocket::SetSocket( int socket )
     return *this;
 }
 
+// M-A: the browser end of the multiplayer bridge. eWebNet is the seam every
+// syscall site in nSocket.cpp calls into; see src/emscripten/eWebNet.h.
+//
+// WHY IT IS PULLED IN HERE AND NOT AT THE TOP OF nSocket.cpp, AND WHY THE ONE
+// DNS CALL GOES THROUGH A MACRO. The dedicated wasm is byte-pinned, and
+// nSocket.cpp compiles two __LINE__ values into it: tERR_ERROR in
+// nAddress::FromString and tVERIFY in nAddress::SetAddress. Inserting a single
+// LINE anywhere above those -- even a line the preprocessor throws away for the
+// server -- renumbers them and moves the pinned bytes, with no code change at
+// all. It cost this task one full diagnosis to learn that, so: everything the
+// client needs above nAddress::SetAddress arrives through this header, which is
+// already included, and adds no line to nSocket.cpp. Below it, nSocket.cpp is
+// free, and the guarded blocks there are ordinary #if/#else.
+//
+// The macro expands to the same tokens the file had before for every other
+// build, so the dedicated object is identical, not merely equivalent.
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+#include "eWebNet.h"
+#define AA_GETHOSTBYNAME( host ) eWebNet::FakeHostent( host )
+#else
+#define AA_GETHOSTBYNAME( host ) gethostbyname( host )
+#endif
+
 #endif
