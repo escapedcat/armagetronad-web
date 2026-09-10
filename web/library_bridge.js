@@ -15,6 +15,9 @@ mergeInto(LibraryManager.library, {
     sentSinceBind: {},   // handle -> DATA frames sent since that BIND
     dataErrors: 0,       // ERROR frames that answered a datagram, not a BIND
     lastDataError: null,
+    dropped: 0,          // DATA frames for a handle with no live queue
+    sendFailures: 0,     // ws.send() calls that threw
+    MAX_ADDR: 255,       // one byte of address length on the wire
     url: null,
     urlChecked: false,
     VERSION: 1,
@@ -31,9 +34,30 @@ mergeInto(LibraryManager.library, {
       return AABridge.url;
     },
 
+    // THE ONLY PLACE ws.send IS CALLED. AABridge.state does not reach 2 until
+    // onclose fires, so a socket in CLOSING state still looks open here and
+    // send() throws InvalidStateError -- out of a JS library function, into
+    // wasm, mid-Asyncify. Nothing in this file may throw at C++, so the throw
+    // is caught, the socket is marked dead, and the caller gets false.
+    send: function (bytes) {
+      try {
+        AABridge.ws.send(bytes);
+        return true;
+      } catch (e) {
+        AABridge.state = 2;
+        AABridge.sendFailures++;
+        console.log('[BRIDGE] send failed: ' + e);
+        return false;
+      }
+    },
+
     frame: function (type, handle, port, addr, payload) {
+      // & 0xff, NOT & 0x7f: bridge/frame.mjs writes the address with
+      // Buffer.from(addr, 'ascii'), and Node's 'ascii' encoding is latin1
+      // with no masking of the high bit (measured: 'e-acute' stays 233, where
+      // & 0x7f would have made it 105). The two ends have to agree.
       var a = [];
-      for (var i = 0; i < addr.length; i++) a.push(addr.charCodeAt(i) & 0x7f);
+      for (var i = 0; i < addr.length; i++) a.push(addr.charCodeAt(i) & 0xff);
       var out = new Uint8Array(7 + a.length + (payload ? payload.length : 0));
       out[0] = AABridge.VERSION;
       out[1] = type;
@@ -90,8 +114,21 @@ mergeInto(LibraryManager.library, {
         return;
       }
       if (type === AABridge.TYPE.DATA) {
-        if (!AABridge.queues[handle]) AABridge.queues[handle] = [];
-        AABridge.queues[handle].push({ addr: addr, port: port, bytes: b.subarray(7 + addrLen) });
+        // A handle aa_bridge_close deleted is gone, and re-creating its queue
+        // here would leave one that nothing ever drains: aa_bridge_pending()
+        // sums EVERY queue, so eWebNet::Poll would return true without ever
+        // yielding, nBasicNetworkSystem::Select would report data-ready on
+        // every call, and the game loop would hot-spin while nSocket::Read
+        // returns EWOULDBLOCK -- with the queue growing without bound.
+        // Reachable: the client recycles handles (1 then 2) whenever
+        // sn_SetNetState cycles, and a datagram for the old one can still be
+        // in flight. Only aa_bridge_bind creates a queue.
+        var q = AABridge.queues[handle];
+        if (!q) {
+          AABridge.dropped++;
+          return;
+        }
+        q.push({ addr: addr, port: port, bytes: b.subarray(7 + addrLen) });
       }
     },
   },
@@ -134,8 +171,11 @@ mergeInto(LibraryManager.library, {
       AABridge.bound[handle] = -1;
       return;
     }
+    if (!AABridge.send(AABridge.frame(AABridge.TYPE.BIND, handle, 0, '', null))) {
+      AABridge.bound[handle] = -1;
+      return;
+    }
     AABridge.binding[handle] = 1;
-    AABridge.ws.send(AABridge.frame(AABridge.TYPE.BIND, handle, 0, '', null));
   },
   aa_bridge_bind__deps: ['$AABridge'],
 
@@ -147,7 +187,7 @@ mergeInto(LibraryManager.library, {
   aa_bridge_bound__deps: ['$AABridge'],
 
   aa_bridge_close: function (handle) {
-    if (AABridge.state === 1) AABridge.ws.send(AABridge.frame(AABridge.TYPE.CLOSE, handle, 0, '', null));
+    if (AABridge.state === 1) AABridge.send(AABridge.frame(AABridge.TYPE.CLOSE, handle, 0, '', null));
     delete AABridge.queues[handle];
     delete AABridge.bound[handle];
     delete AABridge.binding[handle];
@@ -158,11 +198,20 @@ mergeInto(LibraryManager.library, {
   aa_bridge_send: function (handle, addrPtr, port, bufPtr, len) {
     if (AABridge.state !== 1) return -1;
     var addr = UTF8ToString(addrPtr);
+    // Refused rather than truncated, the way bridge/frame.mjs refuses it:
+    // the length goes on the wire in ONE byte, so 256 characters would wrap
+    // to 0 and shift the payload offset, and the relay would read the
+    // datagram as part of the address. FakeAddressFor keys on whatever text
+    // Custom Connect was given, so this is reachable input, not a theory.
+    if (addr.length > AABridge.MAX_ADDR) {
+      console.log('[BRIDGE] address too long, ' + addr.length + ' > ' + AABridge.MAX_ADDR + ' bytes: not sent');
+      return -1;
+    }
     var payload = HEAPU8.subarray(bufPtr, bufPtr + len);
     // counted so that an ERROR provoked by this datagram cannot be mistaken
     // for the answer to a BIND -- see onmessage
     AABridge.sentSinceBind[handle] = (AABridge.sentSinceBind[handle] || 0) + 1;
-    AABridge.ws.send(AABridge.frame(AABridge.TYPE.DATA, handle, port, addr, payload));
+    if (!AABridge.send(AABridge.frame(AABridge.TYPE.DATA, handle, port, addr, payload))) return -1;
     return len;
   },
   aa_bridge_send__deps: ['$AABridge'],

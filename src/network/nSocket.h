@@ -370,16 +370,17 @@ nSocket & nSocket::SetSocket( int socket )
 // compiles a __LINE__ of its own into the dedicated wasm (tERR_ERROR_INT
 // "Someone messed with the camera!", line 3017) and a single added line above
 // it moves the pin. It refuses the whole network menu when the page has no
-// ?bridge=: without one there is no transport for UDP, and every item in that
-// menu ends in sn_SetNetState() asking for a socket that cannot exist, which
-// reached Sys_Error() -> exit(-1) and killed the module. Refusing at the door
+// WORKING bridge -- no ?bridge= at all, or one whose relay does not answer.
+// Without one there is no transport for UDP, and every item in that menu ends
+// in sn_SetNetState() asking for a socket that cannot exist, which reached
+// Sys_Error() -> exit(-1) and killed the module. Refusing at the door
 // also avoids throwing out of sn_SetNetState(), which would leave its static
 // reentry flag set and silently disable every later state change.
 #if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
 #include "eWebNet.h"
 #define AA_GETHOSTBYNAME( host ) eWebNet::FakeHostent( host )
 #define AA_NET_MENU_REQUIRES_BRIDGE \
-    if ( !eWebNet::Enabled() ) { eWebNet::ReportNoBridge(); return; }
+    if ( !eWebNet::Ready() ) { eWebNet::ReportNoBridge(); return; }
 #else
 #define AA_GETHOSTBYNAME( host ) gethostbyname( host )
 #define AA_NET_MENU_REQUIRES_BRIDGE

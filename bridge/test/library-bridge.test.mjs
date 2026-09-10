@@ -30,6 +30,9 @@ function loadBridge({ open = true } = {}) {
   const sent = [];
   const logged = [];
   const heap = new Uint8Array(1024);
+  // aa_bridge_send reads its address through UTF8ToString; the tests choose
+  // what that returns, which is what `callWithAddr` below sets.
+  let addrText = '0.0.0.0';
   const sandbox = {
     mergeInto: (target, obj) => Object.assign(target, obj),
     LibraryManager: { library: {} },
@@ -38,7 +41,7 @@ function loadBridge({ open = true } = {}) {
     URLSearchParams,
     HEAPU8: heap,
     HEAP32: new Int32Array(heap.buffer),
-    UTF8ToString: () => '0.0.0.0',
+    UTF8ToString: () => addrText,
     stringToUTF8: () => 0,
   };
   const names = Object.keys(sandbox);
@@ -52,7 +55,16 @@ function loadBridge({ open = true } = {}) {
 
   built.AB.ws = { readyState: 1, send: (b) => sent.push(Buffer.from(b)) };
   built.AB.state = open ? 1 : 2;
-  return { AB: built.AB, call: (n, ...a) => built.call(n, a), sent, logged };
+  const call = (n, ...a) => built.call(n, a);
+  return {
+    AB: built.AB,
+    call,
+    // aa_bridge_send( handle, addrPtr, port, bufPtr, len ) with the address
+    // supplied as text rather than as a heap pointer
+    callWithAddr: (n, handle, addr, port, len) => { addrText = addr; return call(n, handle, 0, port, 0, len); },
+    sent,
+    logged,
+  };
 }
 
 test('the frame builder is byte-identical to the relay codec', () => {
@@ -132,6 +144,8 @@ test('a bind with no socket to send it on fails at once rather than hanging', ()
 
 test('a DATA frame lands in the handle\'s queue with the address text intact', () => {
   const ctx = loadBridge();
+  ctx.call('aa_bridge_bind', 9);
+  ctx.AB.onmessage({ data: encode({ type: TYPE.BOUND, handle: 9, port: 5555, addr: '' }) });
   ctx.AB.onmessage({ data: encode({ type: TYPE.DATA, handle: 9, port: 4534, addr: 'server.example.org', payload: Buffer.from([9, 8, 7]) }) });
   const q = ctx.AB.queues[9];
   assert.equal(q.length, 1);
@@ -148,4 +162,68 @@ test('a frame that is short, truncated or from another version is ignored', () =
   const wrongVersion = Buffer.from(good); wrongVersion[0] = 2;
   ctx.AB.onmessage({ data: wrongVersion });
   assert.equal(ctx.AB.queues[9], undefined, 'nothing was queued');
+});
+
+// A handle the client closed has no queue. Re-creating one here would leave a
+// queue nothing drains, and aa_bridge_pending() sums every queue -- so
+// eWebNet::Poll would stop yielding and the game loop would hot-spin for ever.
+test('a datagram for a handle with no live queue is dropped, not queued', () => {
+  const ctx = loadBridge();
+  ctx.call('aa_bridge_bind', 2);
+  ctx.AB.onmessage({ data: encode({ type: TYPE.BOUND, handle: 2, port: 5555, addr: '' }) });
+  ctx.call('aa_bridge_close', 2);
+
+  ctx.AB.onmessage({ data: encode({ type: TYPE.DATA, handle: 2, port: 4534, addr: '127.0.0.1', payload: Buffer.from([1, 2, 3]) }) });
+  ctx.AB.onmessage({ data: encode({ type: TYPE.DATA, handle: 77, port: 4534, addr: '127.0.0.1', payload: Buffer.from([4]) }) });
+
+  assert.equal(Object.prototype.hasOwnProperty.call(ctx.AB.queues, 2), false, 'no queue recreated for the closed handle');
+  assert.equal(Object.prototype.hasOwnProperty.call(ctx.AB.queues, 77), false, 'none for a handle never bound either');
+  assert.equal(ctx.AB.dropped, 2);
+  assert.equal(ctx.call('aa_bridge_pending'), 0, 'pending stays zero, so eWebNet::Poll keeps yielding');
+});
+
+// ws.send throws InvalidStateError on a CLOSING socket, and AABridge.state is
+// still 1 until onclose fires. A throw out of a JS library function lands in
+// wasm mid-Asyncify.
+test('a WebSocket that throws on send does not throw at C++', () => {
+  const ctx = loadBridge();
+  ctx.AB.ws.send = () => { throw new DOMException('still in CLOSING state', 'InvalidStateError'); };
+
+  assert.doesNotThrow(() => ctx.call('aa_bridge_bind', 11));
+  assert.equal(ctx.call('aa_bridge_bound', 11), -1, 'the bind failed rather than hanging');
+  assert.equal(ctx.AB.state, 2, 'the socket is marked dead');
+  assert.equal(ctx.AB.sendFailures, 1);
+
+  assert.doesNotThrow(() => ctx.call('aa_bridge_close', 11));
+  assert.doesNotThrow(() => ctx.call('aa_bridge_send', 11, 0, 4534, 0, 0));
+});
+
+test('an address too long for the one-byte length field is refused, not truncated', () => {
+  const ctx = loadBridge();
+  ctx.call('aa_bridge_bind', 12);
+  ctx.AB.onmessage({ data: encode({ type: TYPE.BOUND, handle: 12, port: 5555, addr: '' }) });
+  const sentBefore = ctx.sent.length;
+
+  // 256 characters: out[6] would wrap to 0 and the relay would read the
+  // payload as part of the address. frame.mjs throws RangeError on the same
+  // input; this side cannot throw at wasm, so it returns -1.
+  assert.throws(() => encode({ type: TYPE.DATA, handle: 12, port: 4534, addr: 'x'.repeat(256), payload: Buffer.alloc(0) }), /too long/);
+  assert.equal(ctx.callWithAddr('aa_bridge_send', 12, 'x'.repeat(256), 4534, 0), -1);
+  assert.equal(ctx.sent.length, sentBefore, 'nothing went on the wire');
+
+  // 255 is still fine, and matches the relay byte for byte
+  assert.equal(ctx.callWithAddr('aa_bridge_send', 12, 'y'.repeat(255), 4534, 0), 0);
+  assert.deepEqual([...ctx.sent[ctx.sent.length - 1]],
+                   [...encode({ type: TYPE.DATA, handle: 12, port: 4534, addr: 'y'.repeat(255), payload: Buffer.alloc(0) })]);
+});
+
+// The masks used to disagree: this side wrote charCodeAt & 0x7f, frame.mjs
+// writes Buffer.from(addr, 'ascii'), and Node's 'ascii' does not touch the
+// high bit.
+test('a high-bit character in an address is encoded the same way at both ends', () => {
+  const { AB } = loadBridge();
+  const addr = 'caf\u00e9.example.org';
+  assert.deepEqual([...Buffer.from(AB.frame(TYPE.DATA, 1, 4534, addr, null))],
+                   [...encode({ type: TYPE.DATA, handle: 1, port: 4534, addr, payload: Buffer.alloc(0) })]);
+  assert.ok([...Buffer.from(AB.frame(TYPE.DATA, 1, 4534, addr, null))].includes(0xe9), 'not masked down to 0x69');
 });

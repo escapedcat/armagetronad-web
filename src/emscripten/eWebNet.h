@@ -28,6 +28,14 @@ namespace eWebNet
     //! true when the page was loaded with ?bridge=ws://...
     bool Enabled();
 
+    //! true when the page has a ?bridge= AND the WebSocket to it is open.
+    //! Opens it and waits, in 5 ms steps, up to the same five seconds
+    //! Create() allows -- so this is what a caller wanting to know "can this
+    //! page do network play at all" should ask. Enabled() alone answers only
+    //! "was one configured", and a configured relay that is not running would
+    //! still reach nBasicNetworkSystem::Init()'s Sys_Error() -> exit(-1).
+    bool Ready();
+
     //! allocate a handle and make sure the WebSocket is open. -1 on failure.
     int Create();
 
@@ -54,7 +62,9 @@ namespace eWebNet
     unsigned int FakeAddressFor( const char * host );
 
     //! Tell the player, in the game's own message screen, that this page has
-    //! no bridge and network play is therefore unavailable. Called from
+    //! no working bridge and network play is therefore unavailable. Says which
+    //! of the two it is -- no ?bridge= at all, or one whose relay did not
+    //! answer. Called from
     //! net_game() BEFORE anything touches the network stack: every item in
     //! that menu ends in sn_SetNetState(), and failing inside it leaves its
     //! static reentry flag set, which silently disables every later state

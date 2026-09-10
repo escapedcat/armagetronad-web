@@ -2,14 +2,27 @@
 # on a page with NO ?bridge=, which is every page this project deploys today.
 #
 #   python3 -m http.server 8008 --directory web/dist-m1 &
+#   # (a) no bridge configured at all -- what the deployed page is
 #   node web/tools/drive-browser.mjs --headed --out /tmp/bridge-absent \
 #        --url 'http://localhost:8008/armagetronad.html' \
 #        --script-file web/tools/bridge-absent-gate.steps
+#   # (b) a bridge configured whose relay is NOT running
+#   node web/tools/drive-browser.mjs --headed --out /tmp/bridge-dead \
+#        --url 'http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8099' \
+#        --script-file web/tools/bridge-absent-gate.steps
 #   kill %1
 #
-# NO RELAY, and no ?bridge= on the URL. That is the whole point, and it is why
-# this is a second file rather than more steps in web/tools/bridge-gate.steps:
-# the two cases differ in the URL.
+# NO RELAY in either run. That is the whole point, and it is why this is a
+# second file rather than more steps in web/tools/bridge-gate.steps: the cases
+# differ in the URL.
+#
+# RUN (b) EXISTS BECAUSE THE FIRST FIX DID NOT COVER IT. The guard asked
+# eWebNet::Enabled(), which reads the URL and nothing else, so a page pointed
+# at a relay that is not running still walked into the menu, still failed in
+# nSocket::Create, and still reached Sys_Error() -> exit(-1). It now asks
+# eWebNet::Ready(), which opens the WebSocket and waits for it. Both runs
+# assert the same three things below; the `bridge_url` reading in N1 says which
+# case the log is.
 #
 # WHAT WENT WRONG AND WHAT THIS PINS DOWN. The first cut of Task 2 let the menu
 # items fail deep in the network stack. nSocket::Create returned -1, so
@@ -44,6 +57,12 @@
 #                   at MAX_FPS 60 (the same instrument web/tools/menu-gate.steps
 #                   uses as a frame-rate proxy). A halted module yields nothing.
 #   canvas + gl     the drawing surface still has a size and GL reports no error.
+#
+# plus one reading that differs between the two runs, which is why it is
+# computed rather than fixed: with no ?bridge= at all NOTHING may be attempted,
+# so there must be no WebSocket object; with a ?bridge= whose relay is down,
+# eWebNet::Ready() is SUPPOSED to have constructed one and found it dead, so
+# the socket must exist and AABridge.state must be 2.
 #
 # The refusal counter wraps console.log rather than grepping the transcript,
 # because the count has to be readable from inside the page at assert time.
@@ -113,4 +132,4 @@ shot:07-message-dismissed-menu-still-there
 # ===========================================================================
 # N1: THE NETWORK MENU IS REFUSED AND THE MODULE IS STILL RUNNING.
 # ===========================================================================
-eval:(()=>{const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const r={canvas:!!c,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl',refusals:window.__refusals|0,tps_before:window.__tpsBefore,tps_after:window.__tpsAfter,ctx:(typeof Module!=='undefined'&&Module._aa_web_input_context)?Module._aa_web_input_context()|0:null,bridge_url:window.AABridge?window.AABridge.url:'no-AABridge',ws:!!(window.AABridge&&window.AABridge.ws)};r.PASS=r.canvas&&r.canvas_w>0&&r.refusals>=2&&r.tps_after>20&&r.gl_err===0&&!r.ws;console.log('[BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive '+JSON.stringify(r));return 'N1 '+r.PASS})()
+eval:(()=>{const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const B=window.AABridge;const r={canvas:!!c,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl',refusals:window.__refusals|0,tps_before:window.__tpsBefore,tps_after:window.__tpsAfter,ctx:(typeof Module!=='undefined'&&Module._aa_web_input_context)?Module._aa_web_input_context()|0:null,bridge_url:B?B.url:'no-AABridge',ws:!!(B&&B.ws),state:B?B.state:null};const configured=!!r.bridge_url;r.socket_as_expected=configured?(r.ws===true&&r.state===2):(r.ws===false);r.PASS=r.canvas&&r.canvas_w>0&&r.refusals>=2&&r.tps_after>20&&r.gl_err===0&&r.socket_as_expected;console.log('[BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive '+JSON.stringify(r));return 'N1 '+r.PASS})()
