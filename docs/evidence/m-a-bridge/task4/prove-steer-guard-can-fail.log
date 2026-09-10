@@ -1,0 +1,39 @@
+PROVING THE STEERING ANALYSER'S GUARDS CAN FAIL.
+
+The control arm is the real one from this task. The 'steer' arm is swapped for
+docs/evidence/m-a-bridge/b2/server.log -- Task 3's run against the SHIPPED
+server config, which fills the arena with three AIs. If the guard works, the
+analyser must refuse to compare them rather than reporting a number.
+
+==============================================================================
+THE STEERING DIFFERENTIAL, decided from the server's own log
+==============================================================================
+--- arm control  (/var/folders/ct/rw11h7fj55s59lp5dst9xs6m0000gp/T/tmp.P1T4TT4Bx1/control/server.log)
+    players the server logged entering: ['web_user']
+    rounds the server started: 13, with a logged death: 12
+      round   1: died at server game-time    5.50s (bracketed 5.50..5.76)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.25s (bracketed 5.25..5.52)  DEATH_SUICIDE web_user
+      round   3: died at server game-time    5.26s (bracketed 5.26..5.51)  DEATH_SUICIDE web_user
+      round   4: died at server game-time    5.22s (bracketed 5.22..5.48)  DEATH_SUICIDE web_user
+      round   5: died at server game-time    5.44s (bracketed 5.44..5.70)  DEATH_SUICIDE web_user
+      round   6: died at server game-time    5.44s (bracketed 5.44..5.70)  DEATH_SUICIDE web_user
+      round   7: died at server game-time    5.42s (bracketed 5.42..5.68)  DEATH_SUICIDE web_user
+      round   8: died at server game-time    5.24s (bracketed 5.24..5.51)  DEATH_SUICIDE web_user
+      round   9: died at server game-time    5.21s (bracketed 5.21..5.47)  DEATH_SUICIDE web_user
+      round  10: died at server game-time    5.21s (bracketed 5.21..5.46)  DEATH_SUICIDE web_user
+      round   1: died at server game-time    5.19s (bracketed 5.19..5.45)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.22s (bracketed 5.22..5.48)  DEATH_SUICIDE web_user
+    the server's own per-round Time: lines: 88.7s, 14.8s, 14.8s, 14.7s, 14.8s, 14.8s, 14.7s, 14.7s, 14.7s, 14.8s, 23.8s, 14.7s
+    the server received 70036 bytes in 1577 packets across the rounds it reported
+--- arm steer  (/var/folders/ct/rw11h7fj55s59lp5dst9xs6m0000gp/T/tmp.P1T4TT4Bx1/steer/server.log)
+    players the server logged entering: ['web_user', 'LaTeX', 'Gcc', 'Gdb']
+    rounds the server started: 2, with a logged death: 0
+    the server's own per-round Time: lines: 55.1s, 13.7s
+    the server received 9034 bytes in 182 packets across the rounds it reported
+
+THIS COMPARISON CANNOT BE MADE:
+  - the steer arm produced no round with a logged death, so there is nothing to compare; the run did not happen
+  - the steer arm had more than one cycle in the arena (['web_user', 'LaTeX', 'Gcc', 'Gdb']); an AI wall can end a round early and the rim bound stops meaning anything
+
+VERDICT: INVALID
+analyser exit status: 2  (0 = proven, 1 = not proven, 2 = refused to compare)

@@ -14,7 +14,29 @@ import { WebSocketServer } from 'ws';
 import { encode, decode, TYPE } from './frame.mjs';
 import { checkDestination } from './policy.mjs';
 
-export function startRelay({ port = 8010, allowPrivate = false, log = () => {} } = {}) {
+// A TESTING AID AND NOTHING ELSE, see `drop` below.
+export function startRelay({ port = 8010, allowPrivate = false, drop = 0, log = () => {} } = {}) {
+  // THE LOSS OPTION. `drop` is the fraction of DATA frames to throw away, in
+  // both directions, and it exists so a gate can ask what the game does when
+  // datagrams go missing -- the question WebSocket makes interesting, because
+  // WebSocket is TCP and a lost segment stalls everything queued behind it.
+  //
+  // It deliberately does NOT touch BIND/BOUND/CLOSE/ERROR. Those are the
+  // relay's own control channel, not the network path being modelled; a
+  // client that cannot bind is a broken relay rather than a lossy link, and
+  // measuring that would answer a different question.
+  let dropped = 0;
+  const lose = () => {
+    if (!(drop > 0) || Math.random() >= drop) return false;
+    ++dropped;
+    // Logged in batches: a live round is hundreds of datagrams a second and a
+    // line each would bury the bind lines a gate reads. The count is the far
+    // end's half of "loss actually happened" -- nothing inside the page can
+    // see a datagram that never arrived, so without this the loss gate would
+    // pass identically against a clean relay.
+    if (dropped % 25 === 0) log('discarded ' + dropped + ' datagrams so far (--drop ' + drop + ')');
+    return true;
+  };
   const wss = new WebSocketServer({ port, host: '127.0.0.1' });
   // wss binds asynchronously; wss.address() is null until 'listening' fires.
   const ready = new Promise((res) => wss.on('listening', res));
@@ -46,6 +68,7 @@ export function startRelay({ port = 8010, allowPrivate = false, log = () => {} }
           // the client cannot resolve names and matches replies by that text.
           let addr = rinfo.address;
           for (const [host, ip] of resolved) if (ip === rinfo.address) { addr = host; break; }
+          if (lose()) return;
           send({ type: TYPE.DATA, handle: f.handle, port: rinfo.port, addr, payload: msg });
         });
         sock.on('error', (e) => { log('udp error on handle ' + f.handle + ': ' + e.message); });
@@ -77,6 +100,7 @@ export function startRelay({ port = 8010, allowPrivate = false, log = () => {} }
         }
         const refusal = checkDestination(ip, f.port, { allowPrivate });
         if (refusal) return fail(f.handle, refusal);
+        if (lose()) return;
         sock.send(f.payload, f.port, ip);
         return;
       }
@@ -95,6 +119,7 @@ export function startRelay({ port = 8010, allowPrivate = false, log = () => {} }
     ready,
     get port() { return wss.address().port; },
     socketCount() { let n = 0; for (const s of all) n += s.size; return n; },
+    droppedCount() { return dropped; },
     close() {
       // Clear each connection's socket map as we close it: a WebSocket close
       // handshake finishes asynchronously, and the per-connection teardown()
@@ -107,19 +132,26 @@ export function startRelay({ port = 8010, allowPrivate = false, log = () => {} }
   };
 }
 
-// CLI: node relay.mjs --port 8010 [--allow-private]
+// CLI: node relay.mjs --port 8010 [--allow-private] [--drop <fraction>]
 if (import.meta.url === 'file://' + process.argv[1]) {
   const arg = (name, fallback) => {
     const i = process.argv.indexOf('--' + name);
     return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
   };
+  const drop = Number(arg('drop', 0));
+  if (!(drop >= 0 && drop <= 1)) {
+    console.error('[bridge] --drop takes a fraction between 0 and 1, got: ' + arg('drop', 0));
+    process.exit(2);
+  }
   const relay = startRelay({
     port: Number(arg('port', 8010)),
     allowPrivate: process.argv.includes('--allow-private'),
+    drop,
     log: (m) => console.log('[bridge] ' + m),
   });
   relay.ready.then(() => {
     console.log('[bridge] listening on ws://127.0.0.1:' + relay.port +
-                (process.argv.includes('--allow-private') ? ' (private destinations ALLOWED - local testing only)' : ''));
+                (process.argv.includes('--allow-private') ? ' (private destinations ALLOWED - local testing only)' : '') +
+                (drop > 0 ? ' DISCARDING ' + (drop * 100) + '% OF DATAGRAMS - testing aid, see README' : ''));
   });
 }

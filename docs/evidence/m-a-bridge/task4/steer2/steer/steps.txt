@@ -1,0 +1,326 @@
+# THE STEERING DIFFERENTIAL. One template, two arms, and the difference
+# between them is the whole measurement. web/tools/run-steer-arm.sh substitutes
+# the arm-name marker with the arm's name and the input marker -- the only line
+# in this file that is nothing but a marker -- with that arm's input program.
+# Run that script, not this file.
+#
+# THE MARKERS ARE NOT SPELLED OUT ANYWHERE IN THIS COMMENT, AND THAT IS
+# DELIBERATE. The first cut of this file named them here, the substitution hit
+# the comment as well as the body, and the input program landed in the middle
+# of a comment paragraph -- which broke the leading # on the following line and
+# fed the driver `shot:...180s with its input program by ...` as its first
+# step. The driver's own error was `Page.captureScreenshot: Not attached to an
+# active page`, i.e. it fired a screenshot before the page had loaded, which
+# points nowhere near the real cause. run-steer-arm.sh now substitutes the
+# input marker only on a line that consists of nothing else, and checks every
+# generated body line against the driver's verb list before running it.
+#
+# WHAT THIS ANSWERS AND WHY IT NEEDED A NEW INSTRUMENT.
+# web/tools/bridge-gate.steps already proves, from the server's own log, that a
+# browser player logs in, joins the roster, plays and dies. It does NOT prove
+# that a steering keypress reached the server, and it says so in as many words.
+# Nothing in this tree logs per-turn state: there is no position ladderlog
+# entry and no per-turn one -- the writers are enumerated at
+# src/tron/gGame.cpp:3130, src/tron/gCycle.cpp:3236, src/engine/ePlayer.cpp:6555
+# and src/engine/eTeam.cpp:220, and none of them fires on a turn. And the two
+# obvious substitutes are both dead ends: a round's duration is set by when the
+# AIs finish, not by the browser player, and gCycle::KillAt credits a death as
+# suicide whenever no enemy influence is attributed (src/tron/gCycle.cpp:3276),
+# which covers the rim and one's own wall alike.
+#
+# SO THE INSTRUMENT IS THE SERVER'S OWN SIMULATION CLOCK, AND THE ARENA IS
+# EMPTIED SO THAT CLOCK MEANS SOMETHING.
+# bridge/test-server/steer-var/autoexec.cfg turns off the AIs, so the arena
+# holds exactly one cycle: the browser player's. The only things that can kill
+# it are the rim and its own wall. It also sets LADDERLOG_GAME_TIME_INTERVAL,
+# which makes the server write `[L] GAME_TIME <t>` every 0.25 s with
+# se_GameTime() -- its own clock, reset each round -- so the server's own
+# `[L] DEATH_*` line for web_user is timestamped on the server's clock.
+#
+# THE OBSERVABLE IS THEREFORE: how long, in SERVER game-seconds, the server's
+# copy of the browser player's cycle stayed alive.
+#
+# A cycle that never turns drives straight from its spawn point to the rim and
+# dies there, after an interval fixed by the arena and the cycle's speed. That
+# is an UPPER BOUND on how long a non-steering player can survive, and the
+# control arm MEASURES it rather than assuming it -- several rounds of it, so
+# its spread is a reading too. The steering arm then has to beat that bound.
+#
+# WHY BEATING IT IS PROOF AND NOT A CORRELATION. The server simulates the
+# cycle. If a turn command never arrived, the server's cycle went straight and
+# died at the rim, whatever the browser's own screen was showing. For the
+# SERVER's clock to record a longer life, the SERVER's cycle must have turned,
+# and the only thing that turns it is a turn command over this socket. The
+# client cannot fake the reading either: it is `docker logs aa-server`,
+# collected after the browser is gone.
+#
+# WHAT IT STILL DOES NOT PROVE: which keypress, or how promptly. This is a
+# yes/no on arrival, not a latency measurement.
+
+until:1:90000:[PERSIST] populate ok
+wait:1000
+until:1:120000:[BOOT] autostart
+wait:9000
+shot:01-boot1-language-menu
+key:Enter
+wait:3000
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+
+# THE RELOAD. Same reason as bridge-gate.steps: a fresh profile has an empty
+# IndexedDB, so boot 1 is the first-use flow and only boot 2 reaches the real
+# main menu.
+mark:RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+wait:12000
+shot:02-boot2-main-menu
+
+# The client's own [L] lines, tapped the way bridge-gate.steps taps them. They
+# are CONTEXT here, not the verdict -- a client's ladderlog is a statement
+# about the client. The verdict is computed from the server's log by
+# web/tools/steer-differential.py.
+eval:(()=>{if(window.__lTap)return 'already';window.__lTap=true;window.__L={};const o=console.log;const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[L] ')===0){const k=s.slice(4).split(' ')[0];window.__L[k]=(window.__L[k]||0)+1}}catch(e){}return o.apply(console,arguments)};console.log=w;return 'ladder-log tap installed'})()
+eval:(()=>{const b=window.AABridge;window.__base={dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0};return 'error-counter baseline '+JSON.stringify(window.__base)})()
+
+# THE ROUTE IS DOWN x4, NOT x3, AND THAT IS THE DIFFERENCE FROM
+# bridge-gate.steps. That file arrives at net_menu with `lan` already selected,
+# because its LAN walk entered LAN Multiplayer and came back and net_menu keeps
+# its `selected` across a submenu, so from there it is Down x3. This file never
+# does the LAN walk, so the menu is where it opened -- on `inter`, the top item
+# -- and Server Bookmarks is four down. Both numbers are correct and they are
+# not the same number; shot 04 is what says which situation the run is in.
+mark:ENTER-1-PLAY-GAME-SUBMENU
+key:Enter
+wait:2500
+mark:ENTER-2-MULTIPLAYER-SUBMENU
+key:Enter
+wait:2500
+shot:03-network-menu-opens-on-online-multiplayer
+mark:DOWN-4-FROM-THE-TOP-TO-SERVER-BOOKMARKS
+key:Down:4
+wait:1500
+shot:04-network-menu-server-bookmarks-selected
+mark:ENTER-3-OPENS-BOOKMARKS-AND-TRANSFERS-CUSTOM_SERVER_NAME
+key:Enter
+wait:3000
+shot:05-bookmarks-menu-opens-on-connect-to-127-0-0-1
+mark:ENTER-4-CONNECTS
+key:Enter
+until:1:60000:[BRIDGE] open
+until:1:60000:[L] TEAM_PLAYER_ADDED
+until:1:60000:[L] NEW_ROUND
+wait:2000
+shot:06-on-the-grid-of-a-real-network-game
+
+# ===========================================================================
+# THE MEASUREMENT WINDOW. Both arms open it the same way, hold it open for the
+# same length of time, and differ ONLY in what goes in between. The control
+# arm's block is nothing but waits: no key is pressed, so nothing can be
+# steering the cycle, which is the point of running it rather than assuming it.
+# ===========================================================================
+mark:WINDOW-OPEN-ARM-steer
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+shot:i1-steer-after-30-left-turns
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+shot:i2-steer-after-60-left-turns
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+key:Left
+wait:1670
+mark:WINDOW-CLOSE-ARM-steer
+wait:3000
+shot:07-window-closed
+
+# The client's side of the story, for context and for the liveness check. Its
+# PASS says only "the socket and the module are still healthy and the server
+# ran rounds"; it deliberately makes no claim about steering, because a claim
+# about steering cannot be read from in here.
+#
+# THE QUEUE CHECK IS "NOT BACKING UP", NOT "EMPTY", AND THE FIRST CUT HAD IT
+# WRONG. It asserted pending === 0, copying Task 3's B2/B3 -- where the reading
+# is taken immediately after an `until:` for a ladderlog line, i.e. at a quiet
+# moment. This reading is taken at an arbitrary instant in a live round, and the
+# first control run measured pending: 1 with every other field green: one
+# datagram the relay had delivered that C++ had not yet drained, which is a
+# race against the next drain and not a defect. So it samples twice, 300 ms
+# apart, and asks that the queue be shallow both times -- a wedged consumer
+# shows a queue that grows, which this catches and an instantaneous zero does
+# not.
+eval:(async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const depth=()=>live.reduce((n,h)=>n+((b.queues[h]||[]).length),0);const p1=depth();await new Promise(r=>setTimeout(r,300));const p2=depth();const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={arm:'steer',rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending_before:p1,pending_after:p2,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.draining=p1<=3&&p2<=3;r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.PASS=r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.rounds_started>=2&&r.still_alive;console.log('[STEERGATE] steer client-side-context '+JSON.stringify(r));return 'steer client-context '+r.PASS})()

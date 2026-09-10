@@ -13,9 +13,34 @@ Dockerfile lives here but cannot be built from here):
 
 ```bash
 docker build -f bridge/test-server/Dockerfile -t aa-dedicated .
-docker run --rm -d --name aa-server -p 4534:4534/udp aa-dedicated
+docker rm -f aa-server           # remove the previous one BY NAME
+docker run -d --name aa-server -p 4534:4534/udp aa-dedicated
 docker logs aa-server            # expect "Bound socket to *.*.*.*:4534."
-docker rm -f aa-server           # when done
+```
+
+### No `--rm`, and that is the point
+
+`--rm` deletes the container the moment it exits — and with it the log, exactly
+when the log is the only thing that would say why it exited. Task 3 lost a
+crashed server's log to it once: every reading in the page was correct, the
+connect simply got no answer, and `docker ps -a` said "No such container".
+Remove the previous container **by name** before starting a new one instead;
+then the last run's corpse is always still there to read.
+`web/tools/run-steer-arm.sh` and `web/tools/run-bridge-loss-arm.sh` both do
+exactly that.
+
+### `bridge/test/relay.test.mjs` cannot run while this container is up
+
+The unit test "a datagram reaches the server and the reply comes back with the
+address echoed" binds a UDP echo server on `127.0.0.1:4534`, which is the port
+this container publishes. With `aa-server` running that bind fails with
+EADDRINUSE, and because the failure happens inside a test's setup, `node --test`
+reports it as **nine cancelled tests** with `Promise resolution is still pending
+but the event loop has already resolved` — a message that points nowhere near
+the cause. Stop the container before running the suite:
+
+```bash
+docker stop aa-server && ( cd bridge && npm test ) && docker start aa-server
 ```
 
 The image is ~5 minutes to build cold and seconds when Docker's layer cache

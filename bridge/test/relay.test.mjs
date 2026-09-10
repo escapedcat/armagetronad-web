@@ -38,6 +38,11 @@ test('BIND is answered with BOUND for the same handle', async (t) => {
   assert.equal(f.handle, 3);
 });
 
+// THIS TEST NEEDS UDP 4534 AND THE aa-dedicated CONTAINER PUBLISHES IT. With
+// `aa-server` running, this bind fails with EADDRINUSE inside the test's setup,
+// and node --test reports that as NINE CANCELLED TESTS with "Promise resolution
+// is still pending but the event loop has already resolved" -- a message that
+// points nowhere near the cause. `docker stop aa-server` before `npm test`.
 test('a datagram reaches the server and the reply comes back with the address echoed', async (t) => {
   const server = await echoServer(4534);
   t.after(() => server.close());
@@ -150,4 +155,50 @@ test('a garbled frame is dropped without killing the connection', async (t) => {
   const f = await next(ws);
   assert.equal(f.type, TYPE.BOUND, 'the connection must survive a bad frame');
   assert.equal(f.handle, 5);
+});
+
+// --------------------------------------------------------------------------
+// THE LOSS OPTION. A testing aid and nothing else: it exists so a gate can
+// ask what the game does when datagrams go missing, which is the question
+// WebSocket-over-TCP makes interesting -- a lost segment stalls everything
+// queued behind it, so the game's own resend layer is what has to cope.
+//
+// PORTS 4538/4539 AND NOT 4536/4537. 4536 is already the echo server in
+// "a hostname is resolved to send but echoed back exactly as the client
+// wrote it" above; reusing it here makes the file order-dependent, because
+// two tests would race for the same UDP port.
+// --------------------------------------------------------------------------
+
+test('--drop 1 discards every datagram in both directions', async (t) => {
+  const server = await echoServer(4538);
+  t.after(() => server.close());
+  const relay = startRelay({ port: 0, allowPrivate: true, drop: 1 });
+  t.after(() => relay.close());
+  await relay.ready;
+  const ws = await open('ws://127.0.0.1:' + relay.port);
+  t.after(() => ws.close());
+  ws.send(encode({ type: TYPE.BIND, handle: 1, port: 0, addr: '' }));
+  // BIND/BOUND is control traffic and must NOT be dropped: the option models
+  // a lossy network path, not a broken relay, and a client that cannot bind
+  // is not the situation being measured.
+  assert.equal((await next(ws)).type, TYPE.BOUND);
+  ws.send(encode({ type: TYPE.DATA, handle: 1, port: 4538, addr: '127.0.0.1', payload: Buffer.from('ping') }));
+  const timeout = new Promise((res) => setTimeout(() => res('nothing'), 300));
+  assert.equal(await Promise.race([next(ws).then(() => 'reply'), timeout]), 'nothing');
+  assert.ok(relay.droppedCount() > 0, 'the relay must own up to having discarded something');
+});
+
+test('drop 0 is the default and passes everything', async (t) => {
+  const server = await echoServer(4539);
+  t.after(() => server.close());
+  const relay = startRelay({ port: 0, allowPrivate: true });
+  t.after(() => relay.close());
+  await relay.ready;
+  const ws = await open('ws://127.0.0.1:' + relay.port);
+  t.after(() => ws.close());
+  ws.send(encode({ type: TYPE.BIND, handle: 1, port: 0, addr: '' }));
+  assert.equal((await next(ws)).type, TYPE.BOUND);
+  ws.send(encode({ type: TYPE.DATA, handle: 1, port: 4539, addr: '127.0.0.1', payload: Buffer.from('ping') }));
+  assert.equal((await next(ws)).payload.toString(), 'pong:ping');
+  assert.equal(relay.droppedCount(), 0, 'nothing may be discarded when the option is not asked for');
 });
