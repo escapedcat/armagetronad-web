@@ -479,8 +479,10 @@ that second, clean run — committed at `task5/single-player/portrait/`. The fir
 run is committed too, at `task5/single-player/portrait-pb8-flake-first-attempt/`, precisely so
 this is a documented flake and not a quietly discarded bad reading. Read together with the
 resource-contention timeout in §0 (the same first attempt, run with all four gates
-concurrently), the most likely explanation is machine load affecting the delivery timing of a
-synthetic touch event, not anything this milestone changed.
+concurrently), this is not a regression — no code this milestone touched has any mechanism to
+move a haptic count — but two data points are not enough to say what actually happened, only
+that it was not that. If it recurs, it deserves the harness's own timing instrumentation rather
+than a third data point of the same kind.
 
 ## 5. B6 — a real server: not attempted
 
