@@ -95,6 +95,12 @@ Setting `CUSTOM_SERVER_NAME` and `CLIENT_PORT` in `web/webdefaults/autoexec.cfg`
 
 Alongside the automated gates, one thing only the maintainer can report: **whether it feels good on the phone.** That verdict decides M-B.
 
+## Where the bridge lives
+
+**In this repo, under `bridge/`, until M-C.** The bridge and the C++ shim are two halves of one protocol: during M-A that wire format will change several times, and every change touches both halves at once. In one repo that is one commit, one review and one CI run; across two it is a version dance between a 200-line service and a 2300-file game fork, performed by one person. The gate also has to start the bridge to test the client at all, which is materially easier in-tree.
+
+The counter-argument is real but early: a relay that other people might one day run deserves its own small, readable repo rather than being buried in a fork of a 2003 C++ game, and it has a different deployment lifecycle — the page ships to GitHub Pages on merge, the bridge ships to a VPS. **Both of those become true at M-C**, when it turns into a deployed service with a release cadence. That is the moment to split, and splitting is cheap and lossless (`git subtree split` keeps the history; the alternative is copying three files). Doing it now buys nothing and costs the whole of M-A in friction.
+
 ## Files
 
 - `src/network/nSocket.cpp` (guarded edits), new `src/network/nSocketWeb.{cpp,h}`
