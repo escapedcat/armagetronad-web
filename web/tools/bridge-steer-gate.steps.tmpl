@@ -20,12 +20,13 @@
 # browser player logs in, joins the roster, plays and dies. It does NOT prove
 # that a steering keypress reached the server, and it says so in as many words.
 # Nothing in this tree logs per-turn state: there is no position ladderlog
-# entry and no per-turn one -- the writers are enumerated at
-# src/tron/gGame.cpp:3130, src/tron/gCycle.cpp:3236, src/engine/ePlayer.cpp:6555
-# and src/engine/eTeam.cpp:220, and none of them fires on a turn. And the two
+# entry and no per-turn one -- the writers are enumerated, for example
+# gGame.cpp's sg_newRoundWriter, gCycle.cpp's sg_deathFragWriter,
+# ePlayer.cpp's se_onlinePlayerWriter and eTeam.cpp's se_teamRenamedWriter,
+# and none of them fires on a turn. And the two
 # obvious substitutes are both dead ends: a round's duration is set by when the
 # AIs finish, not by the browser player, and gCycle::KillAt credits a death as
-# suicide whenever no enemy influence is attributed (src/tron/gCycle.cpp:3276),
+# suicide whenever no enemy influence is attributed (gCycle::KillAt),
 # which covers the rim and one's own wall alike.
 #
 # SO THE INSTRUMENT IS THE SERVER'S OWN SIMULATION CLOCK, AND THE ARENA IS
@@ -62,11 +63,11 @@
 #   - the server logs `Creating grid...` and `Deleting grid...` once per round,
 #     so the spawn points are reconstructed every round;
 #   - a fresh gSpawnPoint has lastTimeUsed = se_GameTime()-1000000 and
-#     numberOfUses = 0 (src/tron/gSpawn.cpp:43), so
+#     numberOfUses = 0, set in the gSpawnPoint::gSpawnPoint constructor, so
 #     Danger() = numberOfUses + 100/(se_GameTime()+10-lastTimeUsed)
-#     (gSpawn.cpp:73) is IDENTICAL for every spawn point on a cleared grid;
+#     (gSpawnPoint::Danger) is IDENTICAL for every spawn point on a cleared grid;
 #   - gArena::LeastDangerousSpawnPoint takes a new candidate only on
-#     `newDanger < mindanger - EPS` (src/tron/gArena.cpp:126), a strict
+#     `newDanger < mindanger - EPS`, a strict
 #     improvement, so on a tie the FIRST spawn point wins.
 # Every round is therefore the same spawn on a cleared grid. Whatever the
 # straight-line time to the rim is, it is the same number every round -- which

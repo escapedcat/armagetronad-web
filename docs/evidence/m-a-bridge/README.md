@@ -4,7 +4,8 @@ The browser client's UDP is carried over a WebSocket to a local Node relay
 (`bridge/relay.mjs`), which speaks UDP to a stock Armagetron server. Everything
 here was measured against `aa-dedicated`, a dedicated server built from **this**
 source tree and run in Docker on the same machine; nothing in this directory
-touched a community server.
+touched a community server — that is task 6, and it needs the maintainer's
+explicit permission first.
 
 | directory | what it holds |
 | --- | --- |
@@ -13,10 +14,96 @@ touched a community server.
 | `task4/steer/`, `task4/steer2/` | **did a steering keypress reach the server** — the control and steering arms, run twice |
 | `task4/loss/` | what 5 % packet loss costs, and what a dropped connection does |
 | `task4/prove-*.log` | the checks in this task, run against the case they are meant to catch, failing |
+| `task5/single-player/` | Task 5: the four pre-existing single-player gates, run on this build with **no** `?bridge=` at all |
 
 ---
 
-## 1. A steering keypress reaches the server
+## 0. The letters, what was run, and the counting rule
+
+The design spec (`docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md`,
+"Gates and evidence") names six verdicts, **B1 through B6**. `web/tools/bridge-gate.steps`
+was written before all six existed and uses its own internal labels — `B0`, `B1`, `A1`, `B2`,
+`B3`, `B4`, `B5` — which do **not** line up one-to-one with the spec's numbering; Tasks 3 and 4
+both record why (Task 2 had already used `B0`/`B1`/`A1` inside the file before the spec's `B1`
+and `B2` existed, so the new verdicts continued the sequence rather than falsifying the labels
+already committed in `task2/`). The mapping, stated once here so nobody has to reconstruct it
+from three task reports:
+
+| spec verdict | claim | `bridge-gate.steps` label(s) | evidence |
+| --- | --- | --- | --- |
+| **B1** — it connects | server log shows a login and a join | internal `B2` (the connect half of it) | `b1/` |
+| **B2** — it plays | a full round completes, scored by the server | internal `B2`/`B3`, plus the steering instrument below | `b1/`, `b2/`, `task4/steer*/` |
+| **B3** — it survives loss | round completes under `--drop 0.05` | the whole file re-run, internal `B0`…`B5` | `task4/loss/` |
+| **B4** — it survives a drop | a clean disconnect, no crash | internal `B5` (`the-far-end-went-away-and-the-module-is-still-running`) | `task4/loss/` |
+| **B5** — nothing else changed | pin + four single-player gates, no `?bridge=` | (not in this file — a separate run, below) | `task5/single-player/` |
+| **B6** — a real server | one unmodified community server | not attempted | — |
+
+**The counting rule for everything inside `bridge-gate.steps`:**
+`grep -c '\[console.log\].*BRIDGEGATE.*"PASS":true' console.log`, counting `[console.log]`
+lines only — the harness's own `[harness] until` echo repeats every needle it is waiting on,
+so a raw grep over the whole file over-counts roughly threefold. Expected 7 as of Task 4 (`B0`,
+`B1`, `A1`, `B2`, `B3`, `B4`, `B5`); a run of the first three alone (before a real server exists)
+is still 3. For `B1`/`B2` specifically, the grep that matters is not inside the page at all —
+it is `grep -iE 'Received login|entered the game' server.log`, the server's own word that a
+datagram arrived from somewhere and gave that somewhere a player; every `PASS:true` line above
+is a claim the *client* makes about itself, and this is the one made by the *server*.
+
+**The counting rule for the four single-player gates (`task5/single-player/`, B5) is
+different, because those gates predate this milestone and were never written to print a
+single, greppable `PASS` line per check.** Some assertions print via `console.log` inside the
+page; others (`SPARKSGATE D1` on desktop, most of `portrait-boot-gate.steps`) print only as the
+return value of the harness's own `eval:` step, visible in the transcript as `... => "D1 true"`
+after the call. The M9 reference tallies (portrait 10, landscape 8, layout-boot 3, desktop 2)
+already count both forms; counting `[console.log]` lines alone under-counts (desktop reads 1,
+not 2). The rule applied here, and re-derivable from any of the four committed logs: take the
+text after the **last** `` => `` on a line if there is one, otherwise the whole line; find
+`\[(\w+GATE)\]\s+(\S+).*?"PASS":\s*(true|false)` in it (the JSON may carry escaped quotes,
+`\"PASS\":true`, when it is itself inside a quoted return value); tally `true` and `false`
+separately. Applied to the **committed M9 reference logs**
+(`docs/evidence/m9-layout-lock/gates/*/console.log`) it reproduces 2, 8, 10, 3 exactly, which is
+what makes it the rule and not a guess.
+
+**Exact commands, Task 5:**
+
+```bash
+docker ps                                   # aa-server up (not needed for this step, but running)
+python3 -m http.server 8008 --directory web/dist-m1 &
+
+U='http://localhost:8008/armagetronad.html'
+node web/tools/drive-browser.mjs --headed                    --out .../desktop     --url "$U"              --script-file web/tools/menu-gate.steps
+node web/tools/drive-browser.mjs --headed --mobile 915,412,3 --out .../landscape   --url "$U"              --script-file web/tools/touch-gate.steps
+node web/tools/drive-browser.mjs --headed --mobile 412,915,3 --out .../portrait    --url "$U"              --script-file web/tools/portrait-boot-gate.steps
+node web/tools/drive-browser.mjs --headed --mobile 412,915,3 --out .../layout-boot --url "${U}?autostart=0" --script-file web/tools/layout-boot-gate.steps
+```
+
+Run **one at a time**, not concurrently — the first attempt ran all four together and one
+(`layout-boot`) genuinely timed out waiting on its data-file dependency for the full 90 s
+budget, purely from resource contention between four headed Chrome instances on one machine;
+killed and re-run alone, it passed in the low tens of seconds. That failure is not in this
+directory; it was never a reading of the build, only of running four browsers at once, and is
+recorded here so nobody re-learns it by repeating the mistake.
+
+---
+
+## 1. B1 and B2 — it connects, and it plays
+
+**The server's own log is the claim, not the client's screen.** `grep -c 'Received login'
+b1/server.log` → **1**; `grep -iE 'Received login|entered the game' b1/server.log` shows
+`web_user` joining alongside three AIs (`LaTeX`, `Gcc`, `Gdb`). `b2/server.log` (a second,
+longer run against the same bookmarked address) then shows the round state machine going all
+the way round with the browser player scored in it: `[L] ROUND_SCORE_TEAM` names `web_user`,
+not `[L] ROUND_WINNER` — `gGame::Analysis` returns immediately for `nCLIENT`, so that needle is
+server-only and would time out on a browser transcript. Both directories carry the matching
+`console.log`; `grep -c '\[console.log\].*BRIDGEGATE.*"PASS":true'` reads **5** in each
+(`B0`, `B1`, `A1`, `B2`, `B3`) — Task 3's run, before Task 4 appended `B4` and `B5` to the same
+file. The rule that produces that number is the one in §0; the file-wide total of 7 is a later
+run's, not this one's.
+
+A steering keypress reaching the server specifically — not just packets in general — needed a
+second instrument, because nothing in this tree logs per-turn state. That instrument, and what
+it found, is below.
+
+## 1.1. A steering keypress reaches the server
 
 **This is the question Task 3 left open and it is now closed.** Task 3 proved,
 from the server's own log, that a browser player logs in, joins the roster,
@@ -26,22 +113,23 @@ so: nothing in this tree logs per-turn state.
 ### Why the obvious instruments do not work
 
 - **There is no per-turn or position ladder-log entry.** The writers are
-  enumerable — `src/tron/gGame.cpp:3130`, `src/tron/gCycle.cpp:3236`,
-  `src/engine/ePlayer.cpp:6555`, `src/engine/eTeam.cpp:220` — and none fires on
-  a turn.
+  enumerable — for example `gGame.cpp`'s `sg_newRoundWriter`, `gCycle.cpp`'s
+  `sg_deathFragWriter`, `ePlayer.cpp`'s `se_onlinePlayerWriter` and
+  `eTeam.cpp`'s `se_teamRenamedWriter` — and none fires on a turn.
 - **A round's duration says nothing**, because with the shipped config the
   round ends when the AIs are done. `b2/server.log` has three of them (LaTeX,
   Gcc, Gdb) entering the game.
 - **The death cause does not separate the cases.** `gCycle::KillAt` credits a
-  death as suicide whenever no enemy influence is attributed
-  (`src/tron/gCycle.cpp:3276`), which covers the rim and one's own wall alike —
-  and an AI's wall can cross a straight path anyway.
+  death as suicide whenever no enemy influence is attributed, which covers the
+  rim and one's own wall alike — and an AI's wall can cross a straight path
+  anyway.
 
 ### The instrument that does work: the server's own simulation clock
 
 `bridge/test-server/steer-var/autoexec.cfg` is mounted as the server's var
-directory, which `st_LoadConfig` reads last (`src/tools/tConfiguration.cpp:993`),
-so every line in it is a hard override. It does two things:
+directory, which `st_LoadConfig` reads last (its final `Load()` call, in
+`src/tools/tConfiguration.cpp`), so every line in it is a hard override. It
+does two things:
 
 1. **Empties the arena of AIs** (`TEAM_BALANCE_WITH_AIS 0`, `MIN_PLAYERS 1`), so
    the arena holds exactly one cycle: the browser player's. The only things that
@@ -50,7 +138,7 @@ so every line in it is a hard override. It does two things:
 2. **Timestamps its own ladder-log** (`LADDERLOG_GAME_TIME_INTERVAL 0.25`,
    `CONSOLE_LADDER_LOG 1`), so `gGame::GameLoop` writes `[L] GAME_TIME <t>`
    every quarter second with `se_GameTime()` — the server's simulation clock,
-   reset each round (`src/tron/gGame.cpp:4340`).
+   reset each round.
 
 The observable is therefore **how long, in server game-seconds, the server kept
 the browser player's cycle alive**, read off the last `[L] GAME_TIME` line
@@ -67,11 +155,13 @@ on the same geometry, round after round:
 - the server logs `Creating grid...` and `Deleting grid...` once per round, so
   the spawn points are reconstructed every round;
 - a fresh `gSpawnPoint` has `lastTimeUsed = se_GameTime()-1000000` and
-  `numberOfUses = 0` (`src/tron/gSpawn.cpp:43`), so
+  `numberOfUses = 0`, set in the `gSpawnPoint::gSpawnPoint` constructor
+  (`src/tron/gSpawn.cpp`), so
   `Danger() = numberOfUses + 100/(se_GameTime()+10-lastTimeUsed)`
-  (`gSpawn.cpp:73`) is **identical** for every spawn point on a cleared grid;
+  (`gSpawnPoint::Danger`) is **identical** for every spawn point on a cleared
+  grid;
 - `gArena::LeastDangerousSpawnPoint` replaces its candidate only on
-  `newDanger < mindanger - EPS` (`src/tron/gArena.cpp:126`) — a strict
+  `newDanger < mindanger - EPS` — a strict
   improvement — so on a tie the **first** spawn point wins.
 
 Every round is therefore the same spawn on a cleared grid. Whatever the
@@ -187,7 +277,7 @@ number from an arena it cannot reason about.
 
 ---
 
-## 2. What packet loss costs
+## 2. B3 — it survives loss, and what packet loss costs
 
 `bridge/relay.mjs --drop <fraction>` throws away that fraction of the datagrams
 passing through, in both directions, and logs a running count. The whole of
@@ -300,7 +390,7 @@ of a lossy path has to build the instrument first.
 
 ---
 
-## 3. A dropped connection, mid-round
+## 3. B4 — it survives a drop: a dropped connection, mid-round
 
 B5 kills the **relay process** from the shell — `web/tools/run-bridge-loss-arm.sh`
 waits for B5's own mark to appear in the transcript and kills the relay four
@@ -329,3 +419,93 @@ hung nor crashed.
 the canvas its old size and GL its old state, so the canvas-and-GL check that
 the other verdicts use would have passed straight over a module that had stopped
 running. A module that has stopped running does not paint.
+
+---
+
+## 4. B5 — nothing else changed
+
+Two independent claims: the dedicated wasm is still the pin, and the four gates that predate
+this milestone still behave exactly as M9 left them when the bridge is not asked for at all.
+
+### The byte pin
+
+Rebuilt clean — `rm -rf web/build-m0 web/dist-m0` first, so nothing is short-circuited from an
+earlier link — from `HEAD` of this branch:
+
+```
+$ make -f web/Makefile dedicated -j8   # exit 0
+$ python3 -c "import hashlib,os; p='web/dist-m0/armagetronad-dedicated.wasm'; \
+              print('size', os.path.getsize(p)); \
+              print('md5', hashlib.md5(open(p,'rb').read()).hexdigest())"
+size 2488298
+md5 9718a2a64978cb6e9b95ea2f0454cca5
+```
+
+Both halves **match the pin exactly**: 2,488,298 bytes, md5 `9718a2a64978cb6e9b95ea2f0454cca5`.
+Measured from this rebuild, not assumed from an earlier one still sitting in `web/dist-m0/` —
+that directory was deleted first specifically so this number could not be stale.
+
+### The four single-player gates, no `?bridge=` at all
+
+Run with the exact commands in §0, on `python3 -m http.server 8008 --directory web/dist-m1`
+serving this build, one gate at a time:
+
+| gate | tally (true/false) | M9 reference | assertion-name set vs M9 | `ws://`, `WebSocket`, `[BRIDGE]` | `program exited` / `TIMED OUT` |
+| --- | --- | --- | --- | --- | --- |
+| desktop (`menu-gate.steps`) | 2 / 0 | 2 | identical (`SPARKSGATE D1`, `M7GATE D2`) | 0 | 0 |
+| landscape (`touch-gate.steps`) | 8 / 0 | 8 | identical | 0 | 0 |
+| portrait (`portrait-boot-gate.steps`) | 10 / 0 | 10 | identical | 0 | 0 |
+| layout-boot (`layout-boot-gate.steps`) | 3 / 0 | 3 | identical | 0 | 0 |
+
+Every count is exact against the M9 reference logs (`docs/evidence/m9-layout-lock/gates/`),
+using the counting rule in §0. The negative-control command, stated so the absence means
+something: `grep -c 'ws://\|\[BRIDGE\]' console.log` for each of the four transcripts, all four
+zero. **None of these four gates ever reaches `net_game()`** — `menu-gate.steps` stays in
+"Play Game", `touch-gate.steps` and `portrait-boot-gate.steps` walk the first-run tutorial
+flow, `layout-boot-gate.steps` only opens the layout switch — so this zero is a bare zero, not
+a refusal that happened to go unlogged. (Contrast `bridge-absent-gate.steps`, §0's mapping
+table, where `[BRIDGE]` is expected precisely because that gate does walk into the network
+menu and the refusal is the thing under test.)
+
+**One reading differed from the M9 reference on the first attempt, and the investigation is
+part of the evidence.** Portrait's `PB8` (`haptic-pulse-per-press`) read
+`{"before":2,"after":4,...,"PASS":false}` against the M9 reference's `{"before":3,"after":5,
+...,"PASS":true}` — one of the three early menu taps produced no counted vibration pulse. This
+build touches no touch or haptics code at all (M-A is confined to `src/network/`,
+`src/emscripten/eWebNet.*`, `web/library_bridge.js`, `web/Makefile`), so a code-caused
+regression there has no mechanism. An immediate same-build re-run reproduced the M9 reading
+exactly (`{"before":3,"after":5,...,"PASS":true}`), and the ten-true-zero-false row above is
+that second, clean run — committed at `task5/single-player/portrait/`. The first, anomalous
+run is committed too, at `task5/single-player/portrait-pb8-flake-first-attempt/`, precisely so
+this is a documented flake and not a quietly discarded bad reading. Read together with the
+resource-contention timeout in §0 (the same first attempt, run with all four gates
+concurrently), the most likely explanation is machine load affecting the delivery timing of a
+synthetic touch event, not anything this milestone changed.
+
+## 5. B6 — a real server: not attempted
+
+No community server has been contacted, at any point in this milestone. Every reading in this
+directory is against `aa-dedicated`, a container on this machine. That is deliberate and it is
+task 6, which needs the maintainer's explicit permission before it can run at all — nothing
+here should be read as implying otherwise.
+
+---
+
+## What this milestone does not claim
+
+Stated together, because burying any one of them would make the rest of this document
+misleading:
+
+- **There is no defensible cost-of-loss figure.** §2's round-time deltas are single-sample and
+  confounded by three AIs setting round length in both arms, and `--drop` discards on the
+  relay→server UDP leg — it cannot induce the WebSocket TCP head-of-line stall that the
+  question is actually about. A later milestone needs an option that **stalls** the WebSocket
+  leg, not one that drops packets on the UDP leg, before that question can be measured rather
+  than argued from the mechanism.
+- **No third-party server has ever been contacted.** Everything measured here is a local
+  container built from this source tree. That is task 6, and it needs the maintainer's explicit
+  permission first.
+- **iOS, Firefox and real touch devices are untested**, exactly as they were before this
+  milestone — every gate in this directory runs Chrome device emulation. So is the client's own
+  behaviour after a socket closes for good, beyond "it neither hangs nor crashes" (§3): what the
+  player actually sees, and whether a reload or a reconnect works, has not been checked.

@@ -43,11 +43,14 @@ the cause. Stop the container before running the suite:
 docker stop aa-server && ( cd bridge && npm test ) && docker start aa-server
 ```
 
-The image is ~5 minutes to build cold and seconds when Docker's layer cache
-is warm. What invalidates the cache is `COPY . /src`, i.e. **any** change
-anywhere in the tree, `docs/evidence/` included — so committing evidence
-forces a full rebuild of the autotools tree next time. Build before you write
-evidence, not after.
+The image is **~55 s to build cold, measured** (Apple Silicon, arm64: ~42 s
+`apt-get`, ~9 s for the whole autotools tree) and seconds when Docker's layer
+cache is warm. An earlier draft of this file guessed "~5 minutes"; that was
+wrong, in the harmless direction, but a guess is not a measurement and this is
+one. What invalidates the cache is `COPY . /src`, i.e. **any** change anywhere
+in the tree, `docs/evidence/` included — so committing evidence forces a full
+rebuild of the autotools tree next time. Build before you write evidence, not
+after.
 
 ## What it is configured to do, and what it is not
 

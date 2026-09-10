@@ -987,10 +987,112 @@ Shipping this changes the maintainer's role from developer to **service operator
 - **M-C (1–2 wks):** wss/Caddy, policies, rate limits, metrics, prod deploy; load test 50 sessions, abuse tests.
 - **M-D (stretch):** US bridge + region picker; REST lobby cache; WebTransport datagrams; egress-IP pooling.
 
+### M-A — the multiplayer bridge, local only (2026-09-10): a browser player joins a real dedicated server and plays a round through it
+
+> **What shipped.** A guarded C++ shim (`src/network/nSocket.{cpp,h}`, eight sites, all
+> `#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)`) that turns the browser client's UDP
+> socket calls into a handle table backed by a WebSocket; the handle table, receive queue and
+> fake-address map themselves live in **new `src/emscripten/eWebNet.{h,cpp}`**, not
+> `src/network/` (see the rule below); `web/library_bridge.js`, the Emscripten JS library that
+> owns the actual `WebSocket` object and enforces the enqueue-only rule (also below); and
+> `bridge/`, a one-file Node relay (`ws` + `dgram`, no build step) that speaks the WebSocket on
+> one side and real UDP to a real server on the other, with a destination policy
+> (private/multicast denied, ports 4533–4599, `--allow-private` for the dockerized test server)
+> and a `--drop <fraction>` testing aid. `bridge/test-server/` builds `aa-dedicated`, a stock
+> dedicated server from this same tree in Docker — the opponent every gate below actually
+> played against. No community server was ever contacted; that is M-A task 6 and needs the
+> maintainer's explicit permission first.
+>
+> **The four gate verdicts** (spec: `docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md`):
+> - **B1 — it connects.** The server's own log shows one `Received login` and one
+>   `entered the game` for `web_user`, reached by a bookmark
+>   (`CUSTOM_SERVER_NAME`/`sg_TransferCustomServer`) so the gate needs no text entry.
+>   `docs/evidence/m-a-bridge/b1/`.
+> - **B2 — it plays.** A full round completes and the server's own `[L] ROUND_SCORE_TEAM`
+>   names the browser player in it — not `[L] ROUND_WINNER`, which `gGame::Analysis` never
+>   emits for a network client. A separate instrument (the server's own simulation clock,
+>   `LADDERLOG_GAME_TIME_INTERVAL`, with the AIs emptied out) then proved a **steering**
+>   keypress specifically reaches the server: a no-steer control cycle always dies at
+>   5.19–5.50 s (three independent pairs of runs), and a steering arm both outlives that
+>   bound (up to 21.66 s) and dies *sooner* than it (down to 2.63 s) — only a direction
+>   change explains both tails from the same key. `docs/evidence/m-a-bridge/b2/`,
+>   `task4/steer{,2,3}/`.
+> - **B3 — it survives loss.** The whole gate re-run against `--drop 0.05` reaches every
+>   verdict with no crash, sending about 12 % more datagrams to do it (the resend layer's
+>   own cost), and the delivery-tail percentiles do not move outside noise.
+>   **M-A ships without a defensible cost-of-loss figure**: the round-time deltas are
+>   single-sample and confounded by three AIs setting round length in both arms, and
+>   `--drop` discards on the relay→server UDP leg, so it cannot induce the WebSocket
+>   TCP head-of-line stall the question is actually about (see the rule below). The tail
+>   result is the one this milestone stands behind. `docs/evidence/m-a-bridge/task4/loss/`.
+> - **B4 — it survives a drop.** Killing the relay process mid-round produces a clean
+>   `readyState 3` in the client, two more `requestAnimationFrame` callbacks after the
+>   close (so the module is still running, not just still resident), and no Emscripten
+>   abort — checked because a wedged Asyncify stack would otherwise look identical to a
+>   healthy idle canvas. `docs/evidence/m-a-bridge/task4/loss/`.
+>
+> **B5 — nothing else changed, confirmed in the same task that wrote this block.** The four
+> pre-existing single-player gates, run on this build with no `?bridge=` at all, reproduce the
+> M9 reference tallies exactly: desktop 2, landscape 8, portrait 10, layout-boot 3, zero
+> `"PASS":false` anywhere, zero `ws://`/`WebSocket`/`[BRIDGE]` in any of the four transcripts
+> (none of these four gates ever reaches the network menu, so that zero is a bare one and not
+> a refusal going unlogged). One portrait run's `PB8` (a haptic-pulse count) came back false on
+> a first attempt — `before` read 2 instead of the expected 3, i.e. one of three early menu taps
+> produced no counted vibration — and a same-build immediate re-run reproduced the exact M9
+> reading (`before":3,"PASS":true`); touch/haptics code is untouched by M-A, so this is recorded
+> as a timing-sensitive flake in the assertion, not a regression. The dedicated wasm, rebuilt
+> clean (`rm -rf web/build-m0 web/dist-m0` first), came out **2,488,298 bytes, md5
+> `9718a2a64978cb6e9b95ea2f0454cca5`** — the pin, unmoved. `docs/evidence/m-a-bridge/README.md`.
+> **B6 — a real server — is explicitly not this milestone's claim**; it is task 6, gated on the
+> maintainer's permission to contact one.
+>
+> **Two things a later milestone must not rediscover, on top of trap 4 above:**
+> - **The `src/emscripten/` rule.** `$(SRCS)` in `web/Makefile` wildcards `src/network/*.cpp`
+>   (among others) into **both** the browser client and the byte-pinned dedicated server; the
+>   Makefile's own comment on this point is the reason to trust it — an empty translation unit
+>   is not a non-existent one. New browser-only C++ that is not a handful of guarded lines in an
+>   existing file belongs in `src/emscripten/`, named explicitly in `CLIENT_OBJS`, exactly like
+>   `eCompat.cpp`/`eWebPersist.cpp`/`eWebInput.cpp` before it — never as a new file under
+>   `src/network/`, `src/tron/` etc., however tightly `#if`-guarded, because the guard does not
+>   stop the file from being compiled into the server, only from doing anything once there. This
+>   spec originally named `src/network/nSocketWeb.{cpp,h}` and was corrected in task 5.
+> - **The enqueue-only rule for the WebSocket handler.** The client runs under Asyncify: C++ is
+>   routinely suspended mid-stack, and re-entering it from a JS event handler (a WebSocket
+>   `onmessage`) during an unwind corrupts the rewind. `onmessage` in `web/library_bridge.js`
+>   only ever appends to a JS-side queue; C++ drains it from `nBasicNetworkSystem::Select`,
+>   which runs on the C++ stack where `emscripten_sleep` is legal. **The symptom of breaking
+>   this rule is a random crash, not a network error** — nothing about the failure points back
+>   at its cause, so suspect this rule first if a future milestone sees crashes that correlate
+>   with network activity but carry no network-shaped message.
+> - **The no-bridge refusal lives at the head of `net_game()`**, the single door into the whole
+>   network menu (Custom Connect, master lists, bookmarks, Mates, LAN, Online all sit behind
+>   it) — not inside any deeper call, because the two deeper options both leave the process in
+>   a state that dies on the *second* attempt (a `sn_SetNetState` re-entry latch, or an
+>   assertion in the next `Write`), which is strictly worse than the crash it replaces. **Any
+>   future path that can open a network connection without going through that menu — a
+>   `?connect=` URL parameter, a console command, an auto-reconnect — inherits none of this
+>   protection and must add its own refusal.** None exists yet; M-B's server browser still goes
+>   through the menu.
+> - **`--drop` measures the resend layer, not TCP queueing.** It discards datagrams at the
+>   relay, modelling loss on the relay→server UDP leg only; the browser→relay leg is a
+>   WebSocket, i.e. TCP, where nothing is ever lost, only delayed behind a retransmitted
+>   segment. That head-of-line stall is the actual argument for WebTransport and this option
+>   cannot produce it. **A later milestone needs an option that stalls the WebSocket leg**, not
+>   one that drops on the UDP leg, before any transport argument can be measured rather than
+>   asserted.
+>
+> **What M-B inherits, stated so it is not re-learned by surprise:** the server browser and
+> master list have to reach the network menu the same way everything else does (through
+> `net_game()`'s refusal, still intact); no community server has been contacted at all, so
+> M-B's join-from-list gate is the first time this bridge touches one; and iOS, Firefox and
+> real touch devices remain completely untested, as does the client's own behaviour on
+> reconnecting after a socket has closed for good — B4 proves the module survives a dead
+> socket, not that anything after that is graceful.
+
 ## Critical files
 
 Port: `src/render/rSysdep.cpp`, `src/tools/tSysTime.cpp`, `src/render/rTexture.cpp`, new `src/emscripten/{config.h,nTrueVersion.h,eCompat.cpp}`, new `web/{Makefile,README.md,shell.html,webdefaults/autoexec.cfg}`, new `deps/build-libxml2.sh`.
 M2 added guarded patches to `src/engine/eSound.cpp`, `src/render/{rScreen.cpp,rModel.cpp,rGLRender.cpp}`, `src/tron/{gWall.cpp,gCycle.cpp,gSparks.cpp}` and `src/ui/uInput.cpp` (the keycode re-encoding), plus `web/tools/gameplay-gate.steps` and `docs/evidence/m2-gate/`.
 M3 touched only two source files — `src/engine/eSound.cpp` (the WAV parser, the `Load()` guard, silent-voice retirement, the `samples == 0` guard in `eWavData::Mix`, and the budgeted diagnostics) and `src/emscripten/eCompat.cpp` — plus `web/webdefaults/autoexec.cfg`, `web/tools/audio-gate.steps` and `docs/evidence/m3-audio/`. **`eSound.cpp` compiles into the dedicated build too**, which is why the byte-identity tripwire — 2,488,298 bytes **and** md5 `9718a2a64978cb6e9b95ea2f0454cca5`, both halves; see the M4 task 3 note above for why the size alone is not enough — matters more there than anywhere else; its Emscripten guards are `#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)` for that reason. That file also now states a local rule worth honouring: **same-file references name a symbol, never a line** — line citations in it went stale twice inside this one milestone, and two more in this document rotted the same way (both struck through above).
 Every patch's long-form reasoning is in `docs/porting/browser-runtime-notes.md`; the source files carry pointers to it rather than the argument.
-Future bridge: `src/network/nSocket.cpp`, new `src/network/nSocketWeb.{cpp,h}`, new `web/library_bridge.js`, new Go bridge service (`bridge/` dir).
+~~Future bridge: `src/network/nSocket.cpp`, new `src/network/nSocketWeb.{cpp,h}`, new `web/library_bridge.js`, new Go bridge service (`bridge/` dir).~~ **Superseded by M-A above (2026-09-10):** the new file is `src/emscripten/eWebNet.{h,cpp}`, not `src/network/nSocketWeb.{cpp,h}` (that path would have wildcarded into the byte-pinned dedicated build); the bridge service is Node (`ws`+`dgram`), not Go, matching the M-A milestone line's own description.

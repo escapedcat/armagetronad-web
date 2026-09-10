@@ -59,6 +59,61 @@
 # If an item is ever added to any of those three, this script walks somewhere
 # else and cannot tell. Read shots 04-06, do not trust the Enter count.
 #
+# ---------------------------------------------------------------------------
+# THE MENU PATH TO A BOOKMARKED SERVER. Recorded because it is a fact about
+# this build, and rediscovering it by trial and error is how gates rot. Read
+# off the constructors first and then confirmed screen by screen with a
+# throwaway driver run that shot every level (Down 1..4 and the bookmark list
+# separately); the screens are named below so a future reader checks the
+# shots rather than trusting the count.
+#
+#   net_menu (net_game(), src/tron/gGame.cpp:2397) constructs, in order:
+#       cust, mas, fav, bud, opt, lan, inter
+#   and uMenu renders the highest index at the top and opens on the LAST
+#   constructed item, so top to bottom the screen reads
+#       Online Multiplayer   (inter)   <- where the menu opens
+#       LAN Multiplayer      (lan)     <- where the walk above left it
+#       Network Setup        (opt)
+#       Mates                (bud)
+#       Server Bookmarks     (fav)     <- where we are going
+#       Subcultures          (mas)
+#       Custom Connect       (cust)
+#       Exit Menu                      (uMenu's own, always last on screen)
+#
+#   FROM THE TOP that is Down x4. This script arrives with `lan` still
+#   selected, because the LAN walk above entered it and came back and
+#   net_menu keeps its `selected` across a submenu, so from HERE it is
+#   Down x3. Those two numbers are both correct and are not the same number;
+#   shot 10 is what says which situation the run is actually in.
+#
+#   Then Enter opens gServerFavorites::FavoritesMenu, and the menu that
+#   appears reads
+#       Connect to 127.0.0.1   <- SELECTED, so no Down at all
+#       Edit Bookmarks
+#   so ONE MORE Enter connects. Why the bookmark is there and why it is
+#   already selected is in web/webdefaults/autoexec.cfg next to
+#   CUSTOM_SERVER_NAME: opening this menu runs sg_TransferCustomServer(),
+#   AddFavorite fills the HIGHEST empty slot (9, not 0), and
+#   sg_GenerateConnectionItems walks 9..0 so slot 9's item is constructed
+#   last -- which is the item uMenu opens on. "Connect to 127.0.0.1" is the
+#   $bookmarks_menu_connect template with the slot's name_, and name_ is
+#   nServerInfoBase::DoGetName(), which for a bookmark is its connection
+#   name; that is why the address shows up as the label with nothing typed.
+#
+# WHY NOT CUSTOM CONNECT, THE MENU THAT LOOKS RIGHT FOR THIS. Its address
+# field is a uMenuItemString: reaching a server through it means TYPING an
+# address, and the driver's vocabulary is key:NAME -- there is no step that
+# enters text. The bookmark route needs only Enter and Down, which is why
+# CUSTOM_SERVER_NAME's legacy transfer is the mechanism this gate uses.
+#
+# AND WHY THERE IS NO ?connect= OR CONSOLE COMMAND. The refusal that keeps a
+# bridge-less page alive lives at the head of net_game() -- the single menu
+# door, see web/tools/bridge-absent-gate.steps for the two fix rounds it
+# cost. Any path that opened a socket without passing through that door would
+# put the crash back for every visitor who has no ?bridge=. So the gate walks
+# the menus, and that is a requirement, not an inconvenience.
+# ===========================================================================
+#
 # WHY THE RELOAD. Same reason as https-multiplayer.steps: a fresh profile has
 # an empty IndexedDB, so boot 1 is the first-use flow and only boot 2 reaches
 # the real main menu.
@@ -224,61 +279,6 @@ eval:(()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl
 # the loss and dropped-connection verdicts, and 3 before Task 3 appended the
 # two server gates; each of those numbers was right for the file it described.
 #
-# ---------------------------------------------------------------------------
-# THE MENU PATH TO A BOOKMARKED SERVER. Recorded because it is a fact about
-# this build, and rediscovering it by trial and error is how gates rot. Read
-# off the constructors first and then confirmed screen by screen with a
-# throwaway driver run that shot every level (Down 1..4 and the bookmark list
-# separately); the screens are named below so a future reader checks the
-# shots rather than trusting the count.
-#
-#   net_menu (net_game(), src/tron/gGame.cpp:2397) constructs, in order:
-#       cust, mas, fav, bud, opt, lan, inter
-#   and uMenu renders the highest index at the top and opens on the LAST
-#   constructed item, so top to bottom the screen reads
-#       Online Multiplayer   (inter)   <- where the menu opens
-#       LAN Multiplayer      (lan)     <- where the walk above left it
-#       Network Setup        (opt)
-#       Mates                (bud)
-#       Server Bookmarks     (fav)     <- where we are going
-#       Subcultures          (mas)
-#       Custom Connect       (cust)
-#       Exit Menu                      (uMenu's own, always last on screen)
-#
-#   FROM THE TOP that is Down x4. This script arrives with `lan` still
-#   selected, because the LAN walk above entered it and came back and
-#   net_menu keeps its `selected` across a submenu, so from HERE it is
-#   Down x3. Those two numbers are both correct and are not the same number;
-#   shot 10 is what says which situation the run is actually in.
-#
-#   Then Enter opens gServerFavorites::FavoritesMenu, and the menu that
-#   appears reads
-#       Connect to 127.0.0.1   <- SELECTED, so no Down at all
-#       Edit Bookmarks
-#   so ONE MORE Enter connects. Why the bookmark is there and why it is
-#   already selected is in web/webdefaults/autoexec.cfg next to
-#   CUSTOM_SERVER_NAME: opening this menu runs sg_TransferCustomServer(),
-#   AddFavorite fills the HIGHEST empty slot (9, not 0), and
-#   sg_GenerateConnectionItems walks 9..0 so slot 9's item is constructed
-#   last -- which is the item uMenu opens on. "Connect to 127.0.0.1" is the
-#   $bookmarks_menu_connect template with the slot's name_, and name_ is
-#   nServerInfoBase::DoGetName(), which for a bookmark is its connection
-#   name; that is why the address shows up as the label with nothing typed.
-#
-# WHY NOT CUSTOM CONNECT, THE MENU THAT LOOKS RIGHT FOR THIS. Its address
-# field is a uMenuItemString: reaching a server through it means TYPING an
-# address, and the driver's vocabulary is key:NAME -- there is no step that
-# enters text. The bookmark route needs only Enter and Down, which is why
-# CUSTOM_SERVER_NAME's legacy transfer is the mechanism this gate uses.
-#
-# AND WHY THERE IS NO ?connect= OR CONSOLE COMMAND. The refusal that keeps a
-# bridge-less page alive lives at the head of net_game() -- the single menu
-# door, see web/tools/bridge-absent-gate.steps for the two fix rounds it
-# cost. Any path that opened a socket without passing through that door would
-# put the crash back for every visitor who has no ?bridge=. So the gate walks
-# the menus, and that is a requirement, not an inconvenience.
-# ===========================================================================
-
 # The [L] ladder-log lines B2 and B3 read are console.log lines from
 # se_SaveToLadderLog (CONSOLE_LADDER_LOG 1, set in autoexec.cfg), so they have
 # to be counted as they happen, the same way the peer tap above works. The tap

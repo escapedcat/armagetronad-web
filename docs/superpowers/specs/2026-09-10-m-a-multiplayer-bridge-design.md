@@ -62,7 +62,7 @@ Touched in `src/network/nSocket.cpp`, by symbol (this file's own rule: name symb
 | `nBasicNetworkSystem::Select` | check the queue; if empty, `emscripten_sleep(5)` and check again until `dt` is spent |
 | `nAddress::SetHostname` | the fake-address map, below |
 
-New `src/network/nSocketWeb.{cpp,h}` (~300 lines) holds the handle table, the receive queue and the address map. New `web/library_bridge.js` (~250 lines) is the Emscripten JS library that owns the `WebSocket` object.
+New `src/emscripten/eWebNet.{h,cpp}` (~300 lines) holds the handle table, the receive queue and the address map. **Not** `src/network/nSocketWeb.{cpp,h}`, as an earlier draft of this spec had it: `$(SRCS)` in `web/Makefile` wildcards `src/network/*.cpp` into both the browser client and the byte-pinned dedicated server, and the Makefile's own comment on this point is the reason to trust it — an empty translation unit is not a non-existent one, so even an empty, fully-guarded file dropped there would still move the dedicated server's size. `src/emscripten/` is named explicitly in `CLIENT_OBJS` instead, reaching the client build only. New `web/library_bridge.js` (~250 lines) is the Emscripten JS library that owns the `WebSocket` object.
 
 ### The one rule that governs the JS side
 
@@ -103,7 +103,7 @@ The counter-argument is real but early: a relay that other people might one day 
 
 ## Files
 
-- `src/network/nSocket.cpp` (guarded edits), new `src/network/nSocketWeb.{cpp,h}`
+- `src/network/nSocket.cpp` (guarded edits), new `src/emscripten/eWebNet.{h,cpp}`
 - new `web/library_bridge.js`; `web/Makefile` (`--js-library`)
 - new `bridge/` — the Node relay, its `package.json`, and a README saying how to run it
 - new `web/tools/bridge-gate.steps`, `docs/evidence/m-a-bridge/`
@@ -114,7 +114,7 @@ The counter-argument is real but early: a relay that other people might one day 
 
 - **Latency through TCP under loss.** The known one. B3 measures it instead of guessing; WebTransport datagrams are the fix if it bites, and that is M-D, not M-A.
 - **Asyncify re-entrancy.** Governed by the enqueue-only rule; the failure mode is a corrupted rewind, which looks like a random crash rather than a network bug, so suspect it first if crashes appear.
-- **The byte pin.** Guarded by construction and enforced by CI on every push.
+- **The byte pin.** Guarded by construction and enforced by CI on every push — but a `#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)` guard is not sufficient on its own: `tERR_ERROR`/`tERR_ERROR_INT`/`tVERIFY` bake `__FILE__`/`__LINE__` into the release binary, so *inserting a line* anywhere above one of those in a file the dedicated build compiles renumbers it and moves the pin even when the preprocessor throws the inserted line away for the server. This is trap 4 in `PLAN.md`'s byte-level-traps block (found in M-A task 2, two sites in `nSocket.cpp`, one in `gGame.cpp`); see there for the mechanism and the workaround, not repeated here.
 - **The shell preprocessor.** If `web/shell.html` gains lines, no body line may start with `#` outside a `<style>` block — Emscripten reads it as a preprocessor directive and the link fails.
 - **An empty server.** The population is small and event-shaped (141 servers, 3 players on a Thursday lunchtime; ~56 on a tournament Sunday). B6 may need to wait for an evening or a Ladle.
 
