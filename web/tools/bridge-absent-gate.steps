@@ -10,19 +10,35 @@
 #   node web/tools/drive-browser.mjs --headed --out /tmp/bridge-dead \
 #        --url 'http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8099' \
 #        --script-file web/tools/bridge-absent-gate.steps
-#   kill %1
+#   # (c) a bridge configured whose port ACCEPTS AND THEN SAYS NOTHING, so the
+#   #     WebSocket stalls in CONNECTING instead of failing
+#   node -e "require('net').createServer(()=>{}).listen(8097,'127.0.0.1',()=>console.log('stalling listener on 8097'))" &
+#   node web/tools/drive-browser.mjs --headed --out /tmp/bridge-stalled \
+#        --url 'http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8097' \
+#        --script-file web/tools/bridge-absent-gate.steps
+#   kill %1 %2
 #
-# NO RELAY in either run. That is the whole point, and it is why this is a
-# second file rather than more steps in web/tools/bridge-gate.steps: the cases
-# differ in the URL.
+# NO WORKING RELAY in any of the three runs. That is the whole point, and it is
+# why this is a second file rather than more steps in
+# web/tools/bridge-gate.steps: the cases differ in the URL.
 #
 # RUN (b) EXISTS BECAUSE THE FIRST FIX DID NOT COVER IT. The guard asked
 # eWebNet::Enabled(), which reads the URL and nothing else, so a page pointed
 # at a relay that is not running still walked into the menu, still failed in
 # nSocket::Create, and still reached Sys_Error() -> exit(-1). It now asks
-# eWebNet::Ready(), which opens the WebSocket and waits for it. Both runs
-# assert the same three things below; the `bridge_url` reading in N1 says which
-# case the log is.
+# eWebNet::Ready(), which opens the WebSocket and waits for it.
+#
+# RUN (c) EXISTS BECAUSE (b) CANNOT MEASURE THE TIMEOUT. Nothing listens on
+# 8099, so the kernel refuses the connection, onerror fires and the refusal
+# arrives in about 15 ms -- measured. A time bound checked against that would
+# have passed the five-second version of this guard just as happily as the
+# fixed one. The budget only bites when the connection STALLS, so (c) points
+# the page at a TCP server that accepts the connection and never answers the
+# WebSocket upgrade: readyState stays 0, eWebNet::Ready() runs out its
+# sg_menuProbeMs and refuses. That is the run that pins refusal_ms.
+#
+# All three runs assert the same things below; `bridge_url`, `state` and
+# `refusal_ms` in N1 say which case the log is.
 #
 # WHAT WENT WRONG AND WHAT THIS PINS DOWN. The first cut of Task 2 let the menu
 # items fail deep in the network stack. nSocket::Create returned -1, so
@@ -57,12 +73,19 @@
 #                   at MAX_FPS 60 (the same instrument web/tools/menu-gate.steps
 #                   uses as a frame-rate proxy). A halted module yields nothing.
 #   canvas + gl     the drawing surface still has a size and GL reports no error.
+#   refusal_ms      the worst gap between an Enter this script sent and the
+#                   refusal it produced, and it has to be inside the budget and
+#                   not merely finite. sg_menuProbeMs is 1500 ms; the bound
+#                   here is 2500, which leaves room for the keypress reaching
+#                   the game (measured at 12 ms) and for a step's own latency,
+#                   while failing the 5000 ms version by a wide margin.
 #
 # plus one reading that differs between the two runs, which is why it is
 # computed rather than fixed: with no ?bridge= at all NOTHING may be attempted,
 # so there must be no WebSocket object; with a ?bridge= whose relay is down,
-# eWebNet::Ready() is SUPPOSED to have constructed one and found it dead, so
-# the socket must exist and AABridge.state must be 2.
+# eWebNet::Ready() is SUPPOSED to have constructed one and found it not open,
+# so the socket must exist and AABridge.state must be anything but 1 -- 2 when
+# the connection was refused, still 0 when it stalled.
 #
 # The refusal counter wraps console.log rather than grepping the transcript,
 # because the count has to be readable from inside the page at assert time.
@@ -94,7 +117,7 @@ wait:12000
 shot:02-boot2-main-menu
 
 mark:INSTRUMENT-BEFORE-TOUCHING-ANYTHING
-eval:(()=>{const o=console.log;if(console.log.__aa)return 'already';window.__refusals=0;const w=function(){try{if(String(arguments[0]).indexOf('network menu refused')>=0)window.__refusals++}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'refusal counter installed'})()
+eval:(()=>{const o=console.log;if(console.log.__aa)return 'already';window.__refusalAt=[];window.__enterAt=[];const w=function(){try{if(String(arguments[0]).indexOf('network menu refused')>=0)window.__refusalAt.push(performance.now())}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'refusal tap installed'})()
 eval:(()=>{const o=window.setTimeout;window.__st=0;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})()
 wait:3000
 eval:(()=>{window.__tpsBefore=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec before = '+window.__tpsBefore})()
@@ -107,6 +130,7 @@ key:Enter
 wait:2500
 shot:03-play-game-menu-opens-on-multiplayer
 mark:ENTER-2-MULTIPLAYER-IS-REFUSED-INSTEAD-OF-OPENING
+eval:window.__enterAt.push(performance.now())
 key:Enter
 until:1:30000:network menu refused
 wait:2000
@@ -116,6 +140,7 @@ mark:DISMISS-THE-MESSAGE-AND-ASK-AGAIN-SO-THE-MODULE-HAS-TO-BE-ALIVE
 key:Enter
 wait:3000
 shot:05-back-in-the-play-game-menu
+eval:window.__enterAt.push(performance.now())
 key:Enter
 until:2:30000:network menu refused
 wait:2000
@@ -132,4 +157,4 @@ shot:07-message-dismissed-menu-still-there
 # ===========================================================================
 # N1: THE NETWORK MENU IS REFUSED AND THE MODULE IS STILL RUNNING.
 # ===========================================================================
-eval:(()=>{const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const B=window.AABridge;const r={canvas:!!c,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl',refusals:window.__refusals|0,tps_before:window.__tpsBefore,tps_after:window.__tpsAfter,ctx:(typeof Module!=='undefined'&&Module._aa_web_input_context)?Module._aa_web_input_context()|0:null,bridge_url:B?B.url:'no-AABridge',ws:!!(B&&B.ws),state:B?B.state:null};const configured=!!r.bridge_url;r.socket_as_expected=configured?(r.ws===true&&r.state===2):(r.ws===false);r.PASS=r.canvas&&r.canvas_w>0&&r.refusals>=2&&r.tps_after>20&&r.gl_err===0&&r.socket_as_expected;console.log('[BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive '+JSON.stringify(r));return 'N1 '+r.PASS})()
+eval:(()=>{const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const B=window.AABridge;const rat=window.__refusalAt||[],eat=window.__enterAt||[];let worst=null;for(let i=0;i<Math.min(rat.length,eat.length);i++){const d=rat[i]-eat[i];if(worst===null||d>worst)worst=d;}const r={canvas:!!c,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl',refusals:rat.length,refusal_ms:worst===null?null:Math.round(worst),budget_ms:2500,tps_before:window.__tpsBefore,tps_after:window.__tpsAfter,ctx:(typeof Module!=='undefined'&&Module._aa_web_input_context)?Module._aa_web_input_context()|0:null,bridge_url:B?B.url:'no-AABridge',ws:!!(B&&B.ws),state:B?B.state:null};const configured=!!r.bridge_url;r.socket_as_expected=configured?(r.ws===true&&r.state!==1):(r.ws===false);r.in_budget=r.refusal_ms!==null&&r.refusal_ms<r.budget_ms;r.PASS=r.canvas&&r.canvas_w>0&&r.refusals>=2&&r.in_budget&&r.tps_after>20&&r.gl_err===0&&r.socket_as_expected;console.log('[BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive '+JSON.stringify(r));return 'N1 '+r.PASS})()

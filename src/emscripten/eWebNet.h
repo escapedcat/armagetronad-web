@@ -29,11 +29,15 @@ namespace eWebNet
     bool Enabled();
 
     //! true when the page has a ?bridge= AND the WebSocket to it is open.
-    //! Opens it and waits, in 5 ms steps, up to the same five seconds
-    //! Create() allows -- so this is what a caller wanting to know "can this
-    //! page do network play at all" should ask. Enabled() alone answers only
-    //! "was one configured", and a configured relay that is not running would
-    //! still reach nBasicNetworkSystem::Init()'s Sys_Error() -> exit(-1).
+    //! Opens it and waits, in 5 ms steps, on a budget of its own that is much
+    //! shorter than the one Create() allows -- see sg_menuProbeMs in
+    //! eWebNet.cpp for the measurement it was chosen against. This is what a
+    //! caller wanting to know "can this page do network play at all" should
+    //! ask: Enabled() alone answers only "was one configured", and a
+    //! configured relay that is not running would still reach
+    //! nBasicNetworkSystem::Init()'s Sys_Error() -> exit(-1). A false answer
+    //! is not terminal; the socket is left alone, so a slow relay is found
+    //! open on the next attempt.
     bool Ready();
 
     //! allocate a handle and make sure the WebSocket is open. -1 on failure.

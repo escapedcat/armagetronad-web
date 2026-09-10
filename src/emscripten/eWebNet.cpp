@@ -48,6 +48,38 @@ namespace
 const int sg_stepMs   = 5;
 const int sg_timeoutMs = 5000;
 
+// A SEPARATE, SHORTER BUDGET FOR THE MENU PROBE. Ready() runs from
+// AA_NET_MENU_REQUIRES_BRIDGE, i.e. off a keypress on the Multiplayer item,
+// and the question it answers is "can this page do network play at all" --
+// not "connect to the server the player picked". Five seconds is a fine
+// budget for the second and a freeze for the first, so the two are separate
+// constants and only this one is short.
+//
+// 1500 ms, against measurement rather than taste. A relay on this machine
+// answers in 10 ms from the keypress: measured end to end in
+// docs/evidence/m-a-bridge/task2/bridge-gate/console.log, where the Enter at
+// 36828 ms is followed by an OPEN AND BOUND socket at 36838 ms. So this is
+// 150x the observed cost.
+//
+// A dead LOCAL relay needs no budget at all -- the TCP connection is refused,
+// onerror fires, and the refusal was measured at 15 ms in the
+// relay-not-running gate. The budget only ever bites when the connection
+// STALLS rather than fails, which is why web/tools/bridge-absent-gate.steps
+// has a third case that stalls on purpose and puts a time bound on the
+// refusal. A bound measured against a fast failure would prove nothing.
+//
+// The trade at the other end is falsely refusing a slow but live relay. M-A
+// is local-only by design (bridge/README.md: no TLS, nothing meant to be
+// reachable from the internet), so that cannot arise today; when M-C makes
+// the relay remote, a wss handshake is about four round trips and 1500 ms
+// covers an RTT of roughly 375 ms. Revisit it there, with a measurement.
+//
+// A refusal here is not terminal: it neither closes nor discards the
+// WebSocket, and aa_bridge_state() only constructs one when there is none, so
+// a connection that was merely slow is found open on the player's next
+// attempt.
+const int sg_menuProbeMs = 1500;
+
 int sg_nextHandle = 1;
 
 // Synthetic addresses are numbered from their own counter, not from the map's
@@ -144,13 +176,14 @@ hostent * FakeHostent( const char * host )
 
 namespace
 {
-//! open the WebSocket if it is not open yet and wait for it, in 5 ms steps.
-//! Returns the final state: 1 open, 2 closed or failed, -1 not configured.
-int WaitForOpen()
+//! open the WebSocket if it is not open yet and wait up to budgetMs for it,
+//! in 5 ms steps. Returns the final state: 1 open, 2 closed or failed, 0 still
+//! connecting when the budget ran out, -1 not configured.
+int WaitForOpen( int budgetMs )
 {
     int waited = 0;
     int state = aa_bridge_state();      // opens the socket on the first call
-    while ( state == 0 && waited < sg_timeoutMs )
+    while ( state == 0 && waited < budgetMs )
     {
         emscripten_sleep( sg_stepMs );
         waited += sg_stepMs;
@@ -162,7 +195,8 @@ int WaitForOpen()
 
 bool Ready()
 {
-    return Enabled() && WaitForOpen() == 1;
+    // the SHORT budget: this is a menu probe, not a connect. See sg_menuProbeMs.
+    return Enabled() && WaitForOpen( sg_menuProbeMs ) == 1;
 }
 
 int Create()
@@ -181,7 +215,9 @@ int Create()
         return -1;
     }
 
-    if ( WaitForOpen() != 1 )
+    // the FULL budget: by the time anything reaches here the player has asked
+    // to connect, and waiting is what they asked for.
+    if ( WaitForOpen( sg_timeoutMs ) != 1 )
     {
         errno = ENETDOWN;
         return -1;
@@ -239,7 +275,15 @@ int Send( int handle, const void * buf, int len, const sockaddr * addr )
     }
     if ( host.empty() )
     {
-        errno = EADDRNOTAVAIL;
+        // NOT EADDRNOTAVAIL, which is what this said and which ANET_Error()
+        // maps explicitly to nSocketError_Reset, alongside EOPNOTSUPP and
+        // EAFNOSUPPORT -- exactly the class the note in Create() says these
+        // values avoid. ENETUNREACH is apt ("that destination is not
+        // reachable from here") and is one of only two values ANET_Error()
+        // maps to nSocketError_Ignore BY NAME, the other being EWOULDBLOCK,
+        // so the mapping does not rest on a `break` falling through to the
+        // initialiser that a future edit could disturb.
+        errno = ENETUNREACH;
         return -1;
     }
 

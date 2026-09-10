@@ -1,110 +1,110 @@
-[    637ms] [harness] chrome: Chrome/152.0.7977.83
-[    637ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8099
-[      8ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
-[     15ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
-[     16ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
-[     23ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
-[     43ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
-[     45ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
-[     51ms] [page] load event fired
-[     52ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
-[    106ms] [console.log] [PERSIST] populate ok in 34ms
-[    110ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
-[    330ms] [console.log] [PERSIST] runtime initialized, starting the game
-[    330ms] [console.log] [CAMERA] stock camera (factor 1)
-[    330ms] [console.log] [SPARKS] stock sparks, nothing written
-[    330ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
-[    333ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
-[    333ms] [console.log] [BOOT] autostart: calling main
-[    336ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
-[    336ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
-[    336ms] [console.error] 
-[    337ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
-[    337ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
-[    337ms] [console.log] 
-[    463ms] [console.log] [L] ENCODING latin1
-[    470ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
-[    472ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
-[    490ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
-[    493ms] [console.error] TODO: glShadeModel
-[    496ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
-[    533ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
-[    533ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
-[    533ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
-[    534ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
-[    534ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
-[   1111ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
-[   1111ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
-[   1604ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
-[   1604ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
-[  10147ms] [harness] screenshot -> /tmp/bridge-dead/01-boot1-language-menu.png
-[  10183ms] [console.log] [PERSISTSAVE] menu-leave n=1
-[  10184ms] [harness] key Enter (1/1)
-[  13515ms] [console.log] [PERSISTSAVE] menu-leave n=2
-[  13519ms] [harness] key Escape (1/1)
-[  13820ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
-[  13820ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
-[  16821ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
-[  16831ms] [console.log] [PERSISTSAVE] js-backstop n=3
-[  16832ms] [console.log] [PERSISTBACKSTOP] beforeunload
-[  16833ms] [harness] eval location.reload() => undefined
-[  16834ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
-[  16850ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
-[  16851ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
-[  16854ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
-[  16856ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
-[  16857ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
-[  16861ms] [page] load event fired
-[  16873ms] [console.log] [PERSIST] populate ok in 5ms
-[  16903ms] [console.log] [PERSIST] runtime initialized, starting the game
-[  16903ms] [console.log] [CAMERA] stock camera (factor 1)
-[  16904ms] [console.log] [SPARKS] stock sparks, nothing written
-[  16905ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
-[  16909ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
-[  16910ms] [console.log] [BOOT] autostart: calling main
-[  16911ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
-[  16911ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
-[  16911ms] [console.error] 
-[  16918ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
-[  16918ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
-[  16919ms] [console.log] 
-[  16935ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
-[  16935ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
-[  16936ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
-[  17035ms] [console.log] [L] ENCODING latin1
-[  17039ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
-[  17059ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
-[  17061ms] [console.error] TODO: glShadeModel
-[  17064ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
-[  28973ms] [harness] screenshot -> /tmp/bridge-dead/02-boot2-main-menu.png
-[  28973ms] [harness] === INSTRUMENT-BEFORE-TOUCHING-ANYTHING ===
-[  28974ms] [harness] eval (()=>{const o=console.log;if(console.log.__aa)return 'already';window.__refusals=0;const w=function(){try{if(String(arguments[0]).indexOf('network menu refused')>=0)window.__refusals++}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'refusal counter installed'})() => "refusal counter installed"
-[  28975ms] [harness] eval (()=>{const o=window.setTimeout;window.__st=0;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => "setTimeout counter installed"
-[  31977ms] [harness] eval (()=>{window.__tpsBefore=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec before = '+window.__tpsBefore})() => "timeouts/sec before = 138.6"
-[  31977ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
-[  32010ms] [harness] key Enter (1/1)
-[  34846ms] [harness] screenshot -> /tmp/bridge-dead/03-play-game-menu-opens-on-multiplayer.png
-[  34846ms] [harness] === ENTER-2-MULTIPLAYER-IS-REFUSED-INSTEAD-OF-OPENING ===
-[  34856ms] [browser.error/network] WebSocket connection to 'ws://127.0.0.1:8099/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED   <- http://localhost:8008/armagetronad.js
-[  34857ms] [console.log] [BRIDGE] error
-[  34857ms] [console.log] [BRIDGE] closed
-[  34861ms] [console.log] [BRIDGE] network menu refused: the ?bridge= relay did not answer
-[  34879ms] [harness] key Enter (1/1)
-[  35181ms] [harness] until 1x <<network menu refused>> (timeout 30000ms, have 1)
-[  35181ms] [harness] until SATISFIED: saw 1x <<network menu refused>>
-[  37223ms] [harness] screenshot -> /tmp/bridge-dead/04-refusal-message.png
-[  37223ms] [harness] === DISMISS-THE-MESSAGE-AND-ASK-AGAIN-SO-THE-MODULE-HAS-TO-BE-ALIVE ===
-[  37256ms] [harness] key Enter (1/1)
-[  40589ms] [harness] screenshot -> /tmp/bridge-dead/05-back-in-the-play-game-menu.png
-[  40605ms] [console.log] [BRIDGE] network menu refused: the ?bridge= relay did not answer
-[  40626ms] [harness] key Enter (1/1)
-[  40926ms] [harness] until 2x <<network menu refused>> (timeout 30000ms, have 2)
-[  40927ms] [harness] until SATISFIED: saw 2x <<network menu refused>>
-[  42956ms] [harness] screenshot -> /tmp/bridge-dead/06-refused-a-second-time.png
-[  42956ms] [harness] === STILL-RUNNING ===
-[  42957ms] [harness] eval (()=>{window.__st=0;window.__t0=performance.now();return 'resampling'})() => "resampling"
-[  45961ms] [harness] eval (()=>{window.__tpsAfter=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec after = '+window.__tpsAfter})() => "timeouts/sec after = 138.5"
-[  46001ms] [harness] key Enter (1/1)
-[  49340ms] [harness] screenshot -> /tmp/bridge-dead/07-message-dismissed-menu-still-there.png
-[  49342ms] [console.log] [BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive {"canvas":true,"canvas_w":1024,"canvas_h":768,"gl_err":0,"refusals":2,"tps_before":138.6,"tps_after":138.5,"ctx":1,"bridge_url":"ws://127.0.0.1:8099","ws":true,"state":2,"socket_as_expected":true,"PASS":true}
-[  49343ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const B=window.AABridge;const r={canvas:!!c,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl',refusals:window.__refusals|0,tps_before:window.__tpsBefore,tps_after:window.__tpsAfter,ctx:(typeof Module!=='undefined'&&Module._aa_web_input_context)?Module._aa_web_input_context()|0:null,bridge_url:B?B.url:'no-AABridge',ws:!!(B&&B.ws),state:B?B.state:null};const configured=!!r.bridge_url;r.socket_as_expected=configured?(r.ws===true&&r.state===2):(r.ws===false);r.PASS=r.canvas&&r.canvas_w>0&&r.refusals>=2&&r.tps_after>20&&r.gl_err===0&&r.socket_as_expected;console.log('[BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive '+JSON.stringify(r));return 'N1 '+r.PASS})() => "N1 true"
+[    592ms] [harness] chrome: Chrome/152.0.7977.83
+[    592ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8099
+[     17ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     19ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     20ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[     43ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     52ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     52ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     58ms] [page] load event fired
+[     63ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    127ms] [console.log] [PERSIST] populate ok in 40ms
+[    219ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    340ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    340ms] [console.log] [CAMERA] stock camera (factor 1)
+[    341ms] [console.log] [SPARKS] stock sparks, nothing written
+[    341ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    344ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    344ms] [console.log] [BOOT] autostart: calling main
+[    347ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    347ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    348ms] [console.error] 
+[    348ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    348ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    348ms] [console.log] 
+[    479ms] [console.log] [L] ENCODING latin1
+[    487ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    488ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    509ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    512ms] [console.error] TODO: glShadeModel
+[    516ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    555ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    555ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    556ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    556ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    556ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1220ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   1221ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10262ms] [harness] screenshot -> /tmp/bridge-dead/01-boot1-language-menu.png
+[  10288ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10296ms] [harness] key Enter (1/1)
+[  13622ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13637ms] [harness] key Escape (1/1)
+[  13938ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13938ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16940ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  16947ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16948ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16948ms] [harness] eval location.reload() => undefined
+[  16949ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16966ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  16967ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  16971ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  16974ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16974ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16978ms] [page] load event fired
+[  16987ms] [console.log] [PERSIST] populate ok in 4ms
+[  17031ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17031ms] [console.log] [CAMERA] stock camera (factor 1)
+[  17031ms] [console.log] [SPARKS] stock sparks, nothing written
+[  17032ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  17035ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17035ms] [console.log] [BOOT] autostart: calling main
+[  17035ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17036ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17036ms] [console.error] 
+[  17036ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17036ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17036ms] [console.log] 
+[  17049ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  17049ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  17049ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  17153ms] [console.log] [L] ENCODING latin1
+[  17158ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17172ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17175ms] [console.error] TODO: glShadeModel
+[  17178ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  29068ms] [harness] screenshot -> /tmp/bridge-dead/02-boot2-main-menu.png
+[  29069ms] [harness] === INSTRUMENT-BEFORE-TOUCHING-ANYTHING ===
+[  29070ms] [harness] eval (()=>{const o=console.log;if(console.log.__aa)return 'already';window.__refusalAt=[];window.__enterAt=[];const w=function(){try{if(String(arguments[0]).indexOf('network menu refused')>=0)window.__refusalAt.push(performance.now())}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'refusal tap installed'})() => "refusal tap installed"
+[  29072ms] [harness] eval (()=>{const o=window.setTimeout;window.__st=0;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => "setTimeout counter installed"
+[  32074ms] [harness] eval (()=>{window.__tpsBefore=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec before = '+window.__tpsBefore})() => "timeouts/sec before = 137.8"
+[  32075ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  32110ms] [harness] key Enter (1/1)
+[  34951ms] [harness] screenshot -> /tmp/bridge-dead/03-play-game-menu-opens-on-multiplayer.png
+[  34951ms] [harness] === ENTER-2-MULTIPLAYER-IS-REFUSED-INSTEAD-OF-OPENING ===
+[  34952ms] [harness] eval window.__enterAt.push(performance.now()) => 1
+[  34968ms] [browser.error/network] WebSocket connection to 'ws://127.0.0.1:8099/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED   <- http://localhost:8008/armagetronad.js
+[  34968ms] [console.log] [BRIDGE] error
+[  34969ms] [console.log] [BRIDGE] closed
+[  34973ms] [console.log] [BRIDGE] network menu refused: the ?bridge= relay did not answer
+[  34987ms] [harness] key Enter (1/1)
+[  35289ms] [harness] until 1x <<network menu refused>> (timeout 30000ms, have 1)
+[  35289ms] [harness] until SATISFIED: saw 1x <<network menu refused>>
+[  37324ms] [harness] screenshot -> /tmp/bridge-dead/04-refusal-message.png
+[  37324ms] [harness] === DISMISS-THE-MESSAGE-AND-ASK-AGAIN-SO-THE-MODULE-HAS-TO-BE-ALIVE ===
+[  37357ms] [harness] key Enter (1/1)
+[  40703ms] [harness] screenshot -> /tmp/bridge-dead/05-back-in-the-play-game-menu.png
+[  40704ms] [harness] eval window.__enterAt.push(performance.now()) => 2
+[  40717ms] [console.log] [BRIDGE] network menu refused: the ?bridge= relay did not answer
+[  40736ms] [harness] key Enter (1/1)
+[  41038ms] [harness] until 2x <<network menu refused>> (timeout 30000ms, have 2)
+[  41038ms] [harness] until SATISFIED: saw 2x <<network menu refused>>
+[  43075ms] [harness] screenshot -> /tmp/bridge-dead/06-refused-a-second-time.png
+[  43075ms] [harness] === STILL-RUNNING ===
+[  43076ms] [harness] eval (()=>{window.__st=0;window.__t0=performance.now();return 'resampling'})() => "resampling"
+[  46077ms] [harness] eval (()=>{window.__tpsAfter=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec after = '+window.__tpsAfter})() => "timeouts/sec after = 138.2"
+[  46112ms] [harness] key Enter (1/1)
+[  49454ms] [harness] screenshot -> /tmp/bridge-dead/07-message-dismissed-menu-still-there.png
+[  49456ms] [console.log] [BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive {"canvas":true,"canvas_w":1024,"canvas_h":768,"gl_err":0,"refusals":2,"refusal_ms":20,"budget_ms":2500,"tps_before":137.8,"tps_after":138.2,"ctx":1,"bridge_url":"ws://127.0.0.1:8099","ws":true,"state":2,"socket_as_expected":true,"in_budget":true,"PASS":true}
+[  49456ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const B=window.AABridge;const rat=window.__refusalAt||[],eat=window.__enterAt||[];let worst=null;for(let i=0;i<Math.min(rat.length,eat.length);i++){const d=rat[i]-eat[i];if(worst===null||d>worst)worst=d;}const r={canvas:!!c,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl',refusals:rat.length,refusal_ms:worst===null?null:Math.round(worst),budget_ms:2500,tps_before:window.__tpsBefore,tps_after:window.__tpsAfter,ctx:(typeof Module!=='undefined'&&Module._aa_web_input_context)?Module._aa_web_input_context()|0:null,bridge_url:B?B.url:'no-AABridge',ws:!!(B&&B.ws),state:B?B.state:null};const configured=!!r.bridge_url;r.socket_as_expected=configured?(r.ws===true&&r.state!==1):(r.ws===false);r.in_budget=r.refusal_ms!==null&&r.refusal_ms<r.budget_ms;r.PASS=r.canvas&&r.canvas_w>0&&r.refusals>=2&&r.in_budget&&r.tps_after>20&&r.gl_err===0&&r.socket_as_expected;console.log('[BRIDGEGATE] N1 no-bridge-menu-refused-and-still-alive '+JSON.stringify(r));return 'N1 '+r.PASS})() => "N1 true"
