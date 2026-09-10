@@ -528,6 +528,13 @@ eval:(()=>{const g=(window.__gaps||[]).slice().sort((a,b)=>a-b);const q=p=>g.len
 # still sending, with nothing newly dropped and nothing left undrained. It
 # does NOT claim by itself that loss was happening: the relay discards
 # silently and NOTHING INSIDE THIS PAGE CAN SEE A DATAGRAM THAT NEVER ARRIVED.
+#
+# The three error deltas are all asserted zero, new_dataErrors included. The
+# first cut of this verdict omitted new_dataErrors while B2 and B3 both require
+# it, which would have let the relay start refusing destinations by policy --
+# what happens without --allow-private, and what looks like silence from
+# anywhere else -- without B4 noticing. Both arms measured 0, so adding it
+# changed no result; it was a hole in the check, not a wrong reading.
 # That half of the claim is the relay's own log, which must show
 #   [bridge] discarded N datagrams so far (--drop 0.05)
 # and is checked by web/tools/run-bridge-loss-arm.sh, not from in here. Run
@@ -540,7 +547,7 @@ until:1:240000:[GATEWAIT] SCORED-2
 until:1:240000:[GATEWAIT] STARTED-3
 wait:2000
 shot:13b-a-further-round-completed
-eval:(async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const dep=()=>live.reduce((a,h)=>a+((b.queues[h]||[]).length),0);const p1=dep();await new Promise(rr=>setTimeout(rr,300));const p2=dep();const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending_before:p1,pending_after:p2,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.draining=p1<=3&&p2<=3;r.PASS=r.rounds_started>=3&&r.rounds_scored>=2&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.still_alive;console.log('[BRIDGEGATE] B4 a-further-round-with-datagrams-going-missing '+JSON.stringify(r));return 'B4 '+r.PASS})()
+eval:(async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const dep=()=>live.reduce((a,h)=>a+((b.queues[h]||[]).length),0);const p1=dep();await new Promise(rr=>setTimeout(rr,300));const p2=dep();const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending_before:p1,pending_after:p2,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.draining=p1<=3&&p2<=3;r.PASS=r.rounds_started>=3&&r.rounds_scored>=2&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.still_alive;console.log('[BRIDGEGATE] B4 a-further-round-with-datagrams-going-missing '+JSON.stringify(r));return 'B4 '+r.PASS})()
 
 # The gap readout for the whole session. This is the number the loss table in
 # docs/evidence/m-a-bridge/README.md is built from.

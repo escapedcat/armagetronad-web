@@ -170,9 +170,14 @@ shot:06-on-the-grid-of-a-real-network-game
 # arm's block is nothing but waits: no key is pressed, so nothing can be
 # steering the cycle, which is the point of running it rather than assuming it.
 # ===========================================================================
-mark:WINDOW-OPEN-ARM-@@ARM@@
-@@INPUT@@
-mark:WINDOW-CLOSE-ARM-@@ARM@@
+mark:WINDOW-OPEN-ARM-control
+wait:60000
+shot:i1-control-no-key-pressed-60s
+wait:60000
+shot:i2-control-no-key-pressed-120s
+wait:60000
+shot:i3-control-no-key-pressed-180s
+mark:WINDOW-CLOSE-ARM-control
 wait:3000
 shot:07-window-closed
 
@@ -191,4 +196,4 @@ shot:07-window-closed
 # apart, and asks that the queue be shallow both times -- a wedged consumer
 # shows a queue that grows, which this catches and an instantaneous zero does
 # not.
-eval:(async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const depth=()=>live.reduce((n,h)=>n+((b.queues[h]||[]).length),0);const p1=depth();await new Promise(r=>setTimeout(r,300));const p2=depth();const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={arm:'@@ARM@@',rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending_before:p1,pending_after:p2,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.draining=p1<=3&&p2<=3;r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.PASS=r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.rounds_started>=2&&r.still_alive;console.log('[STEERGATE] @@ARM@@ client-side-context '+JSON.stringify(r));return '@@ARM@@ client-context '+r.PASS})()
+eval:(async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const depth=()=>live.reduce((n,h)=>n+((b.queues[h]||[]).length),0);const p1=depth();await new Promise(r=>setTimeout(r,300));const p2=depth();const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={arm:'control',rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending_before:p1,pending_after:p2,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.draining=p1<=3&&p2<=3;r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.PASS=r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.rounds_started>=2&&r.still_alive;console.log('[STEERGATE] control client-side-context '+JSON.stringify(r));return 'control client-context '+r.PASS})()

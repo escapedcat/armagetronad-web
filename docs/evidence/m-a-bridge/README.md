@@ -58,6 +58,26 @@ before the server's own `[L] DEATH_SUICIDE web_user`. Nothing about that reading
 passes through the browser, and it is collected from `docker logs aa-server`
 after the browser is gone.
 
+### The arena's size and the cycle's speed drop out of the argument
+
+Neither is ever needed, and it does not matter that `SIZE_FACTOR 0` taking
+effect was never confirmed. The bound is *measured*, in the same configuration,
+on the same geometry, round after round:
+
+- the server logs `Creating grid...` and `Deleting grid...` once per round, so
+  the spawn points are reconstructed every round;
+- a fresh `gSpawnPoint` has `lastTimeUsed = se_GameTime()-1000000` and
+  `numberOfUses = 0` (`src/tron/gSpawn.cpp:43`), so
+  `Danger() = numberOfUses + 100/(se_GameTime()+10-lastTimeUsed)`
+  (`gSpawn.cpp:73`) is **identical** for every spawn point on a cleared grid;
+- `gArena::LeastDangerousSpawnPoint` replaces its candidate only on
+  `newDanger < mindanger - EPS` (`src/tron/gArena.cpp:126`) — a strict
+  improvement — so on a tie the **first** spawn point wins.
+
+Every round is therefore the same spawn on a cleared grid. Whatever the
+straight-line time to the rim is, it is the same number every round, and the
+comparison is between two arms that share it.
+
 ### Both arms were run. The control pressed nothing.
 
 `web/tools/run-steer-arm.sh` refuses to run a control arm whose measurement
@@ -74,19 +94,51 @@ Per-round, steering: 13.95, 2.63, 3.17, 9.58, 4.65, **21.66**, 4.16, 5.22,
 3.63, 9.85 s. Control, all twelve: 5.50, 5.25, 5.26, 5.22, 5.44, 5.44, 5.42,
 5.24, 5.21, 5.21, 5.19, 5.22 s.
 
-### Two independent readings of the same proof
+### The proof, and what actually carries it
 
-1. **The steering arm outlived the no-steer bound by +16.17 s** (21.66 s against
-   a measured 5.50 s ceiling — 3.9×). The server simulates that cycle. For the
-   server's clock to record a longer life, the server's cycle must have turned,
-   whatever the browser was drawing on its own screen.
-2. **Five of the ten steering rounds ended *sooner* than the control's fastest
-   round** (2.63, 3.17, 4.16, 3.63, 4.65 s against 5.19 s). A cycle going
-   straight cannot reach a wall before it reaches the rim, because there is
-   nothing else in the arena. An early death is a direction change — and this is
-   the reading that rules out the alternative explanation, a key bound to the
-   *brake* rather than to a turn: braking can only ever delay the rim, never
-   bring a wall closer.
+1. **The steering arm outlived the no-steer bound** — 21.66 s against a measured
+   5.50 s ceiling. The server simulates that cycle, so for its clock to record a
+   longer life the server's cycle must have turned, whatever the browser was
+   drawing on its own screen.
+2. **Some steering rounds ended *sooner* than the control's fastest** (2.63 s
+   against 5.19 s). Nothing else is in the arena, so a cycle going straight
+   cannot reach a wall before the rim: an early death is a direction change.
+
+**One binding has to explain both tails, and that is the force of the result.**
+A key bound to the *brake* explains the long survivals only — braking can delay
+the rim, never bring a wall closer. Anything that merely killed the cycle early
+explains the short ones only. Only a change of **direction** explains 21.66 s
+and 2.63 s coming out of the same key. **One early round is sufficient for
+that**, which is why the analyser requires one of each rather than a majority of
+either. The per-arm counts are printed for completeness and are *not* a
+statistic; they should not be quoted as one.
+
+### The same comparison on a four-times-finer clock
+
+The survival figures above are quantised to the 0.25 s
+`LADDERLOG_GAME_TIME_INTERVAL`, so the control's **0.30 s "spread" is very
+nearly the sampling floor, not measured variation** — the instrument cannot
+resolve anything smaller. The server also prints its own per-round
+`Time: N seconds` to four decimals, and with the AIs gone and `GAME_TYPE 0` the
+round ends when the sole player dies, so `Time = survival + a fixed inter-round
+overhead`. The overhead cancels in a difference. Same log, equally
+server-authored, about four times finer:
+
+| | comparable rounds | per-round `Time:` | spread |
+| --- | --- | --- | --- |
+| control, run 1 | 10 | 14.7138 s – 14.7787 s | **0.0649 s** |
+| control, run 2 | 10 | 14.7028 s – 14.8170 s | **0.1142 s** |
+| control, run 3 | 11 | 14.6871 s – 14.7849 s | **0.0978 s** |
+| steer, run 1 | 9 | longest **30.8223 s** | — |
+| steer, run 2 | 10 | longest **19.7447 s** | — |
+| steer, run 3 | 9 | longest **24.7693 s** | — |
+
+The three steering arms beat their control's longest round by **+16.0436 s**,
+**+4.9277 s** and **+9.9844 s**, against a threshold the data set fixes for
+itself: five times the control's own spread, i.e. 0.5000 s, 0.5710 s and
+0.5000 s. "Comparable" excludes
+a round with no logged death and the last round of a match, whose `Time` includes
+the match teardown (23.8 s against its neighbours' 14.7 s).
 
 Corroborating, from the server's own byte counters: 70 036 bytes received in the
 control arm against 78 588 in the steering arm.
@@ -106,15 +158,20 @@ interval, same 180 s window, a fresh container each arm.
 | --- | --- | --- | --- |
 | control, run 1 | 12 | 5.19 s – 5.50 s | 0.30 s |
 | control, run 2 | 12 | 5.18 s – 5.50 s | 0.31 s |
+| control, run 3 | 12 | 5.18 s – 5.46 s | 0.28 s |
 | steer, run 1 | 10 | 2.63 s – **21.66 s** | 19.03 s |
 | steer, run 2 | 11 | 2.84 s – **11.38 s** | 8.54 s |
+| steer, run 3 | 10 | 2.62 s – **15.49 s** | 12.87 s |
 
-The two controls agree to a hundredth of a second at both ends, over 24 rounds
-between them, with no key pressed in either. That agreement is worth as much as
-the differential: it says the no-steer bound is a property of the arena and the
-cycle's speed, not a lucky run. Run 2's steering arm beat it by +5.88 s and had
-**7 of 11** rounds finish sooner than the control's fastest. Both runs prove it
-on both counts; `task4/steer2/verdict.log` is the second run's full output.
+The two controls land in the same 0.25 s sampling bucket at both ends, over 24
+rounds between them, with no key pressed in either — and on the finer per-round
+clock they agree to 0.11 s. That agreement is worth as much as the differential:
+it says the no-steer bound is a property of the arena and the cycle's speed, not
+a lucky run. Run 2's steering arm beat it by +5.88 s on the coarse clock and
++4.93 s on the fine one, with rounds falling on both sides of the control band.
+Both runs prove it on both counts; `task4/steer2/verdict.log` is the second run's
+full output, and `task4/steer3/` is a third pair, run after the gating fix in fix round 1 and
+the one the committed template actually produced.
 
 Run 2 also confirms the one defect run 1 exposed in the *client-side context*
 line — which is context, never the verdict. Run 1 reported `PASS:false` on it
@@ -148,7 +205,28 @@ contain it.** These numbers are a lower bound on what a lossy path costs a
 browser player, not the whole bill. Producing the other half needs an option
 that stalls the WebSocket leg, which `--drop` is not; that belongs to M-D.
 
-### Round-trip cost
+### Round-trip cost — and M-A ships WITHOUT a defensible figure for it
+
+Read the caveat before the table, because it applies to every row and not just
+to the one I disowned first.
+
+**These rows are single-sample and confounded, and no number in them should be
+planned around.** Confounded, specifically: the loss arms ran against the
+*shipped* server config, which fills the arena with three AIs
+(`ai_team gcc/latex/gdb` appears in both console logs). With AIs in it a round
+ends when the AI play ends, not when the browser player does — so round length
+is largely set by a game the browser player is not driving. The two arms did not
+even play the same game: round 1 scored **−4** in the loss arm against **−2** in
+the clean arm, i.e. different deaths, different rounds. Subtracting one from the
+other measures the difference between two games at least as much as it measures
+loss.
+
+That is not repaired by re-running, and it was a deliberate decision not to:
+`--drop` cannot induce the head-of-line stall that the cost-of-loss question is
+ultimately being asked about (see below), so a cleaner number would be a
+cleaner answer to a question this instrument cannot answer. **The load-bearing
+result in this section is the tail, which did not move; the round-time rows are
+recorded as observations and are not a cost model.**
 
 Both arms reached all seven verdicts, `PASS:true`, no `PASS:false`, and no
 Emscripten abort. From the driver's own elapsed-ms stamps:
@@ -161,9 +239,18 @@ Emscripten abort. From the driver's own elapsed-ms stamps:
 | round 2 → round 3 | 12.69 s | 13.24 s | +0.55 s (+4 %) |
 | connect → two full rounds scored | 27.33 s | 29.77 s | **+2.44 s (+9 %)** |
 
-The resend layer is visibly doing the work: the client sent **336** datagrams on
-its live handle in the clean arm against **376** under loss (+12 %), and the
-server's own counters agree — 374 packets received against 398. The relay
+Every one of those deltas is a difference of single measurements between two
+arms that played different rounds. The +44 % roster figure is one sub-second
+interval measured once and should be ignored entirely; the +13 % round and +9 %
+two-round figures are the same kind of number with a bigger denominator, and are
+**not** a cost of loss.
+
+The one thing here that is not confounded by round content is the datagram
+count, because it counts what the client had to send rather than how long a game
+took: the client sent **336** datagrams on its live handle in the clean arm
+against **376** under loss (+12 %), and the server's own counters agree — 374
+packets received against 398. That is the resend layer doing its job, and it is
+a direct consequence of the discards rather than of what the AIs did. The relay
 reported discarding 50+ datagrams in the loss arm and 0 in the clean one, which
 is the only place the loss shows up at all; nothing inside the page can see a
 datagram that never arrived.
@@ -197,13 +284,19 @@ should window the sampler to inside a round. As it stands the tail column says
 ### So what does this say about WebTransport?
 
 Honestly: **less than the brief hoped, and the reason is instructive.** The
-game's own resend layer absorbs 5 % loss on the far leg at a cost of roughly a
-tenth of a round, which is a good result for playability and a weak argument for
-changing transport. The argument for WebTransport is head-of-line blocking on
-the *browser* leg, and `--drop` cannot exercise it by construction. M-D needs a
-delay/stall option on the WebSocket leg, not a drop option, and until it has one
-the case for WebTransport here rests on the mechanism rather than on a
-measurement.
+argument for WebTransport is head-of-line blocking on the *browser* leg, and
+`--drop` cannot exercise it by construction: it discards at the relay, so it
+models loss on the relay→server UDP leg, while the browser→relay leg is TCP
+where a datagram cannot be lost, only delayed behind a retransmitting segment.
+**M-D needs an option that stalls the WebSocket leg, not one that drops on the
+UDP leg.** Until it has one, the case for WebTransport here rests on the
+mechanism rather than on a measurement.
+
+And **M-A therefore ships without a defensible cost-of-loss figure.** What it
+ships instead, stated as narrowly as the evidence allows: the client survives 5 %
+far-leg loss, completes rounds under it, sends about 12 % more datagrams to do
+so, and the delivery tail does not move. Anyone who needs a number for the cost
+of a lossy path has to build the instrument first.
 
 ---
 

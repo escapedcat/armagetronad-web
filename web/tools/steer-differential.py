@@ -32,7 +32,7 @@ import re, sys, os
 GAME_TIME = re.compile(r'^\[L\] GAME_TIME\s+(-?[\d.]+)')
 DEATH     = re.compile(r'^\[L\] (DEATH_SUICIDE|DEATH_FRAG|DEATH_TEAMKILL)\s+(\S+)')
 NEW_ROUND = re.compile(r'^\[L\] NEW_ROUND')
-GO        = re.compile(r'^\[0\] Go \(round (\d+) of')
+GO        = re.compile(r'^\[0\] Go \(round (\d+) of (\d+)\)')
 WALL      = re.compile(r'^\[0\] Time:\s+([\d.]+) seconds')
 RECV      = re.compile(r'^Received:\s+(\d+) bytes in (\d+) packets')
 ENTERED   = re.compile(r'^\[L\] PLAYER_ENTERED\s+(\S+)')
@@ -60,12 +60,19 @@ def parse(path):
         line = raw.rstrip('\n')
         m = GO.match(line)
         if m:
-            cur = {'round': int(m.group(1)), 'survival': None, 'bracket': None, 'cause': None}
+            n, of = int(m.group(1)), int(m.group(2))
+            # is_final: the last round of a match. Its `Time:` line includes the
+            # match teardown and the score reset, so it is not comparable with
+            # the others and is excluded from the wall-clock reading below. In
+            # the control run that is the difference between 14.7s and 23.8s.
+            cur = {'round': n, 'of': of, 'is_final': n == of, 'wall': None,
+                   'survival': None, 'bracket': None, 'cause': None}
             rounds.append(cur)
             last_gt = None
             continue
         if NEW_ROUND.match(line) and cur is None:
-            cur = {'round': 0, 'survival': None, 'bracket': None, 'cause': None}
+            cur = {'round': 0, 'of': 0, 'is_final': False, 'wall': None,
+                   'survival': None, 'bracket': None, 'cause': None}
             rounds.append(cur)
             last_gt = None
             continue
@@ -85,7 +92,15 @@ def parse(path):
             continue
         m = WALL.match(line)
         if m:
-            wall.append(float(m.group(1)))
+            t = float(m.group(1))
+            wall.append(t)
+            # `Time:` comes AFTER the round it measures, so it belongs to the
+            # round still open. A Time: with no round open is the pre-game
+            # period -- the nap before anybody connected, 88.65 s in the control
+            # run -- and belongs to no round at all.
+            if cur is not None and cur['wall'] is None:
+                cur['wall'] = t
+                cur = None
             continue
         m = RECV.match(line)
         if m:
@@ -102,6 +117,28 @@ def parse(path):
             'path': path}
 
 
+def clean_walls(d):
+    """The per-round `Time:` values that can be compared with each other.
+
+    THIS IS THE FINER INSTRUMENT AND IT WAS ALREADY IN THE LOG. The survival
+    figures above are quantised to the LADDERLOG_GAME_TIME_INTERVAL of 0.25 s,
+    so the control's 0.30 s "spread" is very nearly the sampling floor and not
+    measured variation -- it cannot resolve anything smaller. The server also
+    prints its own per-round `Time: N seconds` to four decimals, and with the
+    AIs gone and GAME_TYPE 0 the round ends when the sole player dies, so
+    Time = survival + a fixed inter-round overhead. The overhead cancels in a
+    difference, which makes these lines a reading of the same quantity about
+    four times finer, equally server-authored, and free.
+
+    Two kinds are excluded: a round with no logged death (the run ended
+    mid-round), and the last round of a match, whose Time includes the match
+    teardown -- 23.8 s against its neighbours' 14.7 s in the control run.
+    """
+    return [r['wall'] for r in d['rounds']
+            if r.get('wall') is not None and r['survival'] is not None
+            and not r.get('is_final')]
+
+
 def report(name, d):
     done = [r for r in d['rounds'] if r['survival'] is not None]
     print(f"--- arm {name}  ({d['path']})")
@@ -112,9 +149,14 @@ def report(name, d):
         hi_s = 'no later reading' if hi is None else f'{hi:.2f}'
         print(f"      round {r['round']:>3}: died at server game-time {r['survival']:>7.2f}s "
               f"(bracketed {lo:.2f}..{hi_s})  {r['cause']} {r.get('who')}")
+    comparable = clean_walls(d)
     if d['wall']:
         print(f"    the server's own per-round Time: lines: "
               + ', '.join(f'{w:.1f}s' for w in d['wall']))
+    if comparable:
+        print(f"    of those, the {len(comparable)} that are comparable "
+              f"(a death logged, not the last round of a match): "
+              + ', '.join(f'{w:.4f}s' for w in comparable))
     print(f"    the server received {d['recv_bytes']} bytes in {d['recv_pkts']} packets "
           f"across the rounds it reported")
     return [r['survival'] for r in done]
@@ -141,14 +183,32 @@ def main():
         if not surv[a]:
             problems.append(f'the {a} arm produced no round with a logged death, so there is '
                             f'nothing to compare; the run did not happen')
-        if data[a]['joins'] and len(data[a]['joins']) > 1:
-            problems.append(f'the {a} arm had more than one cycle in the arena '
-                            f'({data[a]["joins"]}); an AI wall can end a round early and the '
-                            f'rim bound stops meaning anything')
+        # EXACTLY ONE, not "not more than one". The first cut wrote
+        # `if joins and len(joins) > 1`, which passes when the list is EMPTY --
+        # and an empty list is the precise symptom of the parsing bug this
+        # guard was written to survive: the regex had been anchored on `[0]`
+        # while the server decorates a join with the joining client's own id.
+        # A guard that is satisfied by having found nothing is not a guard.
+        if len(data[a]['joins']) != 1:
+            problems.append(f'the {a} arm logged {len(data[a]["joins"])} players entering the '
+                            f'game ({data[a]["joins"]}), and this measurement needs EXACTLY '
+                            f'ONE cycle in the arena: more than one means an AI wall can end '
+                            f'a round early and the rim bound stops meaning anything, and '
+                            f'none means the log was not parsed and nothing here can be '
+                            f'trusted')
     if problems:
         print('THIS COMPARISON CANNOT BE MADE:')
         for p in problems:
             print('  - ' + p)
+        print('\nVERDICT: INVALID')
+        return 2
+
+    walls = {a: clean_walls(data[a]) for a in ('control', 'steer')}
+    if not walls['control'] or not walls['steer']:
+        print('THIS COMPARISON CANNOT BE MADE:')
+        print('  - one arm has no comparable per-round Time: line, so the finer of the two')
+        print('    readings is unavailable and this file will not fall back to the coarser')
+        print('    one alone')
         print('\nVERDICT: INVALID')
         return 2
 
@@ -183,7 +243,31 @@ def main():
     print(f'and {len(early)} of its {len(surv["steer"])} rounds ended SOONER than the '
           f'control\'s fastest ({c_min:.2f}s): '
           + (', '.join(f'{t:.2f}s' for t in early) if early else 'none'))
-    ok = beat > margin and len(early) > 0
+    # THE WALL-CLOCK READING, and the margin comes from the measured noise
+    # rather than from a percentage anybody chose. The control's own spread in
+    # these figures IS the noise floor of the instrument, so requiring five
+    # times it (floored at 0.5 s) is a threshold the data set itself fixes.
+    cw_max, cw_min = max(walls['control']), min(walls['control'])
+    cw_spread = cw_max - cw_min
+    sw_max = max(walls['steer'])
+    beat_wall = sw_max - cw_max
+    margin_wall = max(0.5, 5 * cw_spread)
+    print()
+    print(f'THE SAME COMPARISON ON THE SERVER\'S OWN PER-ROUND CLOCK, which resolves about')
+    print(f'four times finer than the 0.25 s GAME_TIME sampling above:')
+    print(f'  control: {len(walls["control"])} comparable rounds, '
+          f'{cw_min:.4f}s..{cw_max:.4f}s, spread {cw_spread:.4f}s  <- the NOISE FLOOR, measured')
+    print(f'  steer  : {len(walls["steer"])} comparable rounds, longest {sw_max:.4f}s')
+    print(f'  the steering arm beat the control\'s longest round by {beat_wall:+.4f}s '
+          f'(required: more than {margin_wall:.4f}s = 5x the control\'s own spread)')
+    # A control whose own rounds disagree by a lot is not a bound, whatever the
+    # steering arm did, so this is a validity condition and not a nicety.
+    tight = cw_spread < 1.0
+    if not tight:
+        print(f'  BUT THE CONTROL\'S OWN ROUNDS DISAGREE BY {cw_spread:.4f}s, which is too much '
+              f'for it to\n    stand as a bound: the configuration is not behaving '
+              f'deterministically.')
+    ok = beat > margin and len(early) > 0 and beat_wall > margin_wall and tight
     print()
     if ok:
         print('VERDICT: A STEERING KEYPRESS REACHED THE SERVER, ON TWO INDEPENDENT COUNTS.')
@@ -195,6 +279,13 @@ def main():
         print('     in the arena: a cycle going straight cannot reach a wall before the rim,')
         print('     so an early death is a direction change. This is what rules out the key')
         print('     having been bound to the brake, which could only ever delay the rim.')
+        print()
+        print('  ONE BINDING HAS TO EXPLAIN BOTH TAILS, and that is the force of it. A brake')
+        print('  explains the long survivals only. Anything that merely killed the cycle')
+        print('  early explains the short ones only. Only a change of DIRECTION explains')
+        print(f'  {s_max:.2f}s and {min(surv["steer"]):.2f}s coming out of the same key. ONE early')
+        print('  round is sufficient for that, which is why this file requires one of each')
+        print('  and not a majority of either -- the counts above are not a statistic.')
     else:
         print('VERDICT: NOT PROVEN.')
         if beat <= margin:
@@ -203,6 +294,9 @@ def main():
         if not early:
             print('  And no round ended sooner than the control\'s fastest, so a key bound to')
             print('  the brake rather than to a turn is not excluded.')
+        if beat_wall <= margin_wall:
+            print('  And on the finer per-round clock the difference is inside five times the')
+            print('  control\'s own spread, i.e. inside the instrument\'s noise.')
         print('  That is either an input that never arrived or a steering program that did')
         print('  not exercise the arena; the per-round table above says which, and neither')
         print('  may be reported as a pass.')
