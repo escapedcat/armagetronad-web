@@ -982,7 +982,7 @@ Shipping this changes the maintainer's role from developer to **service operator
 
 **Bridge service, the eventual M-C production shape — none of this exists yet:** ~~small Go binary (goroutine/session)~~ **corrected 2026-09-10 (M-A task 5): M-A actually built this in Node (`ws`+`dgram`, no build step), not Go — see the M-A milestone line below and the M-A block**, behind Caddy for wss/TLS, Docker Compose on a €5–9/mo EU VPS (community servers cluster EU/US; ~+5–25 ms added RTT same-region). Anti-abuse: destination policy (no private/multicast; port allowlist 4533–4599 + config), unanswered-flow budget (kills reflection), 32/64 KB/s per-session caps, per-IP session cap 4, Origin allowlist, JSON-line logs + Prometheus counters. ~~Known risk: servers cap clients per IP (`MAX_CLIENTS_SAME_IP_SOFT=4`/`HARD=8`) — mitigate with secondary IPs and~~ **re-sized 2026-09-10 (see above): the per-IP cap cannot bite at this population; what remains is** talking to server admins before launch. **M-A already built the destination policy** (private/multicast denied, port allowlist 4533–4599) **in `bridge/policy.mjs`; wss/Caddy/VPS/rate-caps/Origin-allowlist/metrics are still unbuilt M-C work**, not a description of what runs today.
 
-- **M-A (1–2 wks):** shim + JS lib + minimal bridge (**Node, plain `ws`, on the maintainer's own machine — no VPS, no TLS, nothing public in this milestone**), join local dockerized dedicated server via custom-connect; verify full round, resend-under-loss, ~~WS-drop recovery~~ **corrected 2026-09-10 (M-A final review): WS-drop SURVIVAL, not recovery. There is no reconnection and M-A never built one: `web/library_bridge.js` constructs a WebSocket only when `AABridge.ws` is null and nothing ever nulls it, so after `onclose` the bridge is dead for the life of the page and the player has to reload. What B4 measured is that the module stays alive and keeps painting — which is what `docs/evidence/m-a-bridge/README.md` claims, correctly; this line over-claimed against its own evidence. Reconnection is later-milestone work and was deliberately NOT added to make this sentence true**; then one real community server. Gate: browser client completes a round on an unmodified community server through the bridge. Spec: `docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md`. **Done except the last clause — see the M-A block below for what actually shipped; the real-community-server gate is task 6, not yet attempted.**
+- **M-A (1–2 wks):** shim + JS lib + minimal bridge (**Node, plain `ws`, on the maintainer's own machine — no VPS, no TLS, nothing public in this milestone**), join local dockerized dedicated server via custom-connect; verify full round, resend-under-loss, ~~WS-drop recovery~~ **corrected 2026-09-10 (M-A final review): WS-drop SURVIVAL, not recovery. There is no reconnection and M-A never built one: `web/library_bridge.js` constructs a WebSocket only when `AABridge.ws` is null and nothing ever nulls it, so after `onclose` the bridge is dead for the life of the page and the player has to reload. What B4 measured is that the module stays alive and keeps painting — which is what `docs/evidence/m-a-bridge/README.md` claims, correctly; this line over-claimed against its own evidence. Reconnection is later-milestone work and was deliberately NOT added to make this sentence true**; then one real community server. Gate: browser client completes a round on an unmodified community server through the bridge. Spec: `docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md`. **Done except the last clause, and the last clause is the gate — see the M-A block below for what actually shipped. Task 6 attempted it on 2026-09-12 against two empty community servers and BOTH FAILED: 50 datagrams out to each, none back, no round. So "browser client completes a round on an unmodified community server through the bridge" is UNMET, and M-A closes without it.**
 - **M-B (1–2 wks):** fake-DNS + master list (`master1-4.armagetronad.org:4533`) + in-game server browser through bridge. Gate: server count/pings ≈ native client; joins from list.
 - **M-C (1–2 wks):** wss/Caddy, policies, rate limits, metrics, prod deploy; load test 50 sessions, abuse tests.
 - **M-D (stretch):** US bridge + region picker; REST lobby cache; WebTransport datagrams; egress-IP pooling.
@@ -1002,8 +1002,10 @@ Shipping this changes the maintainer's role from developer to **service operator
 > (private/multicast denied, ports 4533–4599, `--allow-private` for the dockerized test server)
 > and a `--drop <fraction>` testing aid. `bridge/test-server/` builds `aa-dedicated`, a stock
 > dedicated server from this same tree in Docker — the opponent every gate below actually
-> played against. No community server was ever contacted; that is M-A task 6 and needs the
-> maintainer's explicit permission first.
+> played against — **the only opponent any gate here ever beat.** Two community servers were
+> contacted in task 6 (2026-09-12, with permission, both empty first) and **neither answered**,
+> so every *working* reading in this milestone is still against that container. See the B6
+> paragraph below.
 >
 > **The four gate verdicts** (spec: `docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md`):
 > - **B1 — it connects.** The server's own log shows one `Received login` and one
@@ -1045,8 +1047,26 @@ Shipping this changes the maintainer's role from developer to **service operator
 > as a timing-sensitive flake in the assertion, not a regression. The dedicated wasm, rebuilt
 > clean (`rm -rf web/build-m0 web/dist-m0` first), came out **2,488,298 bytes, md5
 > `9718a2a64978cb6e9b95ea2f0454cca5`** — the pin, unmoved. `docs/evidence/m-a-bridge/README.md`.
-> **B6 — a real server — is explicitly not this milestone's claim**; it is task 6, gated on the
-> maintainer's permission to contact one.
+> **B6 — a real server — WAS attempted, with permission, on 2026-09-12, and it FAILED.** Two
+> empty community servers were contacted one after the other — `bob's | DEFAULT SETTINGS [EU]`
+> at `188.245.106.232:4537` and `Unnamed Server` at `185.127.17.61:4537`. Each got 50 datagrams
+> and returned **none**: no round, no reply, no refusal. **So the milestone's headline gate is
+> unmet, and M-A has no latency figure for a real network** — the only round-trip numbers it has
+> are loopback. What the two attempts did establish is narrower: the destination policy admits a
+> real public address (both arms ran *without* `--allow-private` and nothing was refused), the
+> client dialled the right host, and a connect that goes nowhere does not take the page down.
+> The login datagram is byte-identical in the failing arms and in the control, where the
+> container answers it instantly — so the client is not doing anything different when it talks
+> to a stranger. Outbound UDP from that machine is fine (DNS and STUN both answer, on arbitrary
+> ports, through the same NAT) and ICMP to the first host is 126 ms at 0 % loss, so neither the
+> relay nor the link is the explanation. **Two hypotheses remain and they are not separated:**
+> (a) this tree advertises protocol **17** while 121 of the 138 listed servers advertise **18**,
+> all of them `sty+ct+ap`/`bob` forks, so the live community may simply not answer a 17 client
+> whatever its advertised `version_min="0"` claims; (b) both servers tried were on port **4537**
+> and nothing could test UDP into the 4533–4599 range, because every endpoint in it belongs to
+> somebody's game. **The experiment that settles it is one connect to one of the thirteen empty
+> `version_max="17"` servers**, and it was not made: the task allowed one attempt and one retry,
+> and both were spent. `docs/evidence/m-a-bridge/README.md` §5, `docs/evidence/m-a-bridge/b6/`.
 >
 > **Two things a later milestone must not rediscover, on top of trap 4 above:**
 > - **The `src/emscripten/` rule.** `$(SRCS)` in `web/Makefile` wildcards `src/network/*.cpp`

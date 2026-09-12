@@ -147,6 +147,25 @@
 # The five PASS lines above are all statements the client makes about itself.
 # This one is the server saying a datagram arrived from somewhere and it gave
 # that somewhere a player. Without it the run has not been checked.
+#
+# ---------------------------------------------------------------------------
+# B6 IS NOT IN THIS FILE, DELIBERATELY. It is web/tools/bridge-gate-b6.steps,
+# driven by web/tools/run-bridge-b6.sh, and it could not live here for two
+# reasons that file states in full: B5 at the end of this one KILLS THE RELAY
+# and has to stay last, so anything appended after it would run with no
+# transport at all and could only time out -- and `until:` does not throw, so
+# the PASS line after it would print anyway. And B6 dials a community server,
+# which means an UNCOMMITTED edit to CUSTOM_SERVER_NAME in
+# web/webdefaults/autoexec.cfg; this gate's address stays 127.0.0.1 and the
+# repo never ships anyone else's.
+#
+# B6 also carries an instrument this file does not have: an ack-paired ROUND
+# TRIP, recovered from the wire the way nWaitForAck::Ackt recovers it
+# (src/network/nNetwork.cpp:846). The gap sampler further down measures how
+# often the far end SPEAKS, which is a different quantity and cannot price a
+# real network -- on loopback and across a continent it can read the same.
+# See docs/evidence/m-a-bridge/README.md section 5.
+# ---------------------------------------------------------------------------
 
 until:1:90000:[PERSIST] populate ok
 wait:1000

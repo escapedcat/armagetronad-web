@@ -1,0 +1,184 @@
+[    737ms] [harness] chrome: Chrome/153.0.8010.37
+[    738ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010
+[      9ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     26ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     27ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[     37ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     58ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     66ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     76ms] [page] load event fired
+[     84ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    133ms] [console.log] [PERSIST] populate ok in 32ms
+[    212ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    365ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    365ms] [console.log] [CAMERA] stock camera (factor 1)
+[    366ms] [console.log] [SPARKS] stock sparks, nothing written
+[    366ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    368ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    368ms] [console.log] [BOOT] autostart: calling main
+[    371ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    372ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    372ms] [console.error] 
+[    372ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    372ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    372ms] [console.log] 
+[    497ms] [console.log] [L] ENCODING latin1
+[    504ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    506ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    524ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    527ms] [console.error] TODO: glShadeModel
+[    530ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    642ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[   1213ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   1214ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10277ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/01-boot1-language-menu.png
+[  10308ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10308ms] [harness] key Enter (1/1)
+[  13672ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/02-boot1-first-setup.png
+[  13694ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  13695ms] [console.log] [L] TEAM_CREATED web_user
+[  13696ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  13697ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  13699ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  13699ms] [console.log] [L] NEW_ROUND 2026-09-12 13:39:24 UTC+0200
+[  13717ms] [console.log] [L] TEAM_CREATED ai_team
+[  13718ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  13718ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  13718ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  13719ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  13739ms] [harness] key Escape (1/1)
+[  13740ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  13741ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  13741ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  14006ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  14040ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14040ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17041ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17046ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17046ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17047ms] [harness] eval location.reload() => undefined
+[  17047ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17063ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  17064ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  17066ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17068ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17069ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17073ms] [page] load event fired
+[  17085ms] [console.log] [PERSIST] populate ok in 5ms
+[  17122ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17123ms] [console.log] [CAMERA] stock camera (factor 1)
+[  17123ms] [console.log] [SPARKS] stock sparks, nothing written
+[  17123ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  17127ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17127ms] [console.log] [BOOT] autostart: calling main
+[  17128ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17129ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17129ms] [console.error] 
+[  17129ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17129ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17129ms] [console.log] 
+[  17149ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  17150ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  17150ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  17246ms] [console.log] [L] ENCODING latin1
+[  17248ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17265ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17267ms] [console.error] TODO: glShadeModel
+[  17270ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  29238ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/03-boot2-main-menu.png
+[  29239ms] [harness] eval (()=>{const o=console.log;if(console.log.__aa)return 'already';window.__peers=[];const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[BRIDGE] peer ')===0)window.__peers.push(s)}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'peer-line tap installed'})() => "peer-line tap installed"
+[  29240ms] [harness] eval (()=>{if(window.__lTap)return 'already';window.__lTap=true;window.__L={};const o=console.log;const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[L] ')===0){const k=s.slice(4).split(' ')[0];window.__L[k]=(window.__L[k]||0)+1}}catch(e){}return o.apply(console,arguments)};console.log=w;return 'ladder-log tap installed'})() => "ladder-log tap installed"
+[  29240ms] [harness] eval (()=>{if(window.__gw)return 'already';window.__gw={};window.__gwTimer=setInterval(()=>{const L=window.__L||{};const say=(k)=>{if(!window.__gw[k]){window.__gw[k]=1;console.log('[GATEWAIT] '+k)}};const n=L.NEW_ROUND|0,sc=L.ROUND_SCORE_TEAM|0,ro=L.TEAM_PLAYER_ADDED|0;for(let i=1;i<=8;i++){if(ro>=i)say('ROSTER-'+i);if(n>=i)say('STARTED-'+i);if(sc>=i)say('SCORED-'+i)}},500);return 'gate-wait milestone ticker installed'})() => "gate-wait milestone ticker installed"
+[  29241ms] [harness] eval (()=>{if(window.__rttTap)return 'already';window.__rttTap=1;const R={sent:{},samples:[],addrs:{},outD:0,inD:0,parseFail:0};R.reset=function(){R.sent={};R.samples=[];R.addrs={};R.outD=0;R.inD=0;R.parseFail=0;return 'rtt state cleared'};window.__rtt=R;const head=(u)=>{if(u.length<7||u[0]!==1)return null;const al=u[6];if(u.length<7+al)return null;let a='';for(let i=0;i<al;i++)a+=String.fromCharCode(u[7+i]);return {type:u[1],addr:a,off:7+al}};const parse=(u,off)=>{const e=u.length-2;const out=[];let p=off;while(p+6<=e){const d=(u[p]<<8)|u[p+1];const id=(u[p+2]<<8)|u[p+3];const dl=(u[p+4]<<8)|u[p+5];p+=6;if(p+dl*2>e)return out;if(d===1){const a=[];for(let i=0;i<dl;i++)a.push((u[p+i*2]<<8)|u[p+i*2+1]);out.push({d:1,acks:a})}else out.push({d:d,id:id});p+=dl*2}return out};const onOut=(u)=>{const h=head(u);if(!h||h.type!==3)return;R.outD++;R.addrs[h.addr]=(R.addrs[h.addr]|0)+1;const ms=parse(u,h.off);if(!ms.length){R.parseFail++;return}const t=performance.now();for(const m of ms)if(m.d!==1&&m.id&&R.sent[m.id]===undefined)R.sent[m.id]=t};const onIn=(u)=>{const h=head(u);if(!h||h.type!==3)return;R.inD++;const ms=parse(u,h.off);if(!ms.length){R.parseFail++;return}const t=performance.now();for(const m of ms)if(m.d===1)for(const a of m.acks)if(R.sent[a]!==undefined){R.samples.push(Math.round((t-R.sent[a])*100)/100);delete R.sent[a]}};const proto=WebSocket.prototype;const realSend=proto.send;proto.send=function(d){try{onOut(d instanceof Uint8Array?d:new Uint8Array(d))}catch(e){}return realSend.apply(this,arguments)};const realOn=window.AABridge.onmessage;window.AABridge.onmessage=function(ev){try{onIn(new Uint8Array(ev.data))}catch(e){}return realOn.apply(this,arguments)};return 'ack-pairing rtt tap installed'})() => "ack-pairing rtt tap installed"
+[  29242ms] [console.log] [BRIDGEGATE] B6-0 configured-and-idle-until-asked {"present":true,"ws_constructed":false,"url_parsed":false,"url":null,"queues":0,"PASS":true}
+[  29242ms] [harness] eval (()=>{const b=window.AABridge;const r={present:!!b,ws_constructed:!!(b&&b.ws),url_parsed:b?b.urlChecked:null,url:b?b.url:null,queues:b?Object.keys(b.queues).length:null};r.PASS=!!b&&!r.ws_constructed&&r.url_parsed===false;console.log('[BRIDGEGATE] B6-0 configured-and-idle-until-asked '+JSON.stringify(r));return 'B6-0 '+r.PASS})() => "B6-0 true"
+[  29242ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  29276ms] [harness] key Enter (1/1)
+[  32155ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/04-play-game-menu-opens-on-multiplayer.png
+[  32155ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  32164ms] [console.log] [BRIDGE] open ws://127.0.0.1:8010
+[  32187ms] [harness] key Enter (1/1)
+[  35086ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/05-network-menu-opens-on-online-multiplayer.png
+[  35086ms] [harness] === ONE-DOWN-TO-LAN-MULTIPLAYER ===
+[  35120ms] [harness] key Down (1/1)
+[  37007ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/06-network-menu-lan-selected.png
+[  37007ms] [harness] === ENTER-3-LAN-BROWSE-ASKS-FOR-A-SOCKET ===
+[  37039ms] [harness] key Enter (1/1)
+[  37047ms] [console.log] [BRIDGE] handle 1 bound to udp port 55230
+[  37341ms] [harness] until 1x <<[BRIDGE] open>> (timeout 60000ms, have 1)
+[  37341ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] open>>
+[  37341ms] [harness] until 1x <<bound to udp port>> (timeout 60000ms, have 1)
+[  37341ms] [harness] until SATISFIED: saw 1x <<bound to udp port>>
+[  38535ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38538ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38543ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38548ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38559ms] [console.log] [BRIDGE] handle 2 bound to udp port 60140
+[  39403ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/07-lan-browser.png
+[  39403ms] [harness] === BACK-OUT-OF-THE-LAN-BROWSER ===
+[  39428ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  39436ms] [harness] key Escape (1/1)
+[  39444ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39449ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39454ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39460ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  42808ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/08-back-in-the-network-menu.png
+[  42809ms] [harness] eval (()=>{const b=window.AABridge;window.__base={dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0};return 'error-counter baseline '+JSON.stringify(window.__base)})() => "error-counter baseline {\"dropped\":0,\"sendFailures\":0,\"dataErrors\":8}"
+[  42809ms] [harness] eval window.__rtt.reset() => "rtt state cleared"
+[  42809ms] [harness] === B6-DOWN-3-FROM-LAN-TO-SERVER-BOOKMARKS ===
+[  42842ms] [harness] key Down (1/3)
+[  43176ms] [harness] key Down (2/3)
+[  43510ms] [harness] key Down (3/3)
+[  45392ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/09-network-menu-server-bookmarks-selected.png
+[  45392ms] [harness] === B6-ENTER-OPENS-BOOKMARKS-AND-TRANSFERS-CUSTOM_SERVER_NAME ===
+[  45425ms] [harness] key Enter (1/1)
+[  48803ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/10-bookmarks-menu-shows-the-address-about-to-be-dialled.png
+[  48803ms] [harness] === B6-ENTER-CONNECTS ===
+[  48836ms] [harness] key Enter (1/1)
+[  48872ms] [console.log] [BRIDGE] handle 3 bound to udp port 50422
+[  49138ms] [harness] until 1x <<[GATEWAIT] ROSTER-1>> (timeout 90000ms, have 0)
+[  53857ms] [console.log] [BRIDGE] handle 4 bound to udp port 61527
+[ 139156ms] [harness] until TIMED OUT after 90000ms: saw 0x <<[GATEWAIT] ROSTER-1>>, wanted 1
+[ 139156ms] [harness] until 1x <<[GATEWAIT] STARTED-1>> (timeout 90000ms, have 0)
+[ 229200ms] [harness] until TIMED OUT after 90000ms: saw 0x <<[GATEWAIT] STARTED-1>>, wanted 1
+[ 232263ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/11-on-the-grid.png
+[ 232264ms] [harness] eval (()=>{try{const b=window.AABridge;if(!b||!b.ws)return 'NO LIVE SOCKET - the sampler measured nothing';if(window.__gapTap)return 'already';window.__gapTap=true;window.__gaps=[];window.__gapLast=0;const inner=b.ws.onmessage;b.ws.onmessage=function(ev){const t=performance.now();if(window.__gapLast)window.__gaps.push(Math.round((t-window.__gapLast)*100)/100);window.__gapLast=t;return inner.apply(this,arguments)};return 'gap sampler installed on the live socket'}catch(e){return 'GAP SAMPLER FAILED: '+e}})() => "gap sampler installed on the live socket"
+[ 232264ms] [harness] === B6-STEER-WHILE-A-NETWORK-ROUND-IS-LIVE ===
+[ 232297ms] [harness] key Left (1/1)
+[ 233232ms] [harness] key Right (1/1)
+[ 234798ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/12-after-the-zigzag.png
+[ 234798ms] [harness] === B6-CLOSE-THE-BOX-SO-THE-ROUND-ENDS-WITHOUT-LOITERING ===
+[ 234831ms] [harness] key Left (1/1)
+[ 235866ms] [harness] key Left (1/1)
+[ 236901ms] [harness] key Left (1/1)
+[ 237935ms] [harness] key Left (1/1)
+[ 240799ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/13-after-closing-the-box.png
+[ 240800ms] [harness] until 1x <<[GATEWAIT] SCORED-1>> (timeout 180000ms, have 0)
+[ 420804ms] [harness] until TIMED OUT after 180000ms: saw 0x <<[GATEWAIT] SCORED-1>>, wanted 1
+[ 422373ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/14-the-round-was-scored.png
+[ 422373ms] [harness] until 1x <<[GATEWAIT] STARTED-2>> (timeout 90000ms, have 0)
+[ 512442ms] [harness] until TIMED OUT after 90000ms: saw 0x <<[GATEWAIT] STARTED-2>>, wanted 1
+[ 514014ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/15-a-second-round-started-so-the-first-one-really-ended.png
+[ 514324ms] [console.log] [BRIDGEGATE] B6 a-full-round-on-a-server-this-project-does-not-own {"rounds_started":0,"rounds_scored":0,"rosters":0,"peers":[],"peer_literal":0,"peer_synthetic":0,"dialled":{"185.127.17.61":50},"rtt_samples":0,"ws_readyState":1,"state":1,"live_handles":[],"bound":[],"sent_datagrams":[],"pending_before":0,"pending_after":0,"baseline":{"dropped":0,"sendFailures":0,"dataErrors":8},"new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,"lastDataError":"port 0 is outside the allowed range 4533-4599","canvas_w":1024,"canvas_h":768,"gl_err":0,"still_alive":true,"draining":true,"one_peer":false,"PASS":false}
+[ 514324ms] [harness] eval (async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const R=window.__rtt||{samples:[],addrs:{}};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const dep=()=>live.reduce((a,h)=>a+((b.queues[h]||[]).length),0);const p1=dep();await new Promise(rr=>setTimeout(rr,300));const p2=dep();const P=window.__peers||[];const lit=P.filter(l=>/\(literal\)/.test(l)).length;const syn=P.filter(l=>/\(synthetic\)/.test(l)).length;const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,rosters:L.TEAM_PLAYER_ADDED|0,peers:P,peer_literal:lit,peer_synthetic:syn,dialled:R.addrs,rtt_samples:R.samples.length,ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:live,bound:bound,sent_datagrams:sent,pending_before:p1,pending_after:p2,baseline:B,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,lastDataError:b.lastDataError,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.draining=p1<=3&&p2<=3;r.one_peer=P.length===1&&lit===1&&syn===0&&Object.keys(R.addrs).length===1;r.PASS=r.rounds_started>=2&&r.rounds_scored>=1&&r.rosters>0&&r.one_peer&&r.rtt_samples>0&&b.state===1&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.still_alive;console.log('[BRIDGEGATE] B6 a-full-round-on-a-server-this-project-does-not-own '+JSON.stringify(r));return 'B6 '+r.PASS})() => "B6 false"
+[ 514326ms] [console.log] [BRIDGEGATE] RTT {"phase":"connect-through-round-2","what":"full-path ack round trip, page to server and back","peers":{"185.127.17.61":50},"datagrams_out":50,"datagrams_in":0,"parse_failures":0,"unpaired":0,"n":0,"min":null,"p50":null,"p90":null,"p99":null,"max":null,"mean":null,"over100ms":0,"over250ms":0}
+[ 514326ms] [harness] eval (()=>{const R=window.__rtt||{samples:[],addrs:{}};const g=R.samples.slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'connect-through-round-2',what:'full-path ack round trip, page to server and back',peers:R.addrs,datagrams_out:R.outD,datagrams_in:R.inD,parse_failures:R.parseFail,unpaired:Object.keys(R.sent).length,n:g.length,min:g.length?g[0]:null,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,mean:g.length?Math.round(g.reduce((a,b)=>a+b,0)/g.length*100)/100:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length};console.log('[BRIDGEGATE] RTT '+JSON.stringify(r));return 'rtt n='+g.length+' p50='+q(.5)})() => "rtt n=0 p50=null"
+[ 514328ms] [console.log] [BRIDGEGATE] GAPS {"phase":"through-B6","datagrams":0,"p50":null,"p90":null,"p99":null,"max":null,"over100ms":0,"over250ms":0,"over500ms":0}
+[ 514328ms] [harness] eval (()=>{const g=(window.__gaps||[]).slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'through-B6',datagrams:g.length,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length,over500ms:g.filter(x=>x>500).length};console.log('[BRIDGEGATE] GAPS '+JSON.stringify(r));return 'gaps '+JSON.stringify(r)})() => "gaps {\"phase\":\"through-B6\",\"datagrams\":0,\"p50\":null,\"p90\":null,\"p99\":null,\"max\":null,\"over100ms\":0,\"over250ms\":0,\"over500ms\":0}"
+[ 514328ms] [harness] === B6-LEAVE-THE-SERVER ===
+[ 514357ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[ 514361ms] [harness] key Escape (1/1)
+[ 517236ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/16-ingame-menu.png
+[ 517269ms] [harness] key Up (1/1)
+[ 518845ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/17-ingame-menu-one-up.png
+[ 518878ms] [harness] key Up (1/1)
+[ 520457ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/18-ingame-menu-two-up.png
+[ 520489ms] [harness] key Enter (1/1)
+[ 524852ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/19-after-the-disconnect.png
+[ 524853ms] [harness] eval (()=>{try{if(window.AABridge&&window.AABridge.ws)window.AABridge.ws.close();return 'socket closed from the page as a backstop'}catch(e){return 'backstop close threw: '+e}})() => "socket closed from the page as a backstop"
+[ 524854ms] [console.log] [BRIDGE] closed
+[ 527926ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/20-left.png
+[ 527927ms] [console.log] [BRIDGEGATE] B6-LEFT the-page-is-off-the-server-and-still-running {"ws_readyState":3,"state":2,"live_handles":[],"canvas_w":1024,"canvas_h":768,"gl_err":0,"PASS":true}
+[ 527927ms] [harness] eval (()=>{const b=window.AABridge;const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const r={ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:Object.keys(b.queues).map(Number),canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.PASS=r.ws_readyState===3&&r.canvas_w>0&&r.gl_err===0;console.log('[BRIDGEGATE] B6-LEFT the-page-is-off-the-server-and-still-running '+JSON.stringify(r));return 'LEFT '+r.PASS})() => "LEFT true"
+
+Transcript: docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/console.log
