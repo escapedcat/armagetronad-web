@@ -1,0 +1,208 @@
+
+> armagetronad-web-bridge@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: a DATA frame survives a round trip
+ok 1 - a DATA frame survives a round trip
+  ---
+  duration_ms: 0.763708
+  ...
+# Subtest: a BIND frame carries no address and no payload
+ok 2 - a BIND frame carries no address and no payload
+  ---
+  duration_ms: 0.13075
+  ...
+# Subtest: the header is exactly seven bytes before the address
+ok 3 - the header is exactly seven bytes before the address
+  ---
+  duration_ms: 0.083292
+  ...
+# Subtest: a truncated frame is rejected rather than half-decoded
+ok 4 - a truncated frame is rejected rather than half-decoded
+  ---
+  duration_ms: 0.223833
+  ...
+# Subtest: a frame from a future protocol version is rejected
+ok 5 - a frame from a future protocol version is rejected
+  ---
+  duration_ms: 0.837625
+  ...
+# Subtest: an address longer than 255 bytes is refused at encode time
+ok 6 - an address longer than 255 bytes is refused at encode time
+  ---
+  duration_ms: 0.115125
+  ...
+# Subtest: the frame builder is byte-identical to the relay codec
+ok 7 - the frame builder is byte-identical to the relay codec
+  ---
+  duration_ms: 2.71575
+  ...
+# Subtest: a BOUND frame resolves the outstanding bind
+ok 8 - a BOUND frame resolves the outstanding bind
+  ---
+  duration_ms: 0.528083
+  ...
+# Subtest: an ERROR provoked by a datagram cannot fail a bind that is still in flight
+ok 9 - an ERROR provoked by a datagram cannot fail a bind that is still in flight
+  ---
+  duration_ms: 0.589291
+  ...
+# Subtest: an ERROR that can only be the bind's own answer does refuse it
+ok 10 - an ERROR that can only be the bind's own answer does refuse it
+  ---
+  duration_ms: 0.305625
+  ...
+# Subtest: an ERROR arriving after a close does not resurrect the handle
+ok 11 - an ERROR arriving after a close does not resurrect the handle
+  ---
+  duration_ms: 0.93175
+  ...
+# Subtest: a bind with no socket to send it on fails at once rather than hanging
+ok 12 - a bind with no socket to send it on fails at once rather than hanging
+  ---
+  duration_ms: 0.136917
+  ...
+# Subtest: a DATA frame lands in the handle's queue with the address text intact
+ok 13 - a DATA frame lands in the handle's queue with the address text intact
+  ---
+  duration_ms: 0.232583
+  ...
+# Subtest: a frame that is short, truncated or from another version is ignored
+ok 14 - a frame that is short, truncated or from another version is ignored
+  ---
+  duration_ms: 0.115708
+  ...
+# Subtest: a datagram for a handle with no live queue is dropped, not queued
+ok 15 - a datagram for a handle with no live queue is dropped, not queued
+  ---
+  duration_ms: 0.424208
+  ...
+# Subtest: a WebSocket that throws on send does not throw at C++
+ok 16 - a WebSocket that throws on send does not throw at C++
+  ---
+  duration_ms: 0.520625
+  ...
+# Subtest: an address too long for the one-byte length field is refused, not truncated
+ok 17 - an address too long for the one-byte length field is refused, not truncated
+  ---
+  duration_ms: 0.426583
+  ...
+# Subtest: a high-bit character in an address is encoded the same way at both ends
+ok 18 - a high-bit character in an address is encoded the same way at both ends
+  ---
+  duration_ms: 0.10375
+  ...
+# Subtest: a public address on the game port range is allowed
+ok 19 - a public address on the game port range is allowed
+  ---
+  duration_ms: 0.46375
+  ...
+# Subtest: ports outside 4533-4599 are refused
+ok 20 - ports outside 4533-4599 are refused
+  ---
+  duration_ms: 0.109833
+  ...
+# Subtest: private, loopback, link-local and multicast ranges are refused by default
+ok 21 - private, loopback, link-local and multicast ranges are refused by default
+  ---
+  duration_ms: 0.176875
+  ...
+# Subtest: 172.32.0.1 is public and must not be caught by the 172.16/12 rule
+ok 22 - 172.32.0.1 is public and must not be caught by the 172.16/12 rule
+  ---
+  duration_ms: 0.053375
+  ...
+# Subtest: 100.128.0.1 is public and must not be caught by the 100.64/10 rule
+ok 23 - 100.128.0.1 is public and must not be caught by the 100.64/10 rule
+  ---
+  duration_ms: 0.522583
+  ...
+# Subtest: allowPrivate lifts the address rule but never the port rule
+ok 24 - allowPrivate lifts the address rule but never the port rule
+  ---
+  duration_ms: 0.082917
+  ...
+# A clean relay: drop=0 -> outcome=reply droppedCount=0
+# A fully lossy relay: drop=1 -> outcome=nothing droppedCount=1
+# CHECK 1  "--drop 1 discards every datagram": asserts outcome===nothing and droppedCount>0.
+#   against drop=1 (the real case) : outcome=nothing dropped=1  -> PASSES
+#   against drop=0 (the mutation)  : outcome=reply dropped=0  -> FAILS on both halves
+# CHECK 2  "drop 0 passes everything": asserts payload pong:ping and droppedCount===0.
+#   against drop=0 (the real case) : outcome=reply dropped=0  -> PASSES
+#   against drop=1 (the mutation)  : outcome=nothing dropped=1  -> FAILS on both halves
+# BOTH CHECKS DISCRIMINATE.
+# Subtest: test/prove-drop-checks-can-fail.mjs
+ok 4 - test/prove-drop-checks-can-fail.mjs
+  ---
+  duration_ms: 701.195
+  ...
+# Subtest: BIND is answered with BOUND for the same handle
+ok 26 - BIND is answered with BOUND for the same handle
+  ---
+  duration_ms: 12.386625
+  ...
+# Subtest: a datagram reaches the server and the reply comes back with the address echoed
+ok 27 - a datagram reaches the server and the reply comes back with the address echoed
+  ---
+  duration_ms: 5.482417
+  ...
+# Subtest: a hostname is resolved to send but echoed back exactly as the client wrote it
+ok 28 - a hostname is resolved to send but echoed back exactly as the client wrote it
+  ---
+  duration_ms: 5.237417
+  ...
+# Subtest: two handles get two different source ports, as two native clients would
+ok 29 - two handles get two different source ports, as two native clients would
+  ---
+  duration_ms: 3.177666
+  ...
+# Subtest: two host names on one IP do not get each other's replies
+ok 30 - two host names on one IP do not get each other's replies
+  ---
+  duration_ms: 7.757042
+  ...
+# Subtest: a destination the policy refuses is not left behind in the DNS cache
+ok 31 - a destination the policy refuses is not left behind in the DNS cache
+  ---
+  duration_ms: 2.121042
+  ...
+# Subtest: a destination the policy refuses produces ERROR and sends nothing
+ok 32 - a destination the policy refuses produces ERROR and sends nothing
+  ---
+  duration_ms: 1.572125
+  ...
+# Subtest: DATA on a handle that was never bound produces ERROR, not a crash
+ok 33 - DATA on a handle that was never bound produces ERROR, not a crash
+  ---
+  duration_ms: 1.342667
+  ...
+# Subtest: closing the WebSocket releases every UDP socket it held
+ok 34 - closing the WebSocket releases every UDP socket it held
+  ---
+  duration_ms: 103.916333
+  ...
+# Subtest: a garbled frame is dropped without killing the connection
+ok 35 - a garbled frame is dropped without killing the connection
+  ---
+  duration_ms: 1.681458
+  ...
+# Subtest: --drop 1 discards every datagram in both directions
+ok 36 - --drop 1 discards every datagram in both directions
+  ---
+  duration_ms: 302.696209
+  ...
+# Subtest: drop 0 is the default and passes everything
+ok 37 - drop 0 is the default and passes everything
+  ---
+  duration_ms: 2.606
+  ...
+1..37
+# tests 37
+# suites 0
+# pass 37
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 715.580084

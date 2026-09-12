@@ -1,0 +1,205 @@
+[    621ms] [harness] chrome: Chrome/153.0.8010.37
+[    622ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010
+[      5ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     65ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     66ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[    259ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    268ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[    268ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[    271ms] [page] load event fired
+[    274ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    321ms] [console.log] [PERSIST] populate ok in 33ms
+[    412ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    504ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    504ms] [console.log] [CAMERA] stock camera (factor 1)
+[    505ms] [console.log] [SPARKS] stock sparks, nothing written
+[    505ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    507ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    508ms] [console.log] [BOOT] autostart: calling main
+[    510ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    511ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    511ms] [console.error] 
+[    511ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    511ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    511ms] [console.log] 
+[    636ms] [console.log] [L] ENCODING latin1
+[    643ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    644ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    663ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    666ms] [console.error] TODO: glShadeModel
+[    669ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    998ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[   1414ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   1414ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10490ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/01-boot1-language-menu.png
+[  10512ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10523ms] [harness] key Enter (1/1)
+[  13889ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/02-boot1-first-setup.png
+[  13894ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  13896ms] [console.log] [L] TEAM_CREATED web_user
+[  13896ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  13898ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  13900ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  13900ms] [console.log] [L] NEW_ROUND 2026-09-10 22:25:00 UTC+0200
+[  13916ms] [console.log] [L] TEAM_CREATED ai_team
+[  13916ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  13916ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  13917ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  13917ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  13935ms] [harness] key Escape (1/1)
+[  13938ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  13938ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  13938ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  14183ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  14235ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14235ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17236ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17240ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17240ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17240ms] [harness] eval location.reload() => undefined
+[  17241ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17256ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  17256ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  17258ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17260ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17260ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17264ms] [page] load event fired
+[  17277ms] [console.log] [PERSIST] populate ok in 5ms
+[  17299ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17300ms] [console.log] [CAMERA] stock camera (factor 1)
+[  17300ms] [console.log] [SPARKS] stock sparks, nothing written
+[  17300ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  17303ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17303ms] [console.log] [BOOT] autostart: calling main
+[  17304ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17304ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17304ms] [console.error] 
+[  17304ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17304ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17305ms] [console.log] 
+[  17341ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  17342ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  17342ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  17420ms] [console.log] [L] ENCODING latin1
+[  17423ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17435ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17438ms] [console.error] TODO: glShadeModel
+[  17441ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  29423ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/03-boot2-main-menu.png
+[  29423ms] [harness] eval (()=>{const o=console.log;if(console.log.__aa)return 'already';window.__peers=[];const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[BRIDGE] peer ')===0)window.__peers.push(s)}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'peer-line tap installed'})() => "peer-line tap installed"
+[  29424ms] [console.log] [BRIDGEGATE] B0 configured-and-idle-until-asked {"present":true,"ws_constructed":false,"url_parsed":false,"url":null,"queues":0,"bound":0,"PASS":true}
+[  29424ms] [harness] eval (()=>{const b=window.AABridge;const r={present:!!b,ws_constructed:!!(b&&b.ws),url_parsed:b?b.urlChecked:null,url:b?b.url:null,queues:b?Object.keys(b.queues).length:null,bound:b?Object.keys(b.bound).length:null};r.PASS=!!b&&!r.ws_constructed&&r.url_parsed===false;console.log('[BRIDGEGATE] B0 configured-and-idle-until-asked '+JSON.stringify(r));return 'B0 '+r.PASS})() => "B0 true"
+[  29424ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  29457ms] [harness] key Enter (1/1)
+[  32319ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/04-play-game-menu-opens-on-multiplayer.png
+[  32319ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  32335ms] [console.log] [BRIDGE] open ws://127.0.0.1:8010
+[  32351ms] [harness] key Enter (1/1)
+[  35226ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/05-network-menu-opens-on-online-multiplayer.png
+[  35226ms] [harness] === ONE-DOWN-TO-LAN-MULTIPLAYER ===
+[  35259ms] [harness] key Down (1/1)
+[  37123ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/06-network-menu-lan-selected.png
+[  37124ms] [harness] === ENTER-3-LAN-BROWSE-ASKS-FOR-A-SOCKET ===
+[  37156ms] [harness] key Enter (1/1)
+[  37169ms] [console.log] [BRIDGE] handle 1 bound to udp port 50185
+[  37457ms] [harness] until 1x <<[BRIDGE] open>> (timeout 60000ms, have 1)
+[  37458ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] open>>
+[  37458ms] [harness] until 1x <<bound to udp port>> (timeout 60000ms, have 1)
+[  37459ms] [harness] until SATISFIED: saw 1x <<bound to udp port>>
+[  38665ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38669ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38674ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38679ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38689ms] [console.log] [BRIDGE] handle 2 bound to udp port 64371
+[  39520ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/07-lan-browser.png
+[  39521ms] [console.log] [BRIDGEGATE] B1 socket-open-and-bound {"url":"ws://127.0.0.1:8010","state":1,"ws_readyState":1,"bound":[[2,1]],"pending_datagrams":0,"PASS":true}
+[  39521ms] [harness] eval (()=>{const b=window.AABridge;const bound=Object.keys(b.bound).map(h=>[Number(h),b.bound[h]]);const r={url:b.url,state:b.state,ws_readyState:b.ws?b.ws.readyState:null,bound:bound,pending_datagrams:Object.keys(b.queues).reduce((n,h)=>n+b.queues[h].length,0)};r.PASS=b.state===1&&r.ws_readyState===1&&bound.length>0&&bound.every(e=>e[1]===1);console.log('[BRIDGEGATE] B1 socket-open-and-bound '+JSON.stringify(r));return 'B1 '+r.PASS})() => "B1 true"
+[  39521ms] [harness] === A1-INJECT-TWO-DATAGRAMS-ON-THE-LIVE-HANDLE ===
+[  39521ms] [harness] eval (()=>{const b=window.AABridge;const h=Object.keys(b.queues)[0];if(h===undefined)return 'NO LIVE HANDLE';window.__h=h;const push=(a)=>b.queues[h].push({addr:a,port:4534,bytes:new Uint8Array([0,0,0,0])});push('127.0.0.1');push('tron.example.org');return 'injected 2 datagrams on handle '+h})() => "injected 2 datagrams on handle 2"
+[  39521ms] [harness] until 1x <<[BRIDGE] peer 127.0.0.1 -> 127.0.0.1 (literal)>> (timeout 30000ms, have 0)
+[  39533ms] [console.log] [BRIDGE] peer 127.0.0.1 -> 127.0.0.1 (literal)
+[  39534ms] [console.log] [BRIDGE] peer tron.example.org -> 10.42.0.1 (synthetic)
+[  39622ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] peer 127.0.0.1 -> 127.0.0.1 (literal)>>
+[  39622ms] [harness] until 1x <<[BRIDGE] peer tron.example.org -> 10.42.>> (timeout 30000ms, have 1)
+[  39623ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] peer tron.example.org -> 10.42.>>
+[  41125ms] [console.log] [BRIDGEGATE] A1 address-text-maps-the-way-the-game-maps-it {"peer_lines":["[BRIDGE] peer 127.0.0.1 -> 127.0.0.1 (literal)","[BRIDGE] peer tron.example.org -> 10.42.0.1 (synthetic)"],"literal_maps_to_itself":1,"hostname_maps_to_synthetic":1,"drained":0,"dropped":0,"send_failures":0,"PASS":true}
+[  41125ms] [harness] eval (()=>{const p=window.__peers||[];const lit=p.filter(l=>l.indexOf('peer 127.0.0.1 -> 127.0.0.1 (literal)')>=0).length;const syn=p.filter(l=>/peer tron\.example\.org -> 10\.42\.[0-9.]+ \(synthetic\)/.test(l)).length;const q=(window.AABridge.queues[window.__h]||[]);const r={peer_lines:p,literal_maps_to_itself:lit,hostname_maps_to_synthetic:syn,drained:q.length,dropped:window.AABridge.dropped|0,send_failures:window.AABridge.sendFailures|0};r.PASS=lit===1&&syn===1&&r.drained===0;console.log('[BRIDGEGATE] A1 address-text-maps-the-way-the-game-maps-it '+JSON.stringify(r));return 'A1 '+r.PASS})() => "A1 true"
+[  41191ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/08-after-the-injected-datagrams.png
+[  41191ms] [harness] === BACK-OUT-AND-CONFIRM-THE-PAGE-IS-STILL-ALIVE ===
+[  41218ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  41223ms] [harness] key Escape (1/1)
+[  41232ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  41237ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  41242ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  41247ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  44595ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/09-back-in-the-network-menu.png
+[  44596ms] [harness] eval (()=>{const c=document.getElementById('canvas');const g=c.getContext('webgl');return 'alive, gl err=0x'+(g?g.getError().toString(16):'nogl')})() => "alive, gl err=0x0"
+[  44596ms] [harness] eval (()=>{if(window.__lTap)return 'already';window.__lTap=true;window.__L={};const o=console.log;const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[L] ')===0){const k=s.slice(4).split(' ')[0];window.__L[k]=(window.__L[k]||0)+1}}catch(e){}return o.apply(console,arguments)};console.log=w;return 'ladder-log tap installed'})() => "ladder-log tap installed"
+[  44597ms] [harness] eval (()=>{const b=window.AABridge;window.__base={dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0};return 'error-counter baseline '+JSON.stringify(window.__base)})() => "error-counter baseline {\"dropped\":0,\"sendFailures\":0,\"dataErrors\":8}"
+[  44597ms] [harness] === B2-DOWN-3-FROM-LAN-TO-SERVER-BOOKMARKS ===
+[  44629ms] [harness] key Down (1/3)
+[  44963ms] [harness] key Down (2/3)
+[  45297ms] [harness] key Down (3/3)
+[  47179ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/10-network-menu-server-bookmarks-selected.png
+[  47179ms] [harness] === B2-ENTER-OPENS-BOOKMARKS-AND-TRANSFERS-CUSTOM_SERVER_NAME ===
+[  47211ms] [harness] key Enter (1/1)
+[  50568ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/11-bookmarks-menu-opens-on-connect-to-127-0-0-1.png
+[  50568ms] [harness] === B2-ENTER-CONNECTS ===
+[  50601ms] [harness] key Enter (1/1)
+[  50626ms] [console.log] [BRIDGE] handle 3 bound to udp port 55559
+[  50904ms] [harness] until 1x <<[L] TEAM_PLAYER_ADDED>> (timeout 60000ms, have 4)
+[  50904ms] [harness] until SATISFIED: saw 4x <<[L] TEAM_PLAYER_ADDED>>
+[  50904ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  50904ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  51272ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  51273ms] [console.log] [L] NEW_ROUND 2026-09-10 22:25:37 UTC+0200
+[  51303ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  51303ms] [console.log] [SND] live voices peaked at 1 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  51381ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  51660ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gcc
+[  51660ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team latex
+[  51661ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gdb
+[  51698ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  51870ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  51870ms] [console.log] [SND] live voices peaked at 8 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  51970ms] [console.error] warning: Audio callback had starved sending audio by 0.3911065759636472 seconds
+[  52024ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  55023ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/12-on-the-grid-of-a-real-network-game.png
+[  55024ms] [harness] eval (()=>{try{const b=window.AABridge;if(!b||!b.ws)return 'NO LIVE SOCKET - the sampler measured nothing';if(window.__gapTap)return 'already';window.__gapTap=true;window.__gaps=[];window.__gapLast=0;const inner=b.ws.onmessage;b.ws.onmessage=function(ev){const t=performance.now();if(window.__gapLast)window.__gaps.push(Math.round((t-window.__gapLast)*100)/100);window.__gapLast=t;return inner.apply(this,arguments)};return 'gap sampler installed on the live socket'}catch(e){return 'GAP SAMPLER FAILED: '+e}})() => "gap sampler installed on the live socket"
+[  55024ms] [console.log] [BRIDGEGATE] B2 reached-the-bookmarked-server-through-the-bridge {"ws_readyState":1,"state":1,"live_handles":[3],"bound":[[3,1]],"sent":[[3,73]],"pending":0,"baseline":{"dropped":0,"sendFailures":0,"dataErrors":8},"dropped":0,"sendFailures":0,"dataErrors":8,"new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,"lastDataError":"port 0 is outside the allowed range 4533-4599","rosters":4,"rounds_started":1,"PASS":true}
+[  55025ms] [harness] eval (()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:live,bound:bound,sent:sent,pending:live.reduce((n,h)=>n+b.queues[h].length,0),baseline:B,dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,lastDataError:b.lastDataError,rosters:L.TEAM_PLAYER_ADDED|0,rounds_started:L.NEW_ROUND|0};r.PASS=b.state===1&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.pending===0&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.rosters>0&&r.rounds_started>0;console.log('[BRIDGEGATE] B2 reached-the-bookmarked-server-through-the-bridge '+JSON.stringify(r));return 'B2 '+r.PASS})() => "B2 true"
+[  55025ms] [harness] === B3-STEER-WHILE-A-NETWORK-ROUND-IS-LIVE ===
+[  55057ms] [harness] key Left (1/1)
+[  55869ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  55892ms] [harness] key Right (1/1)
+[  56193ms] [harness] until 1x <<[L] ROUND_SCORE_TEAM>> (timeout 180000ms, have 1)
+[  56194ms] [harness] until SATISFIED: saw 1x <<[L] ROUND_SCORE_TEAM>>
+[  56194ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 180000ms, have 2)
+[  56194ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  58349ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/13-a-round-has-completed-with-the-browser-player-scored-in-it.png
+[  58350ms] [console.log] [BRIDGEGATE] B3 a-full-round-completed-with-the-browser-player-scored-in-it {"rounds_started":1,"rounds_scored":0,"rosters":4,"ws_readyState":1,"live_handles":[3],"bound":[[3,1]],"sent":[[3,106]],"pending":1,"baseline":{"dropped":0,"sendFailures":0,"dataErrors":8},"new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,"canvas_w":1024,"canvas_h":768,"gl_err":0,"still_alive":true,"PASS":false}
+[  58351ms] [harness] eval (()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,rosters:L.TEAM_PLAYER_ADDED|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending:live.reduce((n,h)=>n+b.queues[h].length,0),baseline:B,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.PASS=r.rounds_started>=2&&r.rounds_scored>=1&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.pending===0&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.still_alive;console.log('[BRIDGEGATE] B3 a-full-round-completed-with-the-browser-player-scored-in-it '+JSON.stringify(r));return 'B3 '+r.PASS})() => "B3 false"
+[  58354ms] [console.log] [BRIDGEGATE] GAPS {"phase":"through-B3","datagrams":35,"p50":78.8,"p90":118.7,"p99":474,"max":474,"over100ms":11,"over250ms":1,"over500ms":0}
+[  58354ms] [harness] eval (()=>{const g=(window.__gaps||[]).slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'through-B3',datagrams:g.length,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length,over500ms:g.filter(x=>x>500).length};console.log('[BRIDGEGATE] GAPS '+JSON.stringify(r));return 'gaps '+JSON.stringify(r)})() => "gaps {\"phase\":\"through-B3\",\"datagrams\":35,\"p50\":78.8,\"p90\":118.7,\"p99\":474,\"max\":474,\"over100ms\":11,\"over250ms\":1,\"over500ms\":0}"
+[  58354ms] [harness] === B4-A-FURTHER-ROUND-WITH-DATAGRAMS-GOING-MISSING ===
+[  58354ms] [harness] until 2x <<[L] ROUND_SCORE_TEAM>> (timeout 240000ms, have 1)
+[  59135ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  65102ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  65102ms] [console.log] [L] NEW_ROUND 2026-09-10 22:25:51 UTC+0200
+[  65119ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_SCORE_TEAM>>
+[  65119ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 240000ms, have 3)
+[  65119ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  65618ms] [console.error] warning: Audio callback had starved sending audio by 0.49661224489869227 seconds
+[  67214ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/13b-a-further-round-completed.png
+[  67215ms] [console.log] [BRIDGEGATE] B4 a-further-round-with-datagrams-going-missing {"rounds_started":2,"rounds_scored":1,"ws_readyState":1,"live_handles":[3],"bound":[[3,1]],"sent":[[3,200]],"pending":0,"new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,"canvas_w":1024,"canvas_h":768,"gl_err":0,"still_alive":true,"PASS":false}
+[  67216ms] [harness] eval (()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending:live.reduce((n,h)=>n+b.queues[h].length,0),new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.PASS=r.rounds_started>=3&&r.rounds_scored>=2&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.pending===0&&r.new_dropped===0&&r.new_sendFailures===0&&r.still_alive;console.log('[BRIDGEGATE] B4 a-further-round-with-datagrams-going-missing '+JSON.stringify(r));return 'B4 '+r.PASS})() => "B4 false"
+[  67216ms] [console.log] [BRIDGEGATE] GAPS {"phase":"through-B4","datagrams":144,"p50":23.1,"p90":209.9,"p99":787,"max":918.3,"over100ms":31,"over250ms":12,"over500ms":4}
+[  67216ms] [harness] eval (()=>{const g=(window.__gaps||[]).slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'through-B4',datagrams:g.length,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length,over500ms:g.filter(x=>x>500).length};console.log('[BRIDGEGATE] GAPS '+JSON.stringify(r));return 'gaps '+JSON.stringify(r)})() => "gaps {\"phase\":\"through-B4\",\"datagrams\":144,\"p50\":23.1,\"p90\":209.9,\"p99\":787,\"max\":918.3,\"over100ms\":31,\"over250ms\":12,\"over500ms\":4}"
+[  67216ms] [harness] === B5-THE-RELAY-PROCESS-IS-KILLED-FROM-THE-SHELL-DURING-THIS-WAIT ===
+[  72149ms] [console.log] [BRIDGE] closed
+[  97218ms] [harness] until 1x <<[BRIDGE] closed>> (timeout 40000ms, have 1)
+[  97218ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] closed>>
+[ 103380ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/14-after-the-far-end-went-away.png
+[ 103405ms] [console.log] [BRIDGEGATE] B5 the-far-end-went-away-and-the-module-is-still-running {"ws_readyState":3,"state":2,"raf_ticking":true,"sendFailures":0,"dropped":0,"canvas_w":1024,"canvas_h":768,"gl_err":0,"PASS":true}
+[ 103405ms] [harness] eval (async()=>{const b=window.AABridge;const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const raf=await new Promise(res=>{let done=false;const to=setTimeout(()=>{if(!done)res(false)},3000);requestAnimationFrame(()=>requestAnimationFrame(()=>{done=true;clearTimeout(to);res(true)}))});const r={ws_readyState:b.ws?b.ws.readyState:null,state:b.state,raf_ticking:raf,sendFailures:b.sendFailures|0,dropped:b.dropped|0,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.PASS=r.ws_readyState===3&&r.state===2&&r.raf_ticking===true&&r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;console.log('[BRIDGEGATE] B5 the-far-end-went-away-and-the-module-is-still-running '+JSON.stringify(r));return 'B5 '+r.PASS})() => "B5 true"
+[ 105600ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/loss/clean/15-still-running-after-the-bridge-died.png

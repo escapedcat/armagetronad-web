@@ -1,0 +1,102 @@
+[    673ms] [harness] mobile emulation: 412x915 CSS px dpr 3 (= 1236x2745 device px), touch on
+[    674ms] [harness] chrome: Chrome/153.0.8010.37
+[    674ms] [harness] navigating to http://localhost:8008/armagetronad.html?autostart=0
+[      6ms] [harness] until 1x <<[BOOT] main() HELD>> (timeout 90000ms, have 0)
+[     20ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     20ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) at parse
+[     46ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 16384 gameboy square 412css
+[     46ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[     47ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     56ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     61ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     77ms] [console.log] [TOUCH] orientation portrait=true (layout stays gameboy) via resize
+[     79ms] [page] load event fired
+[     86ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    140ms] [console.log] [PERSIST] populate ok in 40ms
+[    356ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    357ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    357ms] [console.log] [SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[    357ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[    411ms] [harness] until SATISFIED: saw 1x <<[BOOT] main() HELD>>
+[    413ms] [console.log] [M9GATE] LB0 parse-time {"layout":"gameboy","canvas_w":1236,"canvas_h":1236,"inner":"412x915"}
+[    413ms] [harness] eval (()=>{const c=document.getElementById('canvas');const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',canvas_w:c.width,canvas_h:c.height,inner:window.innerWidth+'x'+window.innerHeight};console.log('[M9GATE] LB0 parse-time '+JSON.stringify(r));return 'LB0'})() => "LB0"
+[    813ms] [harness] screenshot -> /tmp/t5-gates/layout-boot/lb-00-loading-overlay-while-held.png
+[    813ms] [harness] === ROTATE-WHILE-HELD ===
+[    816ms] [harness] metrics -> 915x412 dpr 3
+[    816ms] [console.log] [TOUCH] orientation portrait=false (layout stays gameboy) via resize
+[    816ms] [console.log] [TOUCH] orientation portrait=false (layout stays gameboy) via media query
+[   1818ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[   1823ms] [console.log] [DISPLAY] before main: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[   1823ms] [console.log] [BOOT] autostart: calling main
+[   1827ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   1827ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   1827ms] [console.error] 
+[   1828ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   1828ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   1828ms] [console.log] 
+[   1964ms] [console.log] [L] ENCODING latin1
+[   1972ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   1973ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   1993ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   1996ms] [console.error] TODO: glShadeModel
+[   2000ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[   2045ms] [harness] eval AA_START() => undefined
+[   2046ms] [harness] until 1x <<[BOOT] autostart>> (timeout 60000ms, have 1)
+[   2046ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   2048ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   2048ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   2048ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   2049ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   2049ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   2300ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[   4549ms] [console.log] [M9GATE] LB3 boots-into-held-orientation {"layout":"full","canvas_w":2745,"canvas_h":1236,"css_w":915,"css_h":412,"inner":"915x412","square_var":"0px","PASS":true}
+[   4549ms] [harness] eval (()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',canvas_w:c.width,canvas_h:c.height,css_w:Math.round(b.width),css_h:Math.round(b.height),inner:window.innerWidth+'x'+window.innerHeight,square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.layout==='full'&&r.canvas_w>r.canvas_h&&r.canvas_w===Math.floor(window.innerWidth*window.devicePixelRatio)&&r.square_var==='0px';console.log('[M9GATE] LB3 boots-into-held-orientation '+JSON.stringify(r));return 'LB3 '+r.PASS})() => "LB3 true"
+[   4683ms] [harness] screenshot -> /tmp/t5-gates/layout-boot/lb-01-turned-while-loading-boots-landscape.png
+[   6188ms] [console.log] [M9GATE] LB1b layout-button-in-landscape-menu {"present":true,"display":"flex","label":"Portrait layout","PASS":true}
+[   6189ms] [harness] eval (()=>{const lb=document.getElementById('layoutbtn');const r={present:!!lb,display:lb?getComputedStyle(lb).display:null,label:lb?lb.textContent.trim():null};r.PASS=r.present&&r.display!=='none'&&r.label==='Portrait layout';console.log('[M9GATE] LB1b layout-button-in-landscape-menu '+JSON.stringify(r));return 'LB1b '+r.PASS})() => "LB1b true"
+[   6189ms] [harness] === TAP-THE-SWITCH ===
+[   6193ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   6260ms] [console.log] [TOUCH] layout switch -> ?layout=portrait (reload)
+[   6265ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[   6266ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[   6269ms] [harness] tap #layoutbtn at 824,32 (1/1)
+[   6287ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[   6287ms] [console.log] [DISPLAY] layout=gameboy (from ?layout=portrait) at parse
+[   6291ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 16384 gameboy square 412css
+[   6292ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[   6292ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[   6294ms] [console.log] [TOUCH] orientation portrait=false (layout stays gameboy) via resize
+[   6295ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[   6295ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[   6300ms] [page] load event fired
+[   6311ms] [console.log] [PERSIST] populate ok in 5ms
+[   6345ms] [console.log] [PERSIST] runtime initialized, starting the game
+[   6346ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[   6346ms] [console.log] [SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[   6346ms] [console.log] [BOOT] main() HELD by ?autostart=0, waiting for AA_START()
+[   6570ms] [harness] until 1x <<[TOUCH] layout switch -> ?layout=portrait>> (timeout 60000ms, have 1)
+[   6570ms] [harness] until SATISFIED: saw 1x <<[TOUCH] layout switch -> ?layout=portrait>>
+[   6570ms] [harness] until 2x <<[BOOT] main() HELD>> (timeout 90000ms, have 2)
+[   6570ms] [harness] until SATISFIED: saw 2x <<[BOOT] main() HELD>>
+[   7072ms] [console.log] [DISPLAY] layout=gameboy (from ?layout=portrait) before main
+[   7076ms] [console.log] [DISPLAY] before main: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 16384 gameboy square 412css
+[   7076ms] [console.log] [BOOT] autostart: calling main
+[   7077ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   7077ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   7077ms] [console.error] 
+[   7077ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   7077ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   7078ms] [console.log] 
+[   7212ms] [console.log] [L] ENCODING latin1
+[   7217ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   7217ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   7235ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   7238ms] [console.error] TODO: glShadeModel
+[   7241ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[   7250ms] [harness] eval AA_START() => undefined
+[   7250ms] [harness] until 2x <<[BOOT] autostart>> (timeout 60000ms, have 2)
+[   7251ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[   7299ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[   9753ms] [console.log] [M9GATE] LB4 switch-reloads-into-the-other-layout {"url_layout":"portrait","layout":"gameboy","canvas_w":1236,"canvas_h":1236,"css_w":412,"css_h":412,"inner":"915x412","square_var":"412px","label":"Landscape layout","PASS":true}
+[   9753ms] [harness] eval (()=>{const c=document.getElementById('canvas');const b=c.getBoundingClientRect();const lb=document.getElementById('layoutbtn');const r={url_layout:new URLSearchParams(location.search).get('layout'),layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',canvas_w:c.width,canvas_h:c.height,css_w:Math.round(b.width),css_h:Math.round(b.height),inner:window.innerWidth+'x'+window.innerHeight,square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim(),label:lb?lb.textContent.trim():null};r.PASS=r.url_layout==='portrait'&&r.layout==='gameboy'&&r.canvas_w===r.canvas_h&&r.canvas_w===Math.floor(Math.min(window.innerWidth,window.innerHeight)*window.devicePixelRatio)&&r.label==='Landscape layout';console.log('[M9GATE] LB4 switch-reloads-into-the-other-layout '+JSON.stringify(r));return 'LB4 '+r.PASS})() => "LB4 true"
+[   9851ms] [harness] screenshot -> /tmp/t5-gates/layout-boot/lb-02-switched-to-portrait-while-held-landscape.png

@@ -1,0 +1,231 @@
+[    696ms] [harness] mobile emulation: 915x412 CSS px dpr 3 (= 2745x1236 device px), touch on
+[    697ms] [harness] chrome: Chrome/152.0.7977.83
+[    697ms] [harness] navigating to http://localhost:8008/armagetronad.html
+[     11ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     24ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[     26ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[     26ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[     26ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[     31ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     33ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     51ms] [console.log] [TOUCH] orientation portrait=false (layout stays full) via resize
+[     52ms] [page] load event fired
+[     54ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    103ms] [console.log] [PERSIST] populate ok in 37ms
+[    302ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    303ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[    303ms] [console.log] [SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[    304ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    307ms] [console.log] [DISPLAY] before main: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[    307ms] [console.log] [BOOT] autostart: calling main
+[    310ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    310ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    310ms] [console.error] 
+[    310ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    310ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    311ms] [console.log] 
+[    433ms] [console.log] [L] ENCODING latin1
+[    440ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    441ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    460ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    463ms] [console.error] TODO: glShadeModel
+[    466ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    507ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    508ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    508ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    508ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    527ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[   1012ms] [harness] eval (()=>{if(window.__fps)return 'already installed';const S={t:new Float64Array(400000),n:0,marks:[],gl:[],polls:0};window.__fps=S;const wrap=(C)=>{if(!C)return;for(const m of ['flush','finish']){const o=C.prototype[m];if(!o)continue;C.prototype[m]=function(){if(S.n<S.t.length)S.t[S.n++]=performance.now();if(S.n%30===0){S.polls++;const e=this.getError();if(e){S.gl.push([S.n,e]);if(S.gl.length<=20)console.error('[GLERR] frame '+S.n+' glGetError=0x'+e.toString(16));}}return o.apply(this,arguments);};}};wrap(window.WebGLRenderingContext);wrap(window.WebGL2RenderingContext);const cl=console.log.bind(console);console.log=function(){const s=(arguments.length&&typeof arguments[0]==='string')?arguments[0]:'';if(s.indexOf('[L] ')===0)S.marks.push([performance.now(),s]);return cl.apply(null,arguments);};return 'frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped'})() => "frame sampler armed: glFlush+glFinish counted, glGetError polled every 30th frame, [L] lines timestamped"
+[   1012ms] [harness] eval (()=>{const S={};S.rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};S.line=(t,k)=>{if(t===null)return null;const m=t.split('\n').find(l=>{const s=l.trim();return s.indexOf(k)===0&&/\s/.test(s.charAt(k.length))});return m?m.trim().slice(k.length).trim().replace(/\s+/g,' '):null};S.save=()=>{try{Module._aa_web_save_config();return 'saved'}catch(e){return 'SAVE FAILED: '+e}};S.box=(id)=>{const e=document.getElementById(id);if(!e)return 'missing';const r=e.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top)};S.dump=(phase)=>{const sv=S.save();const c=S.rd('/persist/var/user.cfg');const cv=document.getElementById('canvas');const ctx=window.AA_INPUT_CONTEXT?window.AA_INPUT_CONTEXT():null;console.log('[TOUCHGATE] '+JSON.stringify({phase:phase,save:sv,ctx:ctx,ctx_menu:ctx===null?null:!!(ctx&1),ctx_cycle:ctx===null?null:!!(ctx&2),driving_class:document.getElementById('touch').classList.contains('aa-driving'),box_tapzone:S.box('tapzone'),box_tzleft:S.box('tz-left'),box_tzright:S.box('tz-right'),box_escbtn:S.box('escbtn'),box_touchpad:S.box('touchpad'),canvas_w:cv.width,canvas_h:cv.height,mpx:Math.round(cv.width*cv.height/1e4)/100,css_w:Math.round(cv.getBoundingClientRect().width),css_h:Math.round(cv.getBoundingClientRect().height),inner:window.innerWidth+'x'+window.innerHeight,dpr:window.devicePixelRatio,touch_hidden:document.getElementById('touch').hidden,chip_hidden:document.getElementById('reloadchip').hidden,maxTouchPoints:navigator.maxTouchPoints,coarse:window.matchMedia('(hover: none) and (pointer: coarse)').matches,tip_left:S.line(c,'CYCLE_TURN_LEFT_TOOLTIP'),tip_right:S.line(c,'CYCLE_TURN_RIGHT_TOOLTIP')}));return phase};window.__tg=S;return 'probe installed'})() => "probe installed"
+[   1013ms] [harness] until 1x <<[BOOT] autostart>> (timeout 90000ms, have 1)
+[   1013ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   1013ms] [harness] === GAME-STARTED ===
+[   1014ms] [console.log] [M7GATE] L1 landscape-unchanged {"layout":"full","visible":"tapzone,escbtn,touchpad,,,pad-cross,pad-btn pad-up,pad-btn pad-left,pad-btn pad-right,pad-btn pad-down,pad-ab,pad-btn pad-b,pad-btn pad-a,pad-legend,,,,,layoutbtn,[object SVGAnimatedString],[object SVGAnimatedString],[object SVGAnimatedString],[object SVGAnimatedString],layoutbtn-label","pad_display":"none","square_var":"0px","PASS":true}
+[   1014ms] [harness] eval (()=>{const t=document.getElementById('touch');const vis=[...t.querySelectorAll('*')].filter(e=>getComputedStyle(e).display!=='none').map(e=>e.id||e.className).join(',');const r={layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',visible:vis,pad_display:getComputedStyle(document.getElementById('pad')).display,square_var:getComputedStyle(document.documentElement).getPropertyValue('--aa-square').trim()};r.PASS=r.layout==='full'&&r.pad_display==='none'&&r.square_var==='0px';console.log('[M7GATE] L1 landscape-unchanged '+JSON.stringify(r));return 'L1 '+r.PASS})() => "L1 true"
+[  10022ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  10022ms] [harness] eval window.__tg.dump('landscape-at-language-menu') => "TypeError: Cannot read properties of null (reading 'hidden')\n    at S.dump (<anonymous>:1:1522)\n    at <anonymous>:1:13"
+[  10101ms] [harness] screenshot -> /tmp/t2-gates3/landscape/00-language-menu-with-touch-controls.png
+[  10101ms] [harness] until 1x <<[SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg>> (timeout 30000ms, have 1)
+[  10101ms] [harness] until SATISFIED: saw 1x <<[SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg>>
+[  10103ms] [harness] eval (()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 1\nSPARKS_LIFETIME 1\nSPARKS_INTERVAL 0.05\n$/.test(t);return '[SPARKSGATE] T1b cheap-sparks-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,ends_with_cheap_block:ends,tail:ok?t.slice(-128):null,PASS:ok&&n===1&&ends})})() => "[SPARKSGATE] T1b cheap-sparks-on-touch {\"read\":true,\"err\":null,\"bytes\":12804,\"sparks_lines\":1,\"ends_with_cheap_block\":true,\"tail\":\"t runtime by web/shell.html: crash sparks on, priced for a phone (touch device)\\nSPARKS 1\\nSPARKS_LIFETIME 1\\nSPARKS_INTERVAL 0.05\\n\",\"PASS\":true}"
+[  10104ms] [harness] eval (()=>{const t=document.getElementById('touch');const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const p=document.getElementById('tapzone').getBoundingClientRect();const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T2b menu-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),turn_zones_have_no_box:z.every(r=>r.width===0&&r.height===0),tap_layer_area:Math.round(p.width*p.height),PASS:!t.classList.contains('aa-driving')&&z.every(r=>r.width===0&&r.height===0)&&p.width>0})})() => "[TOUCHGATE] T2b menu-side collision check {\"ctx\":1,\"driving_class\":false,\"turn_zones_have_no_box\":true,\"tap_layer_area\":376980,\"PASS\":true}"
+[  10104ms] [harness] === TAP-ENTER-ACCEPTS-LANGUAGE ===
+[  10107ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[  10171ms] [harness] tap #tapzone at 458,206 (1/1)
+[  10182ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  10472ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 1)
+[  10473ms] [harness] until SATISFIED: saw 1x <<[PERSISTSAVE] menu-leave>>
+[  13068ms] [harness] screenshot -> /tmp/t2-gates3/landscape/01-first-setup-reached-by-tapping.png
+[  13068ms] [harness] === TAP-ENTER-ACCEPTS-FIRST-SETUP ===
+[  13137ms] [harness] tap #tapzone at 458,206 (1/1)
+[  13145ms] [console.log] [PERSISTSAVE] menu-leave n=3
+[  13276ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  13438ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13440ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16544ms] [harness] screenshot -> /tmp/t2-gates3/landscape/02-welcome-message-reached-by-tapping.png
+[  16544ms] [harness] === TAP-ENTER-DISMISSES-WELCOME ===
+[  16618ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  16619ms] [console.log] [L] TEAM_CREATED web_user
+[  16620ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  16622ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  16624ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  16624ms] [console.log] [L] NEW_ROUND 2026-09-10 16:52:56 UTC+0200
+[  16641ms] [console.log] [L] TEAM_CREATED ai_team
+[  16642ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  16642ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  16642ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  16643ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  16664ms] [harness] tap #tapzone at 458,206 (1/1)
+[  16667ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  16668ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  16668ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  16774ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  16910ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  18967ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 90000ms, have 1)
+[  18967ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  18967ms] [harness] === ROUND-1-STARTED-WITHOUT-A-SINGLE-KEYSTROKE ===
+[  21185ms] [harness] screenshot -> /tmp/t2-gates3/landscape/03-round1-driving.png
+[  21189ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  21189ms] [harness] eval window.__tg.dump('round1-before-steering') => "TypeError: Cannot read properties of null (reading 'hidden')\n    at S.dump (<anonymous>:1:1522)\n    at <anonymous>:1:13"
+[  21190ms] [harness] eval (()=>{const t=document.getElementById('touch');const p=document.getElementById('tapzone').getBoundingClientRect();const z=['tz-left','tz-right'].map(i=>document.getElementById(i).getBoundingClientRect());const ctx=window.AA_INPUT_CONTEXT();return '[TOUCHGATE] T3b round-side collision check '+JSON.stringify({ctx:ctx,driving_class:t.classList.contains('aa-driving'),tap_layer_has_no_box:p.width===0&&p.height===0,turn_zone_areas:z.map(r=>Math.round(r.width*r.height)),PASS:t.classList.contains('aa-driving')&&p.width===0&&p.height===0&&z.every(r=>r.width>0)})})() => "[TOUCHGATE] T3b round-side collision check {\"ctx\":2,\"driving_class\":true,\"tap_layer_has_no_box\":true,\"turn_zone_areas\":[197915,197915],\"PASS\":true}"
+[  21190ms] [harness] === TAP-LEFT-HALF ===
+[  21254ms] [harness] tap #tz-left at 240,206 (1/3)
+[  21262ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  21624ms] [harness] tap #tz-left at 240,206 (2/3)
+[  21991ms] [harness] tap #tz-left at 240,206 (3/3)
+[  22639ms] [console.log] [L] DEATH_SUICIDE web_user
+[  22640ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  22778ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  23345ms] [harness] screenshot -> /tmp/t2-gates3/landscape/04-after-tapping-left-half.png
+[  23348ms] [console.log] [PERSISTSAVE] js-backstop n=5
+[  23349ms] [harness] eval window.__tg.dump('after-tapping-left-half') => "TypeError: Cannot read properties of null (reading 'hidden')\n    at S.dump (<anonymous>:1:1522)\n    at <anonymous>:1:13"
+[  23349ms] [harness] === TAP-RIGHT-HALF ===
+[  23416ms] [harness] tap #tz-right at 0,0 (1/4)
+[  23529ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  23691ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  23785ms] [harness] tap #tz-right at 0,0 (2/4)
+[  23793ms] [console.log] [PERSISTSAVE] menu-leave n=6
+[  24029ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  24154ms] [harness] tap #tz-right at 0,0 (3/4)
+[  24282ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  24524ms] [harness] tap #tz-right at 0,0 (4/4)
+[  24533ms] [console.log] [PERSISTSAVE] menu-leave n=7
+[  24537ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  25849ms] [harness] screenshot -> /tmp/t2-gates3/landscape/05-after-tapping-right-half.png
+[  25853ms] [console.log] [PERSISTSAVE] js-backstop n=8
+[  25853ms] [harness] eval window.__tg.dump('after-tapping-right-half') => "TypeError: Cannot read properties of null (reading 'hidden')\n    at S.dump (<anonymous>:1:1522)\n    at <anonymous>:1:13"
+[  25853ms] [harness] until 2x <<[L] NEW_ROUND>> (timeout 150000ms, have 1)
+[  27769ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  27769ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  27770ms] [console.log] [L] NEW_ROUND 2026-09-10 16:53:07 UTC+0200
+[  27773ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  27774ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  27777ms] [harness] until SATISFIED: saw 2x <<[L] NEW_ROUND>>
+[  27778ms] [harness] === ROUND-2-STARTED ===
+[  27780ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  29850ms] [harness] tap #tz-left at 240,206 (1/3)
+[  30249ms] [harness] tap #tz-left at 240,206 (2/3)
+[  30626ms] [harness] tap #tz-left at 240,206 (3/3)
+[  31703ms] [harness] tap #tz-right at 675,206 (1/4)
+[  32080ms] [harness] tap #tz-right at 675,206 (2/4)
+[  32453ms] [harness] tap #tz-right at 675,206 (3/4)
+[  32828ms] [harness] tap #tz-right at 675,206 (4/4)
+[  34207ms] [harness] screenshot -> /tmp/t2-gates3/landscape/06-after-round2-taps.png
+[  34210ms] [console.log] [PERSISTSAVE] js-backstop n=9
+[  34211ms] [harness] eval window.__tg.dump('after-round2-taps') => "TypeError: Cannot read properties of null (reading 'hidden')\n    at S.dump (<anonymous>:1:1522)\n    at <anonymous>:1:13"
+[  34218ms] [harness] until 3x <<[L] NEW_ROUND>> (timeout 150000ms, have 2)
+[  36471ms] [console.log] [L] DEATH_SUICIDE web_user
+[  36527ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  37958ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  42021ms] [console.log] [L] ROUND_SCORE -4 web_user web_user
+[  42022ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  42022ms] [console.log] [L] NEW_ROUND 2026-09-10 16:53:21 UTC+0200
+[  42029ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  42100ms] [harness] until SATISFIED: saw 3x <<[L] NEW_ROUND>>
+[  42100ms] [harness] === ROUND-3-STARTED-RIGHT-TAPS-ONLY ===
+[  44180ms] [harness] tap #tz-right at 675,206 (1/2)
+[  44555ms] [harness] tap #tz-right at 675,206 (2/2)
+[  45633ms] [harness] tap #tz-right at 675,206 (1/2)
+[  46009ms] [harness] tap #tz-right at 675,206 (2/2)
+[  47322ms] [harness] screenshot -> /tmp/t2-gates3/landscape/06b-after-round3-right-taps.png
+[  47325ms] [console.log] [PERSISTSAVE] js-backstop n=10
+[  47326ms] [harness] eval window.__tg.dump('after-round3-right-taps') => "TypeError: Cannot read properties of null (reading 'hidden')\n    at S.dump (<anonymous>:1:1522)\n    at <anonymous>:1:13"
+[  47326ms] [harness] until 1x <<[L] ROUND_WINNER>> (timeout 150000ms, have 2)
+[  47326ms] [harness] until SATISFIED: saw 2x <<[L] ROUND_WINNER>>
+[  47327ms] [harness] eval (()=>{const c=document.getElementById('canvas');window.__t4={w:c.width,h:c.height,layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full'};return 'T4 snapshot '+JSON.stringify(window.__t4)})() => "T4 snapshot {\"w\":2745,\"h\":1236,\"layout\":\"full\"}"
+[  47328ms] [harness] === ROTATE-TO-PORTRAIT ===
+[  47329ms] [harness] metrics -> 412x915 dpr 3
+[  47332ms] [console.log] [TOUCH] orientation portrait=true (layout stays full) via resize
+[  47332ms] [console.log] [TOUCH] orientation portrait=true (layout stays full) via media query
+[  48831ms] [console.log] [M7GATE] T4 rotate-to-portrait {"chip_element":false,"rotate_element":false,"layout":"full","canvas_w":2745,"canvas_h":1236,"before":{"w":2745,"h":1236,"layout":"full"},"layoutbtn_display":"none","ctx":2,"PASS":true}
+[  48831ms] [harness] eval (()=>{const c=document.getElementById('canvas');const s=window.__t4||{};const lb=document.getElementById('layoutbtn');const r={chip_element:document.getElementById('reloadchip')!==null,rotate_element:document.getElementById('rotate')!==null,layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',canvas_w:c.width,canvas_h:c.height,before:s,layoutbtn_display:lb?getComputedStyle(lb).display:null,ctx:Module._aa_web_input_context()|0};r.PASS=!r.chip_element&&!r.rotate_element&&r.layout===s.layout&&r.canvas_w===s.w&&r.canvas_h===s.h;console.log('[M7GATE] T4 rotate-to-portrait '+JSON.stringify(r));return 'T4 '+r.PASS})() => "T4 true"
+[  48861ms] [console.log] [L] DEATH_FRAG web_user outlook
+[  48941ms] [harness] screenshot -> /tmp/t2-gates3/landscape/07-portrait-mid-game-changes-nothing.png
+[  48942ms] [harness] === ROTATE-BACK-TO-LANDSCAPE ===
+[  48944ms] [harness] metrics -> 915x412 dpr 3
+[  48949ms] [console.log] [TOUCH] orientation portrait=false (layout stays full) via resize
+[  48949ms] [console.log] [TOUCH] orientation portrait=false (layout stays full) via media query
+[  49027ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  50127ms] [console.log] [L] ROUND_WINNER ai_team outlook excel word
+[  50447ms] [console.log] [M7GATE] T4 back-in-landscape {"chip_element":false,"layout":"full","canvas_w":2745,"canvas_h":1236,"PASS":true}
+[  50447ms] [harness] eval (()=>{const c=document.getElementById('canvas');const s=window.__t4||{};const r={chip_element:document.getElementById('reloadchip')!==null,layout:document.documentElement.classList.contains('aa-gameboy')?'gameboy':'full',canvas_w:c.width,canvas_h:c.height};r.PASS=!r.chip_element&&r.layout===s.layout&&r.canvas_w===s.w&&r.canvas_h===s.h;console.log('[M7GATE] T4 back-in-landscape '+JSON.stringify(r));return 'T4b '+r.PASS})() => "T4b true"
+[  50669ms] [harness] screenshot -> /tmp/t2-gates3/landscape/08-back-in-landscape.png
+[  50670ms] [harness] === FRAME-RATE ===
+[  50676ms] [harness] eval (()=>{const S=window.__fps;if(!S)return 'no sampler';const all=Array.prototype.slice.call(S.t.subarray(0,S.n));const nr=S.marks.filter(m=>m[1].indexOf('[L] NEW_ROUND')===0).map(m=>m[0]);const rw=S.marks.filter(m=>m[1].indexOf('[L] ROUND_WINNER')===0).map(m=>m[0]);const q=(a,p)=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.max(0,Math.round(p*(s.length-1))))]};const r2=(x)=>(x===null||x===undefined)?null:Math.round(x*100)/100;const f=(v)=>(v&&v>0)?Math.round(100000/v)/100:null;const stats=(t0,t1)=>{const w=all.filter(x=>x>=t0&&x<=t1);const d=[];for(let i=1;i<w.length;i++)d.push(w[i]-w[i-1]);const sec={};for(const x of w){const k=Math.floor((x-t0)/1000);sec[k]=(sec[k]||0)+1}const span=(t1-t0)/1000;const nb=Math.floor(span);const per=[];for(let k=0;k<nb;k++)per.push(sec[k]||0);return{span_s:r2(span),frames:w.length,mean_fps:span>0?r2(w.length/span):null,frame_ms:{p50:r2(q(d,0.5)),p90:r2(q(d,0.9)),p99:r2(q(d,0.99)),max:r2(q(d,1))},inst_fps:{median:f(q(d,0.5)),p10:f(q(d,0.9)),p01:f(q(d,0.99)),min:f(q(d,1))},fps_per_second:per,fps_per_second_min:per.length?Math.min.apply(null,per):null,fps_per_second_median:q(per,0.5)}};const out={total_frames_sampled:S.n,rounds_started:nr.length,rounds_won:rw.length,gl_errors:S.gl.length,gl_polls:S.polls};const n=Math.min(nr.length,rw.length);if(n>0){out.overall=stats(nr[0],rw[n-1]);out.per_round=[];for(let i=0;i<n;i++)out.per_round.push(stats(nr[i],rw[i]))}return JSON.stringify(out)})() => "{\"total_frames_sampled\":2910,\"rounds_started\":3,\"rounds_won\":3,\"gl_errors\":0,\"gl_polls\":97,\"overall\":{\"span_s\":33.5,\"frames\":1950,\"mean_fps\":58.21,\"frame_ms\":{\"p50\":16.7,\"p90\":18.2,\"p99\":26.3,\"max\":84},\"inst_fps\":{\"median\":59.88,\"p10\":54.95,\"p01\":38.02,\"min\":11.9},\"fps_per_second\":[58,60,60,60,53,58,57,50,60,60,60,60,60,50,61,50,57,60,60,60,60,60,60,60,60,60,60,53,57,56,60,60,60],\"fps_per_second_min\":50,\"fps_per_second_median\":60},\"per_round\":[{\"span_s\":7.07,\"frames\":409,\"mean_fps\":57.89,\"frame_ms\":{\"p50\":16.8,\"p90\":18,\"p99\":40.3,\"max\":81.6},\"inst_fps\":{\"median\":59.52,\"p10\":55.56,\"p01\":24.81,\"min\":12.25},\"fps_per_second\":[58,60,60,60,53,58,57],\"fps_per_second_min\":53,\"fps_per_second_median\":58},{\"span_s\":10.19,\"frames\":589,\"mean_fps\":57.81,\"frame_ms\":{\"p50\":16.7,\"p90\":18.3,\"p99\":66.9,\"max\":83.8},\"inst_fps\":{\"median\":59.88,\"p10\":54.64,\"p01\":14.95,\"min\":11.93},\"fps_per_second\":[61,60,50,57,53,57,60,60,60,60],\"fps_per_second_min\":50,\"fps_per_second_median\":60},{\"span_s\":8.11,\"frames\":473,\"mean_fps\":58.36,\"frame_ms\":{\"p50\":16.7,\"p90\":18.3,\"p99\":20.6,\"max\":84},\"inst_fps\":{\"median\":59.88,\"p10\":54.64,\"p01\":48.54,\"min\":11.9},\"fps_per_second\":[60,60,54,53,60,60,60,60],\"fps_per_second_min\":53,\"fps_per_second_median\":60}]}"
+[  50676ms] [harness] === TAP-ESCAPE-IN-THE-CORNER ===
+[  50678ms] [harness] eval (()=>{const r=document.getElementById('escbtn').getBoundingClientRect();return '[TOUCHGATE] T6 escape corner '+JSON.stringify({rect:Math.round(r.width)+'x'+Math.round(r.height)+'@'+Math.round(r.left)+','+Math.round(r.top),at_least_44px:r.width>=44&&r.height>=44,inset_from_left_px:Math.round(r.left),inset_from_top_px:Math.round(r.top),centre_x_px:Math.round(r.left+r.width/2)})})() => "[TOUCHGATE] T6 escape corner {\"rect\":\"54x46@10,10\",\"at_least_44px\":true,\"inset_from_left_px\":10,\"inset_from_top_px\":10,\"centre_x_px\":37}"
+[  50745ms] [harness] tap #escbtn at 37,33 (1/1)
+[  50776ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  53748ms] [harness] screenshot -> /tmp/t2-gates3/landscape/10-after-tapping-escape-in-the-corner.png
+[  53751ms] [console.log] [PERSISTSAVE] js-backstop n=11
+[  53752ms] [harness] eval window.__tg.dump('after-escape-corner-tap') => "TypeError: Cannot read properties of null (reading 'hidden')\n    at S.dump (<anonymous>:1:1522)\n    at <anonymous>:1:13"
+[  53752ms] [harness] === T1c-PRECONDITION-THE-SAVED-CONFIG-HOLDS-SPARKS-1 ===
+[  53753ms] [harness] eval (()=>{const p='/persist/var/user.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const m=ok?/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(t):null;return '[SPARKSGATE] T1c precondition saved-config-holds-sparks-1 '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,line:m?m[0]:null,value:m?m[1]:null,PASS:!!m&&m[1]==='1'})})() => "[SPARKSGATE] T1c precondition saved-config-holds-sparks-1 {\"read\":true,\"err\":null,\"bytes\":22767,\"line\":\"                      SPARKS 1\",\"value\":\"1\",\"PASS\":true}"
+[  53753ms] [harness] === T1c-RELOAD-WITH-SPARKS-0 ===
+[  53756ms] [console.log] [PERSISTSAVE] js-backstop n=12
+[  53756ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  53756ms] [harness] eval location.search='?sparks=0' => "?sparks=0"
+[  53756ms] [harness] until 1x <<[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg>> (timeout 90000ms, have 0)
+[  53773ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  53773ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  53775ms] [console.log] [DISPLAY] at load: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[  53775ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[  53775ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  53778ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  53778ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  53781ms] [console.log] [TOUCH] orientation portrait=false (layout stays full) via resize
+[  53782ms] [page] load event fired
+[  53794ms] [console.log] [PERSIST] populate ok in 5ms
+[  53840ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  53841ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[  53841ms] [console.log] [SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg before main() (from ?sparks=0)
+[  53841ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  53844ms] [console.log] [DISPLAY] before main: viewport 915x412 dpr 3 -> canvas 2745x1236 aspect 2.2209 gpu-axis-limit 16384
+[  53845ms] [console.log] [BOOT] autostart: calling main
+[  53845ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  53846ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  53846ms] [console.error] 
+[  53846ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  53846ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  53846ms] [console.log] 
+[  53858ms] [harness] until SATISFIED: saw 1x <<[SPARKS] SPARKS 0 written to /data/webdefaults/autoexec.cfg>>
+[  53858ms] [harness] until 2x <<[BOOT] autostart>> (timeout 90000ms, have 2)
+[  53858ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  53959ms] [console.log] [L] ENCODING latin1
+[  53963ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  53978ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  53980ms] [console.error] TODO: glShadeModel
+[  53983ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  60032ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  61866ms] [console.log] [PERSISTSAVE] js-backstop n=1
+[  61867ms] [harness] eval (()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=t!==null&&/\nSPARKS 0\n$/.test(t);return '[SPARKSGATE] T1c sparks-0-overrides-the-saved-1 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,ends_with_sparks_0:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 0'&&ends&&sv==='saved'&&!!um&&um[1]==='0'})})() => "[SPARKSGATE] T1c sparks-0-overrides-the-saved-1 {\"save\":\"saved\",\"autoexec_read\":true,\"autoexec_bytes\":12748,\"autoexec_sparks_lines\":[\"SPARKS 0\"],\"ends_with_sparks_0\":true,\"live_sparks_in_user_cfg\":\"0\",\"tail\":\"ED 0.2\\n\\n# appended at runtime by web/shell.html: crash sparks off (from ?sparks=0)\\nSPARKS 0\\n\",\"PASS\":true}"
+[  61947ms] [harness] screenshot -> /tmp/t2-gates3/landscape/15-booted-with-sparks-0.png
+[  61947ms] [harness] === positive-control-deliberate-uncaught-error-follows ===
+[  61949ms] [harness] eval setTimeout(function(){null.thisIsADeliberateUncaughtError;},0) => 1115
+[  61949ms] [console.error] Uncaught TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+[  61949ms] [EXCEPTION] TypeError: Cannot read properties of null (reading 'thisIsADeliberateUncaughtError')
+    at <anonymous>:1:28
+[  61949ms] [EXCEPTION] structured stack, 1 frames:
+[  61950ms]     <anonymous> @ :0:27
+[  64043ms] [harness] screenshot -> /tmp/t2-gates3/landscape/09-after-deliberate-uncaught-error.png

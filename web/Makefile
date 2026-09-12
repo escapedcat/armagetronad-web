@@ -163,6 +163,10 @@ CLIENT_OBJDIR := web/build-m1
 #                                  aa_web_input_context(), the two bits
 #                                  web/shell.html's touch overlay reads to
 #                                  decide whether a tap means Enter or a turn.
+#   src/emscripten/eWebNet.cpp     M-A: the browser end of the multiplayer
+#                                  bridge. Named here, not added to $(SRCS),
+#                                  for exactly the reason the paragraph below
+#                                  gives -- the dedicated wasm is byte-pinned.
 #
 # They have to be named here because $(SRCS) above wildcards the six game
 # source directories only, and src/emscripten/ is not one of them (it holds
@@ -180,7 +184,8 @@ CLIENT_OBJDIR := web/build-m1
 CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eCompat.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebPersist.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebInput.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebInput.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebNet.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
@@ -410,6 +415,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   --exclude-file '*/polish_transliterated.txt' \
                   --exclude-file '*/spanish.txt' --exclude-file '*/french.txt' \
                   --exclude-file '*/portugese.txt' \
+                  --js-library web/library_bridge.js \
                   --shell-file web/shell.html
 
 # The primary output is the .html page (Task 6's actual deliverable); the
@@ -417,9 +423,14 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
 # the same emcc invocation.
 #
 # The prerequisite list below is NOT "every preloaded directory" -- it is
-# five files: web/shell.html, web/webdefaults/autoexec.cfg, and the three
-# generated data files, because those are the only preload inputs whose
-# paths this Makefile can name without shelling out to `find`. Editing
+# six files: web/shell.html, web/library_bridge.js,
+# web/webdefaults/autoexec.cfg, and the three generated data files, because
+# those are the only preload inputs whose paths this Makefile can name
+# without shelling out to `find`. (web/library_bridge.js is not preloaded;
+# it is merged at link time by --js-library in CLIENT_LDFLAGS, which every
+# one of the four diagnostic variants below shares, so every one of them
+# lists it too -- they did not, and editing the JS library left them stale.)
+# Editing
 # anything else under config/, language/, textures/, models/ or sound/
 # (e.g. adding a texture) does NOT trigger a relink -- Make has no rule
 # pointing at those files, so it will silently reuse a stale .data archive.
@@ -456,7 +467,8 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
 # earlier milestone's build; verify after touching this rule by running
 # `clean-data` first.
 web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/webdefaults/autoexec.cfg \
+                                web/shell.html web/library_bridge.js \
+                                web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion
 	@mkdir -p web/dist-m1
@@ -506,7 +518,8 @@ $(CLIENT_OBJDIR)/emscripten/eWebPersist-nomenusave.o: src/emscripten/eWebPersist
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_NO_MENU_SAVE -c $< -o $@
 
 web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/webdefaults/autoexec.cfg \
+                                web/shell.html web/library_bridge.js \
+                                web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion
 	@mkdir -p web/dist-m1
@@ -550,7 +563,8 @@ $(CLIENT_OBJDIR)/render/rSysdep-oldyield.o: src/render/rSysdep.cpp web/Makefile
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_YIELD_BEFORE_PERFRAME -c $< -o $@
 
 web/dist-m1/armagetronad-oldyield.html: $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/webdefaults/autoexec.cfg \
+                                web/shell.html web/library_bridge.js \
+                                web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion
 	@mkdir -p web/dist-m1
@@ -591,7 +605,8 @@ $(CLIENT_OBJDIR)/tron/gMenus-fstoggle.o: src/tron/gMenus.cpp web/Makefile
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_KEEP_FULLSCREEN_TOGGLE -c $< -o $@
 
 web/dist-m1/armagetronad-fstoggle.html: $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/webdefaults/autoexec.cfg \
+                                web/shell.html web/library_bridge.js \
+                                web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion
 	@mkdir -p web/dist-m1
@@ -644,7 +659,8 @@ $(OLDCFG_DIR)/autoexec.cfg: web/webdefaults/autoexec.cfg web/Makefile
 	@printf 'SOUND_BUFFER_SHIFT 1\n' >> $@
 
 web/dist-m1/armagetronad-oldautoexec.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html $(OLDCFG_DIR)/autoexec.cfg \
+                                web/shell.html web/library_bridge.js \
+                                $(OLDCFG_DIR)/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion
 	@mkdir -p web/dist-m1

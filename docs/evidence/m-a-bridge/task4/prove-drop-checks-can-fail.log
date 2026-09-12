@@ -1,0 +1,11 @@
+A clean relay: drop=0 -> outcome=reply droppedCount=0
+A fully lossy relay: drop=1 -> outcome=nothing droppedCount=1
+
+CHECK 1  "--drop 1 discards every datagram": asserts outcome===nothing and droppedCount>0.
+  against drop=1 (the real case) : outcome=nothing dropped=1  -> PASSES
+  against drop=0 (the mutation)  : outcome=reply dropped=0  -> FAILS on both halves
+CHECK 2  "drop 0 passes everything": asserts payload pong:ping and droppedCount===0.
+  against drop=0 (the real case) : outcome=reply dropped=0  -> PASSES
+  against drop=1 (the mutation)  : outcome=nothing dropped=1  -> FAILS on both halves
+
+BOTH CHECKS DISCRIMINATE.

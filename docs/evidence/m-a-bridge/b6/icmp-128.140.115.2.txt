@@ -1,0 +1,12 @@
+ICMP to 128.140.115.2 (caylee' Fortress Server, Hetzner DE), 2026-09-12 ~12:40Z,
+just before the connect.
+
+  control 1.1.1.1   8 packets, 0% loss, min/avg/max/stddev 108.914/111.989/115.965/2.424 ms
+  128.140.115.2    12 packets, 0% loss, min/avg/max/stddev 124.274/4495.258/9885.853/3277.347 ms
+
+READ THE MINIMUM, NOT THE AVERAGE. 0% loss with a 9.9 s maximum and a 124 ms
+minimum is a host queueing its echo replies behind everything else -- Hetzner
+deprioritises ICMP -- not a path with ten seconds of latency on it. The control
+taken in the same minute was clean (2.4 ms of jitter), so unlike the first
+sample against 188.245.106.232 this one is NOT a transient on this machine.
+The usable reading is the floor: ~124 ms round trip to the host.

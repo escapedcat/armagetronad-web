@@ -554,7 +554,7 @@ void ANET_GetHostList( char const * hostname, nHostList & hostList, int net_host
     {
         // look up hostname
         struct hostent *hostentry;
-        hostentry = gethostbyname (hostname);
+        hostentry = AA_GETHOSTBYNAME (hostname);
         if (!hostentry)
         {
 #ifndef WIN32
@@ -1274,7 +1274,7 @@ nAddress & nAddress::SetHostname( const char * hostname )
     {
         // look up hostname ( TODO: error handling )
         struct hostent *hostentry;
-        hostentry = gethostbyname (hostname);
+        hostentry = AA_GETHOSTBYNAME (hostname);
         if (hostentry)
         {
             // store values
@@ -1519,6 +1519,25 @@ int nSocket::Create( void )
     // initialize networking at OS level
     sn_InitOSNetworking();
 
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+    // The browser cannot open a UDP socket. socket_ holds a bridge handle
+    // instead of a file descriptor from here on, and every site in this file
+    // that would hand socket_ to a syscall is guarded to match: NINE #if
+    // blocks (Create here, Bind, Bind's failure path, Close,
+    // CheckNewConnection, Read, Write, Broadcast, Select), plus the two
+    // AA_GETHOSTBYNAME sites, which are guarded by macro rather than by #if
+    // because both sit above the __LINE__ constants this file bakes into the
+    // byte-pinned dedicated wasm. Eleven in total. The setsockopt and
+    // ioctl(FIONBIO) calls below are not among them: this block returns
+    // before them, and neither are ANET_CloseSocket/ANET_GetSocketAddr, which
+    // socket_ reaches only through call sites already inside the nine.
+    // Counted with the recipe in PLAN.md's M-A block, not
+    // remembered -- an earlier version of this comment claimed every site was
+    // covered while ioctl(FIONREAD) in CheckNewConnection was not.
+    socket_ = eWebNet::Create();
+    return socket_ < 0 ? -1 : 0;
+#endif
+
     int socktype = socktype_;
 #ifndef WIN32
 #ifndef MACOSX
@@ -1616,12 +1635,21 @@ int nSocket::Bind( nAddress const & addr )
     // see if the process was archived; if yes, return without action
     if ( !BindArchiver< tPlaybackBlock >::Archive( ret, trueAddress_ ) )
     {
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+        {
+            int boundPort = 0;
+            ret = eWebNet::Bind( socket_, boundPort );
+            if ( 0 == ret )
+                trueAddress_.SetPort( boundPort );
+        }
+#else
         // just delegate
         ret = bind( socket_, addr, addr.GetAddressLength() );
 
         // read true address
         if ( 0 == ret )
             ANET_GetSocketAddr( socket_, trueAddress_ );
+#endif
     }
 
     // record the bind
@@ -1645,7 +1673,11 @@ int nSocket::Bind( nAddress const & addr )
         // con << "nSocket::Open: Failed to bind socket to " << addr.ToString() << ".\n";
 
         // close the socket and report an error
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+        eWebNet::Close( socket_ );
+#else
         ANET_CloseSocket( socket_ );
+#endif
         socket_ = -1;
 
         // throw exception on fatal error
@@ -1797,7 +1829,11 @@ int nSocket::Close( void )
         con << "Closing socket bound to " << trueAddress_.ToString() << "\n";
 #endif
 
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+    eWebNet::Close( socket_ );
+#else
     ANET_CloseSocket( socket_ );
+#endif
     socket_ = -1;
     broadcast_ = false;
 
@@ -1921,6 +1957,24 @@ const nSocket * nSocket::CheckNewConnection( void ) const
     }
 #endif
 
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+    // THE NINTH GUARDED SITE, and the one the audit missed. socket_ is a
+    // bridge handle (1, 2, 3...), not a file descriptor, so the ioctl below
+    // would interrogate whatever fd happens to share that number -- on
+    // Emscripten that is stdout, which answers ENOTTY, which ANET_Error()
+    // maps to Ignore, which is why this never crashed and never showed up.
+    //
+    // There is also nothing to ask. This is reached from sn_Receive()'s
+    // case nSERVER only, and a page cannot listen for UDP, so it can never
+    // have a new connection to report. gGame.cpp refuses hosting at the door
+    // (AA_NO_HOSTING_FROM_A_PAGE); this is the same answer one layer down, so
+    // a future path that reaches nSERVER some other way still does no syscall
+    // on a handle. The code below is left compiled-but-dead on purpose, the
+    // way nSocket::Create does it, so `available` stays used and the two
+    // branches stay visibly the same function.
+    return NULL;
+#endif
+
     //    for ( SocketArray::iterator iter = sockets.begin(); iter != sockets.end(); ++iter )
     int ret = ioctl (socket_, FIONREAD, &available);
     if ( ret == -1)
@@ -2027,10 +2081,14 @@ int nSocket::Read( int8 * buf, int len, nAddress & addr ) const
         }
 #endif
 
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+        ret = eWebNet::Recv( socket_, buf, len, addr );
+#else
         // really receive
         NET_SIZE addrlen = addr.GetAddressLength();
         ret = recvfrom (socket_, buf, len, 0, addr, &addrlen );
         tASSERT( addrlen <= static_cast< NET_SIZE >( addr.GetAddressLength() ) );
+#endif
     }
 
     // write recording
@@ -2111,7 +2169,11 @@ int nSocket::Write( const int8 * buf, int len, const sockaddr * addr, int addrle
         {
             // don't send if a playback is running
             if ( !tRecorder::IsPlayingBack() )
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+                ret = eWebNet::Send( socket_, buf, len, addr );
+#else
                 ret = sendto (socket_, buf, len, 0, addr, addrlen );
+#endif
         }
     }
 
@@ -2176,6 +2238,13 @@ int nSocket::Write( const int8 * buf, int len, const nAddress & addr ) const
 
 int nSocket::Broadcast( const char * buf, int len, unsigned int port ) const
 {
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+    // LAN discovery cannot work from a page: there is no broadcast transport.
+    // Fail immediately rather than letting the caller wait for answers that
+    // can never arrive.
+    return -1;
+#endif
+
     tASSERT( IsOpen() );
 
     if ( !broadcast_ )
@@ -2656,6 +2725,13 @@ bool nBasicNetworkSystem::Select( REAL dt )
         }
         else
         {
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+            // There is no select() over bridge handles. Yield to the browser
+            // until a datagram is queued or the budget runs out; this is the
+            // one place in the client where the JS side gets to run, which is
+            // why library_bridge.js may only enqueue and never call back in.
+            retval = eWebNet::Poll( dt ) ? 1 : 0;
+#else
             fd_set rfds; // set of sockets to watch
             struct timeval tv; // time value to pass to select()
 
@@ -2682,6 +2758,7 @@ bool nBasicNetworkSystem::Select( REAL dt )
 
             // delegate to system select
             retval = select(max+1, &rfds, NULL, NULL, &tv);
+#endif
         }
     }
     tRecorder::Record( section, retval );

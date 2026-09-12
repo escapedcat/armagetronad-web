@@ -1,0 +1,45 @@
+Where this machine's packets actually go, captured 2026-09-12 ~12:50Z, right after
+the third B6 attempt. This is the evidence for the conclusion in
+docs/evidence/m-a-bridge/README.md section 5: the failure is this machine's egress,
+not the bridge and not the three servers.
+
+$ route -n get default
+     route to: default
+  destination: default
+         mask: default
+      gateway: index: 24 utun5
+    interface: utun5
+        flags: <UP,GATEWAY,DONE,STATIC,PRCLONING,GLOBAL>
+   recvpipe  sendpipe  ssthresh  rtt,msec    rttvar  hopcount      mtu     expire
+         0         0         0         0         0         0      1340         0 
+
+$ route -n get <each destination>  -- which interface it leaves by
+  128.140.115.2      -> utun5
+  188.245.106.232    -> utun5
+  185.127.17.61      -> utun5
+  1.1.1.1            -> utun5
+  8.8.8.8            -> utun5
+  127.0.0.1          -> lo0
+
+$ ifconfig: the tunnel pair (two hops, the NymVPN shape) and the real LAN link
+  utun4: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1420
+  	inet 10.1.22.143 --> 28.30.0.0 netmask 0xff000000
+  utun5: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1340
+  	inet 10.1.137.186 --> 10.1.22.143 netmask 0xff000000
+  en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+  	inet 192.168.178.51 netmask 0xffffff00 broadcast 192.168.178.255
+
+$ the VPN daemons present on the machine
+  /Applications/Mullvad VPN.app/Contents/Resources/mullvad-daemon
+  /Applications/NymVPN.app/Contents/Library/LaunchDaemons/NymVPND.app/Contents/MacOS/nym-vpnd
+  /Applications/NymVPN.app/Contents/MacOS/NymVPN
+  IVPN Agent
+
+WHAT THIS DOES AND DOES NOT SHOW. It shows that every route out of this machine,
+including all three game servers, goes through utun5, and that only loopback does
+not -- which is why the dockerized container is the one opponent every gate in this
+milestone ever beat. It does NOT show the exit policy itself: the Nym policy was
+never read, and no packet was sent to a cooperating endpoint inside 4533-4599 to
+demonstrate the block, because every endpoint in that range is somebody's game
+server and probing one is what task 6 was told not to do. The confirming test is
+the same gate from a network with no tunnel on the default route.
