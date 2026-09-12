@@ -28,8 +28,10 @@
 # non-zero. The arms cannot be confused for each other.
 set -e
 OUT=$1; ADDR=$2; PORT=$3; ARM=$4
-[ -n "$OUT" ] && [ -n "$ADDR" ] && [ -n "$PORT" ] && [ -n "$ARM" ] || {
-  echo "usage: $0 <out-dir> <address> <port> <local|remote>" >&2; exit 2; }
+if [ -z "$OUT" ] || [ -z "$ADDR" ] || [ -z "$PORT" ] || [ -z "$ARM" ]; then
+  echo "usage: $0 <out-dir> <address> <port> <local|remote>" >&2
+  exit 2
+fi
 case $ARM in local|remote) ;; *) echo "arm must be local or remote, got '$ARM'" >&2; exit 2;; esac
 ROOT=$(pwd)
 [ -f "$ROOT/web/tools/bridge-gate-b6.steps" ] || { echo "run me from the repository root" >&2; exit 2; }
@@ -43,10 +45,11 @@ rm -f "$OUT/console.log" "$OUT/udp-trace.jsonl" "$OUT/relay.log" "$OUT/serverlis
 BAKED=$(strings -a web/dist-m1/armagetronad.data 2>/dev/null | grep -E '^CUSTOM_SERVER_NAME ' | tail -1 | awk '{print $2}')
 BAKEDPORT=$(strings -a web/dist-m1/armagetronad.data 2>/dev/null | grep -E '^CLIENT_PORT ' | tail -1 | awk '{print $2}')
 echo "bundle is built for: $BAKED:$BAKEDPORT   this arm expects: $ADDR:$PORT"
-[ "$BAKED" = "$ADDR" ] && [ "$BAKEDPORT" = "$PORT" ] || {
+if [ "$BAKED" != "$ADDR" ] || [ "$BAKEDPORT" != "$PORT" ]; then
   echo "REFUSING TO RUN: the built bundle dials $BAKED:$BAKEDPORT, not $ADDR:$PORT." >&2
   echo "Edit web/webdefaults/autoexec.cfg and relink (make -f web/Makefile client)." >&2
-  exit 1; }
+  exit 1
+fi
 
 if [ "$ARM" = local ]; then
   docker inspect -f '{{.State.Status}}' aa-server 2>/dev/null | grep -q running || {
