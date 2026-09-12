@@ -78,26 +78,39 @@ echo "relay: $(head -1 "$OUT/relay.log")"
 # check as much as an evidence one -- the rule for this gate is never to take a
 # slot on a server someone is playing on.
 #
-# EVERY MINUTE, NOT EVERY TWENTY SECONDS, and the first cut of this got it
-# wrong in both halves. It polled corsapi.armanelgtron.tk every 20 s and was
-# rate-limited into HTTP errors within three minutes -- a third-party service
-# this project is a guest on, exactly like the game server, and the same
-# restraint applies. And the reading itself was wrong even when the fetch
-# worked: a <Server> element in that document puts each attribute ON ITS OWN
-# LINE, so a shell pipeline that required host= and port= to match the same
-# line could only ever report "?". It is a whole-element match in python now,
-# and it prints the name too, so a mis-identified server is visible rather
-# than inferred.
+# THIS ONE SMALL BLOCK GOT THREE THINGS WRONG IN A ROW, and all three are named
+# because it is a CONDUCT guard -- the check that says "nobody else is on this
+# server" -- which is the worst possible place for a reading nobody looks at
+# twice.
+#
+#   1. It polled every 20 s. That is a third-party service this project is a
+#      guest on, exactly like the game server, and the same restraint applies.
+#      It is once a minute now, and capped at fifteen polls.
+#   2. The reading was silently wrong even when the fetch worked. A <Server>
+#      element in that document puts each attribute ON ITS OWN LINE, so the
+#      original shell pipeline, which required host= and port= to match the same
+#      line, could only ever print "?". It never once reported a number.
+#   3. The python replacement got HTTP 403 every time and I wrote that down as
+#      rate-limiting. IT WAS NOT, and that diagnosis is corrected here rather
+#      than quietly dropped: corsapi.armanelgtron.tk rejects the default
+#      `Python-urllib/3.x` User-Agent and answers 200 to a curl-like one --
+#      measured both ways, side by side, same second. Hence the header below.
+#      Do not remove it, and do not re-diagnose a 403 here as "we polled too
+#      hard" without testing the User-Agent first.
+#
+# It prints the server's NAME alongside the count, so a mis-identified server is
+# visible rather than inferred, and it prints an HTTP failure with its status
+# code, so that a future 403 cannot be waved away as "the service was busy".
 if [ "$ARM" = remote ]; then
   ( python3 - "$ADDR" "$PORT" "$OUT/serverlist-watch.txt" <<'PY'
 import re, sys, time, urllib.request
 addr, port, path = sys.argv[1], sys.argv[2], sys.argv[3]
 out = open(path, 'a', buffering=1)
+URL = 'https://corsapi.armanelgtron.tk/servers_link/serverlist.php'
 for _ in range(15):
     try:
-        x = urllib.request.urlopen(
-            'https://corsapi.armanelgtron.tk/servers_link/serverlist.php', timeout=25
-        ).read().decode('utf-8', 'replace')
+        req = urllib.request.Request(URL, headers={'User-Agent': 'curl/8.7.1'})
+        x = urllib.request.urlopen(req, timeout=25).read().decode('utf-8', 'replace')
         row = 'not listed'
         for b in re.findall(r'<Server\b(.*?)>', x, re.S):
             g = lambda k: (re.search(k + r'="([^"]*)"', b) or [None, ''])[1]
@@ -107,7 +120,7 @@ for _ in range(15):
                     re.sub(r'0x[0-9a-fA-F]{6}', '', g('name')))
                 break
     except Exception as e:
-        row = 'fetch failed: ' + type(e).__name__
+        row = 'fetch failed: %s %s' % (type(e).__name__, getattr(e, 'code', ''))
     out.write(time.strftime('%H:%M:%SZ', time.gmtime()) + ' ' + row + '\n')
     time.sleep(60)
 PY

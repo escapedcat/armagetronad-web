@@ -495,19 +495,27 @@ than a third data point of the same kind.
 
 ## 5. B6 — a real server: attempted, with permission, and **it did not work**
 
-**B6 FAILS.** Two community servers were contacted, one after the other, with the maintainer's
-explicit prior permission and only after checking that each was empty. Both behaved the same
-way: the client sent its login and **nothing came back at all** — not a refusal, not a version
-complaint, not one datagram. No round was played on either. There is therefore **no latency
-figure from a real network in this milestone**, which was the number this gate existed to
-produce.
+**B6 FAILS — and the cause is this machine's VPN, not the bridge and not the servers.**
 
-Evidence: `b6/local/` (the control, which passed), `b6/remote-1-bobs-default-settings/` and
-`b6/remote-2-unnamed-server/` (the two that did not), plus `b6/icmp-188.245.106.232.txt` and the
-two `serverlist-*.xml` snapshots taken before connecting.
+Three community servers were contacted, one at a time, with the maintainer's explicit prior
+permission and only after checking that each was empty. All three behaved identically: the
+client sent its login and **nothing came back at all** — not a refusal, not a version complaint,
+not one datagram. No round was played on any of them, so there is **no latency figure from a real
+network in this milestone**, which is the number this gate existed to produce.
 
-**The screenshot filenames in the two failed arms lie, and they lie because they are the same
-filenames the passing arm produces.** All three arms run one steps file, so each shot is named
+The third attempt is what explains the first two. It was run to test a protocol-version theory
+and it **falsified** that theory, which sent the search back to this machine — where
+`route -n get default` says every packet leaves through **`utun5`, a NymVPN mixnet tunnel**.
+Mixnet exit gateways run a Tor-style destination-port allowlist; DNS, STUN and HTTPS are on it,
+and Armagetron's 4533–4599 is not. The container works precisely because loopback never enters
+the tunnel. "Where it actually goes wrong" below has the evidence and its limits.
+
+Evidence: `b6/local/` (the control, which passed), `b6/remote-1-bobs-default-settings/`,
+`b6/remote-2-unnamed-server/` and `b6/remote-3-cayleys-v17/` (the three that did not), plus
+`b6/icmp-*.txt` and the three `serverlist-*.xml` snapshots taken before connecting.
+
+**The screenshot filenames in the three failed arms lie, and they lie because they are the same
+filenames the passing arm produces.** All four arms run one steps file, so each shot is named
 for the *step* that took it and not for what it found: in the remote arms
 `11-on-the-grid.png` is the bookmarks menu the client fell back to, and
 `14-the-round-was-scored.png` and `15-a-second-round-started-…png` are that same menu,
@@ -517,54 +525,61 @@ and a gate that differs between the case it passes and the case it fails, which 
 
 ### What was run, and the conduct rules it was run under
 
-| | arm | address | when | result |
-| --- | --- | --- | --- | --- |
-| control | local container | `127.0.0.1:4534` | 2026-09-12 ~11:05Z | **PASS**, a full round |
-| 1 | `bob's \| DEFAULT SETTINGS [EU]` | `188.245.106.232:4537` | 2026-09-12 11:28Z | 50 datagrams out, **0 in** |
-| 2 | `Unnamed Server` | `185.127.17.61:4537` | 2026-09-12 11:39Z | 50 datagrams out, **0 in** |
+| | arm | address | protocol range | when | result |
+| --- | --- | --- | --- | --- | --- |
+| control | local container | `127.0.0.1:4534` | — | 11:05Z | **PASS**, a full round |
+| 1 | `bob's \| DEFAULT SETTINGS [EU]` | `188.245.106.232:4537` | `0`–**`18`** | 11:28Z | 50 out, **0 in** |
+| 2 | `Unnamed Server` | `185.127.17.61:4537` | `0`–**`18`** | 11:39Z | 50 out, **0 in** |
+| 3 | `caylee's Fortress Server` | `128.140.115.2:4534` | `8`–**`17`** | 12:40Z | 50 out, **0 in** |
 
-Both were confirmed empty from the master list immediately before connecting (`numplayers="0"`,
-snapshots in `b6/`), and both accept protocol 17 by their own advertised range (`0`–`18`). Each
-arm connected **once**. The client gave up on its own after about ten seconds and roughly
-twenty-one retries, and sent nothing to either host afterwards — so the long timeouts visible in
-the two `driver.txt` files are the harness waiting, not the gate sitting on a stranger's slot.
-Arm 2 was the single retry the task allowed, and it was deliberately a **different host and a
-different hosting provider**, so that a host-specific fault and a general one could be told
-apart. After it, contact stopped.
+All 2026-09-12. Every one was confirmed empty from the master list immediately before connecting
+(`numplayers="0"`, snapshots in `b6/`). Each arm connected **once**; the client gave up on its own
+after about ten seconds and roughly twenty-one login retries and sent nothing afterwards, so the
+long timeouts in each `driver.txt` are the harness waiting, not the gate sitting on a stranger's
+slot. The three were deliberately spread: **three hosts, three providers, two destination ports
+(4537 and 4534), and two different protocol ceilings.** Arm 3 was separately authorised precisely
+because it advertises `version_max="17"` — the ceiling this tree speaks.
 
-One conduct failure of my own, recorded because it is the same class of mistake as the one this
-gate is written to avoid: the run's master-list watcher polled
-`corsapi.armanelgtron.tk` every 20 s and was rate-limited into HTTP errors within three minutes.
-That service is a third party this project is a guest on exactly as the game servers are.
-`run-bridge-b6.sh` now polls once a minute and its comment says why; the cost is that arm 2 has
-no independent record of the server's player count while it was connected, only the snapshot
-taken just before.
+**Two conduct failures of my own**, recorded because they are the same class of mistake this gate
+exists to avoid, and because one of them is a wrong diagnosis I published before checking:
 
-### What the two failed arms nevertheless prove
+- The master-list watcher polled `corsapi.armanelgtron.tk` every 20 s. That is a third party this
+  project is a guest on exactly as the game servers are, and I applied the care to one and not the
+  other. It polls once a minute now, capped.
+- **I recorded those polls as having been "rate-limited into HTTP errors". That was wrong.** The
+  service returns **HTTP 403 to the default `Python-urllib/3.x` User-Agent** and 200 to a
+  curl-like one — measured both ways in the same second, after the claim had already been
+  committed. The watcher sends a User-Agent now. The cost of the original bug is real: arms 1–3
+  have no independent record of the server's player count *while* connected, only the snapshot
+  from just before. That is three wrong readings in one small block — a poll interval, a parse
+  that could only ever print `?`, and a misdiagnosed status code — all of them inside the guard
+  whose whole job is to say "nobody else is on this server". A conduct check is the worst place
+  in a repository to put a reading nobody looks at twice.
+
+### What the failed arms nevertheless prove
 
 Not nothing, and the parts that are proven are worth separating from the part that is not:
 
-- **The destination policy admits a real public server.** Both remote arms ran the relay
-  **without** `--allow-private`. `new_dataErrors` is `0` across the connect in both, and the
-  relay's own UDP trace shows the datagrams leaving for `188.245.106.232:4537` and
-  `185.127.17.61:4537`. Nothing was refused by `bridge/policy.mjs`; it is only loopback and the
-  other reserved ranges that it turns away.
-- **The client dialled the right place.** `b6/remote-1-*/10-bookmarks-menu-shows-the-address-about-to-be-dialled.png`
-  reads `Connect to 188.245.106.232`, and `udp-trace.jsonl` in each arm contains exactly one
-  destination and no other.
-- **The page survived the failure.** `B6-LEFT` is `PASS:true` in both remote arms: the socket
+- **The destination policy admits a real public server.** All three remote arms ran the relay
+  **without** `--allow-private`. `new_dataErrors` is `0` across the connect in every one, and the
+  relay's own UDP trace shows the datagrams leaving for the right address. Nothing was refused by
+  `bridge/policy.mjs`; it is only loopback and the other reserved ranges that it turns away.
+- **The client dialled the right place.** Each arm's
+  `10-bookmarks-menu-shows-the-address-about-to-be-dialled.png` reads `Connect to <that server>`,
+  and each `udp-trace.jsonl` contains exactly one destination and no other.
+- **The page survived the failure.** `B6-LEFT` is `PASS:true` in all three remote arms: the socket
   closed, the canvas still has a size, GL reports no error and there is no Emscripten abort. A
   connect that goes nowhere does not take the client down.
-- **And the gate's own assertions are demonstrably not vacuous.** This milestone has twice
-  shipped a check that could only have passed, so it is worth saying plainly: one steps file
-  printed `B6 … "PASS":true` against the container and `B6 … "PASS":false` against both community
-  servers, from the same walk, with `rtt_samples` reading 74 in the one case and 0 in the other.
+- **And the gate's own assertions are demonstrably not vacuous.** This milestone has twice shipped
+  a check that could only have passed, so it is worth saying plainly: one steps file printed
+  `B6 … "PASS":true` against the container and `B6 … "PASS":false` against all three community
+  servers, from the same walk, with `rtt_samples` reading 74 in the one case and 0 in the others.
   A gate that has been seen failing against the thing it is meant to catch is the only kind worth
   quoting.
 
 ### The one thing that makes this a real result rather than a mystery
 
-The login datagram is **byte-for-byte the same shape in all three arms**. Parsed out of the
+The login datagram is **byte-for-byte the same shape in all four arms**. Parsed out of the
 relay's UDP trace, the first datagram the client sends is, in every case:
 
 ```
@@ -573,52 +588,66 @@ len=186   one message: descriptor 11 (login2), message id 0, 89 shorts of payloa
 
 In the control the container answers that datagram immediately — the next line in the trace is
 inbound, `descriptor 5` (`login_accept`) followed by a burst of `descriptor 60` object syncs. In
-both remote arms the identical datagram is sent twenty-one times and the trace contains **no
-inbound line at all**. So the client is not doing something different when it talks to a
-stranger; the difference is entirely at or beyond the far end.
+all three remote arms the identical datagram is sent twenty-one times and the trace contains **no
+inbound line at all**. The client is not doing something different when it talks to a stranger.
 
-### What was ruled out, and what was not
+### Where it actually goes wrong
 
-Ruled out, each with a measurement:
+The first two arms produced a plausible and, as it turns out, **wrong** explanation, which was
+written into this file and into `PLAN.md` before it was tested. It is retracted below rather than
+edited away, because the way it failed is the useful part.
 
-- **Outbound UDP from this machine is not blocked in general.** DNS over UDP to `1.1.1.1` and
-  `8.8.8.8` answers, and so does a STUN binding request to `stun.l.google.com:19302`,
-  `stun1.l.google.com:19302` and `stun.cloudflare.com:3478` — arbitrary high UDP ports, replies
-  returning through the same NAT the relay sits behind, using the same `node:dgram` API.
-- **The path to the host is up.** ICMP to `188.245.106.232`: 10 packets, 0 % loss,
-  min/avg/max/stddev **123.113 / 126.493 / 133.051 / 2.965 ms**. (A first ICMP sample in the same
-  minute showed 80 % loss and a 2.6 s maximum, but a control ping to `1.1.1.1` taken alongside it
-  showed a 2.8 s maximum too — that was a transient on *this* machine's link, and it is recorded
-  and discarded in `b6/icmp-188.245.106.232.txt` rather than quietly dropped.)
-- **The relay is not at fault.** It is `bridge/relay.mjs` unmodified in both arms; the tracing
-  front end patches `dgram.createSocket` in its own process and then imports the real
-  `startRelay`. The trace is taken at the socket, below any of the bridge's own logic.
-- **The servers were not down.** Both were still listed by the master with `numplayers="0"`
-  after the attempts, which means they were still registering with it.
-- **It is not the protocol version being out of range.** This tree advertises
-  `nVersion(0, 17)` — `sn_versionString` in `src/network/nConfig.cpp` ends at index 17
-  (`0.2.9_alpha`) and `sn_GetCurrentProtocolVersion()` returns `len - 2`. Both servers advertise
-  `version_min="0"`, so 17 is inside the range they claim to accept.
+**The retracted claim.** Both of the first two servers advertised `version_max="18"`, and 121 of
+the 138 servers then listed did too — all of them `sty+ct+ap`/`bob` forks — while this tree tops
+out at protocol **17** (`sn_versionString` in `src/network/nConfig.cpp` ends at index 17,
+`sn_GetCurrentProtocolVersion()` returns `len - 2`). From two silent servers I inferred that the
+live community might not answer a 17 client at all, i.e. that the browser client could reach
+about an eighth of the servers. **That inference was unsound and the third arm disproved it:**
+`caylee's Fortress Server` advertises `8`–`17`, runs `0.2.9.1_alpha20240309`, sits on a different
+provider and a different port, and was exactly as silent as the two v18 forks. Two data points
+with a shared property are not evidence that the property is the cause.
 
-**Not ruled out, and these are the two live hypotheses:**
+**What it actually is.** With the protocol theory dead, the only remaining common factor was this
+machine, and it took one command to find:
 
-1. **Protocol 18, and a fork.** 121 of the 138 servers listed advertise `version_max="18"`;
-   only 17 advertise 17. Both servers tried were in the 18 group, and neither runs mainline:
-   `0.2.9-bob unix dedicated` and `0.2.9-sty+ct+ap.3_alpha_z1 unix dedicated`. The live community
-   is essentially all `sty+ct+ap` forks at protocol 18, and this source tree is one protocol
-   version behind all of them. An advertised `version_min="0"` is a claim, not a test.
-2. **UDP into the game-port range being dropped somewhere on this machine's path.** Both servers
-   tried happened to be on port **4537**, and the STUN and DNS checks used 19302, 3478 and 53.
-   There is no cooperating endpoint on 4533–4599 that is not somebody's game server, so this was
-   not tested — deliberately, because testing it means sending packets to a stranger.
+```
+$ route -n get default
+    gateway: index: 24 utun5
+  interface: utun5
+```
 
-**The experiment that separates them is one connect to a server whose `version_max` is 17**, of
-which the same listing had thirteen that were empty — e.g. `216.209.143.245:4534`,
-`46.232.251.31:4534`, `80.134.63.146:4534`. If a 17-ceiling server answers, hypothesis 1 is the
-answer and M-B needs a protocol bump before it needs anything else. If it also stays silent on
-port 4534, hypothesis 2 survives and the next step is a network this port range is not filtered
-on. That connect was **not** made: the task allowed one attempt and one retry, and both were
-spent.
+**Every route out of this machine goes through `utun5`** — `128.140.115.2`, `188.245.106.232`,
+`185.127.17.61` and `1.1.1.1` all resolve to that interface; only `127.0.0.1` goes to `lo0`.
+`utun5` (MTU 1340) is chained behind `utun4` (MTU 1420), which is the two-hop shape of
+**NymVPN**, whose daemon is running. Mixnet exit gateways enforce a Tor-style destination-port
+allowlist, and the pattern of what worked matches it exactly:
+
+| destination port | service | result |
+| --- | --- | --- |
+| 53 | DNS to `1.1.1.1`, `8.8.8.8` | **answers** |
+| 3478, 19302 | STUN to Cloudflare and Google | **answers** |
+| 443 | the master-list HTTPS fetch | **answers** |
+| ICMP | all three game hosts | **answers** |
+| **4534, 4537** | **three Armagetron servers, three providers** | **silence, 150 datagrams, 0 replies** |
+
+That also retrospectively explains two oddities recorded earlier in this section as noise: the
+ICMP sample to `188.245.106.232` that showed 80 % loss and a 2.6 s maximum, and the one to
+`128.140.115.2` that showed 0 % loss with a **9.9 s** maximum against a clean 1.1.1.1 control in
+the same minute. Multi-second, wildly variable latency with no loss is what a mixnet does; it was
+never the Wi-Fi and never Hetzner.
+
+**What this does and does not establish.** It is not proof. The Nym exit policy was not read, and
+no packet was sent to a cooperating endpoint inside 4533–4599 to demonstrate the block directly —
+deliberately, because every endpoint in that range belongs to somebody's game and probing one is
+what this task was told not to do. What is established is that all egress is tunnelled, that the
+tunnel passes the well-known ports and not the game ports, and that three independent servers on
+two ports behaved identically. **The confirming test is to run the same gate from a network with
+no tunnel on the default route** — the maintainer's phone, not this machine. It is a ten-minute
+test and it needs no code.
+
+**What it clears.** The bridge, the relay, the destination policy, the client's protocol version
+and the three server operators are all off the hook. Nothing in `bridge/` or `src/emscripten/`
+needs to change because of this result.
 
 ### The control arm passed, and it carries a new instrument
 
@@ -658,9 +687,11 @@ The gap sampler was kept as well, so there is a row comparable with §2's table:
 | through B6 | local container | 193 | 33.4 | 121.4 | 957.6 | 961.2 | 50 | 17 | 4 |
 
 **The remote halves of both tables are empty, and that is the result of this gate.** The honest
-statement of what M-A now knows about latency on a real network is: the path to one of the
-servers is about **126 ms** round trip at the ICMP level, and nothing whatever is known about
-what the bridge adds on top of it, because no datagram has ever made the trip.
+statement of what M-A knows about latency on a real network is: the ICMP floor to the two hosts
+measured is **123–126 ms**, both of them through the mixnet tunnel and therefore not
+representative of an untunnelled path either, and **nothing whatever is known about what the
+bridge adds**, because no datagram has ever made the trip. The instrument is built, tested, and
+has a control to subtract; it is waiting on one run from a network without a tunnel.
 
 ---
 
@@ -675,13 +706,17 @@ misleading:
   question is actually about. A later milestone needs an option that **stalls** the WebSocket
   leg, not one that drops packets on the UDP leg, before that question can be measured rather
   than argued from the mechanism.
-- **It has never been shown to reach a community server, and one attempt each at two of them
-  failed outright** (§5). Every working reading in this directory is against a local container
-  built from this source tree. The bridge is proven against *that*; nothing here shows it
-  carrying a game to a server this project does not own, and the two attempts that were made got
-  no reply of any kind. Whether that is this tree being a protocol version behind the live
-  community, or this machine's path filtering the game-port range, is **undetermined** — §5 names
-  the one experiment that separates them.
+- **It has never been shown to reach a community server. Three attempts, three providers, two
+  ports, zero replies** (§5). Every working reading in this directory is against a local container
+  built from this source tree. The bridge is proven against *that* and against nothing else. The
+  evidence points hard at this machine's egress — a NymVPN mixnet tunnel carrying the default
+  route, which passes DNS/STUN/HTTPS and not 4533–4599 — but that is inference from a routing
+  table and a pattern, **not a demonstrated block**, and it stays an open item until the same gate
+  is run from an untunnelled network.
+- **Do not repeat the protocol-18 claim that briefly lived in this file.** It said the live
+  community might not answer a protocol-17 client at all. It was inferred from two servers that
+  shared a property, and a third server without that property behaved identically. §5 keeps it
+  written down as a retraction.
 - **There is still no latency figure for a real network.** That was B6's whole purpose. The only
   round-trip numbers in this document are loopback (§5), and the local→remote subtraction they
   were built to feed has no remote half.
