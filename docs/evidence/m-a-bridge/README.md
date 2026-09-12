@@ -12,9 +12,12 @@ explicit permission first.
 | `task2/` | the relay, the client interception, and the address-mapping fix |
 | `b1/`, `b2/` | Task 3: a browser player joins a real server and finishes a round |
 | `task4/steer/`, `task4/steer2/` | **did a steering keypress reach the server** — the control and steering arms, run twice |
+| `task4/steer3/` | a third arm pair, run after fix round 1 closed the steering template's gating hole — the one the committed template actually produced (§1.1) |
 | `task4/loss/` | what 5 % packet loss costs, and what a dropped connection does |
-| `task4/prove-*.log` | the checks in this task, run against the case they are meant to catch, failing |
+| `task4/fix1/clean/` | the whole gate re-run after fix round 1, clean relay: the run that shows the closed gating hole end to end (§1.1) |
+| `task4/prove-*.log`, `task4/npm-test.log` | the checks in this task, run against the case they are meant to catch, failing; and the relay's unit tests |
 | `task5/single-player/` | Task 5: the four pre-existing single-player gates, run on this build with **no** `?bridge=` at all |
+| `final-fixes/` | the final whole-branch review's fixes: the pin re-measured from a clean rebuild, the gates re-run, and the two new relay checks shown failing against the code they fix |
 
 ---
 

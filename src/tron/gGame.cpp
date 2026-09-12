@@ -1895,7 +1895,7 @@ void sg_SinglePlayerGame(){
     own_game( nSTANDALONE );
 }
 
-void sg_HostGame(){
+void sg_HostGame(){ AA_NO_HOSTING_FROM_A_PAGE
     {
         // create a game to check map once
         tJUST_CONTROLLED_PTR< gGame > game = tNEW(gGame);
@@ -2346,7 +2346,7 @@ void net_options(){
         gServerBrowser::highPort = gServerBrowser::lowPort;
 }
 
-void sg_HostGameMenu(){
+void sg_HostGameMenu(){ AA_NO_HOSTING_FROM_A_PAGE
     uMenu net_menu("$network_host_text");
 
     sg_HostMenu = &net_menu;

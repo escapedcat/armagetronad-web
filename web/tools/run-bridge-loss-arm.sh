@@ -74,8 +74,10 @@ docker logs aa-server > "$D/server.log" 2>&1
 
 # ---- what the run produced -------------------------------------------
 echo "--- arm $ARM done: $D ---"
+# [AB][0-9], NOT B[0-9]: the seven verdicts are B0 B1 A1 B2 B3 B4 B5, and a
+# B-only pattern silently tallied six of them against an "expected 7".
 echo "verdicts (expected 7):"
-grep -o '\[BRIDGEGATE\] B[0-9] [a-z-]*' "$D/console.log" | sed 's/^/  /' || true
+grep -o '\[BRIDGEGATE\] [AB][0-9] [a-z-]*' "$D/console.log" | sed 's/^/  /' || true
 echo "PASS true count: $(grep -c '\[console.log\].*BRIDGEGATE.*"PASS":true' "$D/console.log" || true)"
 echo "PASS false count: $(grep -c '\[console.log\].*BRIDGEGATE.*"PASS":false' "$D/console.log" || true)"
 echo "the server's side of it:"

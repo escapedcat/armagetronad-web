@@ -74,10 +74,12 @@ const int sg_timeoutMs = 5000;
 // the relay remote, a wss handshake is about four round trips and 1500 ms
 // covers an RTT of roughly 375 ms. Revisit it there, with a measurement.
 //
-// A refusal here is not terminal: it neither closes nor discards the
+// A refusal on THIS budget is not terminal: it neither closes nor discards the
 // WebSocket, and aa_bridge_state() only constructs one when there is none, so
 // a connection that was merely slow is found open on the player's next
-// attempt.
+// attempt. That is true of a budget that ran out (state 0) and NOT of a
+// WebSocket that has closed or failed (state 2), which nothing in M-A ever
+// reopens -- see the note on Ready() in eWebNet.h.
 const int sg_menuProbeMs = 1500;
 
 int sg_nextHandle = 1;
@@ -149,6 +151,31 @@ void ReportNoBridge()
     emscripten_console_log( configured
         ? "[BRIDGE] network menu refused: the ?bridge= relay did not answer"
         : "[BRIDGE] network menu refused: this page has no ?bridge=" );
+    tConsole::Message( title, message, 20 );
+}
+
+void ReportCannotHost()
+{
+    // UNCONDITIONAL, and not a bridge check. The relay gives each handle an
+    // ephemeral UDP source port it dials OUT from; nothing can dial in, and no
+    // ?bridge= value changes that. So this is "a page is not a server", not
+    // "this page has no bridge", and it must not be phrased as the latter.
+    //
+    // The cost of not refusing is not a failed game: sg_HostGame() calls
+    // nServerInfo::TellMasterAboutMe() whenever sg_TalkToMaster is set, which
+    // gServerBrowser::BrowseMaster() sets for a whole Internet browse -- so
+    // the "Start your own server" item inside a browsed list would publish
+    // this tab on the community's public master list as a live server that
+    // answers nothing. See the note on AA_NO_HOSTING_FROM_A_PAGE in nSocket.h.
+    tOutput title, message;
+    title   << "Hosting unavailable";
+    message << "A browser page cannot listen for UDP, so this build can only "
+               "join servers, never be one. Nothing was started and no server "
+               "list was told about this page. Joining a server from the "
+               "network menu is unaffected.";
+
+    con << "Hosting refused: a browser page cannot be a server.\n";
+    emscripten_console_log( "[BRIDGE] hosting refused: a page cannot listen for UDP" );
     tConsole::Message( title, message, 20 );
 }
 

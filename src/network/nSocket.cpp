@@ -554,7 +554,7 @@ void ANET_GetHostList( char const * hostname, nHostList & hostList, int net_host
     {
         // look up hostname
         struct hostent *hostentry;
-        hostentry = gethostbyname (hostname);
+        hostentry = AA_GETHOSTBYNAME (hostname);
         if (!hostentry)
         {
 #ifndef WIN32
@@ -1521,8 +1521,19 @@ int nSocket::Create( void )
 
 #if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
     // The browser cannot open a UDP socket. socket_ holds a bridge handle
-    // instead of a file descriptor from here on; every syscall site in this
-    // file is guarded to match. See src/emscripten/eWebNet.h.
+    // instead of a file descriptor from here on, and every site in this file
+    // that would hand socket_ to a syscall is guarded to match: NINE #if
+    // blocks (Create here, Bind, Bind's failure path, Close,
+    // CheckNewConnection, Read, Write, Broadcast, Select), plus the two
+    // AA_GETHOSTBYNAME sites, which are guarded by macro rather than by #if
+    // because both sit above the __LINE__ constants this file bakes into the
+    // byte-pinned dedicated wasm. Eleven in total. The setsockopt and
+    // ioctl(FIONBIO) calls below are not among them: this block returns
+    // before them, and neither are ANET_CloseSocket/ANET_GetSocketAddr, which
+    // socket_ reaches only through call sites already inside the nine.
+    // Counted with the recipe in PLAN.md's M-A block, not
+    // remembered -- an earlier version of this comment claimed every site was
+    // covered while ioctl(FIONREAD) in CheckNewConnection was not.
     socket_ = eWebNet::Create();
     return socket_ < 0 ? -1 : 0;
 #endif
@@ -1944,6 +1955,24 @@ const nSocket * nSocket::CheckNewConnection( void ) const
         sn_ResetSocket = false;
         Reset();
     }
+#endif
+
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+    // THE NINTH GUARDED SITE, and the one the audit missed. socket_ is a
+    // bridge handle (1, 2, 3...), not a file descriptor, so the ioctl below
+    // would interrogate whatever fd happens to share that number -- on
+    // Emscripten that is stdout, which answers ENOTTY, which ANET_Error()
+    // maps to Ignore, which is why this never crashed and never showed up.
+    //
+    // There is also nothing to ask. This is reached from sn_Receive()'s
+    // case nSERVER only, and a page cannot listen for UDP, so it can never
+    // have a new connection to report. gGame.cpp refuses hosting at the door
+    // (AA_NO_HOSTING_FROM_A_PAGE); this is the same answer one layer down, so
+    // a future path that reaches nSERVER some other way still does no syscall
+    // on a handle. The code below is left compiled-but-dead on purpose, the
+    // way nSocket::Create does it, so `available` stays used and the two
+    // branches stay visibly the same function.
+    return NULL;
 #endif
 
     //    for ( SocketArray::iterator iter = sockets.begin(); iter != sockets.end(); ++iter )

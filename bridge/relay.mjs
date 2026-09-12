@@ -15,7 +15,14 @@ import { encode, decode, TYPE } from './frame.mjs';
 import { checkDestination } from './policy.mjs';
 
 // A TESTING AID AND NOTHING ELSE, see `drop` below.
-export function startRelay({ port = 8010, allowPrivate = false, drop = 0, log = () => {} } = {}) {
+export function startRelay({
+  port = 8010, allowPrivate = false, drop = 0, log = () => {},
+  // Injectable ONLY so a test can count resolutions. That count is the only
+  // way to observe from outside that a destination the policy REFUSED is not
+  // left behind in the cache below; the default is real DNS and the relay
+  // never resolves any other way.
+  lookup = (host) => dns.lookup(host, { family: 4 }).then((r) => r.address),
+} = {}) {
   // THE LOSS OPTION. `drop` is the fraction of DATA frames to throw away, in
   // both directions, and it exists so a gate can ask what the game does when
   // datagrams go missing -- the question WebSocket makes interesting, because
@@ -46,7 +53,21 @@ export function startRelay({ port = 8010, allowPrivate = false, drop = 0, log = 
     ws.binaryType = 'nodebuffer';
     const sockets = new Map(); // handle -> dgram socket
     all.add(sockets);
-    const resolved = new Map(); // host text -> ip
+    const resolved = new Map(); // host text -> ip. A DNS CACHE AND NOTHING ELSE.
+    // handle -> Map<"ip:port", the address text the client actually sent to>.
+    //
+    // WHY NOT A REVERSE SCAN OF `resolved`. This used to find the echo name by
+    // walking `resolved` for the first host whose IP matched rinfo.address,
+    // which is only correct while no two host names share an address. Two
+    // names on one IP -- an alias, a shared host, several servers behind one
+    // NAT -- would echo the WRONG token, and the client matches replies to
+    // peers BY THAT TEXT (see eWebNet::Recv), so the datagram would be
+    // attributed to the wrong server. Latent in M-A, which talks to one
+    // server at a time; live the moment M-B pings twenty from one page. It is
+    // the same defect class as the client-side critical already fixed in this
+    // milestone, so it is keyed the same way: to the destination the datagram
+    // was actually sent to, not to a guess made backwards from the reply.
+    const peers = new Map();
 
     const send = (frame) => { if (ws.readyState === ws.OPEN) ws.send(encode(frame)); };
     const fail = (handle, reason) => send({ type: TYPE.ERROR, handle, port: 0, addr: '', payload: Buffer.from(reason, 'ascii') });
@@ -63,11 +84,14 @@ export function startRelay({ port = 8010, allowPrivate = false, drop = 0, log = 
       if (f.type === TYPE.BIND) {
         if (sockets.has(f.handle)) return fail(f.handle, 'handle ' + f.handle + ' is already bound');
         const sock = dgram.createSocket('udp4');
+        peers.set(f.handle, new Map());
         sock.on('message', (msg, rinfo) => {
           // Echo back the text the client used for this peer, not rinfo.address:
           // the client cannot resolve names and matches replies by that text.
-          let addr = rinfo.address;
-          for (const [host, ip] of resolved) if (ip === rinfo.address) { addr = host; break; }
+          // Keyed by ip:port, i.e. by the destination we sent to, so two names
+          // on one IP cannot be confused with each other.
+          const byPeer = peers.get(f.handle);
+          const addr = (byPeer && byPeer.get(rinfo.address + ':' + rinfo.port)) || rinfo.address;
           if (lose()) return;
           send({ type: TYPE.DATA, handle: f.handle, port: rinfo.port, addr, payload: msg });
         });
@@ -83,6 +107,7 @@ export function startRelay({ port = 8010, allowPrivate = false, drop = 0, log = 
       if (f.type === TYPE.CLOSE) {
         const sock = sockets.get(f.handle);
         if (sock) { sock.close(); sockets.delete(f.handle); }
+        peers.delete(f.handle);
         return;
       }
 
@@ -92,14 +117,20 @@ export function startRelay({ port = 8010, allowPrivate = false, drop = 0, log = 
         let ip = resolved.get(f.addr);
         if (!ip) {
           try {
-            ip = (await dns.lookup(f.addr, { family: 4 })).address;
+            ip = await lookup(f.addr);
           } catch (e) {
             return fail(f.handle, 'cannot resolve ' + f.addr);
           }
-          resolved.set(f.addr, ip);
         }
         const refusal = checkDestination(ip, f.port, { allowPrivate });
         if (refusal) return fail(f.handle, refusal);
+        // CACHE ONLY WHAT THE POLICY LET THROUGH. Caching before the check
+        // meant a refused destination was remembered anyway, so the cache
+        // filled up with names the relay will never send to and a later
+        // policy change would be answered from stale state.
+        resolved.set(f.addr, ip);
+        const byPeer = peers.get(f.handle);
+        if (byPeer) byPeer.set(ip + ':' + f.port, f.addr);
         if (lose()) return;
         sock.send(f.payload, f.port, ip);
         return;
@@ -109,6 +140,7 @@ export function startRelay({ port = 8010, allowPrivate = false, drop = 0, log = 
     const teardown = () => {
       for (const sock of sockets.values()) sock.close();
       sockets.clear();
+      peers.clear();
       all.delete(sockets);
     };
     ws.on('close', teardown);

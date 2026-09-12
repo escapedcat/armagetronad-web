@@ -13,7 +13,13 @@ outside the page has to carry the datagrams.
     npm install
     node relay.mjs --port 8010
 
-Then open the client with `?bridge=ws://localhost:8010`.
+Then open the client with `?bridge=ws://127.0.0.1:8010`.
+
+**`127.0.0.1` and not `localhost`, in the `?bridge=` value.** The relay binds
+127.0.0.1 on IPv4 only. A browser that resolves `localhost` to `::1` first gets
+ECONNREFUSED and reports it as a WebSocket error, which reads exactly like a
+bridge defect and is not one. The page's own origin may stay `localhost`; it is
+the `ws://` URL the game dials that has to be numeric.
 
 For a server on your own machine (a Docker container, say), add
 `--allow-private` — without it the relay refuses to send to loopback and

@@ -105,6 +105,60 @@ test('two handles get two different source ports, as two native clients would', 
   assert.equal(seen.size, 2, 'each handle must have its own UDP source port');
 });
 
+// --------------------------------------------------------------------------
+// THE ECHO TOKEN AND THE DNS CACHE. Two defects found in the final review of
+// this branch, both latent in M-A (one server at a time) and both live at M-B,
+// where the server browser pings twenty servers through one socket.
+//
+// PORTS 4540/4541: 4534-4539 are all spoken for above, and two tests racing
+// for one UDP port makes this file order-dependent.
+// --------------------------------------------------------------------------
+
+test('two host names on one IP do not get each other\'s replies', async (t) => {
+  const server = await echoServer(4540);
+  t.after(() => server.close());
+  const relay = startRelay({ port: 0, allowPrivate: true });
+  t.after(() => relay.close());
+  await relay.ready;
+  const ws = await open('ws://127.0.0.1:' + relay.port);
+  t.after(() => ws.close());
+  ws.send(encode({ type: TYPE.BIND, handle: 1, port: 0, addr: '' }));
+  assert.equal((await next(ws)).type, TYPE.BOUND);
+
+  // 'localhost' first, so that it is the older entry: the reverse scan this
+  // replaced walked insertion order and would answer BOTH with 'localhost'.
+  ws.send(encode({ type: TYPE.DATA, handle: 1, port: 4540, addr: 'localhost', payload: Buffer.from('a') }));
+  assert.equal((await next(ws)).addr, 'localhost');
+
+  ws.send(encode({ type: TYPE.DATA, handle: 1, port: 4540, addr: '127.0.0.1', payload: Buffer.from('b') }));
+  const f = await next(ws);
+  assert.equal(f.payload.toString(), 'pong:b');
+  assert.equal(f.addr, '127.0.0.1',
+    'the echo must name the destination this datagram was sent to, not some other name that happens to share its IP');
+});
+
+test('a destination the policy refuses is not left behind in the DNS cache', async (t) => {
+  let lookups = 0;
+  const relay = startRelay({
+    port: 0, allowPrivate: false,
+    lookup: async (host) => { ++lookups; return '127.0.0.1'; },
+  });
+  t.after(() => relay.close());
+  await relay.ready;
+  const ws = await open('ws://127.0.0.1:' + relay.port);
+  t.after(() => ws.close());
+  ws.send(encode({ type: TYPE.BIND, handle: 1, port: 0, addr: '' }));
+  assert.equal((await next(ws)).type, TYPE.BOUND);
+
+  for (const n of [1, 2]) {
+    ws.send(encode({ type: TYPE.DATA, handle: 1, port: 4541, addr: 'tron.example.org', payload: Buffer.from('x') }));
+    const f = await next(ws);
+    assert.equal(f.type, TYPE.ERROR, 'attempt ' + n + ' must be refused');
+  }
+  assert.equal(lookups, 2,
+    'a name the policy refused must not be cached: caching before the check filled the cache with destinations the relay will never send to');
+});
+
 test('a destination the policy refuses produces ERROR and sends nothing', async (t) => {
   const relay = startRelay({ port: 0, allowPrivate: false });
   t.after(() => relay.close());

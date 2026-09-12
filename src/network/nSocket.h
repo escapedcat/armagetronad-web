@@ -376,14 +376,36 @@ nSocket & nSocket::SetSocket( int socket )
 // Sys_Error() -> exit(-1) and killed the module. Refusing at the door
 // also avoids throwing out of sn_SetNetState(), which would leave its static
 // reentry flag set and silently disable every later state change.
+//
+// AA_NO_HOSTING_FROM_A_PAGE is the third, added for the same __LINE__ reason
+// and used at two commentless sites in gGame.cpp -- the heads of sg_HostGame()
+// and sg_HostGameMenu(). It refuses ALWAYS in the browser client, bridge or
+// no bridge, because a page cannot listen for UDP: the relay gives it one
+// ephemeral source port per handle and nothing on the internet can dial into
+// it, so there is no configuration in which this build is a server and
+// refusing costs a player nothing they could have had.
+//
+// WHY IT IS NOT MERELY TIDY. sg_HostGame() reaches
+// nServerInfo::TellMasterAboutMe() whenever sg_TalkToMaster is set, and
+// gServerBrowser::BrowseMaster() sets it for the whole of an Internet browse.
+// The master's own port, 4533, is inside bridge/policy.mjs's allowed range and
+// master addresses are public, so without this the "Start your own server"
+// item that sits in every browsed server list would PUBLISH a phantom entry --
+// a stranger's IP advertised on the community's directory as a live
+// Armagetron server that answers nothing. M-A's whole boundary is "nothing
+// public", and that is precisely the reputational damage the admin-relations
+// plan exists to avoid.
 #if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
 #include "eWebNet.h"
 #define AA_GETHOSTBYNAME( host ) eWebNet::FakeHostent( host )
 #define AA_NET_MENU_REQUIRES_BRIDGE \
     if ( !eWebNet::Ready() ) { eWebNet::ReportNoBridge(); return; }
+#define AA_NO_HOSTING_FROM_A_PAGE \
+    { eWebNet::ReportCannotHost(); return; }
 #else
 #define AA_GETHOSTBYNAME( host ) gethostbyname( host )
 #define AA_NET_MENU_REQUIRES_BRIDGE
+#define AA_NO_HOSTING_FROM_A_PAGE
 #endif
 
 #endif

@@ -35,9 +35,21 @@ namespace eWebNet
     //! caller wanting to know "can this page do network play at all" should
     //! ask: Enabled() alone answers only "was one configured", and a
     //! configured relay that is not running would still reach
-    //! nBasicNetworkSystem::Init()'s Sys_Error() -> exit(-1). A false answer
-    //! is not terminal; the socket is left alone, so a slow relay is found
-    //! open on the next attempt.
+    //! nBasicNetworkSystem::Init()'s Sys_Error() -> exit(-1).
+    //!
+    //! A false answer NEVER closes or discards anything here, but only ONE of
+    //! the two ways of being false is recoverable, and they are exactly the
+    //! two cases this function exists to tell apart:
+    //!   - still CONNECTING when the short budget ran out (JS state 0): the
+    //!     WebSocket is untouched and still opening, so a merely slow relay is
+    //!     found open on the player's next attempt. This is the case the
+    //!     budget is a trade against.
+    //!   - CLOSED or FAILED (JS state 2): dead for the life of the page.
+    //!     library_bridge.js constructs a WebSocket only when AABridge.ws is
+    //!     null and nothing ever nulls it, so once onclose/onerror has fired
+    //!     every later call returns 2 immediately. Reconnection is deliberately
+    //!     not in M-A; until some milestone adds it, a dropped bridge means
+    //!     reload the page.
     bool Ready();
 
     //! allocate a handle and make sure the WebSocket is open. -1 on failure.
@@ -74,6 +86,17 @@ namespace eWebNet
     //! static reentry flag set, which silently disables every later state
     //! change. Refusing at the door has no such cost.
     void ReportNoBridge();
+
+    //! Tell the player that this build cannot host a server, and refuse.
+    //! Called from the heads of sg_HostGame() and sg_HostGameMenu() through
+    //! AA_NO_HOSTING_FROM_A_PAGE, unconditionally -- a page has no way to
+    //! listen for UDP, so it can never be a server whether a bridge is
+    //! configured or not. The reason it is refused at the DOOR rather than
+    //! left to fail later is in nSocket.h next to the macro: sg_HostGame()
+    //! calls nServerInfo::TellMasterAboutMe() while sg_TalkToMaster is set,
+    //! which would announce this browser tab on the community's public master
+    //! list as a server that answers nothing.
+    void ReportCannotHost();
 
     //! FakeAddressFor() wrapped in a hostent, so that nAddress::SetHostname
     //! can reach it through the AA_GETHOSTBYNAME macro in nSocket.h without a
