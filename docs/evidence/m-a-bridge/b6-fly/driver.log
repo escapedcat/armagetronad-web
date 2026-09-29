@@ -1,0 +1,205 @@
+[    790ms] [harness] chrome: Chrome/154.0.8037.58
+[    791ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=wss://armagetronad-bridge.fly.dev/<token>
+[      6ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     21ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     22ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[     37ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     48ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     49ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     49ms] [page] load event fired
+[     55ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    123ms] [console.log] [PERSIST] populate ok in 43ms
+[    209ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    351ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    352ms] [console.log] [CAMERA] stock camera (factor 1)
+[    352ms] [console.log] [SPARKS] stock sparks, nothing written
+[    353ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    353ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    353ms] [console.log] [BOOT] autostart: calling main
+[    355ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    356ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    356ms] [console.error] 
+[    357ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    357ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    357ms] [console.log] 
+[    468ms] [console.log] [L] ENCODING latin1
+[    478ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    480ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    502ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    506ms] [console.error] TODO: glShadeModel
+[    510ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    552ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    552ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    553ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    553ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    553ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1212ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   1212ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10277ms] [harness] screenshot -> /tmp/b6-fly/01-boot1-language-menu.png
+[  10311ms] [harness] key Enter (1/1)
+[  10317ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  13677ms] [harness] screenshot -> /tmp/b6-fly/02-boot1-first-setup.png
+[  13700ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13710ms] [harness] key Escape (1/1)
+[  14011ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14011ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17013ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17018ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17018ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17018ms] [harness] eval location.reload() => undefined
+[  17019ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17034ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  17035ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  17037ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17039ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17039ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17045ms] [page] load event fired
+[  17054ms] [console.log] [PERSIST] populate ok in 4ms
+[  17078ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17078ms] [console.log] [CAMERA] stock camera (factor 1)
+[  17078ms] [console.log] [SPARKS] stock sparks, nothing written
+[  17079ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  17081ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17081ms] [console.log] [BOOT] autostart: calling main
+[  17081ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17082ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17082ms] [console.error] 
+[  17082ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17082ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17082ms] [console.log] 
+[  17119ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  17119ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  17119ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  17202ms] [console.log] [L] ENCODING latin1
+[  17205ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17219ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17222ms] [console.error] TODO: glShadeModel
+[  17225ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  29194ms] [harness] screenshot -> /tmp/b6-fly/03-boot2-main-menu.png
+[  29195ms] [harness] eval (()=>{const o=console.log;if(console.log.__aa)return 'already';window.__peers=[];const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[BRIDGE] peer ')===0)window.__peers.push(s)}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'peer-line tap installed'})() => "peer-line tap installed"
+[  29196ms] [harness] eval (()=>{if(window.__lTap)return 'already';window.__lTap=true;window.__L={};const o=console.log;const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[L] ')===0){const k=s.slice(4).split(' ')[0];window.__L[k]=(window.__L[k]||0)+1}}catch(e){}return o.apply(console,arguments)};console.log=w;return 'ladder-log tap installed'})() => "ladder-log tap installed"
+[  29196ms] [harness] eval (()=>{if(window.__gw)return 'already';window.__gw={};window.__gwTimer=setInterval(()=>{const L=window.__L||{};const say=(k)=>{if(!window.__gw[k]){window.__gw[k]=1;console.log('[GATEWAIT] '+k)}};const n=L.NEW_ROUND|0,sc=L.ROUND_SCORE_TEAM|0,ro=L.TEAM_PLAYER_ADDED|0;for(let i=1;i<=8;i++){if(ro>=i)say('ROSTER-'+i);if(n>=i)say('STARTED-'+i);if(sc>=i)say('SCORED-'+i)}},500);return 'gate-wait milestone ticker installed'})() => "gate-wait milestone ticker installed"
+[  29197ms] [harness] eval (()=>{if(window.__rttTap)return 'already';window.__rttTap=1;const R={sent:{},samples:[],addrs:{},outD:0,inD:0,parseFail:0};R.reset=function(){R.sent={};R.samples=[];R.addrs={};R.outD=0;R.inD=0;R.parseFail=0;return 'rtt state cleared'};window.__rtt=R;const head=(u)=>{if(u.length<7||u[0]!==1)return null;const al=u[6];if(u.length<7+al)return null;let a='';for(let i=0;i<al;i++)a+=String.fromCharCode(u[7+i]);return {type:u[1],addr:a,off:7+al}};const parse=(u,off)=>{const e=u.length-2;const out=[];let p=off;while(p+6<=e){const d=(u[p]<<8)|u[p+1];const id=(u[p+2]<<8)|u[p+3];const dl=(u[p+4]<<8)|u[p+5];p+=6;if(p+dl*2>e)return out;if(d===1){const a=[];for(let i=0;i<dl;i++)a.push((u[p+i*2]<<8)|u[p+i*2+1]);out.push({d:1,acks:a})}else out.push({d:d,id:id});p+=dl*2}return out};const onOut=(u)=>{const h=head(u);if(!h||h.type!==3)return;R.outD++;R.addrs[h.addr]=(R.addrs[h.addr]|0)+1;const ms=parse(u,h.off);if(!ms.length){R.parseFail++;return}const t=performance.now();for(const m of ms)if(m.d!==1&&m.id&&R.sent[m.id]===undefined)R.sent[m.id]=t};const onIn=(u)=>{const h=head(u);if(!h||h.type!==3)return;R.inD++;const ms=parse(u,h.off);if(!ms.length){R.parseFail++;return}const t=performance.now();for(const m of ms)if(m.d===1)for(const a of m.acks)if(R.sent[a]!==undefined){R.samples.push(Math.round((t-R.sent[a])*100)/100);delete R.sent[a]}};const proto=WebSocket.prototype;const realSend=proto.send;proto.send=function(d){try{onOut(d instanceof Uint8Array?d:new Uint8Array(d))}catch(e){}return realSend.apply(this,arguments)};const realOn=window.AABridge.onmessage;window.AABridge.onmessage=function(ev){try{onIn(new Uint8Array(ev.data))}catch(e){}return realOn.apply(this,arguments)};return 'ack-pairing rtt tap installed'})() => "ack-pairing rtt tap installed"
+[  29198ms] [console.log] [BRIDGEGATE] B6-0 configured-and-idle-until-asked {"present":true,"ws_constructed":false,"url_parsed":false,"url":null,"queues":0,"PASS":true}
+[  29199ms] [harness] eval (()=>{const b=window.AABridge;const r={present:!!b,ws_constructed:!!(b&&b.ws),url_parsed:b?b.urlChecked:null,url:b?b.url:null,queues:b?Object.keys(b.queues).length:null};r.PASS=!!b&&!r.ws_constructed&&r.url_parsed===false;console.log('[BRIDGEGATE] B6-0 configured-and-idle-until-asked '+JSON.stringify(r));return 'B6-0 '+r.PASS})() => "B6-0 true"
+[  29199ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  29231ms] [harness] key Enter (1/1)
+[  32095ms] [harness] screenshot -> /tmp/b6-fly/04-play-game-menu-opens-on-multiplayer.png
+[  32095ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  32128ms] [harness] key Enter (1/1)
+[  32392ms] [console.log] [BRIDGE] open wss://armagetronad-bridge.fly.dev/<token>
+[  35001ms] [harness] screenshot -> /tmp/b6-fly/05-network-menu-opens-on-online-multiplayer.png
+[  35001ms] [harness] === ONE-DOWN-TO-LAN-MULTIPLAYER ===
+[  35035ms] [harness] key Down (1/1)
+[  36901ms] [harness] screenshot -> /tmp/b6-fly/06-network-menu-lan-selected.png
+[  36901ms] [harness] === ENTER-3-LAN-BROWSE-ASKS-FOR-A-SOCKET ===
+[  36934ms] [harness] key Enter (1/1)
+[  37013ms] [console.log] [BRIDGE] handle 1 bound to udp port 35134
+[  37235ms] [harness] until 1x <<[BRIDGE] open>> (timeout 60000ms, have 1)
+[  37236ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] open>>
+[  37236ms] [harness] until 1x <<bound to udp port>> (timeout 60000ms, have 1)
+[  37236ms] [harness] until SATISFIED: saw 1x <<bound to udp port>>
+[  38514ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38514ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38519ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38523ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38537ms] [console.log] [BRIDGE] handle 2 bound to udp port 58851
+[  39291ms] [harness] screenshot -> /tmp/b6-fly/07-lan-browser.png
+[  39291ms] [harness] === BACK-OUT-OF-THE-LAN-BROWSER ===
+[  39325ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  39325ms] [harness] key Escape (1/1)
+[  39389ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39390ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39405ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39405ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  42700ms] [harness] screenshot -> /tmp/b6-fly/08-back-in-the-network-menu.png
+[  42701ms] [harness] eval (()=>{const b=window.AABridge;window.__base={dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0};return 'error-counter baseline '+JSON.stringify(window.__base)})() => "error-counter baseline {\"dropped\":0,\"sendFailures\":0,\"dataErrors\":8}"
+[  42702ms] [harness] eval window.__rtt.reset() => "rtt state cleared"
+[  42702ms] [harness] === B6-DOWN-3-FROM-LAN-TO-SERVER-BOOKMARKS ===
+[  42735ms] [harness] key Down (1/3)
+[  43071ms] [harness] key Down (2/3)
+[  43409ms] [harness] key Down (3/3)
+[  45269ms] [harness] screenshot -> /tmp/b6-fly/09-network-menu-server-bookmarks-selected.png
+[  45269ms] [harness] === B6-ENTER-OPENS-BOOKMARKS-AND-TRANSFERS-CUSTOM_SERVER_NAME ===
+[  45303ms] [harness] key Enter (1/1)
+[  48663ms] [harness] screenshot -> /tmp/b6-fly/10-bookmarks-menu-shows-the-address-about-to-be-dialled.png
+[  48663ms] [harness] === B6-ENTER-CONNECTS ===
+[  48696ms] [harness] key Enter (1/1)
+[  48782ms] [console.log] [BRIDGE] handle 3 bound to udp port 43654
+[  48877ms] [console.log] [BRIDGE] peer 188.245.106.232 -> 188.245.106.232 (literal)
+[  48997ms] [harness] until 1x <<[GATEWAIT] ROSTER-1>> (timeout 90000ms, have 0)
+[  49742ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  49744ms] [console.log] [L] NEW_ROUND 2026-09-29 11:41:21 UTC+0200
+[  49760ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  49760ms] [console.log] [SND] live voices peaked at 1 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  50170ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  50201ms] [console.log] [GATEWAIT] ROSTER-1
+[  50202ms] [console.log] [GATEWAIT] STARTED-1
+[  50212ms] [harness] until SATISFIED: saw 1x <<[GATEWAIT] ROSTER-1>>
+[  50213ms] [harness] until 1x <<[GATEWAIT] STARTED-1>> (timeout 90000ms, have 1)
+[  50213ms] [harness] until SATISFIED: saw 1x <<[GATEWAIT] STARTED-1>>
+[  50852ms] [console.log] [L] TEAM_PLAYER_ADDED team_blue gcc
+[  50852ms] [console.log] [L] TEAM_PLAYER_ADDED team_blue latex
+[  50852ms] [console.log] [L] TEAM_PLAYER_ADDED team_blue gdb
+[  51208ms] [console.log] [GATEWAIT] ROSTER-2
+[  51208ms] [console.log] [GATEWAIT] ROSTER-3
+[  51209ms] [console.log] [GATEWAIT] ROSTER-4
+[  51297ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  51650ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  51651ms] [console.log] [SND] live voices peaked at 8 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  51926ms] [console.error] warning: Audio callback had starved sending audio by 1.892530612244748 seconds
+[  51988ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  53324ms] [harness] screenshot -> /tmp/b6-fly/11-on-the-grid.png
+[  53325ms] [harness] eval (()=>{try{const b=window.AABridge;if(!b||!b.ws)return 'NO LIVE SOCKET - the sampler measured nothing';if(window.__gapTap)return 'already';window.__gapTap=true;window.__gaps=[];window.__gapLast=0;const inner=b.ws.onmessage;b.ws.onmessage=function(ev){const t=performance.now();if(window.__gapLast)window.__gaps.push(Math.round((t-window.__gapLast)*100)/100);window.__gapLast=t;return inner.apply(this,arguments)};return 'gap sampler installed on the live socket'}catch(e){return 'GAP SAMPLER FAILED: '+e}})() => "gap sampler installed on the live socket"
+[  53326ms] [harness] === B6-STEER-WHILE-A-NETWORK-ROUND-IS-LIVE ===
+[  53358ms] [harness] key Left (1/1)
+[  54293ms] [harness] key Right (1/1)
+[  55916ms] [harness] screenshot -> /tmp/b6-fly/12-after-the-zigzag.png
+[  55917ms] [harness] === B6-CLOSE-THE-BOX-SO-THE-ROUND-ENDS-WITHOUT-LOITERING ===
+[  55927ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  55949ms] [harness] key Left (1/1)
+[  56984ms] [harness] key Left (1/1)
+[  58019ms] [harness] key Left (1/1)
+[  58077ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  59054ms] [harness] key Left (1/1)
+[  62017ms] [harness] screenshot -> /tmp/b6-fly/13-after-closing-the-box.png
+[  62018ms] [harness] until 1x <<[GATEWAIT] SCORED-1>> (timeout 180000ms, have 0)
+[  64297ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  64297ms] [console.log] [L] NEW_ROUND 2026-09-29 11:41:35 UTC+0200
+[  64699ms] [console.log] [GATEWAIT] SCORED-1
+[  64699ms] [console.log] [GATEWAIT] STARTED-2
+[  64752ms] [harness] until SATISFIED: saw 1x <<[GATEWAIT] SCORED-1>>
+[  65959ms] [console.error] warning: Audio callback had starved sending audio by 2.1755963718827473 seconds
+[  66308ms] [harness] screenshot -> /tmp/b6-fly/14-the-round-was-scored.png
+[  66308ms] [harness] until 1x <<[GATEWAIT] STARTED-2>> (timeout 90000ms, have 1)
+[  66309ms] [harness] until SATISFIED: saw 1x <<[GATEWAIT] STARTED-2>>
+[  67936ms] [harness] screenshot -> /tmp/b6-fly/15-a-second-round-started-so-the-first-one-really-ended.png
+[  68246ms] [console.log] [BRIDGEGATE] B6 a-full-round-on-a-server-this-project-does-not-own {"rounds_started":2,"rounds_scored":1,"rosters":4,"peers":["[BRIDGE] peer 188.245.106.232 -> 188.245.106.232 (literal)"],"peer_literal":1,"peer_synthetic":0,"dialled":{"188.245.106.232":220},"rtt_samples":76,"ws_readyState":1,"state":1,"live_handles":[3],"bound":[[3,1]],"sent_datagrams":[[3,220]],"pending_before":0,"pending_after":0,"baseline":{"dropped":0,"sendFailures":0,"dataErrors":8},"new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,"lastDataError":"port 0 is outside the allowed range 4533-4599","canvas_w":1024,"canvas_h":768,"gl_err":0,"still_alive":true,"draining":true,"one_peer":true,"PASS":true}
+[  68247ms] [harness] eval (async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const R=window.__rtt||{samples:[],addrs:{}};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const dep=()=>live.reduce((a,h)=>a+((b.queues[h]||[]).length),0);const p1=dep();await new Promise(rr=>setTimeout(rr,300));const p2=dep();const P=window.__peers||[];const lit=P.filter(l=>/\(literal\)/.test(l)).length;const syn=P.filter(l=>/\(synthetic\)/.test(l)).length;const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,rosters:L.TEAM_PLAYER_ADDED|0,peers:P,peer_literal:lit,peer_synthetic:syn,dialled:R.addrs,rtt_samples:R.samples.length,ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:live,bound:bound,sent_datagrams:sent,pending_before:p1,pending_after:p2,baseline:B,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,lastDataError:b.lastDataError,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.draining=p1<=3&&p2<=3;r.one_peer=P.length===1&&lit===1&&syn===0&&Object.keys(R.addrs).length===1;r.PASS=r.rounds_started>=2&&r.rounds_scored>=1&&r.rosters>0&&r.one_peer&&r.rtt_samples>0&&b.state===1&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.still_alive;console.log('[BRIDGEGATE] B6 a-full-round-on-a-server-this-project-does-not-own '+JSON.stringify(r));return 'B6 '+r.PASS})() => "B6 true"
+[  68248ms] [console.log] [BRIDGEGATE] RTT {"phase":"connect-through-round-2","what":"full-path ack round trip, page to server and back","peers":{"188.245.106.232":220},"datagrams_out":220,"datagrams_in":256,"parse_failures":0,"unpaired":0,"n":76,"min":64.2,"p50":66.8,"p90":76,"p99":111.7,"max":111.7,"mean":69.26,"over100ms":2,"over250ms":0}
+[  68248ms] [harness] eval (()=>{const R=window.__rtt||{samples:[],addrs:{}};const g=R.samples.slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'connect-through-round-2',what:'full-path ack round trip, page to server and back',peers:R.addrs,datagrams_out:R.outD,datagrams_in:R.inD,parse_failures:R.parseFail,unpaired:Object.keys(R.sent).length,n:g.length,min:g.length?g[0]:null,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,mean:g.length?Math.round(g.reduce((a,b)=>a+b,0)/g.length*100)/100:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length};console.log('[BRIDGEGATE] RTT '+JSON.stringify(r));return 'rtt n='+g.length+' p50='+q(.5)})() => "rtt n=76 p50=66.8"
+[  68249ms] [console.log] [BRIDGEGATE] GAPS {"phase":"through-B6","datagrams":155,"p50":53.8,"p90":331.4,"p99":927.6,"max":942.9,"over100ms":28,"over250ms":17,"over500ms":2}
+[  68249ms] [harness] eval (()=>{const g=(window.__gaps||[]).slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'through-B6',datagrams:g.length,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length,over500ms:g.filter(x=>x>500).length};console.log('[BRIDGEGATE] GAPS '+JSON.stringify(r));return 'gaps '+JSON.stringify(r)})() => "gaps {\"phase\":\"through-B6\",\"datagrams\":155,\"p50\":53.8,\"p90\":331.4,\"p99\":927.6,\"max\":942.9,\"over100ms\":28,\"over250ms\":17,\"over500ms\":2}"
+[  68249ms] [harness] === B6-LEAVE-THE-SERVER ===
+[  68282ms] [harness] key Escape (1/1)
+[  71195ms] [harness] screenshot -> /tmp/b6-fly/16-ingame-menu.png
+[  71229ms] [harness] key Up (1/1)
+[  72849ms] [harness] screenshot -> /tmp/b6-fly/17-ingame-menu-one-up.png
+[  72882ms] [harness] key Up (1/1)
+[  74551ms] [harness] screenshot -> /tmp/b6-fly/18-ingame-menu-two-up.png
+[  74584ms] [harness] key Enter (1/1)
+[  74605ms] [console.log] [L] TEAM_PLAYER_REMOVED web_user web_user
+[  74625ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  74625ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 5)
+[  74626ms] [console.log] [L] TEAM_PLAYER_REMOVED team_blue gdb
+[  74638ms] [console.log] [L] TEAM_PLAYER_REMOVED team_blue gcc
+[  74644ms] [console.log] [WAV] retiring a voice on moviesounds/extro.wav: loaded but zero samples
+[  74655ms] [console.log] [L] TEAM_PLAYER_REMOVED team_blue latex
+[  78931ms] [harness] screenshot -> /tmp/b6-fly/19-after-the-disconnect.png
+[  78932ms] [harness] eval (()=>{try{if(window.AABridge&&window.AABridge.ws)window.AABridge.ws.close();return 'socket closed from the page as a backstop'}catch(e){return 'backstop close threw: '+e}})() => "socket closed from the page as a backstop"
+[  80996ms] [console.log] [BRIDGE] closed
+[  82001ms] [harness] screenshot -> /tmp/b6-fly/20-left.png
+[  82002ms] [console.log] [BRIDGEGATE] B6-LEFT the-page-is-off-the-server-and-still-running {"ws_readyState":3,"state":2,"live_handles":[],"canvas_w":1024,"canvas_h":768,"gl_err":0,"PASS":true}
+[  82002ms] [harness] eval (()=>{const b=window.AABridge;const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const r={ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:Object.keys(b.queues).map(Number),canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.PASS=r.ws_readyState===3&&r.canvas_w>0&&r.gl_err===0;console.log('[BRIDGEGATE] B6-LEFT the-page-is-off-the-server-and-still-running '+JSON.stringify(r));return 'LEFT '+r.PASS})() => "LEFT true"
+
+Transcript: /tmp/b6-fly/console.log
