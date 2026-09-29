@@ -6,10 +6,16 @@
 // none of them. So the datagrams have to be carried by something outside the
 // page. That is this.
 //
-// M-A SCOPE: local only. No TLS, no authentication, no rate limits, nothing
-// meant to be reachable from the internet. Those belong to M-C.
+// TWO MODES. Bound to loopback (the default) it trusts whoever can reach it,
+// because only this machine can. Bound anywhere else it is an open door into
+// UDP 4533-4599 -- a reflector anyone could aim at community game servers --
+// so it REFUSES TO START without a token, and refuses every connection that
+// does not carry it. TLS is not done here: a deployment terminates it in
+// front (Fly's proxy does). Rate limits and an Origin allowlist are still M-C.
+import crypto from 'node:crypto';
 import dgram from 'node:dgram';
 import dns from 'node:dns/promises';
+import http from 'node:http';
 import { WebSocketServer } from 'ws';
 import { encode, decode, TYPE } from './frame.mjs';
 import { checkDestination } from './policy.mjs';
@@ -17,6 +23,12 @@ import { checkDestination } from './policy.mjs';
 // A TESTING AID AND NOTHING ELSE, see `drop` below.
 export function startRelay({
   port = 8010, allowPrivate = false, drop = 0, log = () => {},
+  host = '127.0.0.1',
+  // The shared secret a public relay demands, carried as the URL PATH:
+  // wss://relay.example/<token>. A path rather than a query string because the
+  // page reads its own ?bridge= value with URLSearchParams, and an '&' inside a
+  // query-string token would silently split it. No client change is needed.
+  token = null,
   // Injectable ONLY so a test can count resolutions. That count is the only
   // way to observe from outside that a destination the policy REFUSED is not
   // left behind in the cache below; the default is real DNS and the relay
@@ -44,9 +56,47 @@ export function startRelay({
     if (dropped % 25 === 0) log('discarded ' + dropped + ' datagrams so far (--drop ' + drop + ')');
     return true;
   };
-  const wss = new WebSocketServer({ port, host: '127.0.0.1' });
-  // wss binds asynchronously; wss.address() is null until 'listening' fires.
-  const ready = new Promise((res) => wss.on('listening', res));
+  const loopback = host === '127.0.0.1' || host === '::1' || host === 'localhost';
+  if (!loopback && !token) {
+    throw new Error('refusing to listen on ' + host + ' without a token: a public relay ' +
+                    'with no token is an open UDP reflector into game servers');
+  }
+  if (token !== null && String(token).length < 16) {
+    throw new Error('token is too short to be a secret (need at least 16 characters)');
+  }
+  const expected = token === null ? null : Buffer.from('/' + token);
+  // Constant-time, so response timing cannot be used to guess the token byte by byte.
+  const authorised = (url) => {
+    if (expected === null) return true;
+    const got = Buffer.from(String(url || '').split('?')[0]);
+    return got.length === expected.length && crypto.timingSafeEqual(got, expected);
+  };
+
+  // Plain HTTP answers only /health (for the platform's checks) and 404s
+  // everything else -- including a plain GET on the token path, so probing
+  // cannot tell a right guess from a wrong one without attempting an upgrade.
+  const server = http.createServer((req, res) => {
+    if (req.method === 'GET' && req.url === '/health') {
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      res.end('ok');
+      return;
+    }
+    res.writeHead(404);
+    res.end();
+  });
+  const wss = new WebSocketServer({ noServer: true });
+  server.on('upgrade', (req, socket, head) => {
+    if (!authorised(req.url)) {
+      log('refused an upgrade without the token from ' + (req.socket.remoteAddress || '?'));
+      socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
+  });
+  server.listen(port, host);
+  // The server binds asynchronously; address() is null until 'listening' fires.
+  const ready = new Promise((res) => server.on('listening', res));
   const all = new Set();
 
   wss.on('connection', (ws) => {
@@ -149,7 +199,7 @@ export function startRelay({
 
   return {
     ready,
-    get port() { return wss.address().port; },
+    get port() { return server.address().port; },
     socketCount() { let n = 0; for (const s of all) n += s.size; return n; },
     droppedCount() { return dropped; },
     close() {
@@ -159,7 +209,9 @@ export function startRelay({
       // sockets again, which throws ERR_SOCKET_DGRAM_NOT_RUNNING.
       for (const s of all) { for (const sock of s.values()) sock.close(); s.clear(); }
       all.clear();
+      for (const ws of wss.clients) ws.terminate();
       wss.close();
+      server.close();
     },
   };
 }
@@ -175,14 +227,27 @@ if (import.meta.url === 'file://' + process.argv[1]) {
     console.error('[bridge] --drop takes a fraction between 0 and 1, got: ' + arg('drop', 0));
     process.exit(2);
   }
-  const relay = startRelay({
-    port: Number(arg('port', 8010)),
-    allowPrivate: process.argv.includes('--allow-private'),
-    drop,
-    log: (m) => console.log('[bridge] ' + m),
-  });
+  // Environment variables win over flags, because a platform like Fly injects
+  // configuration that way; the token in particular must never be a flag,
+  // where it would show up in `ps` and in the platform's process listings.
+  const host = process.env.BRIDGE_HOST || arg('host', '127.0.0.1');
+  let relay;
+  try {
+    relay = startRelay({
+      port: Number(process.env.PORT || arg('port', 8010)),
+      host,
+      token: process.env.BRIDGE_TOKEN || null,
+      allowPrivate: process.argv.includes('--allow-private'),
+      drop,
+      log: (m) => console.log('[bridge] ' + m),
+    });
+  } catch (e) {
+    console.error('[bridge] ' + e.message);
+    process.exit(2);
+  }
   relay.ready.then(() => {
-    console.log('[bridge] listening on ws://127.0.0.1:' + relay.port +
+    console.log('[bridge] listening on ws://' + host + ':' + relay.port +
+                (process.env.BRIDGE_TOKEN ? ' (token required)' : ' (no token - loopback only)') +
                 (process.argv.includes('--allow-private') ? ' (private destinations ALLOWED - local testing only)' : '') +
                 (drop > 0 ? ' DISCARDING ' + (drop * 100) + '% OF DATAGRAMS - testing aid, see README' : ''));
   });
