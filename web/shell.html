@@ -1147,6 +1147,56 @@
       if (!decision.on) return;
       touchEl.hidden = false;
 
+      // KEEP THE CANVAS ON CHROME'S NORMAL COMPOSITING PATH (2026-09-29).
+      //
+      // THE SYMPTOM. On an Android phone in the Game Boy layout, walls flicker
+      // -- parts of the picture briefly wrong -- once a cycle has been grinding
+      // one for a while, the player's or an AI's, in single-player and online.
+      // A Mac shows nothing.
+      //
+      // WHAT IT IS NOT, MEASURED ON THE PHONE. Not sparks (?sparks=0), not the
+      // halved touch camera (?cam=1), not depth precision: a tunable near-plane
+      // floor (#40, reverted) changed nothing, and the control at upstream's
+      // floor was clean whenever the ?diag=1 readout was on screen.
+      //
+      // WHAT CURES IT, BISECTED FROM THAT READOUT, a couple of minutes each:
+      //   plain page                          flickers
+      //   2x2 px dot at 1% over the picture   flickers
+      //   readout's gl.flush/finish hook only flickers
+      //   readout box over picture, frozen    clean
+      //   readout box BELOW picture, refresh  clean
+      // So what cures it is other page content the browser must repaint
+      // alongside the canvas -- not the GL hook, not depth.
+      //
+      // THE EXPLANATION THAT FITS ALL FIVE, NOT PROVEN. This game's frames are
+      // not drawn in one piece: Asyncify pauses land inside them, which is why
+      // this page forces preserveDrawingBuffer (see the note there). When the
+      // canvas is the only thing on the page that changes, Android Chrome can
+      // move it onto a direct-to-display path on which a frame caught half-drawn
+      // reaches the screen. Regular repaints elsewhere keep it on the normal
+      // path, where they do not. The Game Boy layout is the case with nothing
+      // over the picture, which is why it showed there.
+      //
+      // THE FIX: a 1 px element in the bottom-left corner -- in the Game Boy
+      // layout that is the pad area, off the picture -- whose colour steps
+      // between two all-but-invisible values twice a second. Touch devices
+      // only; the desktop never flickered and is left exactly as it was.
+      // ?keepalive=0 turns it off, which is how the fix is checked on a phone.
+      if (readNumberParam('keepalive', 0, 1) !== 0) {
+        const ka = document.createElement('div');
+        ka.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:1px;' +
+                           'pointer-events:none;z-index:1;background:rgba(0,0,0,0.02)';
+        document.body.appendChild(ka);
+        let kaOn = false;
+        setInterval(() => {
+          kaOn = !kaOn;
+          ka.style.background = kaOn ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.02)';
+        }, 500);
+        console.log('[TOUCH] keepalive on: 1 px repaint every 500 ms (?keepalive=0 turns it off)');
+      } else {
+        console.log('[TOUCH] keepalive off (?keepalive=0)');
+      }
+
       // HAPTICS (M7.2). One 12 ms pulse on every press that SENDS a key -- the
       // pad, the turn zones, the strip, the tap-for-Enter on the picture -- and
       // none on a press that sends nothing (a suppressed Enter, an ignored
