@@ -1500,6 +1500,33 @@
       }
     }
 
+    // ---- THE NEAR-PLANE FLOOR EXPERIMENT (?znear=) -----------------------
+    //
+    // Phones show walls flickering where a cycle grinds along another wall
+    // for a while; a Mac shows nothing. The suspect is the camera's near
+    // clipping plane, which eCamera::Render floors at 0.0001 and which a
+    // 24-bit integer depth buffer (the phone's) cannot afford as the camera
+    // nears the arena rim; a Mac hides it because Apple Silicon has no 24-bit
+    // depth format and Chrome gives WebGL a 32-bit float buffer instead. See
+    // src/emscripten/eWebCamera.cpp for the argument.
+    //
+    // ?znear=0.05 writes CAMERA_ZNEAR_MIN 0.05 before main(); absent, the
+    // game keeps upstream's 0.0001 on every device. It is an experiment: the
+    // value the phone settles on becomes the touch default in its own change.
+    function applyZNearParam() {
+      const v = readNumberParam('znear', 0.00001, 1);
+      if (v === null) return;
+      try {
+        const path = '/data/webdefaults/autoexec.cfg';
+        const lines = ['', '# appended at runtime by web/shell.html: ?znear=', 'CAMERA_ZNEAR_MIN ' + v, ''];
+        Module.FS.writeFile(
+          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
+        console.log('[CAMERA] near-plane floor ' + v + ' written to ' + path + ' before main()');
+      } catch (e) {
+        console.log('[CAMERA] near-plane floor skipped: ' + e);
+      }
+    }
+
     // ---- M6: NO CRASH SPARKS ON A TOUCH DEVICE ---------------------------
     //
     // THE MEASUREMENT FIRST, AND IT IS ABOUT THE WALL. M6 task 3's grind arm
@@ -1819,6 +1846,11 @@
         // touch camera tuning below is here rather than in preRun.
         applyTouchCameraTuning();
         applyTouchSparksTuning();
+        applyZNearParam();
+        // From here on the wasm exports are callable. Calling one earlier is
+        // not a wrong answer but an abort: this build has ASSERTIONS=1, and
+        // the ?diag=1 readout's first tick runs long before this point.
+        window.AA_RUNTIME_READY = true;
         let manual = false;
         try {
           manual = new URLSearchParams(location.search).get('autostart') === '0';
@@ -2069,6 +2101,15 @@
               '  err ' + err.toFixed(2) + '%',
             'gl  ' + (gl ? gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight +
                            (dbOK ? '  MATCH' : '  CLAMPED') : '(no context yet)'),
+            // The LOWEST raw near plane since the last readout, not the current
+            // one: this refreshes every 500 ms and a flicker is shorter.
+            'znear ' + (!window.AA_RUNTIME_READY ? '(runtime not started)' :
+                        typeof Module._aa_web_znear_raw_min === 'function' ?
+                          (() => { const m = Module._aa_web_znear_raw_min();
+                                   return 'floor ' + Module._aa_web_znear_floor_value().toPrecision(3) +
+                                          '  raw-min ' + (m < -1e8 ? '(no frame)' : m.toPrecision(3)) +
+                                          (m > -1e8 && m < Module._aa_web_znear_floor_value() ? '  FLOORED' : ''); })()
+                        : '(not in this build)'),
             'fps ' + swapsPerSec + ' swaps/s' +
               '   cam x' + (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1) +
               '   touch ' + (window.AA_TOUCH ? 'on' : 'off'),
