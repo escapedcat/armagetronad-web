@@ -152,3 +152,6 @@ bridge/node_modules
 
 # live-gate.sh scratch runs; the kept evidence is committed alongside them
 docs/evidence/**/.runs/
+
+# The deployed relay's shared secret. Never commit it.
+bridge/.fly-token

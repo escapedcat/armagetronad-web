@@ -1,0 +1,17 @@
+2026-09-29T09:28:01Z runner[2860413a056608] fra [info]Pulling container image registry.fly.io/armagetronad-bridge@sha256:3993e4360b01673d2a00093a4481743f456aa59fb163eb90af2218b97b2744ef
+2026-09-29T09:28:04Z runner[2860413a056608] fra [info]Successfully prepared image registry.fly.io/armagetronad-bridge@sha256:3993e4360b01673d2a00093a4481743f456aa59fb163eb90af2218b97b2744ef (3.097297649s)
+2026-09-29T09:28:06Z runner[2860413a056608] fra [info]Configuring firecracker
+2026-09-29T09:28:07Z app[2860413a056608] fra [info]2026-09-29T09:28:07.259945664 [01M3P7W5CWPVS06G3413BPQ3W0:main] Running Firecracker v1.14.4
+2026-09-29T09:28:07Z app[2860413a056608] fra [info]2026-09-29T09:28:07.260185213 [01M3P7W5CWPVS06G3413BPQ3W0:main] Listening on API socket ("/fc.sock").
+2026-09-29T09:28:08Z app[2860413a056608] fra [info] INFO Starting init (commit: 6172d83)...
+2026-09-29T09:28:08Z app[2860413a056608] fra [info] INFO Preparing to run: `docker-entrypoint.sh node relay.mjs` as node
+2026-09-29T09:28:08Z app[2860413a056608] fra [info] INFO [fly api proxy] listening at /.fly/api
+2026-09-29T09:28:08Z app[2860413a056608] fra [info]2026/09/29 09:28:08 INFO SSH listening listen_address=[fdaa:1:29ac:a7b:47b:3489:dd57:2]:22
+2026-09-29T09:28:08Z runner[2860413a056608] fra [info]Machine created and started in 7.303s
+2026-09-29T09:28:10Z app[2860413a056608] fra [info][bridge] listening on ws://0.0.0.0:8080 (token required)
+2026-09-29T09:29:36Z app[2860413a056608] fra [info][bridge] refused an upgrade without the token from 172.16.24.226
+2026-09-29T09:29:36Z app[2860413a056608] fra [info][bridge] refused an upgrade without the token from 172.16.24.226
+2026-09-29T09:29:37Z app[2860413a056608] fra [info][bridge] handle 1 bound to udp port 47116
+2026-09-29T09:41:08Z app[2860413a056608] fra [info][bridge] handle 1 bound to udp port 35134
+2026-09-29T09:41:10Z app[2860413a056608] fra [info][bridge] handle 2 bound to udp port 58851
+2026-09-29T09:41:20Z app[2860413a056608] fra [info][bridge] handle 3 bound to udp port 43654
