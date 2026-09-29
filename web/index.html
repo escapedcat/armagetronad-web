@@ -19,10 +19,19 @@
   byte-identical to what `make -f web/Makefile client` emits, and add a file
   beside it rather than renaming one of them.
 
-  The redirect is a <meta refresh> and not JavaScript so it works with scripting
-  disabled, and the anchor below is a fallback for the case where a browser or
-  an extension suppresses the refresh -- a 0-second meta refresh is honoured by
-  every current browser, but a visible link costs one line and never fails.
+  THE QUERY STRING HAS TO SURVIVE, AND A META REFRESH CANNOT CARRY IT. The
+  page is configured by its own URL -- ?bridge=, ?layout=, ?haptics=, ?sparks=
+  -- and a <meta refresh> to a fixed url= drops whatever followed the '?'. For
+  months that went unnoticed because every one of those has a default; the
+  first parameter with no default, ?bridge=, is what exposed it (2026-09-29:
+  the root URL with ?bridge= loaded "without a bridge"). So a script runs
+  first and forwards with location.search and location.hash intact, via
+  location.replace so the redirect page does not sit in the back history.
+
+  The <meta refresh> stays as the fallback for scripting disabled, where the
+  parameters are lost as before, and the anchor below is the fallback for a
+  browser or extension that suppresses both -- a visible link costs one line
+  and never fails.
 
   Copied into the publish directory by web/package.json's `deploy` script; it is
   not produced by the Makefile, so `make -f web/Makefile clean` does not remove
@@ -32,6 +41,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>location.replace('armagetronad.html' + location.search + location.hash);</script>
 <meta http-equiv="refresh" content="0; url=armagetronad.html">
 <title>Armagetron Advanced</title>
 <link rel="canonical" href="armagetronad.html">
