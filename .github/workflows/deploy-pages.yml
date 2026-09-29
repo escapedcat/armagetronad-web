@@ -191,6 +191,17 @@ jobs:
       # correctly. A deploy is "served" only when every published file matches
       # what this job built; the html and the js are the ones that change when
       # the wasm does not.
+      # WAIT ON THE URL A VISITOR FETCHES, NOT A CACHE-BUSTED ONE. This step
+      # used to fetch "$f?t=$SECONDS" with a no-cache header. That is a
+      # DIFFERENT cache key at Pages' CDN edge, so it saw the fresh file while
+      # the plain URL -- the one W7 fetches, and the one every visitor gets --
+      # was still the previous deploy's, cached for up to max-age=600. Run
+      # 36559782924 (the #40 merge, 2026-09-29) passed this step, then W7
+      # fetched the plain URL three seconds after the new html's
+      # last-modified and got #39's 22,821-byte page instead of #40's 23,647.
+      # So it now waits on exactly what W7 measures, and the deadline is 15
+      # minutes because the edge may legitimately hold the old copy for the
+      # whole 10-minute max-age.
       - name: Wait for Pages to serve the new build
         if: github.event_name != 'pull_request'
         run: |
@@ -198,12 +209,12 @@ jobs:
           BASE=https://escapedcat.github.io/armagetronad-web
           FILES="armagetronad.html armagetronad.js armagetronad.wasm armagetronad.data index.html"
           for f in $FILES; do echo "want $f sha256 $(sha256sum web/dist-m1/$f | cut -d' ' -f1)"; done
-          END=$((SECONDS + 600))
+          END=$((SECONDS + 900))
           while true; do
             PENDING=""
             for f in $FILES; do
               WANT=$(sha256sum "web/dist-m1/$f" | cut -d' ' -f1)
-              GOT=$(curl -sL --connect-timeout 15 --max-time 120 -H 'Cache-Control: no-cache' "$BASE/$f?t=$SECONDS" | sha256sum | cut -d' ' -f1) || GOT=transient
+              GOT=$(curl -sL --connect-timeout 15 --max-time 120 "$BASE/$f" | sha256sum | cut -d' ' -f1) || GOT=transient
               if [ "$GOT" != "$WANT" ]; then PENDING="$PENDING $f($GOT)"; fi
             done
             if [ -z "$PENDING" ]; then
@@ -211,7 +222,7 @@ jobs:
               break
             fi
             if [ "$SECONDS" -ge "$END" ]; then
-              echo "Pages did not serve the new build within 10 minutes; still stale:$PENDING" >&2
+              echo "Pages did not serve the new build within 15 minutes; still stale:$PENDING" >&2
               exit 1
             fi
             echo "still stale:$PENDING -- retrying in 20 s"
