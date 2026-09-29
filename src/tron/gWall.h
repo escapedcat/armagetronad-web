@@ -281,4 +281,23 @@ private:
 extern tList<gNetPlayerWall> sg_netPlayerWalls;
 extern tList<gNetPlayerWall> sg_netPlayerWallsGridded;
 
+// The wall cut (2026-09-29). Phone screen recordings show single frames
+// with a comb of lines in a wall's colour shooting to the screen edge, and in
+// every one of four events a wall of that colour passes BESIDE AND BEHIND the
+// camera. The suspect is the phone's GPU: a vertex almost exactly level with
+// the camera (clip-space w near 0) should be clipped before the perspective
+// divide, and a GPU that cuts corners there divides out to huge coordinates.
+// With WALL_CUT on (touch devices by default; ?wallcut=0/1 in the page), the
+// browser client cuts each wall piece in
+// gNetPlayerWall::RenderList so none of it reaches the GPU closer than 0.05
+// units in front of the camera -- far inside the near plane, so nothing visible
+// is lost. Appended at the end of the header so no line number above it moves.
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+class eCoord;
+bool aa_web_wall_cut( eCoord & p1, eCoord & p2, REAL & ta, REAL & te );
+#define AA_WALL_CUT( p1, p2, ta, te ) if ( !aa_web_wall_cut( p1, p2, ta, te ) ) continue;
+#else
+#define AA_WALL_CUT( p1, p2, ta, te )
+#endif
+
 #endif
