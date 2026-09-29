@@ -1147,6 +1147,56 @@
       if (!decision.on) return;
       touchEl.hidden = false;
 
+      // KEEP THE CANVAS ON CHROME'S NORMAL COMPOSITING PATH (2026-09-29).
+      //
+      // THE SYMPTOM. On an Android phone in the Game Boy layout, walls flicker
+      // -- parts of the picture briefly wrong -- once a cycle has been grinding
+      // one for a while, the player's or an AI's, in single-player and online.
+      // A Mac shows nothing.
+      //
+      // WHAT IT IS NOT, MEASURED ON THE PHONE. Not sparks (?sparks=0), not the
+      // halved touch camera (?cam=1), not depth precision: a tunable near-plane
+      // floor (#40, reverted) changed nothing, and the control at upstream's
+      // floor was clean whenever the ?diag=1 readout was on screen.
+      //
+      // WHAT CURES IT, BISECTED FROM THAT READOUT, a couple of minutes each:
+      //   plain page                          flickers
+      //   2x2 px dot at 1% over the picture   flickers
+      //   readout's gl.flush/finish hook only flickers
+      //   readout box over picture, frozen    clean
+      //   readout box BELOW picture, refresh  clean
+      // So what cures it is other page content the browser must repaint
+      // alongside the canvas -- not the GL hook, not depth.
+      //
+      // THE EXPLANATION THAT FITS ALL FIVE, NOT PROVEN. This game's frames are
+      // not drawn in one piece: Asyncify pauses land inside them, which is why
+      // this page forces preserveDrawingBuffer (see the note there). When the
+      // canvas is the only thing on the page that changes, Android Chrome can
+      // move it onto a direct-to-display path on which a frame caught half-drawn
+      // reaches the screen. Regular repaints elsewhere keep it on the normal
+      // path, where they do not. The Game Boy layout is the case with nothing
+      // over the picture, which is why it showed there.
+      //
+      // THE FIX: a 1 px element in the bottom-left corner -- in the Game Boy
+      // layout that is the pad area, off the picture -- whose colour steps
+      // between two all-but-invisible values twice a second. Touch devices
+      // only; the desktop never flickered and is left exactly as it was.
+      // ?keepalive=0 turns it off, which is how the fix is checked on a phone.
+      if (readNumberParam('keepalive', 0, 1) !== 0) {
+        const ka = document.createElement('div');
+        ka.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:1px;' +
+                           'pointer-events:none;z-index:1;background:rgba(0,0,0,0.02)';
+        document.body.appendChild(ka);
+        let kaOn = false;
+        setInterval(() => {
+          kaOn = !kaOn;
+          ka.style.background = kaOn ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.02)';
+        }, 500);
+        console.log('[TOUCH] keepalive on: 1 px repaint every 500 ms (?keepalive=0 turns it off)');
+      } else {
+        console.log('[TOUCH] keepalive off (?keepalive=0)');
+      }
+
       // HAPTICS (M7.2). One 12 ms pulse on every press that SENDS a key -- the
       // pad, the turn zones, the strip, the tap-for-Enter on the picture -- and
       // none on a press that sends nothing (a suppressed Enter, an ignored
@@ -1500,33 +1550,6 @@
       }
     }
 
-    // ---- THE NEAR-PLANE FLOOR EXPERIMENT (?znear=) -----------------------
-    //
-    // Phones show walls flickering where a cycle grinds along another wall
-    // for a while; a Mac shows nothing. The suspect is the camera's near
-    // clipping plane, which eCamera::Render floors at 0.0001 and which a
-    // 24-bit integer depth buffer (the phone's) cannot afford as the camera
-    // nears the arena rim; a Mac hides it because Apple Silicon has no 24-bit
-    // depth format and Chrome gives WebGL a 32-bit float buffer instead. See
-    // src/emscripten/eWebCamera.cpp for the argument.
-    //
-    // ?znear=0.05 writes CAMERA_ZNEAR_MIN 0.05 before main(); absent, the
-    // game keeps upstream's 0.0001 on every device. It is an experiment: the
-    // value the phone settles on becomes the touch default in its own change.
-    function applyZNearParam() {
-      const v = readNumberParam('znear', 0.00001, 1);
-      if (v === null) return;
-      try {
-        const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: ?znear=', 'CAMERA_ZNEAR_MIN ' + v, ''];
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[CAMERA] near-plane floor ' + v + ' written to ' + path + ' before main()');
-      } catch (e) {
-        console.log('[CAMERA] near-plane floor skipped: ' + e);
-      }
-    }
-
     // ---- M6: NO CRASH SPARKS ON A TOUCH DEVICE ---------------------------
     //
     // THE MEASUREMENT FIRST, AND IT IS ABOUT THE WALL. M6 task 3's grind arm
@@ -1846,11 +1869,6 @@
         // touch camera tuning below is here rather than in preRun.
         applyTouchCameraTuning();
         applyTouchSparksTuning();
-        applyZNearParam();
-        // From here on the wasm exports are callable. Calling one earlier is
-        // not a wrong answer but an abort: this build has ASSERTIONS=1, and
-        // the ?diag=1 readout's first tick runs long before this point.
-        window.AA_RUNTIME_READY = true;
         let manual = false;
         try {
           manual = new URLSearchParams(location.search).get('autostart') === '0';
@@ -2101,15 +2119,6 @@
               '  err ' + err.toFixed(2) + '%',
             'gl  ' + (gl ? gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight +
                            (dbOK ? '  MATCH' : '  CLAMPED') : '(no context yet)'),
-            // The LOWEST raw near plane since the last readout, not the current
-            // one: this refreshes every 500 ms and a flicker is shorter.
-            'znear ' + (!window.AA_RUNTIME_READY ? '(runtime not started)' :
-                        typeof Module._aa_web_znear_raw_min === 'function' ?
-                          (() => { const m = Module._aa_web_znear_raw_min();
-                                   return 'floor ' + Module._aa_web_znear_floor_value().toPrecision(3) +
-                                          '  raw-min ' + (m < -1e8 ? '(no frame)' : m.toPrecision(3)) +
-                                          (m > -1e8 && m < Module._aa_web_znear_floor_value() ? '  FLOORED' : ''); })()
-                        : '(not in this build)'),
             'fps ' + swapsPerSec + ' swaps/s' +
               '   cam x' + (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1) +
               '   touch ' + (window.AA_TOUCH ? 'on' : 'off'),

@@ -1440,9 +1440,9 @@ void eCamera::Render(){
         grid->Render( this, id, zNear );
 
         zNear *= .3f;
-        if ( zNear < AA_ZNEAR_FLOOR( zNear ) )
+        if ( zNear < 0.0001f )
         {
-            zNear = AA_ZNEAR_FLOOR( zNear );
+            zNear = 0.0001f;
         }
 
         if (c) c->RenderCockpitVirtual();
