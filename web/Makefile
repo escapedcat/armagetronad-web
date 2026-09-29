@@ -163,10 +163,6 @@ CLIENT_OBJDIR := web/build-m1
 #                                  aa_web_input_context(), the two bits
 #                                  web/shell.html's touch overlay reads to
 #                                  decide whether a tap means Enter or a turn.
-#   src/emscripten/eWebCamera.cpp  the camera's near-plane floor as a setting
-#                                  (CAMERA_ZNEAR_MIN), so a phone can tune the
-#                                  wall flicker that its 24-bit depth buffer
-#                                  shows and a Mac's 32-bit float one hides.
 #   src/emscripten/eWebNet.cpp     M-A: the browser end of the multiplayer
 #                                  bridge. Named here, not added to $(SRCS),
 #                                  for exactly the reason the paragraph below
@@ -189,8 +185,7 @@ CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eCompat.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebPersist.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebInput.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebNet.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebCamera.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebNet.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1

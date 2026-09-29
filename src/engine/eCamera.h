@@ -211,17 +211,4 @@ inline REAL CameraHeight(int i){return eCamera::HeightNum(i);}
 */
 
 
-// The floor under the camera's near clipping plane (see eCamera::Render).
-// Appended at the end of the header on purpose: adding lines anywhere above a
-// tERR_ERROR or tVERIFY renumbers the __LINE__ constants they bake into the
-// byte-pinned dedicated server. The browser client routes the floor through
-// src/emscripten/eWebCamera.cpp so a phone can tune it (CAMERA_ZNEAR_MIN);
-// every other build keeps upstream's constant, token for token.
-#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
-float aa_web_znear_floor( float zNear );
-#define AA_ZNEAR_FLOOR( z ) aa_web_znear_floor( z )
-#else
-#define AA_ZNEAR_FLOOR( z ) 0.0001f
-#endif
-
 #endif
