@@ -163,6 +163,9 @@ CLIENT_OBJDIR := web/build-m1
 #                                  aa_web_input_context(), the two bits
 #                                  web/shell.html's touch overlay reads to
 #                                  decide whether a tap means Enter or a turn.
+#   src/emscripten/eWebWallCut.cpp  WALL_CUT (?wallcut=1): keeps player-wall
+#                                  geometry from reaching the GPU level with
+#                                  the camera, investigating the phone combs.
 #   src/emscripten/eWebNet.cpp     M-A: the browser end of the multiplayer
 #                                  bridge. Named here, not added to $(SRCS),
 #                                  for exactly the reason the paragraph below
@@ -185,7 +188,8 @@ CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eCompat.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebPersist.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebInput.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebNet.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebNet.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebWallCut.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1

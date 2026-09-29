@@ -1024,7 +1024,7 @@ void gNetPlayerWall::RenderList(bool list, gWallRenderMode renderMode ){
                 }
             }
 
-            if(sg_simpleTrail)
+            AA_WALL_CUT( p1, p2, ta, te ) if(sg_simpleTrail)
             {
                 if (te+gBEG_LEN_GIVEUP <= time)
                 {

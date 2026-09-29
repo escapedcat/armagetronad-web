@@ -1500,6 +1500,39 @@
       }
     }
 
+    // ---- THE WALL CUT, ON FOR TOUCH DEVICES (2026-09-29) --------------------
+    //
+    // On an Android phone, single frames showed a comb of thin lines in a
+    // wall's colour, shooting to the screen edge. In all five captured events a
+    // wall of that colour -- usually the player's own trail, just after a turn,
+    // as the camera swung over its corner -- passed level with the camera. A
+    // corner at nearly zero distance should be clipped by the GPU before the
+    // perspective divide; this phone's GPU evidently lets one through now and
+    // then, and it is divided out to the screen edge. WALL_CUT 1 makes the game
+    // cut every piece of a player's wall so none of it reaches the GPU closer
+    // than 0.05 units in front of the camera -- inside the near plane, so
+    // nothing visible goes. See src/emscripten/eWebWallCut.cpp and
+    // docs/evidence/phone-wall-comb/ (plain: 4 combs in 112 s of play; with the
+    // cut: 0 in 110 s).
+    //
+    // Touch devices only: the desktop never showed it, and is left exactly as
+    // it was. ?wallcut=0 turns it off on a phone (to compare); ?wallcut=1 turns
+    // it on anywhere.
+    function applyWallCutParam() {
+      const q = readNumberParam('wallcut', 0, 1);
+      const on = q !== null ? q === 1 : !!window.AA_TOUCH;
+      if (!on) { if (window.AA_TOUCH) console.log('[WALLS] wall cut off (?wallcut=0)'); return; }
+      try {
+        const path = '/data/webdefaults/autoexec.cfg';
+        const lines = ['', '# appended at runtime by web/shell.html: wall cut (' + (q !== null ? '?wallcut=1' : 'touch device') + ')', 'WALL_CUT 1', ''];
+        Module.FS.writeFile(
+          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
+        console.log('[WALLS] WALL_CUT 1 written to ' + path + ' before main()');
+      } catch (e) {
+        console.log('[WALLS] wall cut skipped: ' + e);
+      }
+    }
+
     // ---- M6: NO CRASH SPARKS ON A TOUCH DEVICE ---------------------------
     //
     // THE MEASUREMENT FIRST, AND IT IS ABOUT THE WALL. M6 task 3's grind arm
@@ -1819,6 +1852,7 @@
         // touch camera tuning below is here rather than in preRun.
         applyTouchCameraTuning();
         applyTouchSparksTuning();
+        applyWallCutParam();
         let manual = false;
         try {
           manual = new URLSearchParams(location.search).get('autostart') === '0';
