@@ -1,0 +1,159 @@
+[    611ms] [harness] chrome: Chrome/153.0.8010.37
+[    612ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010
+[      7ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     19ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     20ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[     46ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     60ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     61ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     66ms] [page] load event fired
+[     71ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    125ms] [console.log] [PERSIST] populate ok in 34ms
+[    209ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    322ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    323ms] [console.log] [CAMERA] stock camera (factor 1)
+[    323ms] [console.log] [SPARKS] stock sparks, nothing written
+[    323ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    398ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    399ms] [console.log] [BOOT] autostart: calling main
+[    402ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    402ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    402ms] [console.error] 
+[    403ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    403ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    403ms] [console.log] 
+[    527ms] [console.log] [L] ENCODING latin1
+[    535ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    536ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    556ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    559ms] [console.error] TODO: glShadeModel
+[    562ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    609ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    610ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    610ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    610ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    611ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1211ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   1211ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10291ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/01-boot1-language-menu.png
+[  10325ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10326ms] [harness] key Enter (1/1)
+[  13661ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13662ms] [harness] key Escape (1/1)
+[  13963ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13963ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16965ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  16974ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16974ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16975ms] [harness] eval location.reload() => undefined
+[  16976ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16991ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  16991ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  16994ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  16996ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16996ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17001ms] [page] load event fired
+[  17012ms] [console.log] [PERSIST] populate ok in 4ms
+[  17035ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17036ms] [console.log] [CAMERA] stock camera (factor 1)
+[  17036ms] [console.log] [SPARKS] stock sparks, nothing written
+[  17036ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  17038ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17039ms] [console.log] [BOOT] autostart: calling main
+[  17039ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17039ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17040ms] [console.error] 
+[  17040ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17041ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17041ms] [console.log] 
+[  17077ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  17077ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  17077ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  17160ms] [console.log] [L] ENCODING latin1
+[  17162ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17178ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17180ms] [console.error] TODO: glShadeModel
+[  17183ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  29159ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/02-boot2-main-menu.png
+[  29160ms] [harness] eval (()=>{if(window.__lTap)return 'already';window.__lTap=true;window.__L={};const o=console.log;const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[L] ')===0){const k=s.slice(4).split(' ')[0];window.__L[k]=(window.__L[k]||0)+1}}catch(e){}return o.apply(console,arguments)};console.log=w;return 'ladder-log tap installed'})() => "ladder-log tap installed"
+[  29160ms] [harness] eval (()=>{const b=window.AABridge;window.__base={dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0};return 'error-counter baseline '+JSON.stringify(window.__base)})() => "error-counter baseline {\"dropped\":0,\"sendFailures\":0,\"dataErrors\":0}"
+[  29161ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  29192ms] [harness] key Enter (1/1)
+[  31995ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  32015ms] [console.log] [BRIDGE] open ws://127.0.0.1:8010
+[  32027ms] [harness] key Enter (1/1)
+[  34896ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/03-network-menu-opens-on-online-multiplayer.png
+[  34896ms] [harness] === DOWN-4-FROM-THE-TOP-TO-SERVER-BOOKMARKS ===
+[  34929ms] [harness] key Down (1/4)
+[  35267ms] [harness] key Down (2/4)
+[  35602ms] [harness] key Down (3/4)
+[  35936ms] [harness] key Down (4/4)
+[  37800ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/04-network-menu-server-bookmarks-selected.png
+[  37800ms] [harness] === ENTER-3-OPENS-BOOKMARKS-AND-TRANSFERS-CUSTOM_SERVER_NAME ===
+[  37832ms] [harness] key Enter (1/1)
+[  41177ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/05-bookmarks-menu-opens-on-connect-to-127-0-0-1.png
+[  41178ms] [harness] === ENTER-4-CONNECTS ===
+[  41210ms] [harness] key Enter (1/1)
+[  41249ms] [console.log] [BRIDGE] handle 1 bound to udp port 64193
+[  41274ms] [console.log] [BRIDGE] peer 127.0.0.1 -> 127.0.0.1 (literal)
+[  41512ms] [harness] until 1x <<[BRIDGE] open>> (timeout 60000ms, have 1)
+[  41513ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] open>>
+[  41513ms] [harness] until 1x <<[L] TEAM_PLAYER_ADDED>> (timeout 60000ms, have 0)
+[  41923ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  41925ms] [console.log] [L] NEW_ROUND 2026-09-10 22:36:27 UTC+0200
+[  41952ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  41953ms] [console.log] [SND] live voices peaked at 1 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  42042ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  42119ms] [harness] until SATISFIED: saw 1x <<[L] TEAM_PLAYER_ADDED>>
+[  42119ms] [harness] until 1x <<[L] NEW_ROUND>> (timeout 60000ms, have 1)
+[  42120ms] [harness] until SATISFIED: saw 1x <<[L] NEW_ROUND>>
+[  42378ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  42559ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  42560ms] [console.log] [SND] live voices peaked at 2 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  42663ms] [console.error] warning: Audio callback had starved sending audio by 0.43199546485255524 seconds
+[  42714ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  44227ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/06-on-the-grid-of-a-real-network-game.png
+[  44227ms] [harness] === WINDOW-OPEN-ARM-control ===
+[  52140ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  56773ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  56773ms] [console.log] [L] NEW_ROUND 2026-09-10 22:36:42 UTC+0200
+[  57308ms] [console.error] warning: Audio callback had starved sending audio by 0.5704807256238738 seconds
+[  71511ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  71512ms] [console.log] [L] NEW_ROUND 2026-09-10 22:36:57 UTC+0200
+[  72053ms] [console.error] warning: Audio callback had starved sending audio by 0.5789342403636084 seconds
+[  86342ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[  86343ms] [console.log] [L] NEW_ROUND 2026-09-10 22:37:12 UTC+0200
+[  86835ms] [console.error] warning: Audio callback had starved sending audio by 0.5644943310665553 seconds
+[ 101043ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[ 101043ms] [console.log] [L] NEW_ROUND 2026-09-10 22:37:26 UTC+0200
+[ 101554ms] [console.error] warning: Audio callback had starved sending audio by 0.505827664399888 seconds
+[ 104350ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/i1-control-no-key-pressed-60s.png
+[ 115767ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[ 115767ms] [console.log] [L] NEW_ROUND 2026-09-10 22:37:41 UTC+0200
+[ 116311ms] [console.error] warning: Audio callback had starved sending audio by 0.5431609977332243 seconds
+[ 130548ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[ 130548ms] [console.log] [L] NEW_ROUND 2026-09-10 22:37:56 UTC+0200
+[ 131082ms] [console.error] warning: Audio callback had starved sending audio by 0.5538276643998898 seconds
+[ 145256ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[ 145257ms] [console.log] [L] NEW_ROUND 2026-09-10 22:38:10 UTC+0200
+[ 145791ms] [console.error] warning: Audio callback had starved sending audio by 0.5416009070302721 seconds
+[ 159991ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[ 159991ms] [console.log] [L] NEW_ROUND 2026-09-10 22:38:25 UTC+0200
+[ 160550ms] [console.error] warning: Audio callback had starved sending audio by 0.5949342403635853 seconds
+[ 164463ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/i2-control-no-key-pressed-120s.png
+[ 174767ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[ 174767ms] [console.log] [L] NEW_ROUND 2026-09-10 22:38:40 UTC+0200
+[ 175307ms] [console.error] warning: Audio callback had starved sending audio by 0.584267573696934 seconds
+[ 198572ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[ 198573ms] [console.log] [L] NEW_ROUND 2026-09-10 22:39:04 UTC+0200
+[ 199113ms] [console.error] warning: Audio callback had starved sending audio by 0.5380453514752048 seconds
+[ 213372ms] [console.log] [L] ROUND_SCORE_TEAM 36 web_user
+[ 213372ms] [console.log] [L] NEW_ROUND 2026-09-10 22:39:19 UTC+0200
+[ 213890ms] [console.error] warning: Audio callback had starved sending audio by 0.5644943310665553 seconds
+[ 224627ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/i3-control-no-key-pressed-180s.png
+[ 224627ms] [harness] === WINDOW-CLOSE-ARM-control ===
+[ 227780ms] [harness] screenshot -> docs/evidence/m-a-bridge/task4/steer2/control/07-window-closed.png
+[ 228050ms] [console.log] [L] ROUND_SCORE_TEAM -4 web_user
+[ 228050ms] [console.log] [L] NEW_ROUND 2026-09-10 22:39:33 UTC+0200
+[ 228090ms] [console.log] [STEERGATE] control client-side-context {"arm":"control","rounds_started":13,"rounds_scored":12,"ws_readyState":1,"live_handles":[1],"bound":[[1,1]],"sent":[[1,1712]],"pending_before":1,"pending_after":0,"new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,"canvas_w":1024,"canvas_h":768,"gl_err":0,"draining":true,"still_alive":true,"PASS":true}
+[ 228091ms] [harness] eval (async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const depth=()=>live.reduce((n,h)=>n+((b.queues[h]||[]).length),0);const p1=depth();await new Promise(r=>setTimeout(r,300));const p2=depth();const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const r={arm:'control',rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,ws_readyState:b.ws?b.ws.readyState:null,live_handles:live,bound:bound,sent:sent,pending_before:p1,pending_after:p2,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.draining=p1<=3&&p2<=3;r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.PASS=r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.rounds_started>=2&&r.still_alive;console.log('[STEERGATE] control client-side-context '+JSON.stringify(r));return 'control client-context '+r.PASS})() => "control client-context true"

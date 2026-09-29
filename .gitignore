@@ -133,6 +133,7 @@ web/dist-m1
 # docs/evidence/m5-o2-assertions/measure-fexceptions-cost.sh.
 web/build-m1-noexc
 web/node_modules
+bridge/node_modules
 # Scratch space for planning/recon notes — never part of the port.
 .superpowers/
 # ...but the hand-written wasm Makefile is source, not autotools output

@@ -1,0 +1,66 @@
+==============================================================================
+THE STEERING DIFFERENTIAL, decided from the server's own log
+==============================================================================
+--- arm control  (docs/evidence/m-a-bridge/task4/steer3/control/server.log)
+    players the server logged entering: ['web_user']
+    rounds the server started: 14, with a logged death: 12
+      round   1: died at server game-time    5.44s (bracketed 5.44..5.69)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.46s (bracketed 5.46..5.71)  DEATH_SUICIDE web_user
+      round   3: died at server game-time    5.43s (bracketed 5.43..5.70)  DEATH_SUICIDE web_user
+      round   4: died at server game-time    5.19s (bracketed 5.19..5.44)  DEATH_SUICIDE web_user
+      round   5: died at server game-time    5.23s (bracketed 5.23..5.49)  DEATH_SUICIDE web_user
+      round   6: died at server game-time    5.24s (bracketed 5.24..5.49)  DEATH_SUICIDE web_user
+      round   7: died at server game-time    5.18s (bracketed 5.18..5.43)  DEATH_SUICIDE web_user
+      round   8: died at server game-time    5.41s (bracketed 5.41..5.67)  DEATH_SUICIDE web_user
+      round   9: died at server game-time    5.22s (bracketed 5.22..5.48)  DEATH_SUICIDE web_user
+      round  10: died at server game-time    5.20s (bracketed 5.20..5.46)  DEATH_SUICIDE web_user
+      round   1: died at server game-time    5.28s (bracketed 5.28..5.54)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.22s (bracketed 5.22..5.48)  DEATH_SUICIDE web_user
+    the server's own per-round Time: lines: 48.0s, 14.8s, 14.8s, 14.7s, 14.8s, 14.8s, 14.7s, 14.8s, 14.7s, 14.7s, 22.8s, 14.7s, 14.7s
+    of those, the 11 that are comparable (a death logged, not the last round of a match): 14.7824s, 14.7666s, 14.6871s, 14.7513s, 14.7849s, 14.6887s, 14.7648s, 14.6930s, 14.7447s, 14.7459s, 14.7419s
+    the server received 76160 bytes in 1717 packets across the rounds it reported
+--- arm steer  (docs/evidence/m-a-bridge/task4/steer3/steer/server.log)
+    players the server logged entering: ['web_user']
+    rounds the server started: 12, with a logged death: 10
+      round   1: died at server game-time   13.96s (bracketed 13.96..14.21)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    2.62s (bracketed 2.62..2.87)  DEATH_SUICIDE web_user
+      round   3: died at server game-time    3.19s (bracketed 3.19..3.45)  DEATH_SUICIDE web_user
+      round   4: died at server game-time    9.55s (bracketed 9.55..9.80)  DEATH_SUICIDE web_user
+      round   5: died at server game-time    4.94s (bracketed 4.94..5.20)  DEATH_SUICIDE web_user
+      round   6: died at server game-time    3.43s (bracketed 3.43..3.68)  DEATH_SUICIDE web_user
+      round   7: died at server game-time   14.16s (bracketed 14.16..14.42)  DEATH_SUICIDE web_user
+      round   8: died at server game-time    2.90s (bracketed 2.90..3.15)  DEATH_SUICIDE web_user
+      round   9: died at server game-time   15.49s (bracketed 15.49..15.74)  DEATH_SUICIDE web_user
+      round  10: died at server game-time    4.19s (bracketed 4.19..4.44)  DEATH_SUICIDE web_user
+    the server's own per-round Time: lines: 48.0s, 23.8s, 11.7s, 12.7s, 18.7s, 14.7s, 12.7s, 23.8s, 12.7s, 24.8s, 22.8s
+    of those, the 9 that are comparable (a death logged, not the last round of a match): 23.8272s, 11.7147s, 12.7423s, 18.7434s, 14.7174s, 12.6982s, 23.7976s, 12.7008s, 24.7693s
+    the server received 77064 bytes in 1720 packets across the rounds it reported
+
+control: 12 rounds, survival 5.18s..5.46s (spread 0.28s)  <- the no-steer bound, MEASURED
+steer  : 10 rounds, best survival 15.49s
+the steering arm beat the no-steer bound by +10.03s (required: more than 1.09s)
+corroboration, the server's own byte counters: it received 76160 bytes in the control arm and 77064 in the steering arm
+and 6 of its 10 rounds ended SOONER than the control's fastest (5.18s): 2.62s, 3.19s, 4.94s, 3.43s, 2.90s, 4.19s
+
+THE SAME COMPARISON ON THE SERVER'S OWN PER-ROUND CLOCK, which resolves about
+four times finer than the 0.25 s GAME_TIME sampling above:
+  control: 11 comparable rounds, 14.6871s..14.7849s, spread 0.0978s  <- the NOISE FLOOR, measured
+  steer  : 9 comparable rounds, longest 24.7693s
+  the steering arm beat the control's longest round by +9.9844s (required: more than 0.5000s = 5x the control's own spread)
+
+VERDICT: A STEERING KEYPRESS REACHED THE SERVER, ON TWO INDEPENDENT COUNTS.
+  1. The server kept the cycle alive for longer than a cycle that never turns
+     can survive in this arena -- a bound the control arm measured with no key
+     pressed at all. The server simulates that cycle, so the extra life is the
+     server's cycle having turned.
+  2. And some rounds ended SOONER than the control's fastest. Nothing else is
+     in the arena: a cycle going straight cannot reach a wall before the rim,
+     so an early death is a direction change. This is what rules out the key
+     having been bound to the brake, which could only ever delay the rim.
+
+  ONE BINDING HAS TO EXPLAIN BOTH TAILS, and that is the force of it. A brake
+  explains the long survivals only. Anything that merely killed the cycle
+  early explains the short ones only. Only a change of DIRECTION explains
+  15.49s and 2.62s coming out of the same key. ONE early
+  round is sufficient for that, which is why this file requires one of each
+  and not a majority of either -- the counts above are not a statistic.

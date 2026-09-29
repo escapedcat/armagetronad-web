@@ -1,0 +1,9 @@
+[bridge] listening on ws://127.0.0.1:8010 (private destinations ALLOWED - local testing only)
+[bridge] handle 1 bound to udp port 63427
+[bridge] handle 2 bound to udp port 54582
+[bridge] handle 3 bound to udp port 61153
+[bridge] handle 4 bound to udp port 59611
+[bridge] handle 1 bound to udp port 54752
+[bridge] handle 2 bound to udp port 56173
+[bridge] handle 3 bound to udp port 58831
+[bridge] handle 4 bound to udp port 59029

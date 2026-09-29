@@ -1,0 +1,7 @@
+[bridge] listening on ws://127.0.0.1:8010 (private destinations ALLOWED - local testing only) DISCARDING 5% OF DATAGRAMS - testing aid, see README
+[bridge] handle 1 bound to udp port 61233
+[bridge] handle 2 bound to udp port 62182
+[bridge] handle 3 bound to udp port 52868
+[bridge] discarded 25 datagrams so far (--drop 0.05)
+[bridge] discarded 50 datagrams so far (--drop 0.05)
+[runner] relay killed 20:33:52

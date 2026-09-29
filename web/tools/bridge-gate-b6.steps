@@ -1,0 +1,289 @@
+# M-A gate B6: ONE ROUND ON A SERVER THIS PROJECT DOES NOT OWN.
+#
+# Run it with web/tools/run-bridge-b6.sh, which starts the helpers, names the
+# address the run is supposed to reach and checks afterwards that it reached
+# THAT one:
+#
+#   sh web/tools/run-bridge-b6.sh docs/evidence/m-a-bridge/b6/local  127.0.0.1        4534 local
+#   sh web/tools/run-bridge-b6.sh docs/evidence/m-a-bridge/b6/remote 188.245.106.232  4537 remote
+#
+# ---------------------------------------------------------------------------
+# WHY THIS IS A SECOND FILE AND NOT AN EIGHTH SECTION OF bridge-gate.steps.
+# Two reasons, both structural rather than stylistic:
+#
+#   1. bridge-gate.steps ends with B5, which KILLS THE RELAY, and says in its
+#      own words "THIS MUST BE LAST IN THE FILE. After it there is no relay, so
+#      nothing after it could mean anything." A B6 appended after B5 would run
+#      with no transport at all and could only time out -- and `until:` does not
+#      throw, so the PASS line after it would still have printed. That is the
+#      exact vacuous-pass shape this milestone has already been bitten by twice.
+#   2. B6 connects somewhere else. bridge-gate.steps reaches 127.0.0.1 through
+#      the committed CUSTOM_SERVER_NAME; B6 needs a different address, which is
+#      an UNCOMMITTED edit to web/webdefaults/autoexec.cfg (the repo must never
+#      ship a third party's address -- see the note beside CUSTOM_SERVER_NAME).
+#      Keeping the two gates in one file would mean one file that only works
+#      when the tree is dirty.
+#
+# EVERYTHING ELSE IS bridge-gate.steps'. The boot/reload dance, the taps, the
+# milestone ticker, the error-counter baseline and the menu walk are all copied
+# from it, and the long banner comment there headed "THE MENU PATH TO A
+# BOOKMARKED SERVER" is still the explanation for the key counts below --
+# named, not quoted, so there is one copy of that reasoning and not two.
+#
+# ---------------------------------------------------------------------------
+# THE ONE NEW INSTRUMENT: A ROUND TRIP, NOT A GAP.
+#
+# Task 4's sampler measured inter-arrival GAPS between datagrams delivered to
+# the page. A gap answers "how often does the far end speak", which on
+# loopback and across the Atlantic can be the same number while the latency is
+# not. B6 exists to price a real network, so it needs a round trip.
+#
+# The game already measures one. nWaitForAck::Ackt (src/network/nNetwork.cpp:846)
+# does `REAL thisping = netTime - ack->timeFirstSent;` when an acknowledgement
+# for a message id comes back, and that is the number the score table prints in
+# its ping column (src/engine/ePlayer.cpp:6530, `int(p->ping*1000)`). The tap
+# below recovers the same pairing from the wire, from inside the page, so it
+# measures THE WHOLE PATH: page -> WebSocket -> relay -> UDP -> server and all
+# the way back. web/tools/bridge-rtt-relay.mjs does the same pairing at the
+# relay's UDP socket, where the browser leg is excluded; the difference between
+# the two is what the bridge itself costs. web/tools/bridge-rtt.py explains the
+# packet layout and both directions.
+#
+# WHAT THE RTT NUMBER IS NOT. An ack is not sent the instant a message lands:
+# the game batches acks and flushes them on its next send, so every sample
+# carries one send-cadence of the game's own delay on top of the wire time.
+# That is a property of Armagetron and is present in both arms, which is why
+# this gate is ALWAYS run twice -- once against the local container and once
+# against the real server -- and why the number that gets reported is the
+# DIFFERENCE. A single absolute figure from this instrument would be wrong.
+#
+# WHY THE TAP IS INSTALLED BEFORE THE MENU WALK AND RESET BEFORE THE CONNECT.
+# It has to exist before AABridge.ws does, because library_bridge.js assigns
+# `AABridge.ws.onmessage = AABridge.onmessage` once at construction
+# (web/library_bridge.js:153) -- wrapping the property afterwards would be too
+# late for the handshake. But the LAN walk in between sends datagrams of its
+# own (to port 0, which the relay refuses), and their message ids would sit in
+# the pending map and could collide with the real game's. So it is installed
+# early and its state is cleared immediately before the connect.
+# ===========================================================================
+
+until:1:90000:[PERSIST] populate ok
+wait:1000
+until:1:120000:[BOOT] autostart
+wait:9000
+shot:01-boot1-language-menu
+key:Enter
+wait:3000
+shot:02-boot1-first-setup
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+mark:RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+wait:12000
+shot:03-boot2-main-menu
+
+# The peer tap. eWebNet::Recv logs one of these per distinct address text it
+# maps, and it is the page's own record of WHO it is talking to -- read back in
+# the verdict, where the assertion is that exactly one peer was seen and that a
+# dotted quad mapped to itself rather than into the synthetic 10.42.0.0/16.
+eval:(()=>{const o=console.log;if(console.log.__aa)return 'already';window.__peers=[];const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[BRIDGE] peer ')===0)window.__peers.push(s)}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'peer-line tap installed'})()
+
+# The ladder-log tap and the milestone ticker, both verbatim from
+# bridge-gate.steps -- see the long comments there for why a bare `until:` on
+# an `[L]` line counts boot 1's local game and is therefore satisfied on
+# arrival.
+eval:(()=>{if(window.__lTap)return 'already';window.__lTap=true;window.__L={};const o=console.log;const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[L] ')===0){const k=s.slice(4).split(' ')[0];window.__L[k]=(window.__L[k]||0)+1}}catch(e){}return o.apply(console,arguments)};console.log=w;return 'ladder-log tap installed'})()
+eval:(()=>{if(window.__gw)return 'already';window.__gw={};window.__gwTimer=setInterval(()=>{const L=window.__L||{};const say=(k)=>{if(!window.__gw[k]){window.__gw[k]=1;console.log('[GATEWAIT] '+k)}};const n=L.NEW_ROUND|0,sc=L.ROUND_SCORE_TEAM|0,ro=L.TEAM_PLAYER_ADDED|0;for(let i=1;i<=8;i++){if(ro>=i)say('ROSTER-'+i);if(n>=i)say('STARTED-'+i);if(sc>=i)say('SCORED-'+i)}},500);return 'gate-wait milestone ticker installed'})()
+
+# The ack-pairing round-trip tap. See the banner above for what it measures and
+# what it does not.
+eval:(()=>{if(window.__rttTap)return 'already';window.__rttTap=1;const R={sent:{},samples:[],addrs:{},outD:0,inD:0,parseFail:0};R.reset=function(){R.sent={};R.samples=[];R.addrs={};R.outD=0;R.inD=0;R.parseFail=0;return 'rtt state cleared'};window.__rtt=R;const head=(u)=>{if(u.length<7||u[0]!==1)return null;const al=u[6];if(u.length<7+al)return null;let a='';for(let i=0;i<al;i++)a+=String.fromCharCode(u[7+i]);return {type:u[1],addr:a,off:7+al}};const parse=(u,off)=>{const e=u.length-2;const out=[];let p=off;while(p+6<=e){const d=(u[p]<<8)|u[p+1];const id=(u[p+2]<<8)|u[p+3];const dl=(u[p+4]<<8)|u[p+5];p+=6;if(p+dl*2>e)return out;if(d===1){const a=[];for(let i=0;i<dl;i++)a.push((u[p+i*2]<<8)|u[p+i*2+1]);out.push({d:1,acks:a})}else out.push({d:d,id:id});p+=dl*2}return out};const onOut=(u)=>{const h=head(u);if(!h||h.type!==3)return;R.outD++;R.addrs[h.addr]=(R.addrs[h.addr]|0)+1;const ms=parse(u,h.off);if(!ms.length){R.parseFail++;return}const t=performance.now();for(const m of ms)if(m.d!==1&&m.id&&R.sent[m.id]===undefined)R.sent[m.id]=t};const onIn=(u)=>{const h=head(u);if(!h||h.type!==3)return;R.inD++;const ms=parse(u,h.off);if(!ms.length){R.parseFail++;return}const t=performance.now();for(const m of ms)if(m.d===1)for(const a of m.acks)if(R.sent[a]!==undefined){R.samples.push(Math.round((t-R.sent[a])*100)/100);delete R.sent[a]}};const proto=WebSocket.prototype;const realSend=proto.send;proto.send=function(d){try{onOut(d instanceof Uint8Array?d:new Uint8Array(d))}catch(e){}return realSend.apply(this,arguments)};const realOn=window.AABridge.onmessage;window.AABridge.onmessage=function(ev){try{onIn(new Uint8Array(ev.data))}catch(e){}return realOn.apply(this,arguments)};return 'ack-pairing rtt tap installed'})()
+
+# ===========================================================================
+# B6-0: CONFIGURED, AND IDLE UNTIL THE GAME ASKS. bridge-gate.steps' B0,
+# repeated here because this file is run on its own and the claim "nothing was
+# attempted before the menu asked" has to hold for THIS run, not for another.
+# ===========================================================================
+eval:(()=>{const b=window.AABridge;const r={present:!!b,ws_constructed:!!(b&&b.ws),url_parsed:b?b.urlChecked:null,url:b?b.url:null,queues:b?Object.keys(b.queues).length:null};r.PASS=!!b&&!r.ws_constructed&&r.url_parsed===false;console.log('[BRIDGEGATE] B6-0 configured-and-idle-until-asked '+JSON.stringify(r));return 'B6-0 '+r.PASS})()
+
+mark:ENTER-1-PLAY-GAME-SUBMENU
+key:Enter
+wait:2500
+shot:04-play-game-menu-opens-on-multiplayer
+mark:ENTER-2-MULTIPLAYER-SUBMENU
+key:Enter
+wait:2500
+shot:05-network-menu-opens-on-online-multiplayer
+mark:ONE-DOWN-TO-LAN-MULTIPLAYER
+key:Down
+wait:1500
+shot:06-network-menu-lan-selected
+mark:ENTER-3-LAN-BROWSE-ASKS-FOR-A-SOCKET
+key:Enter
+until:1:60000:[BRIDGE] open
+until:1:60000:bound to udp port
+wait:2000
+shot:07-lan-browser
+mark:BACK-OUT-OF-THE-LAN-BROWSER
+key:Escape
+wait:3000
+shot:08-back-in-the-network-menu
+
+# The error-counter baseline, and the reason it is a baseline and not a zero,
+# is bridge-gate.steps'. One thing IS different here and it is worth naming:
+# the local arm runs the relay WITH --allow-private and the remote arm runs it
+# WITHOUT, so the two arms can legitimately reach this line with different
+# counts. Only the DELTA across the connect is asserted, which is why that
+# difference does not matter.
+eval:(()=>{const b=window.AABridge;window.__base={dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0};return 'error-counter baseline '+JSON.stringify(window.__base)})()
+
+# Clear the LAN walk's message ids out of the round-trip tap. See the banner.
+eval:window.__rtt.reset()
+
+mark:B6-DOWN-3-FROM-LAN-TO-SERVER-BOOKMARKS
+key:Down:3
+wait:1500
+shot:09-network-menu-server-bookmarks-selected
+mark:B6-ENTER-OPENS-BOOKMARKS-AND-TRANSFERS-CUSTOM_SERVER_NAME
+key:Enter
+wait:3000
+
+# READ THIS SHOT BEFORE BELIEVING ANY VERDICT BELOW. It is the only place the
+# address the client is about to dial is visible as the client understands it,
+# and run-bridge-b6.sh's grep of the peer lines is the machine-checked half of
+# the same claim.
+shot:10-bookmarks-menu-shows-the-address-about-to-be-dialled
+mark:B6-ENTER-CONNECTS
+key:Enter
+
+until:1:90000:[GATEWAIT] ROSTER-1
+until:1:90000:[GATEWAIT] STARTED-1
+wait:3000
+shot:11-on-the-grid
+
+# The gap sampler, installed on the live socket now that there is one, so its
+# percentiles are comparable with Task 4's table in
+# docs/evidence/m-a-bridge/README.md -- same instrument, same phase boundary.
+eval:(()=>{try{const b=window.AABridge;if(!b||!b.ws)return 'NO LIVE SOCKET - the sampler measured nothing';if(window.__gapTap)return 'already';window.__gapTap=true;window.__gaps=[];window.__gapLast=0;const inner=b.ws.onmessage;b.ws.onmessage=function(ev){const t=performance.now();if(window.__gapLast)window.__gaps.push(Math.round((t-window.__gapLast)*100)/100);window.__gapLast=t;return inner.apply(this,arguments)};return 'gap sampler installed on the live socket'}catch(e){return 'GAP SAMPLER FAILED: '+e}})()
+
+# PLAY. The zigzag is bridge-gate.steps' B3 keypress pair -- the real input
+# path, driven while a network round is live. The four lefts after it are new
+# and they are a courtesy, not a measurement: on an EMPTY server there may be
+# nothing else on the grid to end the round, and this gate must not sit on a
+# stranger's slot waiting for a timeout. Four turns in the same direction close
+# a box and the cycle dies on its own wall, so the round ends because the
+# browser player finished it.
+mark:B6-STEER-WHILE-A-NETWORK-ROUND-IS-LIVE
+key:Left
+wait:600
+key:Right
+wait:1200
+shot:12-after-the-zigzag
+mark:B6-CLOSE-THE-BOX-SO-THE-ROUND-ENDS-WITHOUT-LOITERING
+key:Left
+wait:700
+key:Left
+wait:700
+key:Left
+wait:700
+key:Left
+wait:2500
+shot:13-after-closing-the-box
+
+until:1:180000:[GATEWAIT] SCORED-1
+wait:1500
+shot:14-the-round-was-scored
+until:1:90000:[GATEWAIT] STARTED-2
+wait:1500
+shot:15-a-second-round-started-so-the-first-one-really-ended
+
+# ===========================================================================
+# B6: A FULL ROUND COMPLETED ON THIS SERVER, THROUGH THE BRIDGE.
+#
+# The bridge readings are B3's, unchanged, and the reasoning for each of them
+# is in bridge-gate.steps: one live handle, bound 1, sentSinceBind > 0, the
+# three error counters unmoved as DELTAS from the baseline, a queue that is
+# shallow on two readings 300 ms apart rather than momentarily zero, and
+# still_alive from the canvas and GL rather than from the page merely existing.
+#
+# FOUR THINGS ARE ADDED, AND EVERY ONE OF THEM IS THERE BECAUSE THE OBVIOUS
+# VERSION OF THIS GATE COULD PASS WITHOUT LEAVING THE MACHINE:
+#
+#   peers -- the distinct address texts eWebNet::Recv mapped. Exactly one, and
+#     it must be a dotted quad mapping to ITSELF (the "(literal)" branch), not
+#     into 10.42.0.0/16. A run that somehow reached a different host would show
+#     two, and a run that reached nothing would show none. Which address it is
+#     is checked by run-bridge-b6.sh against the address it was told to expect,
+#     because a needle hardcoded in here would have to be edited per arm and an
+#     edited assertion is not an assertion.
+#
+#   rtt_samples -- the count of ACK PAIRS. An ack names a message id this page
+#     sent; nothing local can produce one. A non-zero count is a statement that
+#     a real peer read our messages and answered them, and it is the reading
+#     that makes a silent or half-open socket impossible to mistake for a
+#     working one.
+#
+#   rounds_scored and rounds_started, from the tap installed AFTER the reload,
+#     so boot 1's local tutorial game cannot contribute to either.
+#
+#   sent_datagrams -- printed, not just asserted > 0, because "73 at connect,
+#     206 at round end" is what says the socket carried a live two-way stream
+#     rather than a login followed by silence.
+# ===========================================================================
+eval:(async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const R=window.__rtt||{samples:[],addrs:{}};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const dep=()=>live.reduce((a,h)=>a+((b.queues[h]||[]).length),0);const p1=dep();await new Promise(rr=>setTimeout(rr,300));const p2=dep();const P=window.__peers||[];const lit=P.filter(l=>/\(literal\)/.test(l)).length;const syn=P.filter(l=>/\(synthetic\)/.test(l)).length;const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,rosters:L.TEAM_PLAYER_ADDED|0,peers:P,peer_literal:lit,peer_synthetic:syn,dialled:R.addrs,rtt_samples:R.samples.length,ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:live,bound:bound,sent_datagrams:sent,pending_before:p1,pending_after:p2,baseline:B,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,lastDataError:b.lastDataError,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.draining=p1<=3&&p2<=3;r.one_peer=P.length===1&&lit===1&&syn===0&&Object.keys(R.addrs).length===1;r.PASS=r.rounds_started>=2&&r.rounds_scored>=1&&r.rosters>0&&r.one_peer&&r.rtt_samples>0&&b.state===1&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.still_alive;console.log('[BRIDGEGATE] B6 a-full-round-on-a-server-this-project-does-not-own '+JSON.stringify(r));return 'B6 '+r.PASS})()
+
+# The two readouts the report is built from. RTT first, because it is the point
+# of this run; the gap distribution second, because it is the row that lines up
+# with Task 4's table.
+eval:(()=>{const R=window.__rtt||{samples:[],addrs:{}};const g=R.samples.slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'connect-through-round-2',what:'full-path ack round trip, page to server and back',peers:R.addrs,datagrams_out:R.outD,datagrams_in:R.inD,parse_failures:R.parseFail,unpaired:Object.keys(R.sent).length,n:g.length,min:g.length?g[0]:null,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,mean:g.length?Math.round(g.reduce((a,b)=>a+b,0)/g.length*100)/100:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length};console.log('[BRIDGEGATE] RTT '+JSON.stringify(r));return 'rtt n='+g.length+' p50='+q(.5)})()
+eval:(()=>{const g=(window.__gaps||[]).slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'through-B6',datagrams:g.length,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length,over500ms:g.filter(x=>x>500).length};console.log('[BRIDGEGATE] GAPS '+JSON.stringify(r));return 'gaps '+JSON.stringify(r)})()
+
+# ===========================================================================
+# LEAVE. ONE CONNECT, ONE ROUND, THEN GO -- and this half of the gate is a rule
+# of conduct rather than a measurement, so it is unconditional and it does not
+# wait for anything.
+#
+# Escape opens the in-game menu, which for a client is MainMenu(ingame=true)
+# with sn_GetNetState()==nCLIENT (src/tron/gGame.cpp:2510). Its items are
+# constructed exit-first (gGame.cpp:2588) and "Disconnect" second
+# (gGame.cpp:2599), so Disconnect is index 1 and the exit item is index 0.
+# uMenu renders the highest index at the TOP and opens on it, so those two are
+# the bottom two rows of the screen, in that order.
+#
+# WHICH IS WHY THE WALK IS *UP* AND NOT DOWN, AND WHY TWO IS A SAFE COUNT.
+# Up increments the index and wraps, so the first Up goes from the top row
+# straight to index 0 ("Return to Game") and the second lands on index 1
+# ("Disconnect"). That makes the count relative to the BOTTOM of the menu,
+# where the two items are fixed. A Down-count would be relative to the top and
+# would be wrong the moment a server changes how many of the optional items
+# above them exist -- authenticate is gated on the server's protocol version,
+# and police and voting on the net state and settings. Confirmed on the local
+# arm: shot 18 has Disconnect selected, with the help line "Disconnects from
+# the server and returns to the main menu." Read shot 18 of THIS run too; do
+# not trust the count on its own.
+#
+# AND THEN THE SOCKET IS CLOSED FROM JS REGARDLESS. Not because the menu walk
+# is expected to fail, but because "we definitely stopped sending to a stranger"
+# must not depend on a key count being right. A client that vanishes is the
+# ordinary case on the internet and the server times it out in seconds.
+# ===========================================================================
+mark:B6-LEAVE-THE-SERVER
+key:Escape
+wait:2500
+shot:16-ingame-menu
+key:Up
+wait:1200
+shot:17-ingame-menu-one-up
+key:Up
+wait:1200
+shot:18-ingame-menu-two-up
+key:Enter
+wait:4000
+shot:19-after-the-disconnect
+eval:(()=>{try{if(window.AABridge&&window.AABridge.ws)window.AABridge.ws.close();return 'socket closed from the page as a backstop'}catch(e){return 'backstop close threw: '+e}})()
+wait:3000
+shot:20-left
+eval:(()=>{const b=window.AABridge;const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const r={ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:Object.keys(b.queues).map(Number),canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.PASS=r.ws_readyState===3&&r.canvas_w>0&&r.gl_err===0;console.log('[BRIDGEGATE] B6-LEFT the-page-is-off-the-server-and-still-running '+JSON.stringify(r));return 'LEFT '+r.PASS})()

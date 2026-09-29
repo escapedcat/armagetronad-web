@@ -1,0 +1,111 @@
+[0] Command HUD_CACHE_THRESHOLD unknown.
+[0] 
+[0] Bound socket to *.*.*.*:44016.
+[0] Bound socket to *.*.*.*:4534.
+[0] Setting CYCLE_BRAKE_REFILL (Group: Annoying) deviates from its default value; clients older than 0.2.5.0 may experience problems.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/09/10 20:30:07
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.
+[1] Received login from 192.168.215.1:33121 via socket *.*.*.*:4534, network version: 0.2.9_alpha (ID: 17).
+[1] New user: 1
+[1] web_user entered the game.
+[0] Time:     60.1951 seconds
+Sent:     6754 bytes in 38 packets (112.202 bytes/s)
+Received: 2282 bytes in 34 packets (37.9101 bytes/s)
+[0] Timestamp: 2026/09/10 20:31:08
+[0] Creating grid...
+[0] Ping charity changed from 0 to 300.
+[0] LaTeX entered the game.
+[0] Gcc entered the game.
+[0] Gdb entered the game.
+[0] done!
+[0] Resetting scores...
+[0] New Match
+[0] Go (round 1 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] LaTeX core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     13.7532 seconds
+Sent:     15448 bytes in 163 packets (1123.23 bytes/s)
+Received: 6448 bytes in 140 packets (468.838 bytes/s)
+[0] Timestamp: 2026/09/10 20:31:21
+[0] Creating grid...
+[0] Ping charity changed from 300 to 100.
+[0] done!
+[0] Go (round 2 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] Gdb core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     12.6941 seconds
+Sent:     13102 bytes in 146 packets (1032.13 bytes/s)
+Received: 5688 bytes in 127 packets (448.081 bytes/s)
+[0] Timestamp: 2026/09/10 20:31:34
+[0] Creating grid...
+[0] done!
+[0] Go (round 3 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] Gdb core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     21.4907 seconds
+Sent:     123712 bytes in 482 packets (5756.54 bytes/s)
+Received: 3190 bytes in 73 packets (148.436 bytes/s)
+[0] Timestamp: 2026/09/10 20:31:55
+[0] Creating grid...
+[0] 
+
+Timeout! Reason:
+[0] User 1 does not know about netobject 117 ( gCycle nr. 117 owned by ePlayerNetID nr. 49, name Gdb ).
+[0] User 1 does not know about netobject 116 ( gCycle nr. 116 owned by ePlayerNetID nr. 48, name Gcc ).
+[0] User 1 does not know about netobject 115 ( gCycle nr. 115 owned by ePlayerNetID nr. 46, name LaTeX ).
+[0] User 1 does not know about netobject 114 ( gCycle nr. 114 owned by ePlayerNetID nr. 44, name web_user ).
+[0] 
+
+
+[0] Go (round 4 of 10)!
+[0] 2
+[0] 1
+[0] 0
+[0] Gdb core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] User 1 timed out.
+[1] web_user left the game.
+[1] Killing user 1, ping 0.0219449, IP 192.168.215.1:33121: You timed out.
+[0] Closing socket bound to *.*.*.*:4534
+[0] Closing socket bound to *.*.*.*:44016
+[0] Gdb left AI team.
+[0] Gcc left AI team.
+[0] LaTeX left the game.
+[0] Bound socket to *.*.*.*:33647.
+[0] Bound socket to *.*.*.*:4534.
+[0] Ping charity changed from 100 to 0.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/09/10 20:32:13
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.

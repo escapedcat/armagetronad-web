@@ -347,4 +347,65 @@ nSocket & nSocket::SetSocket( int socket )
     return *this;
 }
 
+// M-A: the browser end of the multiplayer bridge. eWebNet is the seam every
+// syscall site in nSocket.cpp calls into; see src/emscripten/eWebNet.h.
+//
+// WHY IT IS PULLED IN HERE AND NOT AT THE TOP OF nSocket.cpp, AND WHY THE ONE
+// DNS CALL GOES THROUGH A MACRO. The dedicated wasm is byte-pinned, and
+// nSocket.cpp compiles two __LINE__ values into it: tERR_ERROR in
+// nAddress::FromString and tVERIFY in nAddress::SetAddress. Inserting a single
+// LINE anywhere above those -- even a line the preprocessor throws away for the
+// server -- renumbers them and moves the pinned bytes, with no code change at
+// all. It cost this task one full diagnosis to learn that, so: everything the
+// client needs above nAddress::SetAddress arrives through this header, which is
+// already included, and adds no line to nSocket.cpp. Below it, nSocket.cpp is
+// free, and the guarded blocks there are ordinary #if/#else.
+//
+// The macros expand to the same tokens the file had before for every other
+// build, so the dedicated object is identical, not merely equivalent.
+//
+// AA_NET_MENU_REQUIRES_BRIDGE is here for the same reason and pays the same
+// price. It is used at exactly one site -- the head of net_game() in
+// src/tron/gGame.cpp -- and it carries no comment there, because gGame.cpp
+// compiles a __LINE__ of its own into the dedicated wasm (tERR_ERROR_INT
+// "Someone messed with the camera!", line 3017) and a single added line above
+// it moves the pin. It refuses the whole network menu when the page has no
+// WORKING bridge -- no ?bridge= at all, or one whose relay does not answer.
+// Without one there is no transport for UDP, and every item in that menu ends
+// in sn_SetNetState() asking for a socket that cannot exist, which reached
+// Sys_Error() -> exit(-1) and killed the module. Refusing at the door
+// also avoids throwing out of sn_SetNetState(), which would leave its static
+// reentry flag set and silently disable every later state change.
+//
+// AA_NO_HOSTING_FROM_A_PAGE is the third, added for the same __LINE__ reason
+// and used at two commentless sites in gGame.cpp -- the heads of sg_HostGame()
+// and sg_HostGameMenu(). It refuses ALWAYS in the browser client, bridge or
+// no bridge, because a page cannot listen for UDP: the relay gives it one
+// ephemeral source port per handle and nothing on the internet can dial into
+// it, so there is no configuration in which this build is a server and
+// refusing costs a player nothing they could have had.
+//
+// WHY IT IS NOT MERELY TIDY. sg_HostGame() reaches
+// nServerInfo::TellMasterAboutMe() whenever sg_TalkToMaster is set, and
+// gServerBrowser::BrowseMaster() sets it for the whole of an Internet browse.
+// The master's own port, 4533, is inside bridge/policy.mjs's allowed range and
+// master addresses are public, so without this the "Start your own server"
+// item that sits in every browsed server list would PUBLISH a phantom entry --
+// a stranger's IP advertised on the community's directory as a live
+// Armagetron server that answers nothing. M-A's whole boundary is "nothing
+// public", and that is precisely the reputational damage the admin-relations
+// plan exists to avoid.
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+#include "eWebNet.h"
+#define AA_GETHOSTBYNAME( host ) eWebNet::FakeHostent( host )
+#define AA_NET_MENU_REQUIRES_BRIDGE \
+    if ( !eWebNet::Ready() ) { eWebNet::ReportNoBridge(); return; }
+#define AA_NO_HOSTING_FROM_A_PAGE \
+    { eWebNet::ReportCannotHost(); return; }
+#else
+#define AA_GETHOSTBYNAME( host ) gethostbyname( host )
+#define AA_NET_MENU_REQUIRES_BRIDGE
+#define AA_NO_HOSTING_FROM_A_PAGE
+#endif
+
 #endif

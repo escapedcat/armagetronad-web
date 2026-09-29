@@ -251,6 +251,7 @@ person holding it a switch and a readout.
 | `?haptics=0` | on wherever `navigator.vibrate` exists | turns off the 12 ms vibration pulse on every press of a touch control that sends a key (pad, turn zones, strip, tap-for-Enter); a press that sends nothing never pulses. Android Chrome vibrates; iOS Safari has no Vibration API and is silent either way. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 | `?layout=portrait` / `?layout=landscape` | the orientation at start | forces the Game Boy or the full layout on a touch device regardless of how the phone is held (a desktop ignores it). The in-menu layout button sets it on a reload; nothing stores it. |
+| `?bridge=ws://host:port` | absent | carries the game's UDP over a WebSocket to a relay that speaks UDP to a real server, so the browser can join one. With no `?bridge=`, nothing is attempted — no `WebSocket` is constructed and the network menu refuses to open rather than hang or crash. `bridge/README.md` for how to run the relay. |
 
 **`?dpr=1` is the experiment that decides the performance question, and it
 decides it in one comparison.** On a desktop this port is CPU-bound, not

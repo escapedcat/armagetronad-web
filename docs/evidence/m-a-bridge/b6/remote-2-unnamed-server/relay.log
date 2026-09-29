@@ -1,0 +1,6 @@
+[bridge] listening on ws://127.0.0.1:8010
+[trace] udp trace -> docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/udp-trace.jsonl (wall clock t0=2026-09-12T11:39:08.301Z)
+[bridge] handle 1 bound to udp port 55230
+[bridge] handle 2 bound to udp port 60140
+[bridge] handle 3 bound to udp port 50422
+[bridge] handle 4 bound to udp port 61527

@@ -1,0 +1,14 @@
+{
+  "name": "armagetronad-web-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WebSocket-to-UDP relay that lets the browser client talk to stock Armagetron servers",
+  "scripts": {
+    "test": "node --test",
+    "start": "node relay.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

@@ -1,0 +1,52 @@
+==============================================================================
+THE STEERING DIFFERENTIAL, decided from the server's own log
+==============================================================================
+--- arm control  (docs/evidence/m-a-bridge/task4/steer2/control/server.log)
+    players the server logged entering: ['web_user']
+    rounds the server started: 13, with a logged death: 12
+      round   1: died at server game-time    5.50s (bracketed 5.50..5.76)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.46s (bracketed 5.46..5.72)  DEATH_SUICIDE web_user
+      round   3: died at server game-time    5.43s (bracketed 5.43..5.68)  DEATH_SUICIDE web_user
+      round   4: died at server game-time    5.20s (bracketed 5.20..5.46)  DEATH_SUICIDE web_user
+      round   5: died at server game-time    5.25s (bracketed 5.25..5.51)  DEATH_SUICIDE web_user
+      round   6: died at server game-time    5.19s (bracketed 5.19..5.44)  DEATH_SUICIDE web_user
+      round   7: died at server game-time    5.19s (bracketed 5.19..5.45)  DEATH_SUICIDE web_user
+      round   8: died at server game-time    5.18s (bracketed 5.18..5.44)  DEATH_SUICIDE web_user
+      round   9: died at server game-time    5.21s (bracketed 5.21..5.47)  DEATH_SUICIDE web_user
+      round  10: died at server game-time    5.23s (bracketed 5.23..5.49)  DEATH_SUICIDE web_user
+      round   1: died at server game-time    5.45s (bracketed 5.45..5.71)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.39s (bracketed 5.39..5.64)  DEATH_SUICIDE web_user
+    the server's own per-round Time: lines: 47.9s, 14.7s, 14.7s, 14.8s, 14.7s, 14.7s, 14.8s, 14.7s, 14.7s, 14.8s, 23.8s, 14.8s
+    the server received 70024 bytes in 1577 packets across the rounds it reported
+--- arm steer  (docs/evidence/m-a-bridge/task4/steer2/steer/server.log)
+    players the server logged entering: ['web_user']
+    rounds the server started: 13, with a logged death: 11
+      round   1: died at server game-time    9.57s (bracketed 9.57..9.82)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    4.17s (bracketed 4.17..4.43)  DEATH_SUICIDE web_user
+      round   3: died at server game-time    4.94s (bracketed 4.94..5.20)  DEATH_SUICIDE web_user
+      round   4: died at server game-time    3.64s (bracketed 3.64..3.89)  DEATH_SUICIDE web_user
+      round   5: died at server game-time    2.84s (bracketed 2.84..3.09)  DEATH_SUICIDE web_user
+      round   6: died at server game-time    3.41s (bracketed 3.41..3.66)  DEATH_SUICIDE web_user
+      round   7: died at server game-time    9.59s (bracketed 9.59..9.85)  DEATH_SUICIDE web_user
+      round   8: died at server game-time    4.68s (bracketed 4.68..4.94)  DEATH_SUICIDE web_user
+      round   9: died at server game-time    3.66s (bracketed 3.66..3.91)  DEATH_SUICIDE web_user
+      round  10: died at server game-time   11.38s (bracketed 11.38..11.64)  DEATH_SUICIDE web_user
+      round   1: died at server game-time    9.83s (bracketed 9.83..10.08)  DEATH_SUICIDE web_user
+    the server's own per-round Time: lines: 48.0s, 18.8s, 13.7s, 14.7s, 12.7s, 11.7s, 12.7s, 18.8s, 14.8s, 12.7s, 29.9s, 19.7s
+    the server received 77392 bytes in 1725 packets across the rounds it reported
+
+control: 12 rounds, survival 5.18s..5.50s (spread 0.31s)  <- the no-steer bound, MEASURED
+steer  : 11 rounds, best survival 11.38s
+the steering arm beat the no-steer bound by +5.88s (required: more than 1.10s)
+corroboration, the server's own byte counters: it received 70024 bytes in the control arm and 77392 in the steering arm
+and 7 of its 11 rounds ended SOONER than the control's fastest (5.18s): 4.17s, 4.94s, 3.64s, 2.84s, 3.41s, 4.68s, 3.66s
+
+VERDICT: A STEERING KEYPRESS REACHED THE SERVER, ON TWO INDEPENDENT COUNTS.
+  1. The server kept the cycle alive for longer than a cycle that never turns
+     can survive in this arena -- a bound the control arm measured with no key
+     pressed at all. The server simulates that cycle, so the extra life is the
+     server's cycle having turned.
+  2. And some rounds ended SOONER than the control's fastest. Nothing else is
+     in the arena: a cycle going straight cannot reach a wall before the rim,
+     so an early death is a direction change. This is what rules out the key
+     having been bound to the brake, which could only ever delay the rim.

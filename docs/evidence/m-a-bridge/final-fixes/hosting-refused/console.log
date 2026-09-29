@@ -1,0 +1,143 @@
+[    726ms] [harness] chrome: Chrome/153.0.8010.37
+[    727ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010
+[     16ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     22ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     23ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[     46ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     57ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     59ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     63ms] [page] load event fired
+[     74ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    135ms] [console.log] [PERSIST] populate ok in 37ms
+[    220ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    339ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    339ms] [console.log] [CAMERA] stock camera (factor 1)
+[    340ms] [console.log] [SPARKS] stock sparks, nothing written
+[    340ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    342ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    343ms] [console.log] [BOOT] autostart: calling main
+[    346ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    347ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    347ms] [console.error] 
+[    347ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    347ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    347ms] [console.log] 
+[    470ms] [console.log] [L] ENCODING latin1
+[    479ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    480ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    499ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    502ms] [console.error] TODO: glShadeModel
+[    506ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    554ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    554ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    554ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    555ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    555ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1222ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   1223ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10259ms] [harness] screenshot -> /tmp/bridge-hosting/01-boot1-language-menu.png
+[  10286ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10292ms] [harness] key Enter (1/1)
+[  13621ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13625ms] [harness] key Escape (1/1)
+[  13927ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13927ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16927ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  16932ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16932ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16932ms] [harness] eval location.reload() => undefined
+[  16933ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  16952ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  16953ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  16956ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  16958ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  16958ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  16962ms] [page] load event fired
+[  16971ms] [console.log] [PERSIST] populate ok in 4ms
+[  17015ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17016ms] [console.log] [CAMERA] stock camera (factor 1)
+[  17016ms] [console.log] [SPARKS] stock sparks, nothing written
+[  17017ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  17019ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17019ms] [console.log] [BOOT] autostart: calling main
+[  17020ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17020ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17021ms] [console.error] 
+[  17021ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17021ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17021ms] [console.log] 
+[  17034ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  17034ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  17035ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  17138ms] [console.log] [L] ENCODING latin1
+[  17141ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17157ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17160ms] [console.error] TODO: glShadeModel
+[  17163ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  29071ms] [harness] screenshot -> /tmp/bridge-hosting/02-boot2-main-menu.png
+[  29071ms] [harness] === INSTRUMENT-BEFORE-TOUCHING-ANYTHING ===
+[  29072ms] [harness] eval (()=>{const o=console.log;if(console.log.__aa)return 'already';window.__hostRefusals=[];const w=function(){try{if(String(arguments[0]).indexOf('hosting refused')>=0)window.__hostRefusals.push(performance.now())}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'hosting-refusal tap installed'})() => "hosting-refusal tap installed"
+[  29072ms] [harness] eval (()=>{const o=window.setTimeout;window.__st=0;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => "setTimeout counter installed"
+[  29072ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  29105ms] [harness] key Enter (1/1)
+[  31907ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  31925ms] [console.log] [BRIDGE] open ws://127.0.0.1:8010
+[  31940ms] [harness] key Enter (1/1)
+[  34778ms] [harness] screenshot -> /tmp/bridge-hosting/03-network-menu-opens-on-online-multiplayer.png
+[  34778ms] [harness] === ONE-DOWN-TO-LAN-MULTIPLAYER ===
+[  34811ms] [harness] key Down (1/1)
+[  36613ms] [harness] === ENTER-3-LAN-BROWSE-ASKS-FOR-A-SOCKET ===
+[  36646ms] [harness] key Enter (1/1)
+[  36655ms] [console.log] [BRIDGE] handle 1 bound to udp port 63427
+[  36947ms] [harness] until 1x <<[BRIDGE] open>> (timeout 60000ms, have 1)
+[  36948ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] open>>
+[  36948ms] [harness] until 1x <<bound to udp port>> (timeout 60000ms, have 1)
+[  36948ms] [harness] until SATISFIED: saw 1x <<bound to udp port>>
+[  38150ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38154ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38159ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38165ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38176ms] [console.log] [BRIDGE] handle 2 bound to udp port 54582
+[  39974ms] [harness] screenshot -> /tmp/bridge-hosting/04-empty-lan-browser-with-start-your-own-server-selected.png
+[  39976ms] [harness] eval (()=>{const b=window.AABridge;window.__before={handles:Object.keys(b.bound).length,sent:Object.keys(b.sentSinceBind).reduce((n,h)=>n+(b.sentSinceBind[h]|0),0)};return 'before '+JSON.stringify(window.__before)})() => "before {\"handles\":1,\"sent\":0}"
+[  39976ms] [harness] === ENTER-4-START-YOUR-OWN-SERVER-IS-REFUSED ===
+[  39993ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39997ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  40002ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  40007ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  40007ms] [harness] key Enter (1/1)
+[  40015ms] [console.log] [BRIDGE] hosting refused: a page cannot listen for UDP
+[  40308ms] [harness] until 1x <<hosting refused>> (timeout 30000ms, have 1)
+[  40309ms] [harness] until SATISFIED: saw 1x <<hosting refused>>
+[  42857ms] [harness] screenshot -> /tmp/bridge-hosting/05-hosting-refusal-message.png
+[  42857ms] [harness] === DISMISS-AND-DO-IT-AGAIN-SO-THE-MODULE-HAS-TO-BE-ALIVE ===
+[  42889ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  42890ms] [harness] key Enter (1/1)
+[  46234ms] [harness] screenshot -> /tmp/bridge-hosting/06-back-in-the-network-menu.png
+[  46234ms] [harness] === ENTER-5-LAN-BROWSE-A-SECOND-TIME ===
+[  46267ms] [harness] key Enter (1/1)
+[  46286ms] [console.log] [BRIDGE] handle 3 bound to udp port 61153
+[  47781ms] [console.log] [BRIDGE] error on handle 3: port 0 is outside the allowed range 4533-4599
+[  47784ms] [console.log] [BRIDGE] error on handle 3: port 0 is outside the allowed range 4533-4599
+[  47790ms] [console.log] [BRIDGE] error on handle 3: port 0 is outside the allowed range 4533-4599
+[  47795ms] [console.log] [BRIDGE] error on handle 3: port 0 is outside the allowed range 4533-4599
+[  49809ms] [console.log] [BRIDGE] handle 4 bound to udp port 59611
+[  51606ms] [harness] screenshot -> /tmp/bridge-hosting/07-lan-browser-again.png
+[  51606ms] [harness] === ENTER-6-REFUSED-A-SECOND-TIME ===
+[  51625ms] [console.log] [BRIDGE] error on handle 4: port 0 is outside the allowed range 4533-4599
+[  51630ms] [console.log] [BRIDGE] error on handle 4: port 0 is outside the allowed range 4533-4599
+[  51634ms] [console.log] [BRIDGE] error on handle 4: port 0 is outside the allowed range 4533-4599
+[  51639ms] [console.log] [BRIDGE] error on handle 4: port 0 is outside the allowed range 4533-4599
+[  51639ms] [harness] key Enter (1/1)
+[  51644ms] [console.log] [BRIDGE] hosting refused: a page cannot listen for UDP
+[  51940ms] [harness] until 2x <<hosting refused>> (timeout 30000ms, have 2)
+[  51941ms] [harness] until SATISFIED: saw 2x <<hosting refused>>
+[  54484ms] [harness] screenshot -> /tmp/bridge-hosting/08-refused-a-second-time.png
+[  54484ms] [harness] === STILL-RUNNING ===
+[  54520ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  54521ms] [harness] key Enter (1/1)
+[  56824ms] [harness] eval (()=>{window.__st=0;window.__t0=performance.now();return 'resampling'})() => "resampling"
+[  59826ms] [harness] eval (()=>{window.__tps=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec = '+window.__tps})() => "timeouts/sec = 137.9"
+[  59870ms] [harness] screenshot -> /tmp/bridge-hosting/09-still-alive.png
+[  59871ms] [console.log] [BRIDGEGATE] H1 hosting-refused-and-nothing-was-announced {"refusals":2,"handles_before":1,"handles_after":0,"sent_before":0,"sent_after":0,"ws_readyState":1,"state":1,"tps":137.9,"canvas_w":1024,"canvas_h":768,"gl_err":0,"no_new_handle":true,"PASS":true}
+[  59871ms] [harness] eval (()=>{const b=window.AABridge;const B=window.__before||{handles:0,sent:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const r={refusals:(window.__hostRefusals||[]).length,handles_before:B.handles,handles_after:Object.keys(b.bound).length,sent_before:B.sent,sent_after:Object.keys(b.sentSinceBind).reduce((n,h)=>n+(b.sentSinceBind[h]|0),0),ws_readyState:b.ws?b.ws.readyState:null,state:b.state,tps:window.__tps,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.no_new_handle=r.handles_after<=r.handles_before;r.PASS=r.refusals>=2&&r.no_new_handle&&r.ws_readyState===1&&r.tps>20&&r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;console.log('[BRIDGEGATE] H1 hosting-refused-and-nothing-was-announced '+JSON.stringify(r));return 'H1 '+r.PASS})() => "H1 true"

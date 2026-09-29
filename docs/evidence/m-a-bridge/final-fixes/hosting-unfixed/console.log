@@ -1,0 +1,175 @@
+[    654ms] [harness] chrome: Chrome/153.0.8010.37
+[    654ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010
+[     17ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     24ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     25ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[     59ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     72ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     74ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     78ms] [page] load event fired
+[     81ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    141ms] [console.log] [PERSIST] populate ok in 37ms
+[    221ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    350ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    350ms] [console.log] [CAMERA] stock camera (factor 1)
+[    350ms] [console.log] [SPARKS] stock sparks, nothing written
+[    350ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    353ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    353ms] [console.log] [BOOT] autostart: calling main
+[    356ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    356ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    356ms] [console.error] 
+[    357ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    357ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    357ms] [console.log] 
+[    481ms] [console.log] [L] ENCODING latin1
+[    489ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    490ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    508ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    511ms] [console.error] TODO: glShadeModel
+[    514ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    560ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    560ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    560ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    561ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    561ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1222ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   1222ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10306ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/01-boot1-language-menu.png
+[  10339ms] [harness] key Enter (1/1)
+[  10343ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  13677ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13679ms] [harness] key Escape (1/1)
+[  13980ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  13980ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  16982ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  16986ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  16987ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  16988ms] [harness] eval location.reload() => undefined
+[  16988ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17001ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  17002ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  17004ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17007ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17007ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17010ms] [page] load event fired
+[  17019ms] [console.log] [PERSIST] populate ok in 4ms
+[  17063ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17063ms] [console.log] [CAMERA] stock camera (factor 1)
+[  17064ms] [console.log] [SPARKS] stock sparks, nothing written
+[  17064ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  17067ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17067ms] [console.log] [BOOT] autostart: calling main
+[  17067ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17068ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17068ms] [console.error] 
+[  17068ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17068ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17069ms] [console.log] 
+[  17090ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  17090ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  17090ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  17187ms] [console.log] [L] ENCODING latin1
+[  17189ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17207ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17210ms] [console.error] TODO: glShadeModel
+[  17213ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  29157ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/02-boot2-main-menu.png
+[  29158ms] [harness] === INSTRUMENT-BEFORE-TOUCHING-ANYTHING ===
+[  29159ms] [harness] eval (()=>{const o=console.log;if(console.log.__aa)return 'already';window.__hostRefusals=[];const w=function(){try{if(String(arguments[0]).indexOf('hosting refused')>=0)window.__hostRefusals.push(performance.now())}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'hosting-refusal tap installed'})() => "hosting-refusal tap installed"
+[  29159ms] [harness] eval (()=>{const o=window.setTimeout;window.__st=0;window.setTimeout=function(){window.__st++;return o.apply(this,arguments)};window.__t0=performance.now();return 'setTimeout counter installed'})() => "setTimeout counter installed"
+[  29159ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  29192ms] [harness] key Enter (1/1)
+[  31994ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  32007ms] [console.log] [BRIDGE] open ws://127.0.0.1:8010
+[  32027ms] [harness] key Enter (1/1)
+[  34892ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/03-network-menu-opens-on-online-multiplayer.png
+[  34892ms] [harness] === ONE-DOWN-TO-LAN-MULTIPLAYER ===
+[  34925ms] [harness] key Down (1/1)
+[  36726ms] [harness] === ENTER-3-LAN-BROWSE-ASKS-FOR-A-SOCKET ===
+[  36758ms] [harness] key Enter (1/1)
+[  36774ms] [console.log] [BRIDGE] handle 1 bound to udp port 54752
+[  37060ms] [harness] until 1x <<[BRIDGE] open>> (timeout 60000ms, have 1)
+[  37060ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] open>>
+[  37060ms] [harness] until 1x <<bound to udp port>> (timeout 60000ms, have 1)
+[  37061ms] [harness] until SATISFIED: saw 1x <<bound to udp port>>
+[  38272ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38276ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38281ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38287ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38297ms] [console.log] [BRIDGE] handle 2 bound to udp port 56173
+[  40107ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/04-empty-lan-browser-with-host-game-selected.png
+[  40108ms] [harness] eval (()=>{const b=window.AABridge;window.__before={handles:Object.keys(b.bound).length,sent:Object.keys(b.sentSinceBind).reduce((n,h)=>n+(b.sentSinceBind[h]|0),0)};return 'before '+JSON.stringify(window.__before)})() => "before {\"handles\":1,\"sent\":0}"
+[  40108ms] [harness] === ENTER-4-HOST-GAME-IS-REFUSED ===
+[  40117ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  40121ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  40126ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  40130ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  40139ms] [harness] key Enter (1/1)
+[  40440ms] [harness] until 1x <<hosting refused>> (timeout 30000ms, have 0)
+[  70467ms] [harness] until TIMED OUT after 30000ms: saw 0x <<hosting refused>>, wanted 1
+[  73033ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/05-hosting-refusal-message.png
+[  73033ms] [harness] === DISMISS-AND-DO-IT-AGAIN-SO-THE-MODULE-HAS-TO-BE-ALIVE ===
+[  73065ms] [console.log] [BRIDGE] handle 3 bound to udp port 58831
+[  73065ms] [harness] key Enter (1/1)
+[  73071ms] [console.log] [BRIDGE] handle 4 bound to udp port 59029
+[  73079ms] [console.log] [L] PLAYER_ENTERED web_user  web_user
+[  73080ms] [console.log] [L] TEAM_CREATED web_user
+[  73081ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  73083ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  73086ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_user
+[  73086ms] [console.log] [L] NEW_ROUND 2026-09-12 12:53:16 UTC+0200
+[  73100ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  73101ms] [console.log] [SND] live voices peaked at 1 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  73276ms] [console.log] [L] TEAM_CREATED armagetron
+[  73276ms] [console.log] [L] TEAM_PLAYER_ADDED armagetron armagetron
+[  73277ms] [console.log] [L] TEAM_CREATED ai_team
+[  73277ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gltron
+[  73277ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team cycles3d
+[  73278ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  73478ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  73478ms] [console.log] [SND] live voices peaked at 8 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  73631ms] [console.error] warning: Audio callback had starved sending audio by 0.25592290249549166 seconds
+[  73687ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  76471ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/06-back-in-the-network-menu.png
+[  76471ms] [harness] === ENTER-5-LAN-BROWSE-A-SECOND-TIME ===
+[  76504ms] [harness] key Enter (1/1)
+[  79937ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  80012ms] [console.log] [L] DEATH_FRAG web_user cycles3d
+[  80013ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  81934ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/07-lan-browser-again.png
+[  81934ms] [harness] === ENTER-6-REFUSED-A-SECOND-TIME ===
+[  81960ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  81967ms] [harness] key Enter (1/1)
+[  82269ms] [harness] until 2x <<hosting refused>> (timeout 30000ms, have 0)
+[  84788ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  84789ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  84789ms] [console.log] [L] ROUND_SCORE_TEAM 0 armagetron
+[  84789ms] [console.log] [L] NEW_ROUND 2026-09-12 12:53:28 UTC+0200
+[  85321ms] [console.error] warning: Audio callback had starved sending audio by 0.5095283446718213 seconds
+[  91693ms] [console.log] [L] DEATH_FRAG web_user cycles3d
+[  96487ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[  96488ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  96488ms] [console.log] [L] ROUND_SCORE_TEAM 0 armagetron
+[  96488ms] [console.log] [L] NEW_ROUND 2026-09-12 12:53:40 UTC+0200
+[  97027ms] [console.error] warning: Audio callback had starved sending audio by 0.5110884353747878 seconds
+[ 103395ms] [console.log] [L] DEATH_FRAG web_user cycles3d
+[ 108208ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[ 108208ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[ 108209ms] [console.log] [L] ROUND_SCORE_TEAM 0 armagetron
+[ 108209ms] [console.log] [L] NEW_ROUND 2026-09-12 12:53:51 UTC+0200
+[ 108747ms] [console.error] warning: Audio callback had starved sending audio by 0.5270884353747647 seconds
+[ 112273ms] [harness] until TIMED OUT after 30000ms: saw 0x <<hosting refused>>, wanted 2
+[ 114905ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/08-refused-a-second-time.png
+[ 114906ms] [harness] === STILL-RUNNING ===
+[ 114940ms] [harness] key Enter (1/1)
+[ 115115ms] [console.log] [L] DEATH_FRAG web_user cycles3d
+[ 117242ms] [harness] eval (()=>{window.__st=0;window.__t0=performance.now();return 'resampling'})() => "resampling"
+[ 119877ms] [console.log] [L] ROUND_SCORE -2 web_user web_user
+[ 119878ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[ 119878ms] [console.log] [L] ROUND_SCORE_TEAM 0 armagetron
+[ 119879ms] [console.log] [L] NEW_ROUND 2026-09-12 12:54:03 UTC+0200
+[ 120244ms] [harness] eval (()=>{window.__tps=+(window.__st/((performance.now()-window.__t0)/1000)).toFixed(1);return 'timeouts/sec = '+window.__tps})() => "timeouts/sec = 808"
+[ 120274ms] [harness] screenshot -> /tmp/bridge-hosting-unfixed/09-still-alive.png
+[ 120275ms] [console.log] [BRIDGEGATE] H1 hosting-refused-and-nothing-was-announced {"refusals":0,"handles_before":1,"handles_after":2,"sent_before":0,"sent_after":0,"ws_readyState":1,"state":1,"tps":808,"canvas_w":1024,"canvas_h":768,"gl_err":0,"no_new_handle":false,"PASS":false}
+[ 120276ms] [harness] eval (()=>{const b=window.AABridge;const B=window.__before||{handles:0,sent:0};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const r={refusals:(window.__hostRefusals||[]).length,handles_before:B.handles,handles_after:Object.keys(b.bound).length,sent_before:B.sent,sent_after:Object.keys(b.sentSinceBind).reduce((n,h)=>n+(b.sentSinceBind[h]|0),0),ws_readyState:b.ws?b.ws.readyState:null,state:b.state,tps:window.__tps,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.no_new_handle=r.handles_after<=r.handles_before;r.PASS=r.refusals>=2&&r.no_new_handle&&r.ws_readyState===1&&r.tps>20&&r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;console.log('[BRIDGEGATE] H1 hosting-refused-and-nothing-was-announced '+JSON.stringify(r));return 'H1 '+r.PASS})() => "H1 false"

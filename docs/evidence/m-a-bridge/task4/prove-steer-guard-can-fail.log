@@ -1,0 +1,91 @@
+PROVING THE STEERING ANALYSER'S GUARDS CAN FAIL.
+
+Two refusals, one per guard. The control arm is the real one from this task in
+both; only the 'steer' arm's log is swapped for something the analyser must
+refuse to compare rather than produce a number from.
+
+==============================================================================
+CASE: an arena with AIs in it
+The steering arm's log is docs/evidence/m-a-bridge/b2/server.log -- Task 3's run
+against the SHIPPED server config, which fills the arena with three AIs. An AI
+wall can end a round early, so the rim bound stops meaning anything.
+
+==============================================================================
+THE STEERING DIFFERENTIAL, decided from the server's own log
+==============================================================================
+--- arm control  (/var/folders/ct/rw11h7fj55s59lp5dst9xs6m0000gp/T/tmpql8d6xya/control/server.log)
+    players the server logged entering: ['web_user']
+    rounds the server started: 13, with a logged death: 12
+      round   1: died at server game-time    5.50s (bracketed 5.50..5.76)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.25s (bracketed 5.25..5.52)  DEATH_SUICIDE web_user
+      round   3: died at server game-time    5.26s (bracketed 5.26..5.51)  DEATH_SUICIDE web_user
+      round   4: died at server game-time    5.22s (bracketed 5.22..5.48)  DEATH_SUICIDE web_user
+      round   5: died at server game-time    5.44s (bracketed 5.44..5.70)  DEATH_SUICIDE web_user
+      round   6: died at server game-time    5.44s (bracketed 5.44..5.70)  DEATH_SUICIDE web_user
+      round   7: died at server game-time    5.42s (bracketed 5.42..5.68)  DEATH_SUICIDE web_user
+      round   8: died at server game-time    5.24s (bracketed 5.24..5.51)  DEATH_SUICIDE web_user
+      round   9: died at server game-time    5.21s (bracketed 5.21..5.47)  DEATH_SUICIDE web_user
+      round  10: died at server game-time    5.21s (bracketed 5.21..5.46)  DEATH_SUICIDE web_user
+      round   1: died at server game-time    5.19s (bracketed 5.19..5.45)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.22s (bracketed 5.22..5.48)  DEATH_SUICIDE web_user
+    the server's own per-round Time: lines: 88.7s, 14.8s, 14.8s, 14.7s, 14.8s, 14.8s, 14.7s, 14.7s, 14.7s, 14.8s, 23.8s, 14.7s
+    of those, the 10 that are comparable (a death logged, not the last round of a match): 14.7787s, 14.7559s, 14.7320s, 14.7520s, 14.7641s, 14.7496s, 14.7331s, 14.7438s, 14.7568s, 14.7138s
+    the server received 70036 bytes in 1577 packets across the rounds it reported
+--- arm steer  (/var/folders/ct/rw11h7fj55s59lp5dst9xs6m0000gp/T/tmpql8d6xya/steer/server.log)
+    players the server logged entering: ['web_user', 'LaTeX', 'Gcc', 'Gdb']
+    rounds the server started: 2, with a logged death: 0
+    the server's own per-round Time: lines: 55.1s, 13.7s
+    the server received 9034 bytes in 182 packets across the rounds it reported
+
+THIS COMPARISON CANNOT BE MADE:
+  - the steer arm produced no round with a logged death, so there is nothing to compare; the run did not happen
+  - the steer arm logged 4 players entering the game (['web_user', 'LaTeX', 'Gcc', 'Gdb']), and this measurement needs EXACTLY ONE cycle in the arena: more than one means an AI wall can end a round early and the rim bound stops meaning anything, and none means the log was not parsed and nothing here can be trusted
+
+VERDICT: INVALID
+analyser exit status: 2  (0 = proven, 1 = not proven, 2 = refused to compare)
+
+==============================================================================
+CASE: a log the analyser could not parse
+The steering arm's log has no join line and no round in it at all. THIS IS THE
+CASE THE FIRST CUT OF THE GUARD COULD NOT CATCH: it read
+`if joins and len(joins) > 1`, which is satisfied by an EMPTY list -- and an
+empty list is exactly the symptom of the parsing bug the guard exists to
+survive (the join regex had been anchored on `[0]` while the server decorates a
+join with the joining client's own id). A guard satisfied by having found
+nothing is not a guard. It now requires EXACTLY ONE join per arm.
+
+==============================================================================
+THE STEERING DIFFERENTIAL, decided from the server's own log
+==============================================================================
+--- arm control  (/var/folders/ct/rw11h7fj55s59lp5dst9xs6m0000gp/T/tmpz0haktvp/control/server.log)
+    players the server logged entering: ['web_user']
+    rounds the server started: 13, with a logged death: 12
+      round   1: died at server game-time    5.50s (bracketed 5.50..5.76)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.25s (bracketed 5.25..5.52)  DEATH_SUICIDE web_user
+      round   3: died at server game-time    5.26s (bracketed 5.26..5.51)  DEATH_SUICIDE web_user
+      round   4: died at server game-time    5.22s (bracketed 5.22..5.48)  DEATH_SUICIDE web_user
+      round   5: died at server game-time    5.44s (bracketed 5.44..5.70)  DEATH_SUICIDE web_user
+      round   6: died at server game-time    5.44s (bracketed 5.44..5.70)  DEATH_SUICIDE web_user
+      round   7: died at server game-time    5.42s (bracketed 5.42..5.68)  DEATH_SUICIDE web_user
+      round   8: died at server game-time    5.24s (bracketed 5.24..5.51)  DEATH_SUICIDE web_user
+      round   9: died at server game-time    5.21s (bracketed 5.21..5.47)  DEATH_SUICIDE web_user
+      round  10: died at server game-time    5.21s (bracketed 5.21..5.46)  DEATH_SUICIDE web_user
+      round   1: died at server game-time    5.19s (bracketed 5.19..5.45)  DEATH_SUICIDE web_user
+      round   2: died at server game-time    5.22s (bracketed 5.22..5.48)  DEATH_SUICIDE web_user
+    the server's own per-round Time: lines: 88.7s, 14.8s, 14.8s, 14.7s, 14.8s, 14.8s, 14.7s, 14.7s, 14.7s, 14.8s, 23.8s, 14.7s
+    of those, the 10 that are comparable (a death logged, not the last round of a match): 14.7787s, 14.7559s, 14.7320s, 14.7520s, 14.7641s, 14.7496s, 14.7331s, 14.7438s, 14.7568s, 14.7138s
+    the server received 70036 bytes in 1577 packets across the rounds it reported
+--- arm steer  (/var/folders/ct/rw11h7fj55s59lp5dst9xs6m0000gp/T/tmpz0haktvp/steer/server.log)
+    players the server logged entering: []
+    rounds the server started: 0, with a logged death: 0
+    the server received 0 bytes in 0 packets across the rounds it reported
+
+THIS COMPARISON CANNOT BE MADE:
+  - the steer arm produced no round with a logged death, so there is nothing to compare; the run did not happen
+  - the steer arm logged 0 players entering the game ([]), and this measurement needs EXACTLY ONE cycle in the arena: more than one means an AI wall can end a round early and the rim bound stops meaning anything, and none means the log was not parsed and nothing here can be trusted
+
+VERDICT: INVALID
+analyser exit status: 2  (0 = proven, 1 = not proven, 2 = refused to compare)
+
+==============================================================================
+BOTH GUARDS REFUSE. exit 2 in both cases.

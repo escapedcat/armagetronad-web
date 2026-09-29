@@ -1,0 +1,7 @@
+# The byte pin, re-measured after every change in this fix pass.
+# Clean rebuild: rm -rf web/build-m0 web/dist-m0 && make -f web/Makefile dedicated -j8
+# emcc emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.8 (aeb67926e7de656da38bc807d83050af93578758)
+
+size 2488298  expected 2488298
+md5  9718a2a64978cb6e9b95ea2f0454cca5  expected 9718a2a64978cb6e9b95ea2f0454cca5
+js   6dd7f84eae1de362e4faf847a5d1b194  expected 6dd7f84eae1de362e4faf847a5d1b194 (docs/evidence/m5-camera/invariant/README.md)

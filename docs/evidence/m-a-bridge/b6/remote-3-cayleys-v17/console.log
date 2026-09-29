@@ -1,0 +1,172 @@
+[    710ms] [harness] chrome: Chrome/153.0.8010.37
+[    710ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010
+[      9ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     15ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     17ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[     27ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[     47ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[     53ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[     57ms] [page] load event fired
+[     67ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[    115ms] [console.log] [PERSIST] populate ok in 35ms
+[    212ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[    312ms] [console.log] [PERSIST] runtime initialized, starting the game
+[    312ms] [console.log] [CAMERA] stock camera (factor 1)
+[    312ms] [console.log] [SPARKS] stock sparks, nothing written
+[    312ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[    315ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[    315ms] [console.log] [BOOT] autostart: calling main
+[    318ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[    318ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[    319ms] [console.error] 
+[    319ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[    319ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[    319ms] [console.log] 
+[    443ms] [console.log] [L] ENCODING latin1
+[    451ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[    452ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[    470ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[    474ms] [console.error] TODO: glShadeModel
+[    477ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[    523ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    523ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    523ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    524ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[    524ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   1212ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[   1212ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[  10289ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/01-boot1-language-menu.png
+[  10322ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  10323ms] [harness] key Enter (1/1)
+[  13688ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/02-boot1-first-setup.png
+[  13721ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  13723ms] [harness] key Escape (1/1)
+[  14024ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  14024ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  17025ms] [harness] === RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU ===
+[  17031ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  17032ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  17033ms] [harness] eval location.reload() => undefined
+[  17033ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  17049ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  17050ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  17053ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17055ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  17056ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  17060ms] [page] load event fired
+[  17070ms] [console.log] [PERSIST] populate ok in 4ms
+[  17096ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  17097ms] [console.log] [CAMERA] stock camera (factor 1)
+[  17097ms] [console.log] [SPARKS] stock sparks, nothing written
+[  17097ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  17100ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 16384
+[  17100ms] [console.log] [BOOT] autostart: calling main
+[  17100ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  17101ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  17101ms] [console.error] 
+[  17101ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  17101ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  17101ms] [console.log] 
+[  17134ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  17134ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 2)
+[  17134ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  17223ms] [console.log] [L] ENCODING latin1
+[  17226ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  17240ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  17243ms] [console.error] TODO: glShadeModel
+[  17246ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  29222ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/03-boot2-main-menu.png
+[  29223ms] [harness] eval (()=>{const o=console.log;if(console.log.__aa)return 'already';window.__peers=[];const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[BRIDGE] peer ')===0)window.__peers.push(s)}catch(e){}return o.apply(console,arguments)};w.__aa=true;console.log=w;return 'peer-line tap installed'})() => "peer-line tap installed"
+[  29224ms] [harness] eval (()=>{if(window.__lTap)return 'already';window.__lTap=true;window.__L={};const o=console.log;const w=function(){try{const s=String(arguments[0]);if(s.indexOf('[L] ')===0){const k=s.slice(4).split(' ')[0];window.__L[k]=(window.__L[k]||0)+1}}catch(e){}return o.apply(console,arguments)};console.log=w;return 'ladder-log tap installed'})() => "ladder-log tap installed"
+[  29225ms] [harness] eval (()=>{if(window.__gw)return 'already';window.__gw={};window.__gwTimer=setInterval(()=>{const L=window.__L||{};const say=(k)=>{if(!window.__gw[k]){window.__gw[k]=1;console.log('[GATEWAIT] '+k)}};const n=L.NEW_ROUND|0,sc=L.ROUND_SCORE_TEAM|0,ro=L.TEAM_PLAYER_ADDED|0;for(let i=1;i<=8;i++){if(ro>=i)say('ROSTER-'+i);if(n>=i)say('STARTED-'+i);if(sc>=i)say('SCORED-'+i)}},500);return 'gate-wait milestone ticker installed'})() => "gate-wait milestone ticker installed"
+[  29225ms] [harness] eval (()=>{if(window.__rttTap)return 'already';window.__rttTap=1;const R={sent:{},samples:[],addrs:{},outD:0,inD:0,parseFail:0};R.reset=function(){R.sent={};R.samples=[];R.addrs={};R.outD=0;R.inD=0;R.parseFail=0;return 'rtt state cleared'};window.__rtt=R;const head=(u)=>{if(u.length<7||u[0]!==1)return null;const al=u[6];if(u.length<7+al)return null;let a='';for(let i=0;i<al;i++)a+=String.fromCharCode(u[7+i]);return {type:u[1],addr:a,off:7+al}};const parse=(u,off)=>{const e=u.length-2;const out=[];let p=off;while(p+6<=e){const d=(u[p]<<8)|u[p+1];const id=(u[p+2]<<8)|u[p+3];const dl=(u[p+4]<<8)|u[p+5];p+=6;if(p+dl*2>e)return out;if(d===1){const a=[];for(let i=0;i<dl;i++)a.push((u[p+i*2]<<8)|u[p+i*2+1]);out.push({d:1,acks:a})}else out.push({d:d,id:id});p+=dl*2}return out};const onOut=(u)=>{const h=head(u);if(!h||h.type!==3)return;R.outD++;R.addrs[h.addr]=(R.addrs[h.addr]|0)+1;const ms=parse(u,h.off);if(!ms.length){R.parseFail++;return}const t=performance.now();for(const m of ms)if(m.d!==1&&m.id&&R.sent[m.id]===undefined)R.sent[m.id]=t};const onIn=(u)=>{const h=head(u);if(!h||h.type!==3)return;R.inD++;const ms=parse(u,h.off);if(!ms.length){R.parseFail++;return}const t=performance.now();for(const m of ms)if(m.d===1)for(const a of m.acks)if(R.sent[a]!==undefined){R.samples.push(Math.round((t-R.sent[a])*100)/100);delete R.sent[a]}};const proto=WebSocket.prototype;const realSend=proto.send;proto.send=function(d){try{onOut(d instanceof Uint8Array?d:new Uint8Array(d))}catch(e){}return realSend.apply(this,arguments)};const realOn=window.AABridge.onmessage;window.AABridge.onmessage=function(ev){try{onIn(new Uint8Array(ev.data))}catch(e){}return realOn.apply(this,arguments)};return 'ack-pairing rtt tap installed'})() => "ack-pairing rtt tap installed"
+[  29226ms] [console.log] [BRIDGEGATE] B6-0 configured-and-idle-until-asked {"present":true,"ws_constructed":false,"url_parsed":false,"url":null,"queues":0,"PASS":true}
+[  29226ms] [harness] eval (()=>{const b=window.AABridge;const r={present:!!b,ws_constructed:!!(b&&b.ws),url_parsed:b?b.urlChecked:null,url:b?b.url:null,queues:b?Object.keys(b.queues).length:null};r.PASS=!!b&&!r.ws_constructed&&r.url_parsed===false;console.log('[BRIDGEGATE] B6-0 configured-and-idle-until-asked '+JSON.stringify(r));return 'B6-0 '+r.PASS})() => "B6-0 true"
+[  29226ms] [harness] === ENTER-1-PLAY-GAME-SUBMENU ===
+[  29259ms] [harness] key Enter (1/1)
+[  32140ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/04-play-game-menu-opens-on-multiplayer.png
+[  32140ms] [harness] === ENTER-2-MULTIPLAYER-SUBMENU ===
+[  32159ms] [console.log] [BRIDGE] open ws://127.0.0.1:8010
+[  32173ms] [harness] key Enter (1/1)
+[  35037ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/05-network-menu-opens-on-online-multiplayer.png
+[  35037ms] [harness] === ONE-DOWN-TO-LAN-MULTIPLAYER ===
+[  35070ms] [harness] key Down (1/1)
+[  36933ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/06-network-menu-lan-selected.png
+[  36933ms] [harness] === ENTER-3-LAN-BROWSE-ASKS-FOR-A-SOCKET ===
+[  36966ms] [harness] key Enter (1/1)
+[  36972ms] [console.log] [BRIDGE] handle 1 bound to udp port 58444
+[  37268ms] [harness] until 1x <<[BRIDGE] open>> (timeout 60000ms, have 1)
+[  37268ms] [harness] until SATISFIED: saw 1x <<[BRIDGE] open>>
+[  37268ms] [harness] until 1x <<bound to udp port>> (timeout 60000ms, have 1)
+[  37269ms] [harness] until SATISFIED: saw 1x <<bound to udp port>>
+[  38470ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38474ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38478ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38483ms] [console.log] [BRIDGE] error on handle 1: port 0 is outside the allowed range 4533-4599
+[  38495ms] [console.log] [BRIDGE] handle 2 bound to udp port 58515
+[  39338ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/07-lan-browser.png
+[  39338ms] [harness] === BACK-OUT-OF-THE-LAN-BROWSER ===
+[  39368ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  39369ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39371ms] [harness] key Escape (1/1)
+[  39373ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39377ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  39382ms] [console.log] [BRIDGE] error on handle 2: port 0 is outside the allowed range 4533-4599
+[  42726ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/08-back-in-the-network-menu.png
+[  42727ms] [harness] eval (()=>{const b=window.AABridge;window.__base={dropped:b.dropped|0,sendFailures:b.sendFailures|0,dataErrors:b.dataErrors|0};return 'error-counter baseline '+JSON.stringify(window.__base)})() => "error-counter baseline {\"dropped\":0,\"sendFailures\":0,\"dataErrors\":8}"
+[  42728ms] [harness] eval window.__rtt.reset() => "rtt state cleared"
+[  42728ms] [harness] === B6-DOWN-3-FROM-LAN-TO-SERVER-BOOKMARKS ===
+[  42760ms] [harness] key Down (1/3)
+[  43100ms] [harness] key Down (2/3)
+[  43435ms] [harness] key Down (3/3)
+[  45289ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/09-network-menu-server-bookmarks-selected.png
+[  45289ms] [harness] === B6-ENTER-OPENS-BOOKMARKS-AND-TRANSFERS-CUSTOM_SERVER_NAME ===
+[  45322ms] [harness] key Enter (1/1)
+[  48686ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/10-bookmarks-menu-shows-the-address-about-to-be-dialled.png
+[  48686ms] [harness] === B6-ENTER-CONNECTS ===
+[  48719ms] [harness] key Enter (1/1)
+[  48744ms] [console.log] [BRIDGE] handle 3 bound to udp port 63514
+[  49021ms] [harness] until 1x <<[GATEWAIT] ROSTER-1>> (timeout 90000ms, have 0)
+[  53725ms] [console.log] [BRIDGE] handle 4 bound to udp port 63702
+[ 139059ms] [harness] until TIMED OUT after 90000ms: saw 0x <<[GATEWAIT] ROSTER-1>>, wanted 1
+[ 139059ms] [harness] until 1x <<[GATEWAIT] STARTED-1>> (timeout 90000ms, have 0)
+[ 229101ms] [harness] until TIMED OUT after 90000ms: saw 0x <<[GATEWAIT] STARTED-1>>, wanted 1
+[ 232163ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/11-on-the-grid.png
+[ 232164ms] [harness] eval (()=>{try{const b=window.AABridge;if(!b||!b.ws)return 'NO LIVE SOCKET - the sampler measured nothing';if(window.__gapTap)return 'already';window.__gapTap=true;window.__gaps=[];window.__gapLast=0;const inner=b.ws.onmessage;b.ws.onmessage=function(ev){const t=performance.now();if(window.__gapLast)window.__gaps.push(Math.round((t-window.__gapLast)*100)/100);window.__gapLast=t;return inner.apply(this,arguments)};return 'gap sampler installed on the live socket'}catch(e){return 'GAP SAMPLER FAILED: '+e}})() => "gap sampler installed on the live socket"
+[ 232164ms] [harness] === B6-STEER-WHILE-A-NETWORK-ROUND-IS-LIVE ===
+[ 232197ms] [harness] key Left (1/1)
+[ 233138ms] [harness] key Right (1/1)
+[ 234711ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/12-after-the-zigzag.png
+[ 234711ms] [harness] === B6-CLOSE-THE-BOX-SO-THE-ROUND-ENDS-WITHOUT-LOITERING ===
+[ 234743ms] [harness] key Left (1/1)
+[ 235780ms] [harness] key Left (1/1)
+[ 236821ms] [harness] key Left (1/1)
+[ 237857ms] [harness] key Left (1/1)
+[ 240729ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/13-after-closing-the-box.png
+[ 240729ms] [harness] until 1x <<[GATEWAIT] SCORED-1>> (timeout 180000ms, have 0)
+[ 420763ms] [harness] until TIMED OUT after 180000ms: saw 0x <<[GATEWAIT] SCORED-1>>, wanted 1
+[ 422331ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/14-the-round-was-scored.png
+[ 422331ms] [harness] until 1x <<[GATEWAIT] STARTED-2>> (timeout 90000ms, have 0)
+[ 512350ms] [harness] until TIMED OUT after 90000ms: saw 0x <<[GATEWAIT] STARTED-2>>, wanted 1
+[ 513919ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/15-a-second-round-started-so-the-first-one-really-ended.png
+[ 514228ms] [console.log] [BRIDGEGATE] B6 a-full-round-on-a-server-this-project-does-not-own {"rounds_started":0,"rounds_scored":0,"rosters":0,"peers":[],"peer_literal":0,"peer_synthetic":0,"dialled":{"128.140.115.2":50},"rtt_samples":0,"ws_readyState":1,"state":1,"live_handles":[],"bound":[],"sent_datagrams":[],"pending_before":0,"pending_after":0,"baseline":{"dropped":0,"sendFailures":0,"dataErrors":8},"new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,"lastDataError":"port 0 is outside the allowed range 4533-4599","canvas_w":1024,"canvas_h":768,"gl_err":0,"still_alive":true,"draining":true,"one_peer":false,"PASS":false}
+[ 514229ms] [harness] eval (async()=>{const b=window.AABridge;const L=window.__L||{};const B=window.__base||{dropped:0,sendFailures:0,dataErrors:0};const R=window.__rtt||{samples:[],addrs:{}};const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const live=Object.keys(b.queues).map(Number);const bound=live.map(h=>[h,b.bound[h]===undefined?0:b.bound[h]]);const sent=live.map(h=>[h,b.sentSinceBind[h]|0]);const dep=()=>live.reduce((a,h)=>a+((b.queues[h]||[]).length),0);const p1=dep();await new Promise(rr=>setTimeout(rr,300));const p2=dep();const P=window.__peers||[];const lit=P.filter(l=>/\(literal\)/.test(l)).length;const syn=P.filter(l=>/\(synthetic\)/.test(l)).length;const r={rounds_started:L.NEW_ROUND|0,rounds_scored:L.ROUND_SCORE_TEAM|0,rosters:L.TEAM_PLAYER_ADDED|0,peers:P,peer_literal:lit,peer_synthetic:syn,dialled:R.addrs,rtt_samples:R.samples.length,ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:live,bound:bound,sent_datagrams:sent,pending_before:p1,pending_after:p2,baseline:B,new_dropped:(b.dropped|0)-B.dropped,new_sendFailures:(b.sendFailures|0)-B.sendFailures,new_dataErrors:(b.dataErrors|0)-B.dataErrors,lastDataError:b.lastDataError,canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.still_alive=r.canvas_w>0&&r.canvas_h>0&&r.gl_err===0;r.draining=p1<=3&&p2<=3;r.one_peer=P.length===1&&lit===1&&syn===0&&Object.keys(R.addrs).length===1;r.PASS=r.rounds_started>=2&&r.rounds_scored>=1&&r.rosters>0&&r.one_peer&&r.rtt_samples>0&&b.state===1&&r.ws_readyState===1&&live.length===1&&bound.every(e=>e[1]===1)&&sent.every(e=>e[1]>0)&&r.draining&&r.new_dropped===0&&r.new_sendFailures===0&&r.new_dataErrors===0&&r.still_alive;console.log('[BRIDGEGATE] B6 a-full-round-on-a-server-this-project-does-not-own '+JSON.stringify(r));return 'B6 '+r.PASS})() => "B6 false"
+[ 514230ms] [console.log] [BRIDGEGATE] RTT {"phase":"connect-through-round-2","what":"full-path ack round trip, page to server and back","peers":{"128.140.115.2":50},"datagrams_out":50,"datagrams_in":0,"parse_failures":0,"unpaired":0,"n":0,"min":null,"p50":null,"p90":null,"p99":null,"max":null,"mean":null,"over100ms":0,"over250ms":0}
+[ 514231ms] [harness] eval (()=>{const R=window.__rtt||{samples:[],addrs:{}};const g=R.samples.slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'connect-through-round-2',what:'full-path ack round trip, page to server and back',peers:R.addrs,datagrams_out:R.outD,datagrams_in:R.inD,parse_failures:R.parseFail,unpaired:Object.keys(R.sent).length,n:g.length,min:g.length?g[0]:null,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,mean:g.length?Math.round(g.reduce((a,b)=>a+b,0)/g.length*100)/100:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length};console.log('[BRIDGEGATE] RTT '+JSON.stringify(r));return 'rtt n='+g.length+' p50='+q(.5)})() => "rtt n=0 p50=null"
+[ 514232ms] [console.log] [BRIDGEGATE] GAPS {"phase":"through-B6","datagrams":0,"p50":null,"p90":null,"p99":null,"max":null,"over100ms":0,"over250ms":0,"over500ms":0}
+[ 514232ms] [harness] eval (()=>{const g=(window.__gaps||[]).slice().sort((a,b)=>a-b);const q=p=>g.length?g[Math.min(g.length-1,Math.floor(p*g.length))]:null;const r={phase:'through-B6',datagrams:g.length,p50:q(.5),p90:q(.9),p99:q(.99),max:g.length?g[g.length-1]:null,over100ms:g.filter(x=>x>100).length,over250ms:g.filter(x=>x>250).length,over500ms:g.filter(x=>x>500).length};console.log('[BRIDGEGATE] GAPS '+JSON.stringify(r));return 'gaps '+JSON.stringify(r)})() => "gaps {\"phase\":\"through-B6\",\"datagrams\":0,\"p50\":null,\"p90\":null,\"p99\":null,\"max\":null,\"over100ms\":0,\"over250ms\":0,\"over500ms\":0}"
+[ 514232ms] [harness] === B6-LEAVE-THE-SERVER ===
+[ 514270ms] [harness] key Escape (1/1)
+[ 514277ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[ 517136ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/16-ingame-menu.png
+[ 517170ms] [harness] key Up (1/1)
+[ 518739ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/17-ingame-menu-one-up.png
+[ 518771ms] [harness] key Up (1/1)
+[ 520329ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/18-ingame-menu-two-up.png
+[ 520362ms] [harness] key Enter (1/1)
+[ 524750ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/19-after-the-disconnect.png
+[ 524751ms] [harness] eval (()=>{try{if(window.AABridge&&window.AABridge.ws)window.AABridge.ws.close();return 'socket closed from the page as a backstop'}catch(e){return 'backstop close threw: '+e}})() => "socket closed from the page as a backstop"
+[ 524753ms] [console.log] [BRIDGE] closed
+[ 527821ms] [harness] screenshot -> docs/evidence/m-a-bridge/b6/remote-3-cayleys-v17/20-left.png
+[ 527822ms] [console.log] [BRIDGEGATE] B6-LEFT the-page-is-off-the-server-and-still-running {"ws_readyState":3,"state":2,"live_handles":[],"canvas_w":1024,"canvas_h":768,"gl_err":0,"PASS":true}
+[ 527822ms] [harness] eval (()=>{const b=window.AABridge;const c=document.getElementById('canvas');const g=c?c.getContext('webgl'):null;const r={ws_readyState:b.ws?b.ws.readyState:null,state:b.state,live_handles:Object.keys(b.queues).map(Number),canvas_w:c?c.width:0,canvas_h:c?c.height:0,gl_err:g?g.getError():'nogl'};r.PASS=r.ws_readyState===3&&r.canvas_w>0&&r.gl_err===0;console.log('[BRIDGEGATE] B6-LEFT the-page-is-off-the-server-and-still-running '+JSON.stringify(r));return 'LEFT '+r.PASS})() => "LEFT true"

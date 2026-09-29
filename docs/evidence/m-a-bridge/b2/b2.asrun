@@ -1,0 +1,80 @@
+Gate B2 of Task 3 -- A FULL ROUND COMPLETED WITH THE BROWSER PLAYER IN IT.
+
+Same single run as ../b1/; console.log and server.log here are copies of that
+one transcript, kept alongside so this directory stands on its own. ../b1/
+carries the commands, the five-verdict count and the Docker UDP-proxy
+measurement. The verdict for this directory is the one labelled B3 in the log
+-- ../b1/b1.asrun explains the numbering.
+
+B3's reading in full:
+
+  {"rounds_started":2,"rounds_scored":1,"rosters":4,
+   "ws_readyState":1,"live_handles":[3],"bound":[[3,1]],"sent":[[3,215]],
+   "pending":0,"baseline":{"dropped":0,"sendFailures":0,"dataErrors":8},
+   "new_dropped":0,"new_sendFailures":0,"new_dataErrors":0,
+   "canvas_w":1024,"canvas_h":768,"gl_err":0,"still_alive":true,"PASS":true}
+
+rounds_started 2 and rounds_scored 1 are the page's own counts of [L]
+NEW_ROUND and [L] ROUND_SCORE_TEAM, tapped in the page rather than grepped
+afterwards. `sent` went 78 -> 215 datagrams between B2 and B3, so the round
+was a live stream on that handle and not a login followed by silence.
+
+NOT [L] ROUND_WINNER, which is what the brief asked for. This build never
+prints it on a client: it comes from gGame::Analysis (src/tron/gGame.cpp:3610)
+which returns immediately when sn_GetNetState() == nCLIENT. Measured on a
+three-round run of this same walk: 0x ROUND_WINNER, 4x NEW_ROUND in the
+browser transcript. Waiting for it would have timed out, and `until:` does not
+throw, so the PASS after it would still have printed. The substitute needles
+and why each one requires a finished round are argued at length in
+web/tools/bridge-gate.steps.
+
+THE SERVER'S SIDE OF THE SAME ROUND, from server.log:
+
+  [0] Go (round 1 of 10)!
+  [0] Winner: AI team
+  [0] Go (round 2 of 10)!
+  [0] Gdb core dumped web_user for 3 points.
+  [0] web_user lost 2 points since it caused a general protection fault.
+  [0] Winner: AI team
+
+The browser player is not a spectator in that log: it has a cycle on the grid
+that an AI kills, and the server scores it.
+
+AND THE TWO ENDS AGREE ON THE PACKET COUNTS, which is a better cross-check
+than either end's own totals. Both print a per-round summary. The server
+(server.log, lines 36-38) says of round 1:
+
+  Time:     13.7395 seconds
+  Sent:     15642 bytes in 164 packets
+  Received:  6752 bytes in 148 packets
+
+and the client's own console, legible on this directory's screenshot, says of
+the same round:
+
+  Time:     13.745 seconds
+  Sent:      6456 bytes in 148 packets
+  Received: 15980 bytes in 164 packets
+
+148 sent by the client is 148 received by the server, and 164 sent by the
+server is 164 received by the client, with no loss in either direction. The
+byte totals differ by a constant per-packet amount because the two ends count
+different framing, not because datagrams went missing. Neither of these is a
+number the gate asserts; they are here because they are the closest thing in
+this build to a measurement of the bridge's fidelity over a whole round, and
+they say it dropped nothing.
+
+THE SCREENSHOT IS THE START OF ROUND 2, not the middle of round 1, and that is
+the useful frame: it shows the browser player's cycle on the grid, the
+countdown at 3, and round 1's completed statistics still on the console above
+it. ../b1/12-*.png is the same client at the start of round 1, with the HUD
+reading "Fastest: web_user", "Enemies: 3 Friends: 1", "Ping: 200 ms".
+
+WHAT THE TWO STEERING KEYPRESSES IN B3 DO NOT PROVE. They exercise the real
+input path while a network round is live, and a path that threw there would
+stop the round finishing. They do NOT prove a particular turn reached the
+server: neither end logs anything per turn, and a round's duration is not a
+measurement of one keypress. The browser player lost every round it played
+here -- [L] ROUND_SCORE_TEAM -4 web_user for the one round this run scored --
+unattended, which is what an untouched cycle against three AIs does. A gate that claimed "it plays well" would be
+measuring the wrong thing; this one claims the round completed with the player
+in it, and that is what the server's log says.

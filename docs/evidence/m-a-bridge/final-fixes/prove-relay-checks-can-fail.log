@@ -1,0 +1,53 @@
+# The two new relay checks, run against the code they fix (bridge/relay.mjs as of
+# commit 13957020, with only the test-only `lookup` injection added so the second
+# check can run at all). Both must FAIL here and pass after the fix.
+
+not ok 5 - two host names on one IP do not get each other's replies
+not ok 6 - a destination the policy refuses is not left behind in the DNS cache
+
+not ok 5 - two host names on one IP do not get each other's replies
+  ---
+  duration_ms: 5.100083
+  location: '/Users/user/data/src/armagetronad-web/.worktrees/phase2/bridge/test/relay.test.mjs:117:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    the echo must name the destination this datagram was sent to, not some other name that happens to share its IP
+    + actual - expected
+    
+    + 'localhost'
+    - '127.0.0.1'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '127.0.0.1'
+  actual: 'localhost'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/user/data/src/armagetronad-web/.worktrees/phase2/bridge/test/relay.test.mjs:136:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:935:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+# Subtest: a destination the policy refuses is not left behind in the DNS cache
+not ok 6 - a destination the policy refuses is not left behind in the DNS cache
+  ---
+  duration_ms: 3.318042
+  location: '/Users/user/data/src/armagetronad-web/.worktrees/phase2/bridge/test/relay.test.mjs:140:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a name the policy refused must not be cached: caching before the check filled the cache with destinations the relay will never send to
+    
+    1 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/user/data/src/armagetronad-web/.worktrees/phase2/bridge/test/relay.test.mjs:158:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:935:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+# Subtest: a destination the policy refuses produces ERROR and sends nothing

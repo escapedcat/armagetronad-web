@@ -1,0 +1,36 @@
+{
+  "trace": "docs/evidence/m-a-bridge/b6/remote-2-unnamed-server/udp-trace.jsonl",
+  "peer": "185.127.17.61",
+  "other_destinations_in_trace": {},
+  "seconds_of_traffic": 9.99,
+  "udp_out_datagrams": 50,
+  "udp_in_datagrams": 0,
+  "messages_out": 50,
+  "messages_in": 0,
+  "unpaired_forward": 0,
+  "unpaired_reverse": 0,
+  "forward_relay_to_server_ms": {
+    "what": "client message -> server ack (network + server)",
+    "n": 0,
+    "min": null,
+    "p50": null,
+    "p90": null,
+    "p99": null,
+    "max": null,
+    "mean": null,
+    "over100ms": 0,
+    "over250ms": 0
+  },
+  "reverse_relay_to_browser_ms": {
+    "what": "server message -> client ack (websocket + page + wasm)",
+    "n": 0,
+    "min": null,
+    "p50": null,
+    "p90": null,
+    "p99": null,
+    "max": null,
+    "mean": null,
+    "over100ms": 0,
+    "over250ms": 0
+  }
+}

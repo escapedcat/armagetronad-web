@@ -1,0 +1,5 @@
+[bridge] listening on ws://127.0.0.1:8010 (private destinations ALLOWED - local testing only)
+[bridge] handle 1 bound to udp port 60271
+[bridge] handle 2 bound to udp port 62159
+[bridge] handle 3 bound to udp port 52007
+[runner] relay killed 10:58:00

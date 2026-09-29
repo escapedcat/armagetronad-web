@@ -1,0 +1,9 @@
+ICMP to the chosen host, taken at 2026-09-12T11:27Z, just before the connect.
+The first sample was polluted by a transient on THIS machine (a control ping to
+1.1.1.1 in the same minute showed a 2.8 s maximum with 0% loss), so it is
+recorded and then discarded; the second is the reading.
+
+  first  15 packets, 80% loss, min/avg/max/stddev 128.045/1131.716/2638.169/1084.673 ms
+  1.1.1.1 control    8 packets, 0% loss, 110.998/743.314/2799.015/956.643 ms
+  85.214.226.170     8 packets, 0% loss, 120.801/1191.476/3766.689/1330.652 ms
+  188.245.106.232   10 packets, 0% loss, 123.113/126.493/133.051/2.965 ms   <- the reading
