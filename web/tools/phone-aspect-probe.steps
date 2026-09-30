@@ -3,7 +3,7 @@
 #   python3 -m http.server 8000 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --mobile 915,350,3 \
 #        --out docs/evidence/phone-feedback/aspect \
-#        --url http://localhost:8000/armagetronad.html \
+#        --url 'http://localhost:8000/armagetronad.html?askname=0' \
 #        --script-file web/tools/phone-aspect-probe.steps
 #   kill %1
 #

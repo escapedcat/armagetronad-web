@@ -41,8 +41,12 @@
        overlay below turns taps into game input, so a pinch-zoom leaves the
        player looking at a corner of a game they can no longer aim at. iOS
        Safari ignores it anyway. -->
+  <!-- interactive-widget=resizes-visual: the phone keyboard (name dialog,
+       chat bar) must shrink only the VISUAL viewport. With resizes-content,
+       the default on some browsers, it shrinks the layout viewport, and this
+       page is 100dvh, so the game would be squeezed while the player types. -->
   <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
   <title>Armagetron Advanced</title>
   <style>
     html, body { height:100%; }
@@ -443,9 +447,7 @@
                             transition:transform 140ms ease-out; }
     html.aa-gameboy #layoutbtn .lb-screen { transform:rotate(90deg); }
     @media (prefers-reduced-motion: reduce) { #layoutbtn .lb-screen { transition:none; } }
-    #layoutbtn { display:none; position:absolute; align-items:center; gap:.4rem;
-                 top:calc(.6rem + env(safe-area-inset-top, 0px));
-                 right:calc(.6rem + env(safe-area-inset-right, 0px));
+    #layoutbtn { display:none; align-items:center; gap:.4rem;
                  min-height:44px; min-width:44px; padding:.35rem .7rem;
                  color:#cfd3dc; background:rgba(0,0,0,.55);
                  border:1px solid rgba(255,255,255,.3); border-radius:.5rem;
@@ -459,8 +461,48 @@
        needs about 230 px of the 503 below the square, and the cross is centred
        in what is left. --aa-square is the square's CSS side, the same number
        the pad's own top edge uses. */
-    html.aa-gameboy #layoutbtn { top:calc(var(--aa-square, 100vw) + .5rem); }
+    /* (Since the mobile keyboard, #aa-corner below carries this placement:
+       the layout button, Name and 💬 sit in it together.) */
     #touch:not(.aa-driving) #layoutbtn { display:inline-flex; }
+    /* THE CORNER takes over #layoutbtn's old position, so the layout button
+       lands exactly where it was; 💬 and Name line up to its left. */
+    #aa-corner { position:absolute; display:flex; gap:.4rem; align-items:center;
+                 top:calc(.6rem + env(safe-area-inset-top, 0px));
+                 right:calc(.6rem + env(safe-area-inset-right, 0px)); }
+    html.aa-gameboy #aa-corner { top:calc(var(--aa-square, 100vw) + .5rem); }
+    #chatbtn, #namebtn { display:none; align-items:center; justify-content:center;
+                 min-height:44px; min-width:44px; padding:.35rem .7rem;
+                 color:#cfd3dc; background:rgba(0,0,0,.55);
+                 border:1px solid rgba(255,255,255,.3); border-radius:.5rem;
+                 font:600 .8rem/1.2 ui-monospace, Menlo, "Roboto Mono", monospace;
+                 -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+    #chatbtn { font-size:1.1rem; }
+    #touch.aa-connected #chatbtn { display:inline-flex; }
+    #touch:not(.aa-driving) #namebtn { display:inline-flex; }
+    /* THE OVERLAYS. Above everything the game draws; system fonts, 16 px text
+       so phones don't zoom into the field. */
+    .aa-textui { position:fixed; z-index:30; color:#e8ebf2;
+                 font:16px/1.3 system-ui, sans-serif; }
+    .aa-textui[hidden] { display:none; }
+    .aa-textui input { font:16px/1.3 system-ui, sans-serif; color:#fff;
+                 background:#1b1f2a; border:1px solid rgba(255,255,255,.35);
+                 border-radius:.4rem; padding:.55rem .6rem; min-width:0; }
+    .aa-textui button { font:600 16px/1 system-ui, sans-serif; color:#e8ebf2;
+                 background:#2a3142; border:1px solid rgba(255,255,255,.3);
+                 border-radius:.4rem; min-height:44px; min-width:44px; padding:0 .8rem; }
+    #aa-namedlg { inset:0; display:flex; align-items:flex-start; justify-content:center;
+                 padding-top:12vh; background:rgba(0,0,0,.55); }
+    #aa-namedlg[hidden] { display:none; }
+    #aa-nameform { display:grid; gap:.6rem; width:min(20rem, 88vw);
+                 background:#11141c; border:1px solid rgba(255,255,255,.25);
+                 border-radius:.7rem; padding:1rem; }
+    #aa-name-title { font-weight:600; }
+    .aa-textui-hint { margin:0; font-size:13px; color:#9aa3b5; }
+    .aa-textui-row { display:flex; justify-content:flex-end; gap:.5rem; }
+    #aa-chatbar { left:0; right:0; top:0; padding:.4rem .5rem;
+                 background:rgba(12,14,20,.92); border-top:1px solid rgba(255,255,255,.2); }
+    #aa-chatform { display:flex; gap:.4rem; }
+    #aa-chat { flex:1; }
     /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
        z-index 40 puts it above everything, the reload chip included, because
        the numbers are most interesting exactly when something on the screen
@@ -595,17 +637,44 @@
       Its label is set by the script from the layout the page is in; the
       stylesheet shows it only while the game is not driving.
     -->
-    <button type="button" id="layoutbtn" aria-label="Switch layout">
-      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
-        <rect class="lb-screen" x="9.5" y="4.5" width="9" height="15" rx="1.8"
-              fill="none" stroke="currentColor" stroke-width="1.7"/>
-        <path d="M6.2 10.5 A6.4 6.4 0 0 1 11.6 3.3" fill="none" stroke="currentColor"
-              stroke-width="1.7" stroke-linecap="round"/>
-        <path d="M3.6 8.2 L6.2 10.9 L8.9 8.9" fill="none" stroke="currentColor"
-              stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span id="layoutbtn-label">Layout</span>
-    </button>
+    <!--
+      THE CORNER: 💬 chat (while connected), Name (in menus), and the layout
+      switch (in menus), left to right. Portrait: just below the square;
+      landscape: top-right. See docs/superpowers/plans/2026-09-30-mobile-keyboard.md.
+    -->
+    <div id="aa-corner">
+      <button type="button" id="chatbtn" aria-label="Chat">&#128172;</button>
+      <button type="button" id="namebtn" aria-label="Your name">Name</button>
+      <button type="button" id="layoutbtn" aria-label="Switch layout">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+          <rect class="lb-screen" x="9.5" y="4.5" width="9" height="15" rx="1.8"
+                fill="none" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M6.2 10.5 A6.4 6.4 0 0 1 11.6 3.3" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round"/>
+          <path d="M3.6 8.2 L6.2 10.9 L8.9 8.9" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="layoutbtn-label">Layout</span>
+      </button>
+    </div>
+  </div>
+  <div id="aa-namedlg" class="aa-textui" role="dialog" aria-modal="true" aria-labelledby="aa-name-title" hidden>
+    <form id="aa-nameform" autocomplete="off">
+      <label id="aa-name-title" for="aa-name">Your name</label>
+      <input id="aa-name" maxlength="16" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
+      <p class="aa-textui-hint">Other players see this on the servers.</p>
+      <div class="aa-textui-row">
+        <button type="button" id="aa-name-cancel">Cancel</button>
+        <button type="submit">OK</button>
+      </div>
+    </form>
+  </div>
+  <div id="aa-chatbar" class="aa-textui" hidden>
+    <form id="aa-chatform" autocomplete="off">
+      <input id="aa-chat" maxlength="120" placeholder="Say something" enterkeyhint="send" aria-label="Chat message">
+      <button type="submit" aria-label="Send">&#10148;</button>
+      <button type="button" id="aa-chat-close" aria-label="Close">&#10005;</button>
+    </form>
   </div>
 
   <!--
@@ -1572,6 +1641,115 @@
         }
       };
       document.addEventListener('visibilitychange', onVisibility);
+    })();
+
+    // ---- TEXT FROM A PHONE: THE NAME DIALOG AND THE CHAT BAR -----------------
+    // A phone shows its keyboard only for a real text box, and the game draws
+    // everything into one canvas -- so these are HTML inputs, and their text
+    // reaches the game through the slots below, which the game's own frame loop
+    // empties (src/emscripten/eWebText.cpp). The page never calls the game with
+    // a string: the game may be suspended mid-frame when a browser event runs.
+    (() => {
+      const q = { 1: null, 2: null };            // 1 = name, 2 = chat
+      window.AA_TEXT_PEEK = (k) => q[k];
+      window.AA_TEXT_TAKE = (k) => { const t = q[k]; q[k] = null; return t; };
+      window.AA_TEXT_QUEUE = (k, t) => { q[k] = t; };
+      window.AA_TEXT_OPEN = false;
+      const clean = (s, max) => String(s).replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max);
+      const MARKER = '/persist/var/aa-name-asked';
+      const $ = (id) => document.getElementById(id);
+      const touch = $('touch'), dlg = $('aa-namedlg'), nameIn = $('aa-name'),
+            bar = $('aa-chatbar'), chatIn = $('aa-chat');
+      // KEYS TYPED HERE NEVER REACH THE GAME. SDL listens on document in the
+      // bubble phase (libsdl.js), so stopping them at these roots is enough --
+      // otherwise 'b' would toggle spectator mode and Enter would open the
+      // game's own chat line.
+      for (const root of [dlg, bar])
+        for (const t of ['keydown', 'keyup', 'keypress'])
+          root.addEventListener(t, (e) => e.stopPropagation());
+      // user.cfg holds the name as latin-1 bytes (the game's encoding), so
+      // it is decoded byte for byte, not as UTF-8.
+      const savedName = () => {
+        try {
+          let t = '';
+          for (const b of Module.FS.readFile('/persist/var/user.cfg')) t += String.fromCharCode(b);
+          const m = /^\s*PLAYER_1\s+(.*)$/m.exec(t);   // right-aligned in user.cfg
+          return m ? m[1].trim().replace(/\\(.)/g, '$1') : null;   // spaces saved as "\\ "
+        } catch (e) { return null; }
+      };
+      const openName = (first) => {
+        nameIn.value = savedName() || window.AA_DEFAULT_NAME || '';
+        dlg.hidden = false; window.AA_TEXT_OPEN = true;
+        nameIn.focus(); nameIn.select();
+        console.log('[TEXT] name dialog open' + (first ? ' (first visit)' : ''));
+      };
+      const closeName = () => {
+        dlg.hidden = true; nameIn.blur(); window.AA_TEXT_OPEN = false;
+        try { Module.FS.writeFile(MARKER, 'asked\n'); } catch (e) { /* no /persist: it asks again next time */ }
+      };
+      $('aa-nameform').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const n = clean(nameIn.value, 16);
+        if (n) { q[1] = n; console.log('[TEXT] name queued'); }
+        closeName();
+      });
+      $('aa-name-cancel').addEventListener('click', closeName);
+      // THE BAR SITS JUST ABOVE THE KEYBOARD, or right under the square in the
+      // Game Boy layout when the keyboard is lower than that. visualViewport is
+      // the part of the page the keyboard leaves visible.
+      const placeBar = () => {
+        if (bar.hidden) return;
+        const vv = window.visualViewport;
+        const visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+        let top = visibleBottom - bar.offsetHeight;
+        if (document.documentElement.classList.contains('aa-gameboy')) {
+          const sq = $('canvas').getBoundingClientRect().bottom;
+          top = Math.min(top, sq);
+        }
+        bar.style.top = Math.max(0, Math.round(top)) + 'px';
+      };
+      if (window.visualViewport) {
+        visualViewport.addEventListener('resize', placeBar);
+        visualViewport.addEventListener('scroll', placeBar);
+      }
+      const openChat = () => {
+        bar.hidden = false; window.AA_TEXT_OPEN = true;
+        chatIn.value = ''; placeBar(); chatIn.focus();
+      };
+      const closeChat = () => { bar.hidden = true; chatIn.blur(); window.AA_TEXT_OPEN = false; };
+      $('aa-chatform').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const s = clean(chatIn.value, 120);
+        if (s) { q[2] = s; console.log('[TEXT] chat queued'); }
+        closeChat();
+      });
+      $('aa-chat-close').addEventListener('click', closeChat);
+      $('chatbtn').addEventListener('click', openChat);
+      $('namebtn').addEventListener('click', () => openName(false));
+      // CONNECTED STATE AND THE FIRST-VISIT PROMPT, every half second once the
+      // game runs. _aa_web_connected() only reads a value (eWebLeave.cpp).
+      let checkedFirstVisit = false;
+      setInterval(() => {
+        if (window.AA_RUNTIME_READY !== true) return;
+        let connected = false;
+        try { connected = typeof Module._aa_web_connected === 'function' && Module._aa_web_connected() === 1; } catch (e) {}
+        touch.classList.toggle('aa-connected', connected);
+        if (!connected && !bar.hidden) closeChat();
+        // ?askname=0 skips the automatic first-visit prompt (the Name button
+        // still works). The older phone gates use it: each run is a fresh
+        // profile, and the prompt's backdrop would swallow their taps.
+        if (!checkedFirstVisit && window.AA_TOUCH && readNumberParam('askname', 0, 1) === 0) {
+          checkedFirstVisit = true;
+          console.log('[TEXT] first-visit name prompt skipped (?askname=0)');
+        }
+        if (!checkedFirstVisit && window.AA_TOUCH) {
+          checkedFirstVisit = true;
+          let asked = false;
+          try { asked = Module.FS.analyzePath(MARKER).exists; } catch (e) {}
+          const n = savedName();
+          if (!asked && (!n || n === 'web_user' || /^web_\d{4}$/.test(n))) openName(true);
+        }
+      }, 500);
     })();
 
     // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------

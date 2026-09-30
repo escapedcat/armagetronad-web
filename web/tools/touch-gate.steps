@@ -3,7 +3,7 @@
 #   python3 -m http.server 8000 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --mobile 915,412,3 \
 #        --out /tmp/touch-chrome \
-#        --url http://localhost:8000/armagetronad.html \
+#        --url 'http://localhost:8000/armagetronad.html?askname=0' \
 #        --script-file web/tools/touch-gate.steps
 #   kill %1
 #
