@@ -29,10 +29,16 @@ mergeInto(LibraryManager.library, {
   aa_resource_fetch__deps: ['$AABridge', '$AAResource', 'malloc'],
   aa_resource_fetch__async: true,
   aa_resource_fetch: function (uriPtr, outBufPtr, outLenPtr) {
+    // EVERYTHING WITH A SIDE EFFECT GOES INSIDE THE ASYNC FUNCTION. Under
+    // Asyncify this import is called twice: once to start the work (the stack
+    // unwinds) and once more when it is done (the stack rewinds and the body
+    // re-runs; only then does handleAsync return the result). The outputs used
+    // to be zeroed up here, so the second call wiped the buffer the first had
+    // filled, and the game saved an empty map after "OK".
     var uri = UTF8ToString(uriPtr);
-    HEAP32[outBufPtr >> 2] = 0;
-    HEAP32[outLenPtr >> 2] = 0;
     return Asyncify.handleAsync(async function () {
+      HEAP32[outBufPtr >> 2] = 0;
+      HEAP32[outLenPtr >> 2] = 0;
       var status = 0;
       var reason = '';
       var ep = AAResource.endpoint(AABridge.getUrl());

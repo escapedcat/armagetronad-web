@@ -25,7 +25,20 @@ function load({ search = '?bridge=ws://127.0.0.1:8010', hostname = '127.0.0.1', 
     HEAP32: new Int32Array(heap.buffer),
     UTF8ToString: (p) => sandbox._strings[p],
     _malloc: (n) => { const p = next; next += n; return p; },
-    Asyncify: { handleAsync: (f) => f() },
+    // Asyncify as it really behaves: the import is CALLED TWICE. The first
+    // call starts the async work and unwinds (handleAsync returns nothing);
+    // when the work is done the stack rewinds and the import body runs AGAIN,
+    // and only this second handleAsync returns the result. Anything the body
+    // does outside the async function therefore happens twice -- the first
+    // gate run of this feature saved an empty map because of exactly that.
+    Asyncify: {
+      pending: null, done: false, value: undefined,
+      handleAsync(f) {
+        if (this.done) { this.done = false; return this.value; }
+        this.pending = f().then((v) => { this.value = v; this.done = true; });
+        return undefined;
+      },
+    },
     _strings: {},
   };
   const names = Object.keys(sandbox);
@@ -45,7 +58,11 @@ function load({ search = '?bridge=ws://127.0.0.1:8010', hostname = '127.0.0.1', 
     lib, heap, logged, freed,
     fetch: async (uri) => {
       sandbox._strings[1] = uri;
-      const status = await built.call('aa_resource_fetch', [1, 0, 4]);
+      const A = sandbox.Asyncify;
+      const first = built.call('aa_resource_fetch', [1, 0, 4]);   // unwind
+      assert.equal(first, undefined, 'the first call must only start the work');
+      await A.pending;
+      const status = built.call('aa_resource_fetch', [1, 0, 4]);  // rewind: the body runs again
       const i32 = new Int32Array(heap.buffer);
       const ptr = i32[0], len = i32[1];
       return { status, text: ptr ? Buffer.from(heap.subarray(ptr, ptr + len)).toString() : null, ptr, len };
