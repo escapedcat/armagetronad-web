@@ -26,7 +26,7 @@ const librarySource = readFileSync(join(here, '..', '..', 'web', 'library_bridge
 // body, because that is how emcc's output has it -- a top-level var the entry
 // points close over. So the entry points must be CALLED from that scope too,
 // which is what the returned `call` does.
-function loadBridge({ open = true } = {}) {
+function loadBridge({ open = true, location = { search: '?bridge=ws://127.0.0.1:8010', hostname: '127.0.0.1' } } = {}) {
   const sent = [];
   const logged = [];
   const heap = new Uint8Array(1024);
@@ -37,7 +37,7 @@ function loadBridge({ open = true } = {}) {
     mergeInto: (target, obj) => Object.assign(target, obj),
     LibraryManager: { library: {} },
     console: { log: (...a) => logged.push(a.join(' ')) },
-    location: { search: '?bridge=ws://127.0.0.1:8010' },
+    location,
     URLSearchParams,
     HEAPU8: heap,
     HEAP32: new Int32Array(heap.buffer),
@@ -226,4 +226,17 @@ test('a high-bit character in an address is encoded the same way at both ends', 
   assert.deepEqual([...Buffer.from(AB.frame(TYPE.DATA, 1, 4534, addr, null))],
                    [...encode({ type: TYPE.DATA, handle: 1, port: 4534, addr, payload: Buffer.alloc(0) })]);
   assert.ok([...Buffer.from(AB.frame(TYPE.DATA, 1, 4534, addr, null))].includes(0xe9), 'not masked down to 0x69');
+});
+
+test('which relay the page dials: the published page defaults to the public one, nowhere else does', () => {
+  const url = (hostname, search) => loadBridge({ location: { hostname, search } }).AB.getUrl();
+  const PUB = 'escapedcat.github.io';
+  assert.equal(url(PUB, ''), 'wss://armagetronad-bridge.fly.dev/', 'the published page goes online by default');
+  assert.equal(url(PUB, '?bridge=wss://other.test/tok'), 'wss://other.test/tok', '?bridge= overrides the default');
+  assert.equal(url(PUB, '?bridge=0'), null, '?bridge=0 turns online play off');
+  assert.equal(url(PUB, '?bridge=junk'), null, 'a malformed ?bridge= is off, not silently the default');
+  assert.equal(url('localhost', ''), null, 'a local page stays offline unless told otherwise');
+  assert.equal(url('192.168.178.51', ''), null, 'so does the Wi-Fi test server');
+  assert.equal(url('escapedcat.github.io.evil.test', ''), null, 'the host must match exactly');
+  assert.equal(url('localhost', '?bridge=ws://127.0.0.1:8010'), 'ws://127.0.0.1:8010');
 });

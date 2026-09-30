@@ -44,15 +44,55 @@ no trace there), so the relay's own log is the only place the loss shows up.
 BIND/BOUND/CLOSE/ERROR are never dropped — those are the relay's control
 channel, not the network path being modelled.
 
-## Scope
+## Who may connect
 
-This is the M-A relay: local only. No TLS, no authentication, no rate limits,
-no metrics. It binds to 127.0.0.1 and is not meant to be reachable from
-anywhere else. Making it safe to expose is M-C.
+On 127.0.0.1 (the default) the relay trusts whoever can reach it, because only
+this machine can. Anywhere else it refuses to start unless it has at least one
+way to tell who is asking:
+
+- **`BRIDGE_TOKEN`** — a shared secret carried as the URL path,
+  `wss://relay/<token>`. Whoever holds the link may connect, from anywhere.
+- **`BRIDGE_ORIGINS`** — a comma-separated list of pages whose visitors may
+  connect to `wss://relay/` with no token, e.g. `https://escapedcat.github.io`.
+  An entry ending in `:*` allows any port (`http://localhost:*`). A connection
+  from any other page, or with no `Origin` at all, gets 403.
+
+The allowlist keeps other *websites* off the relay. It is not a lock against
+anyone else: a program outside a browser can send whatever `Origin` it likes.
+What bounds everybody, token or not, are the limits in `limits.mjs`:
+
+| limit | default | on breach |
+|---|---|---|
+| connections from one client IP | 4 | 429 |
+| connections in total | 200 | 503 |
+| UDP sockets per connection | 8 | ERROR frame |
+| datagrams sent per second, per connection | 200, burst 600 | dropped silently, counted in the log |
+| bytes sent per second, per connection | 100 kB, burst 300 kB | dropped silently, counted in the log |
+| new destinations per minute, per connection | 300 | ERROR frame, and the name is never resolved |
+
+The burst and destination figures are sized for the in-game server browser,
+which pings every listed server (~140) at once.
+
+Behind a proxy, set **`BRIDGE_CLIENT_IP_HEADER`** to the header carrying the
+player's address (`Fly-Client-IP` on Fly), or every player shares the proxy's
+address and the per-IP limit becomes one global limit. Only set it behind a
+proxy that overwrites that header.
+
+## Deploying to Fly
+
+`fly.toml` sets the allowlist and the client-IP header; the token is a secret:
+
+    fly secrets set BRIDGE_TOKEN=<at least 16 characters> -a armagetronad-bridge
+    fly deploy
+
+The published page connects to `wss://armagetronad-bridge.fly.dev/` by
+default (`web/library_bridge.js`); `?bridge=<url>` overrides it and
+`?bridge=0` turns online play off.
 
 ## Layout
 
 - `frame.mjs` — the wire format, shared with `web/library_bridge.js`
 - `policy.mjs` — which destinations are allowed
+- `limits.mjs` — the rate and connection limits, and the origin allowlist
 - `relay.mjs` — the server itself
 - `test/` — `node --test`

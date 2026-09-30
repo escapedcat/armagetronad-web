@@ -6,12 +6,21 @@
 // none of them. So the datagrams have to be carried by something outside the
 // page. That is this.
 //
-// TWO MODES. Bound to loopback (the default) it trusts whoever can reach it,
-// because only this machine can. Bound anywhere else it is an open door into
-// UDP 4533-4599 -- a reflector anyone could aim at community game servers --
-// so it REFUSES TO START without a token, and refuses every connection that
-// does not carry it. TLS is not done here: a deployment terminates it in
-// front (Fly's proxy does). Rate limits and an Origin allowlist are still M-C.
+// WHO MAY CONNECT. Bound to loopback (the default) it trusts whoever can reach
+// it, because only this machine can. Bound anywhere else it is a door into UDP
+// 4533-4599 -- a reflector anyone could aim at community game servers -- so it
+// REFUSES TO START unless it has at least one way to tell who is asking:
+//
+//   * a token, carried as the URL path (wss://relay/<token>): whoever holds the
+//     link may connect, from anywhere;
+//   * an Origin allowlist (M-C): a browser on one of the listed pages may
+//     connect to wss://relay/ with no token at all. That is what lets the
+//     published page go online for every visitor.
+//
+// Either way, every connection is held to limits.mjs: connections per client
+// IP and in total, sockets per connection, datagrams and bytes per second, and
+// new destinations per minute. TLS is not done here: a deployment terminates
+// it in front (Fly's proxy does).
 import crypto from 'node:crypto';
 import dgram from 'node:dgram';
 import dns from 'node:dns/promises';
@@ -19,6 +28,7 @@ import http from 'node:http';
 import { WebSocketServer } from 'ws';
 import { encode, decode, TYPE } from './frame.mjs';
 import { checkDestination } from './policy.mjs';
+import { DEFAULT_LIMITS, bucket, destinationWindow, ipCounter, originAllowed, parseOrigins } from './limits.mjs';
 
 // A TESTING AID AND NOTHING ELSE, see `drop` below.
 export function startRelay({
@@ -29,6 +39,18 @@ export function startRelay({
   // page reads its own ?bridge= value with URLSearchParams, and an '&' inside a
   // query-string token would silently split it. No client change is needed.
   token = null,
+  // Pages whose visitors may connect WITHOUT the token, e.g.
+  // ['https://escapedcat.github.io']. See originAllowed() for the ':*' form.
+  origins = null,
+  // Overrides for DEFAULT_LIMITS (limits.mjs), mainly so a test can make a
+  // limit small enough to hit.
+  limits = {},
+  // The request header that carries the real client address when the relay
+  // sits behind a proxy ('fly-client-ip' on Fly). Without it every client would
+  // share the proxy's address and the per-IP limit would be one global limit.
+  // Only ever set this behind a proxy that overwrites the header: a client
+  // talking to the relay directly could otherwise claim any address it liked.
+  clientIpHeader = null,
   // Injectable ONLY so a test can count resolutions. That count is the only
   // way to observe from outside that a destination the policy REFUSED is not
   // left behind in the cache below; the default is real DNS and the relay
@@ -57,19 +79,49 @@ export function startRelay({
     return true;
   };
   const loopback = host === '127.0.0.1' || host === '::1' || host === 'localhost';
-  if (!loopback && !token) {
-    throw new Error('refusing to listen on ' + host + ' without a token: a public relay ' +
-                    'with no token is an open UDP reflector into game servers');
+  const allowlist = Array.isArray(origins) && origins.length ? origins.slice() : null;
+  if (!loopback && !token && !allowlist) {
+    throw new Error('refusing to listen on ' + host + ' without a token or an origin ' +
+                    'allowlist: a public relay that admits anyone is an open UDP ' +
+                    'reflector into game servers');
   }
+  const L = { ...DEFAULT_LIMITS, ...limits };
+  const perIp = ipCounter(L.perIp);
+  let limited = 0; // datagrams dropped by the per-connection rate limits
+  const noteLimited = (ip) => {
+    ++limited;
+    // Logged in batches for the same reason as `lose` below.
+    if (limited === 1 || limited % 100 === 0) log('rate limit dropped ' + limited + ' datagrams so far (latest from ' + ip + ')');
+  };
   if (token !== null && String(token).length < 16) {
     throw new Error('token is too short to be a secret (need at least 16 characters)');
   }
   const expected = token === null ? null : Buffer.from('/' + token);
   // Constant-time, so response timing cannot be used to guess the token byte by byte.
-  const authorised = (url) => {
-    if (expected === null) return true;
+  const tokenMatches = (url) => {
+    if (expected === null) return false;
     const got = Buffer.from(String(url || '').split('?')[0]);
     return got.length === expected.length && crypto.timingSafeEqual(got, expected);
+  };
+  // null when the upgrade may proceed, otherwise the HTTP status to refuse it
+  // with: 401 for a wrong token, 403 for a tokenless request from a page not on
+  // the allowlist.
+  const admission = (req) => {
+    if (expected === null && !allowlist) return null; // loopback, no rules set
+    if (tokenMatches(req.url)) return null;
+    const path = String(req.url || '').split('?')[0];
+    if (allowlist && (path === '/' || path === '')) {
+      return originAllowed(req.headers.origin, allowlist) ? null : 403;
+    }
+    return 401;
+  };
+  const clientIp = (req) => {
+    const h = clientIpHeader && req.headers[clientIpHeader.toLowerCase()];
+    return (typeof h === 'string' && h.trim()) || req.socket.remoteAddress || '?';
+  };
+  const refuse = (socket, status, text) => {
+    socket.write('HTTP/1.1 ' + status + ' ' + text + '\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
+    socket.destroy();
   };
 
   // Plain HTTP answers only /health (for the platform's checks) and 404s
@@ -86,13 +138,25 @@ export function startRelay({
   });
   const wss = new WebSocketServer({ noServer: true });
   server.on('upgrade', (req, socket, head) => {
-    if (!authorised(req.url)) {
-      log('refused an upgrade without the token from ' + (req.socket.remoteAddress || '?'));
-      socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
-      socket.destroy();
-      return;
+    const ip = clientIp(req);
+    const status = admission(req);
+    if (status === 403) {
+      log('refused an upgrade from origin ' + JSON.stringify(req.headers.origin || null) + ' (' + ip + ')');
+      return refuse(socket, 403, 'Forbidden');
     }
-    wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
+    if (status !== null) {
+      log('refused an upgrade without the token from ' + ip);
+      return refuse(socket, 401, 'Unauthorized');
+    }
+    if (wss.clients.size >= L.total) {
+      log('refused an upgrade from ' + ip + ': ' + L.total + ' connections already open');
+      return refuse(socket, 503, 'Service Unavailable');
+    }
+    if (!perIp.tryOpen(ip)) {
+      log('refused an upgrade from ' + ip + ': ' + L.perIp + ' connections already open from there');
+      return refuse(socket, 429, 'Too Many Requests');
+    }
+    wss.handleUpgrade(req, socket, head, (ws) => { ws.clientIp = ip; wss.emit('connection', ws, req); });
   });
   server.listen(port, host);
   // The server binds asynchronously; address() is null until 'listening' fires.
@@ -101,6 +165,10 @@ export function startRelay({
 
   wss.on('connection', (ws) => {
     ws.binaryType = 'nodebuffer';
+    const ip = ws.clientIp;
+    const packets = bucket(L.packetsPerSecond, L.packetBurst);
+    const bytes = bucket(L.bytesPerSecond, L.byteBurst);
+    const destinations = destinationWindow(L.destinationsPerMinute);
     const sockets = new Map(); // handle -> dgram socket
     all.add(sockets);
     const resolved = new Map(); // host text -> ip. A DNS CACHE AND NOTHING ELSE.
@@ -133,6 +201,9 @@ export function startRelay({
 
       if (f.type === TYPE.BIND) {
         if (sockets.has(f.handle)) return fail(f.handle, 'handle ' + f.handle + ' is already bound');
+        if (peers.size >= L.socketsPerConnection) {
+          return fail(f.handle, 'too many sockets on one connection (limit ' + L.socketsPerConnection + ')');
+        }
         const sock = dgram.createSocket('udp4');
         peers.set(f.handle, new Map());
         sock.on('message', (msg, rinfo) => {
@@ -164,30 +235,42 @@ export function startRelay({
       if (f.type === TYPE.DATA) {
         const sock = sockets.get(f.handle);
         if (!sock) return fail(f.handle, 'handle ' + f.handle + ' is not bound');
-        let ip = resolved.get(f.addr);
-        if (!ip) {
+        // The rate limits come before everything else, name resolution
+        // included, so a flood costs the relay as little as possible.
+        if (!packets.take(1) || !bytes.take(f.payload.length)) return noteLimited(ip);
+        if (!destinations.allow(f.addr + ':' + f.port)) {
+          return fail(f.handle, 'too many new destinations this minute (limit ' + L.destinationsPerMinute + ')');
+        }
+        let dst = resolved.get(f.addr);
+        if (!dst) {
           try {
-            ip = await lookup(f.addr);
+            dst = await lookup(f.addr);
           } catch (e) {
             return fail(f.handle, 'cannot resolve ' + f.addr);
           }
         }
-        const refusal = checkDestination(ip, f.port, { allowPrivate });
+        const refusal = checkDestination(dst, f.port, { allowPrivate });
         if (refusal) return fail(f.handle, refusal);
         // CACHE ONLY WHAT THE POLICY LET THROUGH. Caching before the check
         // meant a refused destination was remembered anyway, so the cache
         // filled up with names the relay will never send to and a later
         // policy change would be answered from stale state.
-        resolved.set(f.addr, ip);
+        resolved.set(f.addr, dst);
         const byPeer = peers.get(f.handle);
-        if (byPeer) byPeer.set(ip + ':' + f.port, f.addr);
+        if (byPeer) byPeer.set(dst + ':' + f.port, f.addr);
         if (lose()) return;
-        sock.send(f.payload, f.port, ip);
+        sock.send(f.payload, f.port, dst);
         return;
       }
     });
 
+    let tornDown = false;
     const teardown = () => {
+      // 'error' is followed by 'close', so this runs twice; the IP slot must
+      // be given back exactly once.
+      if (tornDown) return;
+      tornDown = true;
+      perIp.close(ip);
       for (const sock of sockets.values()) sock.close();
       sockets.clear();
       peers.clear();
@@ -202,6 +285,7 @@ export function startRelay({
     get port() { return server.address().port; },
     socketCount() { let n = 0; for (const s of all) n += s.size; return n; },
     droppedCount() { return dropped; },
+    limitedCount() { return limited; },
     close() {
       // Clear each connection's socket map as we close it: a WebSocket close
       // handshake finishes asynchronously, and the per-connection teardown()
@@ -237,6 +321,8 @@ if (import.meta.url === 'file://' + process.argv[1]) {
       port: Number(process.env.PORT || arg('port', 8010)),
       host,
       token: process.env.BRIDGE_TOKEN || null,
+      origins: parseOrigins(process.env.BRIDGE_ORIGINS),
+      clientIpHeader: process.env.BRIDGE_CLIENT_IP_HEADER || null,
       allowPrivate: process.argv.includes('--allow-private'),
       drop,
       log: (m) => console.log('[bridge] ' + m),
@@ -247,7 +333,9 @@ if (import.meta.url === 'file://' + process.argv[1]) {
   }
   relay.ready.then(() => {
     console.log('[bridge] listening on ws://' + host + ':' + relay.port +
-                (process.env.BRIDGE_TOKEN ? ' (token required)' : ' (no token - loopback only)') +
+                (process.env.BRIDGE_TOKEN ? ' (token accepted)' : ' (no token)') +
+                (parseOrigins(process.env.BRIDGE_ORIGINS).length ? ' (open to pages from ' + parseOrigins(process.env.BRIDGE_ORIGINS).join(', ') + ')' : '') +
+                (process.env.BRIDGE_CLIENT_IP_HEADER ? ' (client IP from ' + process.env.BRIDGE_CLIENT_IP_HEADER + ')' : '') +
                 (process.argv.includes('--allow-private') ? ' (private destinations ALLOWED - local testing only)' : '') +
                 (drop > 0 ? ' DISCARDING ' + (drop * 100) + '% OF DATAGRAMS - testing aid, see README' : ''));
   });

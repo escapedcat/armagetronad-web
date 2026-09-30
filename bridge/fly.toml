@@ -10,6 +10,15 @@ primary_region = "fra"
 [build]
   dockerfile = "Dockerfile"
 
+# OPEN TO THE PUBLISHED PAGE (M-C). A browser on these pages may connect with
+# no token; the BRIDGE_TOKEN secret, if set, still works from anywhere. Fly's
+# proxy puts the player's real address in Fly-Client-IP and overwrites any
+# value a client sent, which is what makes the per-IP limit per player
+# instead of one limit shared by everyone. See limits.mjs for the limits.
+[env]
+  BRIDGE_ORIGINS = "https://escapedcat.github.io"
+  BRIDGE_CLIENT_IP_HEADER = "Fly-Client-IP"
+
 [http_service]
   internal_port = 8080
   force_https = true
@@ -17,6 +26,8 @@ primary_region = "fra"
   auto_start_machines = true
   min_machines_running = 1
 
+  # Fly's cap sits BELOW the relay's own total (200, limits.mjs), so on this
+  # machine it is the one that bites; the relay's is the backstop elsewhere.
   [http_service.concurrency]
     type = "connections"
     soft_limit = 50
