@@ -8,10 +8,11 @@ PASS page fetched the map (200)
 PASS no [RESOURCE] line with another status
 PASS the map is in the page's cache
 PASS the cached map is the whole file (4618 bytes)
+PASS no empty file at the save path while downloading
 PASS the relay served it
 PASS the stand-in repository was asked for it
 PASS the server saw the player enter the game
 PASS the server downloaded nothing itself
 PASS no Emscripten abort
-look at docs/evidence/map-downloads/download/r1-end.png: the download arm must show the arena, the refused arm the failure screen
+look at docs/evidence/map-downloads/download/r1-end.png: the download and bundled arms must show the arena, the refused arm the failure screen
 --- arm download: ALL PASSED ---

@@ -15,5 +15,5 @@ PASS the relay never fetched anything
 PASS the stand-in repository was never asked
 PASS the server downloaded nothing itself
 PASS no Emscripten abort
-look at docs/evidence/map-downloads/refused/r1-end.png: the download arm must show the arena, the refused arm the failure screen
+look at docs/evidence/map-downloads/refused/r1-end.png: the download and bundled arms must show the arena, the refused arm the failure screen
 --- arm refused: ALL PASSED ---

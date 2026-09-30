@@ -16,9 +16,8 @@ sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/download download
 sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/bundled  bundled
 ```
 
-`refused` and `download` ran on the build with the fix described under "The
-first run", below; `bundled` ran on the next build, which differs only by the
-preloaded bundle. Each directory holds the arm's `verdict.txt` (the runner's
+All three arms ran on the final build of the branch, after the two fixes
+described below ("The first run" and "The final review"). Each directory holds the arm's `verdict.txt` (the runner's
 PASS/FAIL lines), the page's `console.log`, `relay.log`, `server.log`,
 `repo.log` (the stand-in repository's access log) and `r1-end.png`.
 
@@ -27,7 +26,7 @@ PASS/FAIL lines), the page's `console.log`, `relay.log`, `server.log`,
 | arm | relay may fetch from | result |
 |---|---|---|
 | `refused` | nowhere (`BRIDGE_RESOURCE_HOSTS=none.invalid`) | 9/9 PASS |
-| `download` | `127.0.0.1:8009` only, the stand-in repository | 9/9 PASS |
+| `download` | `127.0.0.1:8009` only, the stand-in repository | 10/10 PASS |
 | `bundled` | nowhere — the server's map is in the client's bundle | 5/5 PASS |
 
 **`refused`.** The client tried two addresses, in the engine's order: the
@@ -42,7 +41,10 @@ refused both locally, and the page read the refusal, not a status 0:
 "Return value 0 != 200".
 
 **`download`.** One fetch, 4,618 bytes, and the cached copy under
-`/persist/resource/automatic/` is the whole file. `r1-end.png` shows the round
+`/persist/resource/automatic/` is the whole file. The stand-in repository
+answers after 3 s (`web/tools/slow-static-server.py`), and a sampler polled
+the save path every 25 ms during the join: no empty file ever sat there
+(`sawEmpty=false`). `r1-end.png` shows the round
 being played on the downloaded map.
 
 **`bundled`.** The server runs `tourney/sumobar/8player_sumo-1`, the one map
@@ -88,3 +90,24 @@ and on the fixed build it passes.
 - **The gate runs headless**, with a filter that drops headless Chrome's
   spurious `Unidentified` key events; see the header of
   `web/tools/resource-gate.steps`.
+
+## The final review, and why the gate has a sampler
+
+The whole-branch review found that the game created the map file **before**
+downloading it (native `myHTTPFetch` opens the `std::ofstream` first). In the
+browser that file lives on the IndexedDB mount, which persists every file the
+moment it is created, and the download suspends for the whole round trip. So
+an empty file was persisted during every download, and a reload mid-download
+kept it for good: the next join found it "in the cache", never downloaded, and
+failed to load that map in that browser until site data was cleared.
+
+The sampler was added first, and on the unfixed build it saw the empty file
+(`=> "sawEmpty=true"`, while every other check passed). The web client's
+`myHTTPFetch` now downloads into memory and creates the file only once the
+whole map is in hand; an empty body is an error. The relay also refuses an
+empty upstream 200 (`502`), unit-tested. With the fix: `sawEmpty=false`.
+
+The sampler check reads the eval's **result** line (`=> "sawEmpty=…"`): the
+harness also logs each eval's source, and the sampler's source contains the
+text `__sawEmpty=false`. The first version of the check matched that line and
+passed on the broken build.

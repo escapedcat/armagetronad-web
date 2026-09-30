@@ -63,6 +63,9 @@ export async function fetchResource(url, {
         if (n > maxBytes) return tooBig; // leaving the loop cancels the stream
         chunks.push(c);
       }
+      // An empty "map" would be cached by the page as a successful download
+      // and then fail to parse on every join, for good; refuse it here.
+      if (n === 0) return { status: 502, reason: 'upstream answered 200 with an empty body' };
       return { status: 200, body: Buffer.concat(chunks) };
     }
     return { status: 502, reason: 'too many redirects' };

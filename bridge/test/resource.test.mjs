@@ -79,6 +79,14 @@ test('a redirect is followed only to a URL that passes the same policy', async (
   assert.match(loop.reason, /redirects/);
 });
 
+test('an empty 200 is refused as 502, so the page never caches an empty map', async (t) => {
+  const u = await upstream({ '/empty-1.aamap.xml': (q, s) => { s.writeHead(200); s.end(); } });
+  t.after(() => u.server.close());
+  const r = await fetchResource('http://' + u.host + '/empty-1.aamap.xml', opts([u.host]));
+  assert.equal(r.status, 502);
+  assert.match(r.reason, /empty/);
+});
+
 test('an upstream that never answers is 504 within the timeout', async (t) => {
   const u = await upstream({ '/hang.xml': () => {} });
   t.after(() => { u.server.closeAllConnections(); u.server.close(); });

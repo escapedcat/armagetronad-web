@@ -91,7 +91,10 @@ sleep 5
 [ "$(docker inspect -f '{{.State.Status}}' aa-server)" = running ] || { echo "the server did not stay up" >&2; docker logs aa-server; exit 1; }
 
 # ---- the stand-in repository -------------------------------------------
-python3 -m http.server 8009 --bind 127.0.0.1 --directory "$ROOT/bridge/test-server/resource-repo" > "$OUT/repo.log" 2>&1 &
+# Slow on purpose (3 s per request): the download must be in flight long enough
+# for the page's sampler to catch an empty file at the save path (see
+# web/tools/slow-static-server.py).
+python3 web/tools/slow-static-server.py 8009 "$ROOT/bridge/test-server/resource-repo" 3 > "$OUT/repo.log" 2>&1 &
 REPO_PID=$!
 
 # ---- the relay for this arm --------------------------------------------
@@ -131,6 +134,13 @@ if [ "$ARM" = download ]; then
   # the first run of this gate passed every other check with an empty map.
   WANT_BYTES=$(wc -c < "$ROOT/bridge/test-server/resource-repo/$MAP" | tr -d ' ')
   check "the cached map is the whole file ($WANT_BYTES bytes)" grep -qF "cachedBytes=$WANT_BYTES" "$C"
+  # Browser storage persists every file the moment it is created. An empty
+  # file at the save path WHILE the download is pending is therefore what a
+  # reload keeps for good -- a map broken in that browser until site data is
+  # cleared. The sampler polls the path every 25 ms during the whole join.
+  # Anchored on the eval's RESULT ('=> "..."'): the harness also logs each
+  # eval's source, and the sampler's source contains "__sawEmpty=false".
+  check "no empty file at the save path while downloading" grep -qF '=> "sawEmpty=false"' "$C"
   check "the relay served it" grep -q '^\[bridge\] resource 200 ' "$OUT/relay.log"
   check "the stand-in repository was asked for it" grep -qF "GET /$MAP" "$OUT/repo.log"
   check "the server saw the player enter the game" grep -q 'web_user entered the game' "$OUT/server.log"

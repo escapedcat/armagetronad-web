@@ -61,6 +61,7 @@ shot:04-server-bookmarks-selected
 key:Enter
 wait:3000
 shot:05-bookmarks-menu
+eval:(()=>{const p='/persist/resource/automatic/gate/resource/sumo_gate-0.1.0.aamap.xml';window.__sawEmpty=false;window.__emptySampler=setInterval(()=>{try{const a=Module.FS.analyzePath(p);if(a.exists&&Module.FS.stat(p).size===0)window.__sawEmpty=true;}catch(e){}},25);return 'empty-file sampler on'})()
 mark:R1 join started
 key:Enter
 until:1:30000:[RESOURCE]
@@ -68,4 +69,5 @@ shot:r1-after-fetch
 wait:12000
 shot:r1-end
 eval:(()=>{const p='/persist/resource/automatic/gate/resource/sumo_gate-0.1.0.aamap.xml';try{const a=Module.FS.analyzePath(p);return 'cached='+a.exists+' cachedBytes='+(a.exists?Module.FS.stat(p).size:-1)}catch(e){return 'cached=ERR '+e}})()
+eval:(()=>{clearInterval(window.__emptySampler);return 'sawEmpty='+window.__sawEmpty})()
 eval:(()=>{console.log('[GATE] unidentified keys dropped: '+window.__drop);return 'ok'})()
