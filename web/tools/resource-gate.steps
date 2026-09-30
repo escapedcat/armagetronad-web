@@ -1,0 +1,71 @@
+# The map-download gate: join a server whose map this client does not have.
+#
+# Run it with web/tools/run-resource-gate.sh, which starts the local server,
+# the stand-in repository and the relay for one arm, and decides PASS/FAIL:
+#
+#   python3 -m http.server 8008 --directory web/dist-m1 &
+#   sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/refused  refused
+#   sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/download download
+#
+# WHY `until:` DOES NOT DECIDE ANYTHING HERE. `until:` never throws: a wait that
+# times out prints a line and the script carries on. So nothing below can pass
+# or fail an arm -- the runner reads the transcript this produces ([RESOURCE]
+# lines from web/library_resource.js, the cached= line, the screenshots) and
+# the relay's and the server's logs, and decides there. The failure screen
+# ("Map load failure") is NOT looked for in the console: the game shows it
+# with tConsole::Message, and its con output never reaches the browser
+# console. The screenshots and the server log are the evidence for it -- and
+# the SIZE of the cached file, compared with the original by the runner: the
+# first run of this gate passed every other check while the page had saved an
+# EMPTY map (the arena never loaded; only the screenshot showed it).
+#
+# THE UNIDENTIFIED-KEY FILTER. Headless Chrome delivers tens of thousands of
+# spurious keydowns with key 'Unidentified' per run; they start matches and
+# type into chat at random. The eval after each boot drops them before SDL
+# sees them, which is what makes this walk deterministic without a visible
+# (--headed) window.
+#
+# THE WALK: Play Game -> Multiplayer -> Down 3 -> Server Bookmarks -> Enter
+# (the bookmark is CUSTOM_SERVER_NAME 127.0.0.1:4534 from
+# web/webdefaults/autoexec.cfg) -> Enter connects. LAN Multiplayer is hidden in
+# the web client, so Server Bookmarks is three below Online Multiplayer.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+until:1:120000:[BOOT] autostart
+eval:(()=>{if(window.__keyFilter)return 'filter already on';window.__keyFilter=true;window.__drop=0;for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){window.__drop++;e.stopImmediatePropagation();e.preventDefault();}},true);return 'unidentified-key filter on'})()
+wait:9000
+shot:01-boot1-language-menu
+key:Enter
+wait:3000
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+mark:RELOAD-SO-BOOT-2-STARTS-AT-THE-REAL-MAIN-MENU
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+eval:(()=>{if(window.__keyFilter)return 'filter already on';window.__keyFilter=true;window.__drop=0;for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){window.__drop++;e.stopImmediatePropagation();e.preventDefault();}},true);return 'unidentified-key filter on'})()
+wait:6000
+shot:02-boot2-main-menu
+mark:ENTER-PLAY-GAME
+key:Enter
+wait:2500
+mark:ENTER-MULTIPLAYER
+key:Enter
+wait:3500
+shot:03-network-menu
+mark:DOWN-3-TO-SERVER-BOOKMARKS
+key:Down:3
+wait:1500
+shot:04-server-bookmarks-selected
+key:Enter
+wait:3000
+shot:05-bookmarks-menu
+mark:R1 join started
+key:Enter
+until:1:30000:[RESOURCE]
+shot:r1-after-fetch
+wait:12000
+shot:r1-end
+eval:(()=>{const p='/persist/resource/automatic/gate/resource/sumo_gate-0.1.0.aamap.xml';try{const a=Module.FS.analyzePath(p);return 'cached='+a.exists+' cachedBytes='+(a.exists?Module.FS.stat(p).size:-1)}catch(e){return 'cached=ERR '+e}})()
+eval:(()=>{console.log('[GATE] unidentified keys dropped: '+window.__drop);return 'ok'})()

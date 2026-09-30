@@ -1,0 +1,4 @@
+[bridge] listening on ws://127.0.0.1:8010 (no token) (map downloads from none.invalid) (private destinations ALLOWED - local testing only)
+[bridge] handle 1 bound to udp port 49724
+[bridge] resource 403 0 http://127.0.0.1:8009/gate/resource/sumo_gate-0.1.0.aamap.xml (127.0.0.1)
+[bridge] resource 403 0 http://resource.armagetronad.net/resource/gate/resource/sumo_gate-0.1.0.aamap.xml (127.0.0.1)
