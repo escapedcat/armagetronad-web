@@ -4,7 +4,7 @@
 #   python3 -m http.server 8008 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --mobile 412,915,3 \
 #        --out docs/evidence/m7-gameboy/task1-no-hold/portrait-boot \
-#        --url 'http://localhost:8008/armagetronad.html?askname=0' \
+#        --url http://localhost:8008/armagetronad.html \
 #        --script-file web/tools/portrait-boot-gate.steps
 #   kill %1
 #

@@ -1,13 +1,12 @@
 #!/bin/sh
 # sh web/tools/run-text-net-gate.sh <out-dir>
 #
-# The mobile-keyboard network gate (docs/superpowers/plans/2026-09-30-
-# mobile-keyboard.md, Task 4). A phone (emulated, portrait) names itself in
-# the first-visit dialog, joins the local aa-dedicated container
-# (bridge/test-server/text-var: waits for a second player, and writes chat and
-# renames to the ladder log, echoed into the server's output), sends a chat
-# line from the 💬 bar and renames itself from the Name button while
-# connected. The checks read the page's console and the server's own log.
+# The phone keyboard against a real server (docs/superpowers/plans/
+# 2026-09-30-game-text-keyboard.md). An emulated phone (portrait) joins the
+# local aa-dedicated container (bridge/test-server/text-var: waits for a
+# second player, so it stays connected, and writes chat to the ladder log,
+# echoed into the server's output), opens the game's own chat line with Enter,
+# types into the keyboard's hidden field and sends with the keyboard's Enter.
 # Run from the repository root, with a static server on 8008 and the
 # aa-dedicated image built:
 #
@@ -59,15 +58,14 @@ check() { # check <name> <command...>
   name=$1; shift
   if "$@" >/dev/null 2>&1; then echo "PASS $name"; else echo "FAIL $name"; FAILS=$((FAILS + 1)); fi
 }
-check "N0: the saved name, no prompt after the reload" sh -c "grep -F '[TEXTGATE] N0' '$C' | grep -q '\"PASS\":true'"
-check "N1: no chat button before joining" grep -qF '[TEXTGATE] N1 no-chat-before-joining' "$C"
-check "N1 passed" sh -c "grep -F '[TEXTGATE] N1' '$C' | grep -q '\"PASS\":true'"
-check "N2: chat button once connected" sh -c "grep -F '[TEXTGATE] N2' '$C' | grep -q '\"PASS\":true'"
-check "the server saw the chosen name join" grep -q 'phoneplayer entered the game' "$OUT/server.log"
-check "the server logged the chat line" grep -qE 'CHAT phoneplayer hello from a phone' "$OUT/server.log"
-check "the server logged the rename" grep -qE 'PLAYER_RENAMED phoneplayer phonerenamed' "$OUT/server.log"
+# Anchored on eval RESULTS ('=> "..."'): the harness also logs each eval's source.
+check "connected to the server" grep -qF '=> "connected=1"' "$C"
+check "the server saw a web_NNNN player join" grep -qE 'PLAYER_ENTERED web_[0-9]{4} ' "$OUT/server.log"
+check "Enter in the round opened the keyboard with the chat line" grep -qF '=> "chat-line-keyboard=1"' "$C"
+check "the server logged the chat line" grep -qE 'CHAT web_[0-9]{4} hello from a phone' "$OUT/server.log"
+check "the keyboard closed after sending" grep -qF '=> "after-send-keyboard=0"' "$C"
 check "no Emscripten abort" sh -c "! grep -qiE 'abort\(|Aborted\(|RuntimeError: abort' '$C'"
 echo "server log, the client's lines:"
-grep -E 'phoneplayer|phonerenamed|CHAT|RENAMED' "$OUT/server.log" | sed 's/^/  /' || true
+grep -E 'web_[0-9]{4}|CHAT' "$OUT/server.log" | sed 's/^/  /' || true
 if [ "$FAILS" -gt 0 ]; then echo "--- text-net gate: $FAILS FAILED ---"; exit 1; fi
 echo "--- text-net gate: ALL PASSED ---"

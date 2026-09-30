@@ -54,13 +54,16 @@ Mode* back to Off.
   below: a cross (← → turn, ↓ brake), Enter and Esc.
 - **Landscape:** tap the left or right half of the screen to turn. In menus a
   tap is Enter, and there are small Up, Down and Escape buttons.
-- **The layout is chosen when the game starts.** A "Portrait layout" /
-  "Landscape layout" button in the menus switches it with a short reload.
-- **Your name:** on your first visit the game asks for it. Later, use the
-  **Name** button in the menus. New players start as `web_` plus four digits.
-  On a server a new name takes effect at the next round, as on desktop.
-- **Chat:** while you're on a server, tap **💬**. Your cycle keeps driving
-  while you type, so chat between rounds or while watching.
+- **The layout is chosen when the game starts.** The rotate button in the
+  menus switches it with a short reload.
+- **Typing:** the phone keyboard opens by itself when a text field is
+  highlighted, such as the name in *Player Setup*, and closes when you move
+  off it. Its Enter confirms. If you fold the keyboard away, tap the game to
+  bring it back. New players start as `web_` plus four digits. On a server a
+  new name takes effect at the next round, as on desktop.
+- **Chat:** on a server, tap **Enter** during a round. The game's chat line
+  opens with the keyboard; the keyboard's Enter sends it. Your cycle keeps
+  driving while you type, so chat between rounds or while watching.
 
 ## What works
 
@@ -102,8 +105,9 @@ unmodified and don't know a browser is involved.
     explains why it can't work.
   - Leaving the game: closing the tab is how you quit, so the main menu has no
     Exit Game.
-- **Typing on a phone** covers your name and chat. Custom Connect and editing
-  bookmarks still need a keyboard.
+- **Typing on a phone:** a word suggestion that rewrites a word at a text
+  field's length limit (15 characters for names) can delete one character too
+  many.
 - **Phone performance:**
   - The frame rate drops the longer a round goes on. It's CPU-bound, and the
     general fix is still open.

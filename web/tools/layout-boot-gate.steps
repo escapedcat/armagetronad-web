@@ -3,7 +3,7 @@
 #   python3 -m http.server 8008 --directory web/dist-m1 &
 #   node web/tools/drive-browser.mjs --headed --mobile 412,915,3 \
 #        --out docs/evidence/m9-layout-lock/gates/layout-boot \
-#        --url 'http://localhost:8008/armagetronad.html?autostart=0&askname=0' \
+#        --url 'http://localhost:8008/armagetronad.html?autostart=0' \
 #        --script-file web/tools/layout-boot-gate.steps
 #
 # TWO CLAIMS, both about the moment main() runs:
