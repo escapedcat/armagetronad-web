@@ -1532,6 +1532,48 @@
       }
     }
 
+    // ---- LEAVE A SERVER CLEANLY WHEN THE PAGE HAS BEEN HIDDEN ----------------
+    // All browser players reach the servers through the relay, so a server sees
+    // them as ONE address and counts their kicks together; too many and it
+    // autobans that address -- every web player at once (49+ minutes on
+    // 2026-09-30). The usual kick is the idle kick: a tab in the background or
+    // a phone that switched apps stops sending input. A regular logout is not a
+    // kick, so after LEAVE_AFTER seconds hidden while connected, the page asks
+    // the game for exactly the in-game menu's Disconnect
+    // (src/emscripten/eWebLeave.cpp). Coming back sooner cancels it. A phone
+    // that freezes the tab outright never gets that far -- the server then
+    // sees a timeout, which is not a kick either.
+    //
+    // ?leaveafter=<seconds> (5..3600) overrides the 60 s, for testing.
+    (() => {
+      const q = readNumberParam('leaveafter', 5, 3600);
+      const LEAVE_AFTER = (q !== null ? q : 60) * 1000;
+      let timer = null;
+      const exported = () => typeof Module !== 'undefined' &&
+        typeof Module._aa_web_request_leave === 'function' &&
+        typeof Module._aa_web_connected === 'function' && window.AA_RUNTIME_READY === true;
+      const onVisibility = () => {
+        if (document.visibilityState === 'hidden') {
+          if (timer === null) {
+            timer = setTimeout(() => {
+              timer = null;
+              if (document.visibilityState !== 'hidden' || !exported()) return;
+              try {
+                if (Module._aa_web_connected()) {
+                  console.log('[LEAVE] hidden for ' + (LEAVE_AFTER / 1000) + ' s while connected: asking the game to disconnect');
+                  Module._aa_web_request_leave();
+                }
+              } catch (e) { console.log('[LEAVE] could not ask the game to disconnect: ' + e); }
+            }, LEAVE_AFTER);
+          }
+        } else if (timer !== null) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      };
+      document.addEventListener('visibilitychange', onVisibility);
+    })();
+
     // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------
     // The maintainer's phone played in silence for 3-7 minutes before the
     // sound came on. Emscripten's $autoResumeAudioContext (libcore.js) calls
@@ -1875,6 +1917,9 @@
         // the two lines swap order deterministically -- which is how
         // docs/evidence/m4-persist demonstrates that this check can fail.
         console.log('[PERSIST] runtime initialized, starting the game');
+        // Calling a wasm export before this point aborts the page under
+        // ASSERTIONS; the hidden-page leave timer checks this first.
+        window.AA_RUNTIME_READY = true;
         // The preloaded /data tree exists from here on and not one moment
         // earlier: the file packager appends ITS preRun callback after this
         // page's, so a preRun hook cannot read /data at all. That is why the
