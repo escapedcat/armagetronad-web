@@ -29,6 +29,7 @@ import { WebSocketServer } from 'ws';
 import { encode, decode, TYPE } from './frame.mjs';
 import { checkDestination } from './policy.mjs';
 import { DEFAULT_LIMITS, bucket, destinationWindow, ipCounter, originAllowed, parseOrigins } from './limits.mjs';
+import { DEFAULT_RESOURCE_HOSTS, fetchResource } from './resource.mjs';
 
 // A TESTING AID AND NOTHING ELSE, see `drop` below.
 export function startRelay({
@@ -51,6 +52,9 @@ export function startRelay({
   // Only ever set this behind a proxy that overwrites the header: a client
   // talking to the relay directly could otherwise claim any address it liked.
   clientIpHeader = null,
+  // Hosts the /resource route may fetch from (resource.mjs). Replaces the
+  // default when given; tests list their local upstream as 'host:port'.
+  resourceHosts = DEFAULT_RESOURCE_HOSTS,
   // Injectable ONLY so a test can count resolutions. That count is the only
   // way to observe from outside that a destination the policy REFUSED is not
   // left behind in the cache below; the default is real DNS and the relay
@@ -124,17 +128,64 @@ export function startRelay({
     socket.destroy();
   };
 
-  // Plain HTTP answers only /health (for the platform's checks) and 404s
-  // everything else -- including a plain GET on the token path, so probing
-  // cannot tell a right guess from a wrong one without attempting an upgrade.
-  const server = http.createServer((req, res) => {
+  // Plain HTTP answers /health (for the platform's checks) and the /resource
+  // map-download route (resource.mjs), and 404s everything else -- including a
+  // plain GET on the token path, and any /resource request that is not
+  // admitted, so probing cannot tell a right guess from a wrong one.
+  const resourceBuckets = new Map(); // client ip -> bucket
+  let resourcesInFlight = 0;
+  // The same admission as an upgrade, for /resource and /<token>/resource.
+  const resourceAdmitted = (req, path) => {
+    if (expected === null && !allowlist) return path === '/resource';
+    if (path.endsWith('/resource') && path !== '/resource' && tokenMatches(path.slice(0, -'/resource'.length))) return true;
+    return path === '/resource' && !!allowlist && originAllowed(req.headers.origin, allowlist);
+  };
+  const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'text/plain' });
       res.end('ok');
       return;
     }
-    res.writeHead(404);
-    res.end();
+    const path = String(req.url || '').split('?')[0];
+    if (req.method !== 'GET' || !resourceAdmitted(req, path)) {
+      res.writeHead(404);
+      res.end();
+      return;
+    }
+    const ip = clientIp(req);
+    // Every admitted answer carries CORS, refusals included: without it the
+    // page sees a network error (status 0) instead of the reason.
+    const cors = typeof req.headers.origin === 'string' ? { 'access-control-allow-origin': req.headers.origin, vary: 'Origin' } : {};
+    // The URL is logged, and it arrives decoded from ?url=, so anything outside
+    // printable ASCII (a newline would forge a log line) is re-escaped first.
+    const printable = (u) => String(u).replace(/[^\x21-\x7e]/g, (c) => encodeURIComponent(c));
+    const answer = (status, body, url) => {
+      const text = typeof body === 'string';
+      res.writeHead(status, { ...cors, 'content-type': text ? 'text/plain' : 'text/xml',
+                              ...(status === 200 ? { 'cache-control': 'public, max-age=86400' } : {}) });
+      res.end(body);
+      log('resource ' + status + ' ' + (text ? 0 : body.length) + ' ' + printable(url) + ' (' + ip + ')');
+    };
+    // AN ASYNC HANDLER MUST NOT THROW: in Node 22 an unhandled rejection ends
+    // the process, and this is the only relay. Anything unexpected is a 500.
+    try {
+      const url = new URL(req.url, 'http://relay').searchParams.get('url');
+      if (!url) return answer(400, 'missing ?url=', '-');
+      if (resourceBuckets.size > 10_000) resourceBuckets.clear(); // bounded memory; a reset only forgives
+      if (!resourceBuckets.has(ip)) resourceBuckets.set(ip, bucket(L.resourcesPerMinute / 60, L.resourceBurst));
+      if (!resourceBuckets.get(ip).take(1)) return answer(429, 'too many map downloads, try again in a minute', url);
+      if (resourcesInFlight >= L.resourceConcurrent) return answer(503, 'the relay is busy, try again', url);
+      ++resourcesInFlight;
+      try {
+        const r = await fetchResource(url, { hosts: resourceHosts });
+        answer(r.status, r.status === 200 ? r.body : r.reason, url);
+      } finally {
+        --resourcesInFlight;
+      }
+    } catch (e) {
+      log('resource handler error: ' + e.message);
+      if (!res.headersSent) { res.writeHead(500, cors); res.end(); } else res.destroy();
+    }
   });
   const wss = new WebSocketServer({ noServer: true });
   server.on('upgrade', (req, socket, head) => {
@@ -323,6 +374,9 @@ if (import.meta.url === 'file://' + process.argv[1]) {
       token: process.env.BRIDGE_TOKEN || null,
       origins: parseOrigins(process.env.BRIDGE_ORIGINS),
       clientIpHeader: process.env.BRIDGE_CLIENT_IP_HEADER || null,
+      // parseOrigins is a plain comma splitter; reusing it for hosts is deliberate.
+      resourceHosts: parseOrigins(process.env.BRIDGE_RESOURCE_HOSTS).length
+        ? parseOrigins(process.env.BRIDGE_RESOURCE_HOSTS) : undefined,
       allowPrivate: process.argv.includes('--allow-private'),
       drop,
       log: (m) => console.log('[bridge] ' + m),
@@ -336,6 +390,7 @@ if (import.meta.url === 'file://' + process.argv[1]) {
                 (process.env.BRIDGE_TOKEN ? ' (token accepted)' : ' (no token)') +
                 (parseOrigins(process.env.BRIDGE_ORIGINS).length ? ' (open to pages from ' + parseOrigins(process.env.BRIDGE_ORIGINS).join(', ') + ')' : '') +
                 (process.env.BRIDGE_CLIENT_IP_HEADER ? ' (client IP from ' + process.env.BRIDGE_CLIENT_IP_HEADER + ')' : '') +
+                (process.env.BRIDGE_RESOURCE_HOSTS ? ' (map downloads from ' + process.env.BRIDGE_RESOURCE_HOSTS + ')' : '') +
                 (process.argv.includes('--allow-private') ? ' (private destinations ALLOWED - local testing only)' : '') +
                 (drop > 0 ? ' DISCARDING ' + (drop * 100) + '% OF DATAGRAMS - testing aid, see README' : ''));
   });

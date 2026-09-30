@@ -1,0 +1,19 @@
+relay: [bridge] listening on ws://127.0.0.1:8010 (no token) (map downloads from none.invalid) (private destinations ALLOWED - local testing only)
+--- arm refused: driving ---
+[RESOURCE] lines the page logged:
+  [RESOURCE] 403 http://127.0.0.1:8009/gate/resource/sumo_gate-0.1.0.aamap.xml (host 127.0.0.1:8009 is not an allowed resource host)
+  [RESOURCE] 403 http://resource.armagetronad.net/resource/gate/resource/sumo_gate-0.1.0.aamap.xml (host resource.armagetronad.net is not an allowed resource host)
+relay resource lines:
+  [bridge] resource 403 0 http://127.0.0.1:8009/gate/resource/sumo_gate-0.1.0.aamap.xml (127.0.0.1)
+  [bridge] resource 403 0 http://resource.armagetronad.net/resource/gate/resource/sumo_gate-0.1.0.aamap.xml (127.0.0.1)
+PASS server repository URI refused, readable (403)
+PASS official fallback URI refused locally (403)
+PASS never status 0
+PASS no [RESOURCE] line with another status
+PASS the relay refused both
+PASS the relay never fetched anything
+PASS the stand-in repository was never asked
+PASS the server downloaded nothing itself
+PASS no Emscripten abort
+look at docs/evidence/map-downloads/refused/r1-end.png: the download and bundled arms must show the arena, the refused arm the failure screen
+--- arm refused: ALL PASSED ---

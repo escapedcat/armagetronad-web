@@ -78,6 +78,59 @@ player's address (`Fly-Client-IP` on Fly), or every player shares the proxy's
 address and the per-IP limit becomes one global limit. Only set it behind a
 proxy that overwrites that header.
 
+## Map downloads (`/resource`)
+
+When a server runs a map the client does not have, the game downloads it.
+Natively that is a plain TCP connection to `resource.armagetronad.net:80`; a
+page can open no TCP at all, and cannot `fetch()` that server directly because
+it sends no `Access-Control-Allow-Origin`. So the page asks the relay, which
+already faces the internet on its behalf (`resource.mjs`).
+
+    GET /resource?url=<encodeURIComponent(absolute URL)>          loopback, or an allowlisted page
+    GET /<token>/resource?url=<encodeURIComponent(absolute URL)>  token holders
+
+**Admission is the same as for a WebSocket upgrade.** A request that is not
+admitted gets a bare `404` with no CORS header — the same answer as any other
+unknown path, so probing reveals nothing. Every admitted answer, refusals
+included, carries `Access-Control-Allow-Origin` (the request's Origin) and
+`Vary: Origin`; without it the page would see a network error instead of the
+reason.
+
+**What it will fetch:** only hosts on the list (default
+`resource.armagetronad.net`), only `http:`/`https:`, no credentials in the URL,
+only paths ending `.xml`, at most 1,000,000 bytes, within 10 s, and at most 3
+redirects — each hop checked again.
+
+| answer | meaning |
+|---|---|
+| 200 | the map, `text/xml`, cacheable for a day |
+| 400 | no `?url=` |
+| 403 | the URL is refused by the policy above (the body says why) |
+| 404 | the repository has no such file |
+| 429 | this client asked for more than 30 a minute (burst 10) |
+| 502 | upstream error, too large, too many redirects, or unreachable |
+| 503 | 8 downloads already in flight across all clients |
+| 504 | upstream did not answer within 10 s |
+| 500 | an unexpected error in the handler — logged; the relay keeps running |
+
+**`BRIDGE_RESOURCE_HOSTS`** — comma-separated `URL.host` values (`host` or
+`host:port`). It **replaces** the default, so list `resource.armagetronad.net`
+too if it should stay allowed. `none.invalid` refuses everything (the map
+gates use it so nothing leaves the machine). The game falls back to the
+official repository after a server's own one, so a server that hosts maps
+elsewhere is served only once its host is listed.
+
+**The log line** is `resource <status> <bytes> <url> (<client ip>)`, with
+anything outside printable ASCII in the URL re-escaped so a URL cannot forge a
+line. Maps worth bundling into the page (`web/resource-bundle.txt`):
+
+    fly logs -a armagetronad-bridge | grep -o 'resource 200 [0-9]* [^ ]*' | sort | uniq -c | sort -rn
+
+Repository hosts players were refused, the evidence for widening
+`BRIDGE_RESOURCE_HOSTS`:
+
+    fly logs -a armagetronad-bridge | grep -o 'resource 403 0 [a-z]*://[^/ ]*' | sort | uniq -c | sort -rn
+
 ## Deploying to Fly
 
 `fly.toml` sets the allowlist and the client-IP header; the token is a secret:
@@ -94,5 +147,6 @@ default (`web/library_bridge.js`); `?bridge=<url>` overrides it and
 - `frame.mjs` — the wire format, shared with `web/library_bridge.js`
 - `policy.mjs` — which destinations are allowed
 - `limits.mjs` — the rate and connection limits, and the origin allowlist
+- `resource.mjs` — the `/resource` map-download route's URL policy and fetcher
 - `relay.mjs` — the server itself
 - `test/` — `node --test`

@@ -1,0 +1,77 @@
+[0] Command HUD_CACHE_THRESHOLD unknown.
+[0] 
+[0] Bound socket to *.*.*.*:48170.
+[0] Bound socket to *.*.*.*:4534.
+[0] Setting MAP_FILE (Group: Breaking) deviates from its default value; clients older than 0.2.8_beta3 will not be allowed in.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/09/30 11:14:23
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.
+[1] Received login from 192.168.215.1:42343 via socket *.*.*.*:4534, network version: 0.2.9_alpha (ID: 17).
+[1] New user: 1
+[1] web_user entered the game.
+[0] Time:     55.1473 seconds
+Sent:     7326 bytes in 38 packets (132.844 bytes/s)
+Received: 2350 bytes in 34 packets (42.6131 bytes/s)
+[0] Timestamp: 2026/09/30 11:15:18
+[0] Creating grid...
+[0] Ping charity changed from 0 to 252.
+[0] LaTeX entered the game.
+[0] Gcc entered the game.
+[0] Gdb entered the game.
+[0] done!
+[0] Resetting scores...
+[0] New Match
+[0] Go (round 1 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] web_user committed suicide and lost 4 points.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     12.7109 seconds
+Sent:     17484 bytes in 159 packets (1375.51 bytes/s)
+Received: 6358 bytes in 137 packets (500.2 bytes/s)
+[0] Timestamp: 2026/09/30 11:15:31
+[0] Creating grid...
+[0] Ping charity changed from 252 to 100.
+[0] done!
+[0] Go (round 2 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] web_user committed suicide and lost 4 points.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     12.6887 seconds
+Sent:     14900 bytes in 149 packets (1174.28 bytes/s)
+Received: 5896 bytes in 131 packets (464.667 bytes/s)
+[0] Timestamp: 2026/09/30 11:15:43
+[0] Creating grid...
+[0] done!
+[0] Go (round 3 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] web_user committed suicide and lost 4 points.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     12.6843 seconds
+Sent:     13982 bytes in 144 packets (1102.3 bytes/s)
+Received: 5790 bytes in 129 packets (456.468 bytes/s)
+[0] Timestamp: 2026/09/30 11:15:56
+[0] Creating grid...
+[0] done!
+[0] Go (round 4 of 10)!

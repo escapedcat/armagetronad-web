@@ -14,6 +14,10 @@
 #include "tDirectories.h"
 #include "tResourceManager.h"
 #include "tString.h"
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+#include "eWebFetch.h"
+#include <sstream>
+#endif
 
 #ifdef LIBCURL_PROTOCOL_HTTP
 #include <curl/curl.h>
@@ -74,6 +78,22 @@ static tSettingItem<tString> conf_res_repo("RESOURCE_REPOSITORY_CLIENT", tResour
 
 tResourceManager::Result tResourceManager::FetchURI(const char* URI, std::ostream& o)
 {
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+    // A page cannot open the TCP socket nanoHTTP needs; the relay fetches for
+    // us -- see src/emscripten/eWebFetch.cpp. Status 0 (nothing answered) is
+    // ERROR_Unknown, NOT static_cast<Result>(0): myFetch reads 0 as success
+    // and would hand the map loader a file it has just deleted.
+    {
+        int rc = eWebFetch( URI, o );
+        if ( rc != 200 )
+        {
+            con << tOutput( rc == 404 ? "$resource_fetcherror_404" : "$resource_fetcherror", rc );
+            return rc == 0 ? ERROR_Unknown : static_cast< tResourceManager::Result >( rc );
+        }
+        con << "OK\n";
+        return RESULT_Ok;
+    }
+#endif
 #ifdef LIBCURL_PROTOCOL_HTTP
     {
         tCurlLocal handle;
@@ -156,6 +176,37 @@ tResourceManager::Result tResourceManager::FetchURI(const char* URI, std::ostrea
     return Result::RESULT_Ok;
 }
 
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+// THE WEB CLIENT DOWNLOADS INTO MEMORY FIRST. The native path below opens the
+// save file before fetching; in the browser that file lives on an IndexedDB
+// mount that persists every file the moment it is created, and the fetch
+// suspends (Asyncify) for the whole network round trip. So an EMPTY file was
+// persisted during every download, and a reload or tab close mid-download
+// kept it for good: locateResource then found it in the cache and never
+// downloaded again, and the map failed to load in that browser until its site
+// data was cleared. Here the file is only created once the whole map is in
+// hand, and an empty body is an error, never a cached map.
+static int myHTTPFetch(const char* URI, const char* filename, const char* savepath)
+{
+    con << tOutput("$resource_downloading", URI);
+    std::ostringstream body;
+    tResourceManager::Result ret = tResourceManager::FetchURI(URI, body);
+    if (ret != tResourceManager::Result::RESULT_Ok)
+        return ret;
+    std::string const & bytes = body.str();
+    if (bytes.empty())
+        return tResourceManager::Result::ERROR_Unknown;
+    std::ofstream o{savepath};
+    o.write(bytes.data(), bytes.size());
+    o.close();
+    if (!o)
+    {
+        remove(savepath);
+        return tResourceManager::Result::ERROR_FileAccess;
+    }
+    return 0;
+}
+#else
 static int myHTTPFetch(const char* URI, const char* filename, const char* savepath)
 {
     con << tOutput("$resource_downloading", URI);
@@ -182,6 +233,7 @@ static int myHTTPFetch(const char* URI, const char* filename, const char* savepa
 
     return 0;
 }
+#endif
 
 static int myFetch(const char *URIs, const char *filename, const char *savepath) {
     const char *r = URIs, *p, *n;

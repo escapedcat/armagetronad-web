@@ -1,0 +1,17 @@
+relay: [bridge] listening on ws://127.0.0.1:8010 (no token) (map downloads from 127.0.0.1:8009) (private destinations ALLOWED - local testing only)
+--- arm download: driving ---
+[RESOURCE] lines the page logged:
+  [RESOURCE] 200 http://127.0.0.1:8009/gate/resource/sumo_gate-0.1.0.aamap.xml
+relay resource lines:
+  [bridge] resource 200 4618 http://127.0.0.1:8009/gate/resource/sumo_gate-0.1.0.aamap.xml (127.0.0.1)
+PASS page fetched the map (200)
+PASS no [RESOURCE] line with another status
+PASS the map is in the page's cache
+FAIL the cached map is the whole file (4618 bytes)
+PASS the relay served it
+PASS the stand-in repository was asked for it
+PASS the server saw the player enter the game
+PASS the server downloaded nothing itself
+PASS no Emscripten abort
+look at /tmp/gate-red/r1-end.png: the download arm must show the arena, the refused arm the failure screen
+--- arm download: 1 FAILED ---

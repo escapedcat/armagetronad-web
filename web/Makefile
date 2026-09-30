@@ -170,6 +170,9 @@ CLIENT_OBJDIR := web/build-m1
 #                                  bridge. Named here, not added to $(SRCS),
 #                                  for exactly the reason the paragraph below
 #                                  gives -- the dedicated wasm is byte-pinned.
+#   src/emscripten/eWebFetch.cpp   map downloads through the relay's /resource
+#                                  route, for the same byte-pin reason as
+#                                  eWebNet.cpp.
 #
 # They have to be named here because $(SRCS) above wildcards the six game
 # source directories only, and src/emscripten/ is not one of them (it holds
@@ -189,8 +192,19 @@ CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eWebPersist.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebInput.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebNet.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebWallCut.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebWallCut.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebFetch.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
+# THE MAP BUNDLE (web/resource-bundle.txt, web/tools/fetch-resource-bundle.sh):
+# popular server maps preloaded so joining those servers needs no download.
+# They land in /data/resource, NOT /data/resource/automatic: the page passes
+# --userdatadir /persist, so the first resource read path is
+# /persist/resource/automatic and /data/resource/automatic is never searched,
+# while /data/resource is (tPathResource::Paths, src/tools/tDirectories.cpp).
+# Bundle paths never start with included/, so the preload beside
+# resource/included cannot overlap it (the fetch script refuses such a line).
+# Defined up here because Make expands a rule's prerequisites as it reads it.
+RESOURCE_BUNDLE := $(shell find web/resource-bundle -type f 2>/dev/null)
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
 # $(EXCEPTIONS) is required at COMPILE time as well as link — see the
@@ -412,6 +426,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   --preload-file models@/data/models \
                   --preload-file sound@/data/sound \
                   --preload-file resource/included@/data/resource/included \
+                  --preload-file web/resource-bundle@/data/resource \
                   --preload-file web/webdefaults@/data/webdefaults \
                   --exclude-file '*.xcf' --exclude-file '*/update.py' \
                   --exclude-file '*/settings_dedicated.cfg' \
@@ -420,6 +435,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   --exclude-file '*/spanish.txt' --exclude-file '*/french.txt' \
                   --exclude-file '*/portugese.txt' \
                   --js-library web/library_bridge.js \
+                  --js-library web/library_resource.js \
                   --shell-file web/shell.html
 
 # The primary output is the .html page (Task 6's actual deliverable); the
@@ -427,10 +443,10 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
 # the same emcc invocation.
 #
 # The prerequisite list below is NOT "every preloaded directory" -- it is
-# six files: web/shell.html, web/library_bridge.js,
+# seven files: web/shell.html, web/library_bridge.js, web/library_resource.js,
 # web/webdefaults/autoexec.cfg, and the three generated data files, because
 # those are the only preload inputs whose paths this Makefile can name
-# without shelling out to `find`. (web/library_bridge.js is not preloaded;
+# without shelling out to `find`. (The two JS libraries are not preloaded;
 # it is merged at link time by --js-library in CLIENT_LDFLAGS, which every
 # one of the four diagnostic variants below shares, so every one of them
 # lists it too -- they did not, and editing the JS library left them stale.)
@@ -471,10 +487,11 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
 # earlier milestone's build; verify after touching this rule by running
 # `clean-data` first.
 web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -522,10 +539,11 @@ $(CLIENT_OBJDIR)/emscripten/eWebPersist-nomenusave.o: src/emscripten/eWebPersist
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_NO_MENU_SAVE -c $< -o $@
 
 web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -567,10 +585,11 @@ $(CLIENT_OBJDIR)/render/rSysdep-oldyield.o: src/render/rSysdep.cpp web/Makefile
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_YIELD_BEFORE_PERFRAME -c $< -o $@
 
 web/dist-m1/armagetronad-oldyield.html: $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -609,10 +628,11 @@ $(CLIENT_OBJDIR)/tron/gMenus-fstoggle.o: src/tron/gMenus.cpp web/Makefile
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_KEEP_FULLSCREEN_TOGGLE -c $< -o $@
 
 web/dist-m1/armagetronad-fstoggle.html: $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -663,10 +683,11 @@ $(OLDCFG_DIR)/autoexec.cfg: web/webdefaults/autoexec.cfg web/Makefile
 	@printf 'SOUND_BUFFER_SHIFT 1\n' >> $@
 
 web/dist-m1/armagetronad-oldautoexec.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js \
                                 $(OLDCFG_DIR)/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
 	  $(subst --preload-file web/webdefaults@/data/webdefaults,--preload-file $(OLDCFG_DIR)@/data/webdefaults,$(CLIENT_LDFLAGS)) \

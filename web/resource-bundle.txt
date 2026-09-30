@@ -1,0 +1,9 @@
+# Maps preloaded into the browser build so joining these servers needs no
+# download. One repository path per line, relative to
+# http://resource.armagetronad.net/resource/ -- always a VERSIONED file name,
+# so a bundled copy can never be stale for its own path.
+#
+# How to find candidates: the relay logs every map it serves
+# (bridge/README.md, "Map downloads"). Anything requested often belongs here.
+# Refresh the files with: sh web/tools/fetch-resource-bundle.sh
+tourney/sumobar/8player_sumo-1.aamap.xml

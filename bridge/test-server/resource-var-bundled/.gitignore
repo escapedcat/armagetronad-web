@@ -1,0 +1,9 @@
+# This directory is bind-mounted into the aa-dedicated container as its VAR
+# directory, which is where a dedicated server keeps its runtime state:
+# ladderlog.txt, user.cfg, ladder.txt, highscores.txt, bans.txt, big_brother,
+# and so on. None of that is input to anything and all of it is rewritten on
+# every run, so only autoexec.cfg -- the config the measurement depends on --
+# is tracked. A run leaves the rest behind; `git status` should stay quiet.
+*
+!.gitignore
+!autoexec.cfg
