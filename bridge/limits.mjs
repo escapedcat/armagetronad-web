@@ -32,6 +32,13 @@ export const DEFAULT_LIMITS = Object.freeze({
   // talking to per minute. The server browser needs ~140; a sweep needs
   // thousands. Counted BEFORE name resolution, so it also bounds DNS lookups.
   destinationsPerMinute: 300,
+  // Map downloads (resource.mjs) one client IP may ask for. Joining a server
+  // costs at most one or two; a burst of 10 covers hopping between servers.
+  resourcesPerMinute: 30,
+  resourceBurst: 10,
+  // Upstream fetches in flight at once, across all clients, so a crowd cannot
+  // turn the relay into a download mirror.
+  resourceConcurrent: 8,
 });
 
 // A token bucket: `rate` tokens a second, holding at most `burst`.
