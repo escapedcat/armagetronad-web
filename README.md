@@ -24,6 +24,16 @@ Scan the code to open it on a phone. It needs no install and no account.
   Chrome and Brave on Android.
 - **iPhone / Safari:** untested.
 
+<table>
+<tr>
+<td align="center"><img src="docs/screenshots/desktop.jpg" alt="Desktop: a round against three AI opponents, with the HUD" width="560"><br><sub>Desktop</sub></td>
+<td align="center" rowspan="2"><img src="docs/screenshots/phone-portrait.jpg" alt="Phone in portrait: the game in a square with a Game Boy pad below" width="200"><br><sub>Phone, portrait</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/phone-landscape.jpg" alt="Phone in landscape: tap the left or right half to turn" width="560"><br><sub>Phone, landscape</sub></td>
+</tr>
+</table>
+
 ### Controls
 
 **Desktop:**
@@ -73,8 +83,12 @@ unmodified and don't know a browser is involved.
 - **All web players share one address.** Servers see every browser player as
   the relay's single IP. A server that autobans an address for too many kicks
   (for example idle kicks) therefore locks out *every* web player for a while.
-  This has happened on a busy server. Avoid idling on a server; see Known
-  limitations.
+  This has happened on a busy server.
+  - **After 60 s with the tab hidden, the page leaves the server.** It does
+    this with a regular logout, which isn't a kick: a background tab or a
+    phone that switched apps would otherwise be idle-kicked.
+  - **A player who keeps the tab visible but sits idle** can still be kicked,
+    so don't park on a server.
 
 ## Known limitations
 
