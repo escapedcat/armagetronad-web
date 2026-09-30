@@ -1,4 +1,5 @@
-# Keep the three first-party actions this repo uses on their current major.
+# Keep the actions this repo uses on their current major, and the relay's npm
+# dependencies current.
 #
 # WHY. GitHub Actions has no floating "latest" for an action: `@v6` follows
 # patches within a major, and a new major is a new tag nobody pulls in on its
@@ -19,5 +20,16 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    schedule:
+      interval: weekly
+
+  # THE RELAY (bridge/). Since M-C it is open to every visitor of the published
+  # page, so its one runtime dependency, ws, faces the internet. Weekly, so a
+  # fix lands as one small PR instead of a pile; checks.yml's bridge-tests job
+  # runs the relay's suite on that PR, and deploy-relay.yml ships it on merge.
+  # web/'s npm packages are build/deploy tools that never reach a visitor, so
+  # they are left to Dependabot security updates (on for the repository).
+  - package-ecosystem: npm
+    directory: /bridge
     schedule:
       interval: weekly

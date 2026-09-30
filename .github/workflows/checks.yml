@@ -1,7 +1,7 @@
 # Checks worth having on every pull request, beyond "does the client build"
 # (that proof already belongs to deploy-pages.yml, which runs the same event).
 #
-# TWO JOBS, TWO DIFFERENT KINDS OF REGRESSION.
+# THREE JOBS, THREE DIFFERENT KINDS OF REGRESSION.
 #
 #   dedicated-pin  Builds the OTHER wasm -- the M0 dedicated server -- which
 #                  deploy-pages.yml never touches, and asserts the byte
@@ -17,6 +17,11 @@
 #                  the run that established the second number, and
 #                  web/README.md for why the Mac pin still stands as the
 #                  local invariant.
+#
+#   bridge-tests   `npm test` in bridge/, the relay's own suite. Until M-C it
+#                  ran only by hand; the relay is public now and Dependabot
+#                  bumps its one runtime dependency (ws), so a PR has to prove
+#                  the relay still works BEFORE deploy-relay.yml ships it.
 #
 #   scripts        shellcheck on the shell scripts and `node --check` on the
 #                  ES modules under web/tools/ and deps/. Nothing here runs
@@ -182,6 +187,22 @@ jobs:
             echo "FAIL: measured $BYTES bytes / md5 $MD5 matches NEITHER the Mac pin ($MAC_PIN_BYTES / $MAC_PIN_MD5) NOR the Linux pin ($LINUX_PIN_BYTES / $LINUX_PIN_MD5)" >&2
             exit 1
           fi
+
+  bridge-tests:
+    name: bridge tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+
+      - name: npm test in bridge/
+        working-directory: bridge
+        run: |
+          npm ci
+          npm test
 
   scripts:
     name: shellcheck + node --check
