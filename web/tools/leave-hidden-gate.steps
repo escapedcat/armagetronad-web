@@ -1,0 +1,51 @@
+# The hidden-page leave gate: does the game leave a server with a regular
+# logout once the page has been hidden for ?leaveafter= seconds, and stay put
+# when the page comes back sooner? Run it with web/tools/run-leave-hidden-gate.sh
+# (the page is loaded with ?leaveafter=5), which decides PASS/FAIL from the
+# page's console and the server's log.
+#
+# VISIBILITY IS SIMULATED. Headless Chrome never hides its page, so the evals
+# below override document.visibilityState and dispatch 'visibilitychange' --
+# exactly the two things web/shell.html's watcher reads.
+#
+# THE UNIDENTIFIED-KEY FILTER: see web/tools/resource-gate.steps.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+until:1:120000:[BOOT] autostart
+eval:(()=>{if(window.__keyFilter)return 'filter on';window.__keyFilter=true;for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'unidentified-key filter on'})()
+wait:9000
+key:Enter
+wait:3000
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+eval:(()=>{if(window.__keyFilter)return 'filter on';window.__keyFilter=true;for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'unidentified-key filter on'})()
+wait:6000
+mark:WALK-TO-SERVER-BOOKMARKS-AND-CONNECT
+key:Enter
+wait:2500
+key:Enter
+wait:3500
+key:Down:3
+wait:1500
+key:Enter
+wait:3000
+key:Enter
+wait:12000
+eval:'connected-at-start='+Module._aa_web_connected()
+mark:ARM-1-HIDDEN-BRIEFLY-MUST-STAY
+eval:(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'hidden'});document.dispatchEvent(new Event('visibilitychange'));return 'page now reports hidden'})()
+wait:2000
+eval:(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'visible'});document.dispatchEvent(new Event('visibilitychange'));return 'page now reports visible'})()
+wait:8000
+eval:'connected-after-brief-hide='+Module._aa_web_connected()
+mark:ARM-2-HIDDEN-FOR-GOOD-MUST-LEAVE
+eval:(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'hidden'});document.dispatchEvent(new Event('visibilitychange'));return 'page now reports hidden'})()
+wait:10000
+eval:'connected-after-long-hide='+Module._aa_web_connected()
+eval:(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'visible'});document.dispatchEvent(new Event('visibilitychange'));return 'page now reports visible'})()
+wait:2000
+shot:after-leave

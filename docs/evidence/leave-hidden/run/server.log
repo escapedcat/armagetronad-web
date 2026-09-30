@@ -1,0 +1,77 @@
+[0] Command HUD_CACHE_THRESHOLD unknown.
+[0] 
+[0] Bound socket to *.*.*.*:34266.
+[0] Bound socket to *.*.*.*:4534.
+[0] Setting CYCLE_BRAKE_REFILL (Group: Annoying) deviates from its default value; clients older than 0.2.5.0 may experience problems.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/09/30 14:57:40
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.
+[1] Received login from 192.168.215.1:19871 via socket *.*.*.*:4534, network version: 0.2.9_alpha (ID: 17).
+[1] New user: 1
+[1] web_user entered the game.
+[0] Time:     50.0394 seconds
+Sent:     6860 bytes in 40 packets (137.092 bytes/s)
+Received: 2342 bytes in 35 packets (46.8032 bytes/s)
+[0] Timestamp: 2026/09/30 14:58:30
+[0] Creating grid...
+[0] Ping charity changed from 0 to 300.
+[0] LaTeX entered the game.
+[0] Gcc entered the game.
+[0] Gdb entered the game.
+[0] done!
+[0] Resetting scores...
+[0] New Match
+[0] Go (round 1 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] Gcc core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     12.7095 seconds
+Sent:     15296 bytes in 155 packets (1203.5 bytes/s)
+Received: 6356 bytes in 138 packets (500.097 bytes/s)
+[0] Timestamp: 2026/09/30 14:58:43
+[0] Creating grid...
+[0] Ping charity changed from 300 to 100.
+[0] done!
+[0] Go (round 2 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] Gdb core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     12.6952 seconds
+Sent:     13302 bytes in 146 packets (1047.8 bytes/s)
+Received: 5852 bytes in 131 packets (460.963 bytes/s)
+[0] Timestamp: 2026/09/30 14:58:56
+[0] Creating grid...
+[0] done!
+[0] Go (round 3 of 10)!
+[1] received logout from 1.
+[1] web_user left the game.
+[1] Killing user 1, ping 0.0260938, IP 192.168.215.1:19871: You logged out regularly.
+[0] Closing socket bound to *.*.*.*:4534
+[0] Closing socket bound to *.*.*.*:34266
+[0] Gdb left AI team.
+[0] Gcc left AI team.
+[0] LaTeX left the game.
+[0] Bound socket to *.*.*.*:43730.
+[0] Bound socket to *.*.*.*:4534.
+[0] Ping charity changed from 100 to 0.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/09/30 14:58:57
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.

@@ -1,0 +1,22 @@
+PASS connected before the test
+PASS arm 1: hidden for 2 s, still connected
+PASS arm 2: hidden past the timeout, disconnected
+PASS arm 2: the page asked for the leave exactly once
+PASS arm 2: the game logged out
+PASS the server saw the player leave
+PASS the server recorded a regular logout
+PASS the reason is a regular logout
+PASS no kick reason anywhere (idle, vote, spam, ban)
+PASS no Emscripten abort
+server log, the client's lines:
+  [1] Received login from 192.168.215.1:19871 via socket *.*.*.*:4534, network version: 0.2.9_alpha (ID: 17).
+  [1] web_user entered the game.
+  [0] Gcc core dumped web_user for 3 points.
+  [0] web_user lost 2 points since it caused a general protection fault.
+  [0] Gdb core dumped web_user for 3 points.
+  [0] web_user lost 2 points since it caused a general protection fault.
+  [1] received logout from 1.
+  [1] web_user left the game.
+  [1] Killing user 1, ping 0.0260938, IP 192.168.215.1:19871: You logged out regularly.
+look at docs/evidence/leave-hidden/run/after-leave.png: the main menu, with the leave message in the console
+--- leave-hidden gate: ALL PASSED ---

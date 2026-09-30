@@ -173,6 +173,9 @@ CLIENT_OBJDIR := web/build-m1
 #   src/emscripten/eWebFetch.cpp   map downloads through the relay's /resource
 #                                  route, for the same byte-pin reason as
 #                                  eWebNet.cpp.
+#   src/emscripten/eWebLeave.cpp   leaves a server with a regular logout after
+#                                  the page has been hidden a while, so the
+#                                  shared relay address collects no idle kicks.
 #
 # They have to be named here because $(SRCS) above wildcards the six game
 # source directories only, and src/emscripten/ is not one of them (it holds
@@ -193,7 +196,8 @@ CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eWebInput.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebNet.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebWallCut.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebFetch.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebFetch.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebLeave.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # THE MAP BUNDLE (web/resource-bundle.txt, web/tools/fetch-resource-bundle.sh):
 # popular server maps preloaded so joining those servers needs no download.
