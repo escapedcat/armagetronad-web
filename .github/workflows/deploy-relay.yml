@@ -1,0 +1,91 @@
+# Deploy bridge/ -- the WebSocket-to-UDP relay -- to Fly when it changes on main.
+#
+# WHY THIS EXISTS. The relay used to be deployed by hand (`fly deploy` from
+# bridge/), which means a merged relay change was live only once someone
+# remembered. Since M-C the published page dials the relay with no token
+# (web/library_bridge.js), so the page and the relay have to move together: a
+# merge to main should deploy both.
+#
+# ORDER. A merge that changes both deploys both at once, and the page deploy
+# (deploy-pages.yml) refuses to publish until the live relay admits the page
+# -- see its "Wait for the relay to admit the page" step. So the page never
+# goes live pointing at a relay that turns it away, whichever finishes first.
+#
+# WHAT IT NEEDS. The repository secret FLY_API_TOKEN: a deploy token scoped to
+# this one app, made with
+#   fly tokens create deploy -a armagetronad-bridge
+# BRIDGE_TOKEN stays a Fly secret and is never seen here; `fly deploy` keeps
+# the app's secrets as they are.
+#
+# NOTE ON FILE PLACEMENT. As with deploy-pages.yml: a workflow cannot live
+# under bridge/, where the thing it deploys does.
+name: relay
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bridge/**'
+      - '!bridge/**.md'
+      - '!bridge/test-server/**'
+      - '.github/workflows/deploy-relay.yml'
+  workflow_dispatch:
+
+# One relay, one machine: two deploys at once would race for it. Queue them.
+concurrency:
+  group: deploy-relay
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: test + deploy relay
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+
+      # The same suite a PR runs locally; nothing untested reaches the live relay.
+      - name: Bridge tests
+        working-directory: bridge
+        run: |
+          npm ci
+          npm test
+
+      - uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # 1.5
+
+      # --remote-only builds on Fly's builders, so the runner needs no Docker.
+      - name: Deploy to Fly
+        working-directory: bridge
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --remote-only
+
+      # "Deployed" means the relay answers the way the page needs, not that
+      # flyctl returned: healthy, admitting the published page with no token,
+      # and still refusing any other site. Retried for two minutes because the
+      # new machine can take a moment to take over from the old one.
+      - name: Check the live relay
+        run: |
+          set -u
+          RELAY=wss://armagetronad-bridge.fly.dev/
+          END=$((SECONDS + 120))
+          while true; do
+            HEALTH=$(curl -s --max-time 10 https://armagetronad-bridge.fly.dev/health || true)
+            PAGE=$(sh web/tools/relay-admits.sh "$RELAY" https://escapedcat.github.io)
+            OTHER=$(sh web/tools/relay-admits.sh "$RELAY" https://example.com)
+            echo "health=$HEALTH page=$PAGE other-site=$OTHER"
+            if [ "$HEALTH" = ok ] && [ "$PAGE" = 101 ] && [ "$OTHER" = 403 ]; then
+              echo "The relay is live: healthy, open to the page, closed to other sites."
+              break
+            fi
+            if [ "$SECONDS" -ge "$END" ]; then
+              echo "The relay did not reach health=ok page=101 other-site=403 within 2 minutes." >&2
+              exit 1
+            fi
+            sleep 10
+          done

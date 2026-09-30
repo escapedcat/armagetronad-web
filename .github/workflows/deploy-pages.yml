@@ -146,6 +146,33 @@ jobs:
           cp index.html dist-m1/index.html
           node tools/check-publish-set.mjs dist-m1
 
+      # THE PAGE DIALS THE RELAY WITH NO TOKEN (web/library_bridge.js, M-C), so
+      # it must not go live while the relay would refuse it. A merge that
+      # changes both deploys both at once (deploy-relay.yml), and this job can
+      # finish first; this step makes the page wait for the relay instead of
+      # publishing a page whose online play says "relay did not answer".
+      #
+      # 101 is admitted. Anything else is waited on for 15 minutes, then fails
+      # the job BEFORE the publish -- which also means a relay that is down for
+      # an unrelated reason holds page deploys back until it is fixed or this
+      # step is re-run. That is the intended trade: the page and the relay are
+      # one product now.
+      - name: Wait for the relay to admit the page
+        if: github.event_name != 'pull_request'
+        run: |
+          set -u
+          END=$((SECONDS + 900))
+          while true; do
+            CODE=$(sh web/tools/relay-admits.sh wss://armagetronad-bridge.fly.dev/ https://escapedcat.github.io)
+            if [ "$CODE" = 101 ]; then echo "The relay admits the page (101)."; break; fi
+            if [ "$SECONDS" -ge "$END" ]; then
+              echo "The relay still answers $CODE to the page after 15 minutes; not publishing." >&2
+              exit 1
+            fi
+            echo "relay answers $CODE to the page -- waiting for deploy-relay.yml, retrying in 20 s"
+            sleep 20
+          done
+
       # The committer string goes through gh-pages' strict RFC 5322 address
       # parser, which rejects `[` and `]` unquoted -- so the conventional
       # "github-actions[bot] <41898282+github-actions[bot]@...>" fails with
