@@ -13,10 +13,12 @@ docker build -t aa-dedicated -f bridge/test-server/Dockerfile .
 python3 -m http.server 8008 --directory web/dist-m1 &
 sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/refused  refused
 sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/download download
+sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/bundled  bundled
 ```
 
-Both arms run the same build: the one with the fix described under "The
-first run", below. Each directory holds the arm's `verdict.txt` (the runner's
+`refused` and `download` ran on the build with the fix described under "The
+first run", below; `bundled` ran on the next build, which differs only by the
+preloaded bundle. Each directory holds the arm's `verdict.txt` (the runner's
 PASS/FAIL lines), the page's `console.log`, `relay.log`, `server.log`,
 `repo.log` (the stand-in repository's access log) and `r1-end.png`.
 
@@ -26,6 +28,7 @@ PASS/FAIL lines), the page's `console.log`, `relay.log`, `server.log`,
 |---|---|---|
 | `refused` | nowhere (`BRIDGE_RESOURCE_HOSTS=none.invalid`) | 9/9 PASS |
 | `download` | `127.0.0.1:8009` only, the stand-in repository | 9/9 PASS |
+| `bundled` | nowhere — the server's map is in the client's bundle | 5/5 PASS |
 
 **`refused`.** The client tried two addresses, in the engine's order: the
 server's repository, then its own, which is always the official one. The relay
@@ -41,6 +44,13 @@ refused both locally, and the page read the refusal, not a status 0:
 **`download`.** One fetch, 4,618 bytes, and the cached copy under
 `/persist/resource/automatic/` is the whole file. `r1-end.png` shows the round
 being played on the downloaded map.
+
+**`bundled`.** The server runs `tourney/sumobar/8player_sumo-1`, the one map
+in `web/resource-bundle.txt`. The page logged no `[RESOURCE]` line at all,
+the relay was never asked, and `r1-end.png` shows a round on the sumo map. An
+early version of this check matched the harness's own "until … [RESOURCE]"
+line in the same transcript; it now reads only the page's `[console.log]`
+lines, and was shown to fail on the download arm's transcript.
 
 ## The first run, and why the gate has a size check
 

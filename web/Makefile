@@ -195,6 +195,16 @@ CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eWebWallCut.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebFetch.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
+# THE MAP BUNDLE (web/resource-bundle.txt, web/tools/fetch-resource-bundle.sh):
+# popular server maps preloaded so joining those servers needs no download.
+# They land in /data/resource, NOT /data/resource/automatic: the page passes
+# --userdatadir /persist, so the first resource read path is
+# /persist/resource/automatic and /data/resource/automatic is never searched,
+# while /data/resource is (tPathResource::Paths, src/tools/tDirectories.cpp).
+# Bundle paths never start with included/, so the preload beside
+# resource/included cannot overlap it (the fetch script refuses such a line).
+# Defined up here because Make expands a rule's prerequisites as it reads it.
+RESOURCE_BUNDLE := $(shell find web/resource-bundle -type f 2>/dev/null)
 # SDL and libpng are needed at COMPILE time for their headers, not just at link.
 CLIENT_PORTS  := -sUSE_SDL=1 -sUSE_LIBPNG=1
 # $(EXCEPTIONS) is required at COMPILE time as well as link — see the
@@ -416,6 +426,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   --preload-file models@/data/models \
                   --preload-file sound@/data/sound \
                   --preload-file resource/included@/data/resource/included \
+                  --preload-file web/resource-bundle@/data/resource \
                   --preload-file web/webdefaults@/data/webdefaults \
                   --exclude-file '*.xcf' --exclude-file '*/update.py' \
                   --exclude-file '*/settings_dedicated.cfg' \
@@ -479,7 +490,8 @@ web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
                                 web/shell.html web/library_bridge.js web/library_resource.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -530,7 +542,8 @@ web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2
                                 web/shell.html web/library_bridge.js web/library_resource.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -575,7 +588,8 @@ web/dist-m1/armagetronad-oldyield.html: $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.
                                 web/shell.html web/library_bridge.js web/library_resource.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -617,7 +631,8 @@ web/dist-m1/armagetronad-fstoggle.html: $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.
                                 web/shell.html web/library_bridge.js web/library_resource.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
 
@@ -671,7 +686,8 @@ web/dist-m1/armagetronad-oldautoexec.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2
                                 web/shell.html web/library_bridge.js web/library_resource.js \
                                 $(OLDCFG_DIR)/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
-                                resource/included/.mapversion
+                                resource/included/.mapversion \
+                                $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
 	  $(subst --preload-file web/webdefaults@/data/webdefaults,--preload-file $(OLDCFG_DIR)@/data/webdefaults,$(CLIENT_LDFLAGS)) \

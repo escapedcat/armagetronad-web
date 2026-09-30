@@ -781,6 +781,38 @@ defaults.
   geometry instead**. So the rule is not "no `-O`" — it is **never drop
   `-sASSERTIONS=1`**.
 
+## Bundled maps
+
+When a server runs a map the client does not have, the game downloads it --
+in the browser, through the relay's `/resource` route (`bridge/README.md`,
+"Map downloads"). A small bundle of popular server maps is preloaded so the
+common case needs no download at all.
+
+- **The list:** `web/resource-bundle.txt`, one repository path per line,
+  relative to `https://resource.armagetronad.net/resource/`, always with the
+  version in the file name (`…-1.aamap.xml`) -- so a bundled copy can never be
+  stale for its own path; a server moving to a new version simply misses the
+  bundle and downloads.
+- **The files:** `web/resource-bundle/`, committed, so the build stays offline
+  and reproducible. Refresh with `sh web/tools/fetch-resource-bundle.sh`, which
+  refuses unversioned, absolute, `..` and `included/` paths and validates each
+  file with `xmllint`.
+- **Where they land:** `/data/resource`, not `/data/resource/automatic`. The
+  page passes `--userdatadir /persist`, so the first resource read path is
+  `/persist/resource/automatic` (where downloads are cached, in IndexedDB) and
+  `/data/resource/automatic` is never searched, while `/data/resource` is
+  (`tPathResource::Paths`, `src/tools/tDirectories.cpp`).
+- **Adding a map:** add the line, run the script, commit both. Find
+  candidates in the relay's log (the command is in `bridge/README.md`), and
+  read the map's header before adding it: bundling redistributes it, so leave
+  out anything whose terms forbid that.
+- **A missing map is only a download, never a failure** -- unless the
+  repository it lives on is not on the relay's `BRIDGE_RESOURCE_HOSTS`.
+
+The browser gate for all of this is `web/tools/run-resource-gate.sh`
+(`download`, `refused` and `bundled` arms); evidence in
+`docs/evidence/map-downloads/`.
+
 ## Deploying to GitHub Pages
 
 **Live at <https://escapedcat.github.io/armagetronad-web/>.**

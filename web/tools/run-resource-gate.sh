@@ -1,5 +1,5 @@
 #!/bin/sh
-# sh web/tools/run-resource-gate.sh <out-dir> <download|refused>
+# sh web/tools/run-resource-gate.sh <out-dir> <download|refused|bundled>
 #
 # The map-download gate (docs/superpowers/plans/2026-09-30-map-downloads.md,
 # Task 4): the browser client joins the local aa-dedicated container, whose
@@ -10,6 +10,7 @@
 #   python3 -m http.server 8008 --directory web/dist-m1 &
 #   sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/refused  refused
 #   sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/download download
+#   sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/bundled  bundled
 #
 # HERMETIC. The "resource repository" is python3 -m http.server 8009 over
 # bridge/test-server/resource-repo, and the relay is told exactly which hosts
@@ -30,6 +31,10 @@
 #             refused both. r1-end.png should show the "Map load failure"
 #             screen; look at it -- the game's failure text never reaches the
 #             browser console, so no check below can read it.
+#   bundled   the server runs a map that is in the client's preloaded bundle
+#             (web/resource-bundle/); relay may fetch from nowhere. PASS: the
+#             page asked for no download at all -- not one [RESOURCE] line --
+#             and the server saw the player enter. r1-end.png shows the round.
 #
 # FRESH PROFILE PER ARM: web/tools/drive-browser.mjs makes a new Chrome
 # profile with mkdtemp for every run and deletes it after, so a map the
@@ -37,15 +42,23 @@
 set -eu
 OUT=${1:-}; ARM=${2:-}
 if [ -z "$OUT" ] || [ -z "$ARM" ]; then
-  echo "usage: $0 <out-dir> <download|refused>" >&2
+  echo "usage: $0 <out-dir> <download|refused|bundled>" >&2
   exit 2
 fi
-case $ARM in download|refused) ;; *) echo "arm must be download or refused, got '$ARM'" >&2; exit 2;; esac
+case $ARM in download|refused|bundled) ;; *) echo "arm must be download, refused or bundled, got '$ARM'" >&2; exit 2;; esac
 ROOT=$(pwd)
 [ -f "$ROOT/web/tools/resource-gate.steps" ] || { echo "run me from the repository root" >&2; exit 2; }
 pgrep -f 'http.server 8008' >/dev/null || { echo "no static server on 8008" >&2; exit 2; }
 docker image inspect aa-dedicated >/dev/null 2>&1 || { echo "no aa-dedicated image (bridge/test-server/README.md)" >&2; exit 2; }
 MAP=gate/resource/sumo_gate-0.1.0.aamap.xml
+VAR=resource-var
+SERVER_MAPS="$ROOT/bridge/test-server/resource-repo"
+if [ "$ARM" = bundled ]; then
+  MAP=tourney/sumobar/8player_sumo-1.aamap.xml
+  VAR=resource-var-bundled
+  SERVER_MAPS="$ROOT/web/resource-bundle"
+  [ -f "$SERVER_MAPS/$MAP" ] || { echo "no $SERVER_MAPS/$MAP: run sh web/tools/fetch-resource-bundle.sh" >&2; exit 2; }
+fi
 mkdir -p "$OUT"
 rm -f "$OUT"/*.png "$OUT/console.log" "$OUT/relay.log" "$OUT/server.log" "$OUT/repo.log" "$OUT/driver.txt"
 
@@ -66,11 +79,11 @@ trap cleanup EXIT
 # for it to download.
 docker rm -f aa-server >/dev/null 2>&1 || true
 docker create --name aa-server -p 4534:4534/udp \
-  -v "$ROOT/bridge/test-server/resource-var:/gatevar" \
+  -v "$ROOT/bridge/test-server/$VAR:/gatevar" \
   aa-dedicated /opt/aa/bin/armagetronad-dedicated --userdatadir /data --vardir /gatevar >/dev/null
 STAGE=$(mktemp -d)
 mkdir -p "$STAGE/resource/automatic"
-cp -R "$ROOT/resource/included/." "$ROOT/bridge/test-server/resource-repo/." "$STAGE/resource/automatic/"
+cp -R "$ROOT/resource/included/." "$SERVER_MAPS/." "$STAGE/resource/automatic/"
 docker cp "$STAGE/resource" aa-server:/data/ >/dev/null
 rm -rf "$STAGE"
 docker start aa-server >/dev/null
@@ -121,6 +134,12 @@ if [ "$ARM" = download ]; then
   check "the relay served it" grep -q '^\[bridge\] resource 200 ' "$OUT/relay.log"
   check "the stand-in repository was asked for it" grep -qF "GET /$MAP" "$OUT/repo.log"
   check "the server saw the player enter the game" grep -q 'web_user entered the game' "$OUT/server.log"
+elif [ "$ARM" = bundled ]; then
+  # [console.log] only: the harness's own "until ... <<[RESOURCE]>>" line is
+  # in the same transcript and would match a bare [RESOURCE].
+  check "the page asked for no download at all" sh -c "! grep -q '\[console.log\] \[RESOURCE\]' '$C'"
+  check "the relay was never asked" sh -c "! grep -q '^\[bridge\] resource ' '$OUT/relay.log'"
+  check "the server saw the player enter the game" grep -q 'web_user entered the game' "$OUT/server.log"
 else
   check "server repository URI refused, readable (403)" grep -qF "[RESOURCE] 403 http://127.0.0.1:8009/$MAP" "$C"
   check "official fallback URI refused locally (403)" grep -qF "[RESOURCE] 403 http://resource.armagetronad.net/resource/$MAP" "$C"
@@ -132,6 +151,6 @@ else
 fi
 check "the server downloaded nothing itself" sh -c "! grep -qE 'not found in cache|Downloading ' '$OUT/server.log'"
 check "no Emscripten abort" sh -c "! grep -qiE 'abort\(|Aborted\(|RuntimeError: abort' '$C'"
-echo "look at $OUT/r1-end.png: the download arm must show the arena, the refused arm the failure screen"
+echo "look at $OUT/r1-end.png: the download and bundled arms must show the arena, the refused arm the failure screen"
 if [ "$FAILS" -gt 0 ]; then echo "--- arm $ARM: $FAILS FAILED ---"; exit 1; fi
 echo "--- arm $ARM: ALL PASSED ---"

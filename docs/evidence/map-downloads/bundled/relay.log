@@ -1,0 +1,2 @@
+[bridge] listening on ws://127.0.0.1:8010 (no token) (map downloads from none.invalid) (private destinations ALLOWED - local testing only)
+[bridge] handle 1 bound to udp port 64283
