@@ -1181,9 +1181,8 @@
         if (!name || active.has(ev.pointerId)) return;
         // preventDefault suppresses the compatibility mouse events and the
         // double-tap-zoom gesture. It does NOT stop propagation, which matters:
-        // Emscripten's $autoResumeAudioContext listens for a real pointerdown/
-        // touchstart on document to resume the AudioContext, and that gesture
-        // has to keep reaching it or a phone visitor gets a silent game.
+        // resumeAudio() ("SOUND ON A PHONE" below) listens on window for the
+        // pointerup that follows, and a stopped event would never reach it.
         ev.preventDefault();
         // ENTER ON THE PAD IS A MENU KEY ONLY (M7.1). The game binds Enter to
         // CHAT in a round (config/default.cfg: KEYBOARD 13 PLAYER_BIND CHAT 1),
@@ -1533,6 +1532,36 @@
       }
     }
 
+    // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------
+    // The maintainer's phone played in silence for 3-7 minutes before the
+    // sound came on. Emscripten's $autoResumeAudioContext (libcore.js) calls
+    // ctx.resume() ONCE, on the first keydown, mousedown or touchstart. On a
+    // phone none of those is a user gesture when it arrives: the pad's keys
+    // are synthetic, the pad's preventDefault suppresses mousedown, and
+    // Chrome grants activation on pointerup/touchend, not touchstart. So the
+    // one resume() is refused and never retried; sound came on only when a
+    // tap on the picture happened to produce a real mousedown. Measured
+    // (headless Chrome, --mobile 412,915,3, --autoplay-policy=document-user-
+    // activation-required): three pad taps, activation 'sticky' from the first
+    // pointerup, AudioContext still 'suspended' at the end.
+    //
+    // So: on every TRUSTED pointerup, touchend, click or keydown, resume the
+    // context if it is not running -- not once, every time, which also brings
+    // it back after the phone interrupted it (a call, the app backgrounded).
+    // Capture phase on window, so no element's handler can hide it.
+    function resumeAudio(ev) {
+      if (!ev.isTrusted || typeof SDL === 'undefined' || !SDL.audioContext) return;
+      const ctx = SDL.audioContext;
+      if (ctx.state === 'running') return;
+      ctx.resume().then(() => {
+        if (!window.AA_AUDIO_RESUMED) console.log('[AUDIO] resumed on ' + ev.type);
+        window.AA_AUDIO_RESUMED = (window.AA_AUDIO_RESUMED | 0) + 1;
+      }, () => { /* refused; the next gesture tries again */ });
+    }
+    for (const type of ['pointerup', 'touchend', 'click', 'keydown']) {
+      window.addEventListener(type, resumeAudio, { capture: true, passive: true });
+    }
+
     // ---- M6: NO CRASH SPARKS ON A TOUCH DEVICE ---------------------------
     //
     // THE MEASUREMENT FIRST, AND IT IS ABOUT THE WALL. M6 task 3's grind arm
@@ -1810,9 +1839,9 @@
       // $autoResumeAudioContext (libcore.js) registers one-shot keydown,
       // mousedown and touchstart listeners on BOTH document and the canvas and
       // resumes a suspended context, and libsdl.js wires it into
-      // SDL_OpenAudio. The player has to press a key to steer and the game
-      // boots into menus that need Enter and the arrow keys, so the gesture
-      // arrives within seconds of the page loading no matter what. M3's audio
+      // SDL_OpenAudio. On a keyboard that is enough: the menus need Enter and
+      // the arrow keys, so the gesture arrives within seconds. On a phone it
+      // is NOT -- see "SOUND ON A PHONE" above, which is what resumes it there. M3's audio
       // gate is the check on that claim, not this comment: its A11 asserts
       // every AudioContext state seen in the measured window is 'running', and
       // its A7c asserts the menus before round 1 are exactly silent.
