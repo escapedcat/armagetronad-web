@@ -612,5 +612,20 @@ public:
 inline void uMenu::AddItem(uMenuItem* item)     { items.Add(item, item->idnum); }
 inline void uMenu::RemoveItem(uMenuItem* item)  { items.Remove(item, item->idnum); }
 
+// MENU ENTRIES THAT CANNOT WORK IN A BROWSER, HIDDEN (web client only).
+// "LAN Multiplayer" looks for servers by broadcasting on the local network. A
+// page has no local network: its datagrams leave through the relay, which runs
+// on Fly and refuses private and broadcast addresses on purpose
+// (bridge/policy.mjs). So the entry could only ever find nothing, and new
+// players were picking it. The item is built as usual and then taken out of
+// the menu; tList::Remove resets its id, so its destructor does not remove it
+// a second time. Appended here, at the end of the header, so no line above it
+// moves; expands to nothing in every other build.
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+#define AA_WEB_HIDE_MENU_ITEM( menu, item ) ( menu ).RemoveItem( &( item ) );
+#else
+#define AA_WEB_HIDE_MENU_ITEM( menu, item )
+#endif
+
 #endif
 

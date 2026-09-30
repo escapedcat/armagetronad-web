@@ -2426,7 +2426,7 @@ void net_game(){ AA_NET_MENU_REQUIRES_BRIDGE
 
     uMenuItemFunction lan
     (&net_menu,"$network_menu_lan_text",
-     "$network_menu_lan_help",&gServerBrowser::BrowseLAN);
+     "$network_menu_lan_help",&gServerBrowser::BrowseLAN); AA_WEB_HIDE_MENU_ITEM( net_menu, lan )
 
     uMenuItemFunction inter
     (&net_menu,"$network_menu_internet_text",
