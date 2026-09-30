@@ -340,7 +340,7 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 # assignment, so a second -sEXPORTED_RUNTIME_METHODS= flag would REPLACE the
 # list rather than add to it, silently dropping callMain -- which is the
 # exact failure the long comment above describes (Play button, abort()).
-# Four names now:
+# Six names now:
 #   callMain   -- unchanged, see above.
 #   FS, IDBFS  -- web/shell.html mounts /persist with them, and the evidence
 #                 scripts in web/tools/ read the mount back through FS.
@@ -353,6 +353,9 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 #                 isExportedByForceFilesystem() list in
 #                 src/runtime_debug.js, but that is a diagnostics helper,
 #                 not a promise about the export table -- name them.)
+#   ENV        -- web/shell.html's preRun replaces Emscripten's hard-coded
+#                 USER=web_user (libwasi.js), which the game reads with
+#                 getenv("USER") for the default player name, with web_NNNN.
 #
 # -sEXPORTED_RUNTIME_METHODS=callMain is not optional either, and for a
 # reason that will not show up as a build error: Emscripten never
@@ -424,7 +427,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \
                   -sALLOW_MEMORY_GROWTH=1 -sERROR_ON_UNDEFINED_SYMBOLS=1 \
                   -sASYNCIFY=1 -sASYNCIFY_STACK_SIZE=131072 \
-                  -sEXPORTED_RUNTIME_METHODS=callMain,FS,IDBFS,addRunDependency,removeRunDependency \
+                  -sEXPORTED_RUNTIME_METHODS=callMain,FS,IDBFS,addRunDependency,removeRunDependency,ENV \
                   -lidbfs.js \
                   $(EXCEPTIONS) \
                   --use-preload-plugins \

@@ -1,0 +1,9 @@
+# Task 2 test: a fresh profile gets a web_NNNN default, not web_user.
+until:1:120000:[BOOT] autostart
+wait:9000
+key:Enter
+wait:3000
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2000
+eval:(()=>{const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m&&m[1].trim().replace(/\\(.)/g,'$1');console.log('[TEXTGATE] D1 default-name '+JSON.stringify({saved:v,page:window.AA_DEFAULT_NAME||null,PASS:/^web_\d{4}$/.test(v||'')&&v===window.AA_DEFAULT_NAME}));return 'D1'})()

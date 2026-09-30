@@ -1861,6 +1861,19 @@
           console.log('[PERSIST] populate FAILED before it started: ' + e);
           release();
         }
+      },
+      // THE DEFAULT NAME. Emscripten's environment says USER=web_user, and the
+      // game reads getenv("USER") for the name a new player starts with -- so
+      // every browser player was "web_user". A saved name (user.cfg) still
+      // wins; this is only what a first visit starts from.
+      () => {
+        const name = 'web_' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        try {
+          Module.ENV.USER = name;
+          Module.ENV.LOGNAME = name;
+          window.AA_DEFAULT_NAME = name;
+          console.log('[TEXT] default name ' + name);
+        } catch (e) { console.log('[TEXT] default name not set: ' + e); }
       }],
       // noInitialRun + an explicit callMain from onRuntimeInitialized, rather
       // than letting the runtime auto-run. Two reasons, neither of them the
