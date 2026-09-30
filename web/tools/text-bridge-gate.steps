@@ -1,0 +1,26 @@
+# Task 1 test: the game pulls queued text from the page and applies it.
+# Desktop, local page, no server:
+#   python3 -m http.server 8008 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --out /tmp/text-bridge \
+#        --url http://localhost:8008/armagetronad.html --script-file web/tools/text-bridge-gate.steps
+# PASS/FAIL is read from the [TEXTGATE] lines (see Step 2).
+until:1:120000:[BOOT] autostart
+wait:9000
+key:Enter
+wait:3000
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:2000
+eval:(()=>{if(!window.AA_TEXT_TAKE){const q={1:null,2:null};window.AA_TEXT_PEEK=(k)=>q[k];window.AA_TEXT_TAKE=(k)=>{const t=q[k];q[k]=null;return t};window.__q=q;}else{window.__q=null}return 'slots '+(window.__q?'defined by the test':'from the page')})()
+eval:(()=>{const put=(k,v)=>{if(window.__q)window.__q[k]=v;else window.AA_TEXT_QUEUE(k,v)};window.__put=put;put(1,'gatetester');return 'queued name'})()
+wait:1500
+eval:(()=>{const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);if(m)m[1]=m[1].trim().replace(/\\(.)/g,'$1');console.log('[TEXTGATE] T1 name-applied '+JSON.stringify({saved:m&&m[1],PASS:!!m&&m[1].trim()==='gatetester'}));return 'T1'})()
+eval:(()=>{window.__put(1,'Zoë 🚀 and a name that is far too long');return 'queued awkward name'})()
+wait:1500
+eval:(()=>{const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);if(m)m[1]=m[1].trim().replace(/\\(.)/g,'$1');const v=m&&m[1];console.log('[TEXTGATE] T2 awkward-name '+JSON.stringify({saved:v,PASS:!!v&&v.length<=16&&!/[Ā-￿]/.test(v)&&v.startsWith('Zo\u00eb ?')}));return 'T2'})()
+eval:(()=>{window.__put(1,'   ');return 'queued blank name'})()
+wait:1500
+eval:(()=>{const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);if(m)m[1]=m[1].trim().replace(/\\(.)/g,'$1');console.log('[TEXTGATE] T3 blank-name-ignored '+JSON.stringify({saved:m&&m[1],PASS:!!m&&m[1].trim().startsWith('Zo')}));return 'T3'})()
+eval:(()=>{window.__put(2,'hello while standalone');return 'queued chat'})()
+wait:1500
+eval:(()=>{return 'standalone chat checked by the runner'})()
