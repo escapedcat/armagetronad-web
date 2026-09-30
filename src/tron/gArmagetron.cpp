@@ -302,7 +302,7 @@ static void welcome(){
     }
     else
     {
-        bool showSplash = true;
+        bool showSplash = AA_WEB_SHOW_SPLASH;
 #ifdef DEBUG
         showSplash = false;
 #endif
@@ -908,7 +908,7 @@ int main(int argc,char **argv){
 
                     sn_bigBrotherString = renderer_identification + "VER=" + sn_programVersion + "\n\n";
 
-                    MainMenu();
+                    AA_WEB_MAIN_MENU_FOREVER MainMenu();
 
                     // remove all players
                     for ( int i = se_PlayerNetIDs.Len()-1; i>=0; --i )

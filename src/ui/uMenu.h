@@ -627,5 +627,55 @@ inline void uMenu::RemoveItem(uMenuItem* item)  { items.Remove(item, item->idnum
 #define AA_WEB_HIDE_MENU_ITEM( menu, item )
 #endif
 
+// THE REST OF THE MENUS, SAME RULE (web client only). Each entry is removed
+// right after it is built, while it is still the LAST item of its menu:
+// tList::Remove fills the gap by moving the last item into it, so removing any
+// other item would reorder the menu. Hidden this way: "Exit Game" (see
+// AA_WEB_MAIN_MENU_FOREVER), the desktop-window rows of Screen Mode (applying a
+// resolution resized the canvas under the page's own layout; colour/Z depth,
+// SDL init, error checks, vsync, mouse grab and window focus do nothing in a
+// browser), Display Lists and Infinity (stubbed / forced off in this port),
+// Show Recording Time (no recording here) and Moviepack (not shipped).
+//
+// _IF: only when the condition holds -- the main menu's exit item is "Exit
+// Game" outside a match but "Return to Game" inside one, which must stay.
+// _STATIC_: for items defined at file scope, where no statement can go; a
+// static object's constructor does the removal, and objects in one file are
+// constructed in the order they are defined, i.e. right after the item.
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+#define AA_WEB_HIDE_MENU_ITEM_IF( cond, menu, item ) if ( cond ) ( menu ).RemoveItem( &( item ) );
+struct uWebHiddenMenuItem
+{
+    uWebHiddenMenuItem( uMenu & menu, uMenuItem & item ) { menu.RemoveItem( &item ); }
+};
+#define AA_WEB_HIDE_STATIC_MENU_ITEM( menu, item ) static uWebHiddenMenuItem aa_web_hidden_##item( menu, item );
+#else
+#define AA_WEB_HIDE_MENU_ITEM_IF( cond, menu, item )
+#define AA_WEB_HIDE_STATIC_MENU_ITEM( menu, item )
+#endif
+
+// A BROWSER PAGE HAS NOTHING TO QUIT TO (web client only). When the top-level
+// main menu returned -- "Exit Game", or Escape on the main menu, which on a
+// phone is one tap on the pad's Esc -- the game shut down and the page went
+// black for good, with the SDL event queue overflowing thousands of times a
+// second because nothing polled it any more. Measured 2026-09-30: 11,410
+// "event queue full" errors in six seconds. In the browser the main menu is
+// therefore re-entered instead; closing the tab is how a player leaves.
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+#define AA_WEB_MAIN_MENU_FOREVER for ( ;; )
+#else
+#define AA_WEB_MAIN_MENU_FOREVER
+#endif
+
+// THE SPLASH SCREEN, SKIPPED (web client only). From the second start on, the
+// game showed the empty grid for up to six seconds or until a key -- nothing
+// to read, and in a browser it follows a download the player already waited
+// through. The first-start path (language menu, First Setup) is untouched.
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+#define AA_WEB_SHOW_SPLASH false
+#else
+#define AA_WEB_SHOW_SPLASH true
+#endif
+
 #endif
 

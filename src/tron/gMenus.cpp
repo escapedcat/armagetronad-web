@@ -225,7 +225,7 @@ public:
              text,
              help,
              res)
-    {
+    { AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, res_men )
 #ifndef DEDICATED
         // fetch valid screen modes from SDL
         SDL_Rect **modes;
@@ -305,19 +305,19 @@ static void sg_ScreenModeMenu()
     (&screen_menu_mode,
      "$screen_apply_changes_text",
      "$screen_apply_changes_help",
-     &sr_ReinitDisplay);
+     &sr_ReinitDisplay); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, appl )
 
     uMenuItemToggle kwa_t(
         &screen_menu_mode,
         "$screen_keep_window_active_text",
         "$screen_keep_window_active_help",
-        sr_keepWindowActive);
+        sr_keepWindowActive); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, kwa_t )
 
     uMenuItemToggle ie_t
     (&screen_menu_mode,
      "$screen_check_errors_text",
      "$screen_check_errors_help",
-     currentScreensetting.checkErrors);
+     currentScreensetting.checkErrors); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, ie_t )
 
     // frame rate limit
     std::unique_ptr<uMenuItem> zfm_t;
@@ -363,7 +363,7 @@ static void sg_ScreenModeMenu()
     (&screen_menu_mode,
      "$screen_use_sdl_text",
      "$screen_use_sdl_help",
-     currentScreensetting.useSDL);
+     currentScreensetting.useSDL); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, sdl_t )
 #endif // dirty
 
 #if SDL_VERSION_ATLEAST(1, 2, 10)
@@ -371,7 +371,7 @@ static void sg_ScreenModeMenu()
     (&screen_menu_mode,
      "$screen_vsync_text",
      "$screen_vsync_help",
-     currentScreensetting.vSync);
+     currentScreensetting.vSync); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, zvs_t )
 
     uSelectEntry<rVSync> zvs_on(zvs_t,"$screen_vsync_on_text","$screen_vsync_on_help",ArmageTron_VSync_On);
     uSelectEntry<rVSync> zvs_d(zvs_t,"$screen_vsync_default_text","$screen_vsync_default_help",ArmageTron_VSync_Default);
@@ -386,13 +386,13 @@ static void sg_ScreenModeMenu()
         &screen_menu_mode,
         "$screen_grab_mouse_text",
         "$screen_grab_mouse_help",
-        su_mouseGrab);
+        su_mouseGrab); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, gm )
 
     uMenuItemSelection<rColorDepth> zd_t
     (&screen_menu_mode,
      "$screen_zdepth_text",
      "$screen_zdepth_help",
-     currentScreensetting.zDepth);
+     currentScreensetting.zDepth); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, zd_t )
 
     uSelectEntry<rColorDepth> zd_16(zd_t,"$screen_zdepth_16_text","$screen_zdepth_16_help",ArmageTron_ColorDepth_16);
     uSelectEntry<rColorDepth> zd_d(zd_t,"$screen_zdepth_desk_text","$screen_zdepth_desk_help",ArmageTron_ColorDepth_Desktop);
@@ -402,7 +402,7 @@ static void sg_ScreenModeMenu()
     (&screen_menu_mode,
      "$screen_colordepth_text",
      "$screen_colordepth_help",
-     currentScreensetting.colorDepth);
+     currentScreensetting.colorDepth); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, cd_t )
 
     uSelectEntry<rColorDepth> cd_16(cd_t,"$screen_colordepth_16_text","$screen_colordepth_16_help",ArmageTron_ColorDepth_16);
     uSelectEntry<rColorDepth> cd_d(cd_t,"$screen_colordepth_desk_text","$screen_colordepth_desk_help",ArmageTron_ColorDepth_Desktop);
@@ -412,7 +412,7 @@ static void sg_ScreenModeMenu()
     (&screen_menu_mode,
      "$screen_fullscreen_text",
      "$screen_fullscreen_help",
-     currentScreensetting.fullscreen);
+     currentScreensetting.fullscreen); AA_WEB_HIDE_MENU_ITEM( screen_menu_mode, fs_t )
 
 
     gResMenEntry res( screen_menu_mode, currentScreensetting.res, "$screen_resolution_text", "$screen_resolution_help", false );
@@ -545,7 +545,7 @@ static ArmageTron_texmode_menuitem tmm3(&screen_menu_detail,
 
 uMenuItemToggle bpt2
 (&screen_menu_prefs,"$misc_recording_time_text",
- "$misc_recording_time_help",sr_RecordingTimeOut);
+ "$misc_recording_time_help",sr_RecordingTimeOut); AA_WEB_HIDE_STATIC_MENU_ITEM( screen_menu_prefs, bpt2 )
 
 static uMenuItemToggle s2
 (&screen_menu_prefs,"$pref_highrim_text",
@@ -588,19 +588,19 @@ static uMenuItemToggle cs
 
 static uMenuItemSelection<rDisplayListUsage> dl
 (&screen_menu_tweaks,"$tweaks_displaylists_text",
- "$tweaks_displaylists_help", sr_useDisplayLists);
+ "$tweaks_displaylists_help", sr_useDisplayLists); AA_WEB_HIDE_STATIC_MENU_ITEM( screen_menu_tweaks, dl )
 static uSelectEntry<rDisplayListUsage> dl_off(dl,"$tweaks_displaylists_off_text","$tweaks_displaylists_off_help",rDisplayList_Off);
 static uSelectEntry<rDisplayListUsage> dl_cac(dl,"$tweaks_displaylists_cac_text","$tweaks_displaylists_cac_help",rDisplayList_CAC);
 static uSelectEntry<rDisplayListUsage> dl_cae(dl,"$tweaks_displaylists_cae_text","$tweaks_displaylists_cae_help",rDisplayList_CAE);
 
 // This toggle still moves in the browser but changes nothing: eDisplay.cpp
 // forces the rim path under __EMSCRIPTEN__, because turning the infinity plane
-// on would reach glTexCoord4f and abort the runtime. Hiding the item is an M4
-// UI job. See docs/porting/browser-runtime-notes.md § 4.
+// on would reach glTexCoord4f and abort the runtime. So the web client hides
+// it (end of the next line). See docs/porting/browser-runtime-notes.md § 4.
 static uMenuItemToggle infp
 (&screen_menu_tweaks,"$tweaks_infinity_text",
  "$tweaks_infinity_help"
- ,sr_infinityPlane);
+ ,sr_infinityPlane); AA_WEB_HIDE_STATIC_MENU_ITEM( screen_menu_tweaks, infp )
 
 uMenuItemSelection<rSysDep::rSwapMode> swapMode
 (&screen_menu_tweaks,

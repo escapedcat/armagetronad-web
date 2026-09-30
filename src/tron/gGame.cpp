@@ -2586,7 +2586,7 @@ void MainMenu(bool ingame){
     }
 
     uMenuItemExit exx(&MainMenu,extitle,
-                      exhelp);
+                      exhelp); AA_WEB_HIDE_MENU_ITEM_IF( !ingame, MainMenu, exx )
 
     uMenuItemFunction *return_to_main=NULL;
     if (ingame){
@@ -2690,7 +2690,7 @@ void MainMenu(bool ingame){
 
     uMenuItemToggle mp
     (&misc,"$misc_moviepack_text",
-     "$misc_moviepack_help",sg_moviepackUse);
+     "$misc_moviepack_help",sg_moviepackUse); AA_WEB_HIDE_MENU_ITEM( misc, mp )
 
 
     uMenuItemSubmenu misc_sm
