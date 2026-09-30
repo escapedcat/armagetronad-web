@@ -65,7 +65,7 @@ rm -f "$OUT"/*.png "$OUT/console.log" "$OUT/relay.log" "$OUT/server.log" "$OUT/r
 REPO_PID=
 cleanup() {
   pkill -f 'relay.mjs --port 8010' >/dev/null 2>&1 || true
-  [ -n "$REPO_PID" ] && kill "$REPO_PID" 2>/dev/null || true
+  if [ -n "$REPO_PID" ]; then kill "$REPO_PID" 2>/dev/null || true; fi
 }
 trap cleanup EXIT
 
