@@ -1,0 +1,68 @@
+[0] Command HUD_CACHE_THRESHOLD unknown.
+[0] 
+[0] Bound socket to *.*.*.*:48839.
+[0] Bound socket to *.*.*.*:4534.
+[0] Setting CYCLE_BRAKE_REFILL (Group: Annoying) deviates from its default value; clients older than 0.2.5.0 may experience problems.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/09/30 14:06:37
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.
+[1] Received login from 192.168.215.1:61076 via socket *.*.*.*:4534, network version: 0.2.9_alpha (ID: 17).
+[1] New user: 1
+[1] web_user entered the game.
+[0] Time:     50.989 seconds
+Sent:     6872 bytes in 40 packets (134.774 bytes/s)
+Received: 2330 bytes in 34 packets (45.6962 bytes/s)
+[0] Timestamp: 2026/09/30 14:07:28
+[0] Creating grid...
+[0] Ping charity changed from 0 to 300.
+[0] LaTeX entered the game.
+[0] Gcc entered the game.
+[0] Gdb entered the game.
+[0] done!
+[0] Resetting scores...
+[0] New Match
+[0] Go (round 1 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] Gcc core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     12.8913 seconds
+Sent:     15170 bytes in 155 packets (1176.76 bytes/s)
+Received: 5924 bytes in 128 packets (459.535 bytes/s)
+[0] Timestamp: 2026/09/30 14:07:41
+[0] Creating grid...
+[0] Ping charity changed from 300 to 100.
+[0] done!
+[0] Go (round 2 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] Gdb core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[0] Time:     12.8211 seconds
+Sent:     13066 bytes in 146 packets (1019.1 bytes/s)
+Received: 5490 bytes in 122 packets (428.201 bytes/s)
+[0] Timestamp: 2026/09/30 14:07:54
+[0] Creating grid...
+[0] done!
+[0] Go (round 3 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[0] Gdb core dumped web_user for 3 points.
+[0] web_user lost 2 points since it caused a general protection fault.

@@ -436,6 +436,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   --exclude-file '*/portugese.txt' \
                   --js-library web/library_bridge.js \
                   --js-library web/library_resource.js \
+                  -sOFFSCREEN_FRAMEBUFFER=1 --js-library web/library_present.js \
                   --shell-file web/shell.html
 
 # The primary output is the .html page (Task 6's actual deliverable); the
@@ -443,10 +444,11 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
 # the same emcc invocation.
 #
 # The prerequisite list below is NOT "every preloaded directory" -- it is
-# seven files: web/shell.html, web/library_bridge.js, web/library_resource.js,
+# eight files: web/shell.html, the three JS libraries (library_bridge.js,
+# library_resource.js, library_present.js),
 # web/webdefaults/autoexec.cfg, and the three generated data files, because
 # those are the only preload inputs whose paths this Makefile can name
-# without shelling out to `find`. (The two JS libraries are not preloaded;
+# without shelling out to `find`. (The JS libraries are not preloaded;
 # it is merged at link time by --js-library in CLIENT_LDFLAGS, which every
 # one of the four diagnostic variants below shares, so every one of them
 # lists it too -- they did not, and editing the JS library left them stale.)
@@ -487,7 +489,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
 # earlier milestone's build; verify after touching this rule by running
 # `clean-data` first.
 web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
@@ -539,7 +541,7 @@ $(CLIENT_OBJDIR)/emscripten/eWebPersist-nomenusave.o: src/emscripten/eWebPersist
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_NO_MENU_SAVE -c $< -o $@
 
 web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
@@ -585,7 +587,7 @@ $(CLIENT_OBJDIR)/render/rSysdep-oldyield.o: src/render/rSysdep.cpp web/Makefile
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_YIELD_BEFORE_PERFRAME -c $< -o $@
 
 web/dist-m1/armagetronad-oldyield.html: $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
@@ -628,7 +630,7 @@ $(CLIENT_OBJDIR)/tron/gMenus-fstoggle.o: src/tron/gMenus.cpp web/Makefile
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_KEEP_FULLSCREEN_TOGGLE -c $< -o $@
 
 web/dist-m1/armagetronad-fstoggle.html: $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
@@ -683,7 +685,7 @@ $(OLDCFG_DIR)/autoexec.cfg: web/webdefaults/autoexec.cfg web/Makefile
 	@printf 'SOUND_BUFFER_SHIFT 1\n' >> $@
 
 web/dist-m1/armagetronad-oldautoexec.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js \
+                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
                                 $(OLDCFG_DIR)/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \

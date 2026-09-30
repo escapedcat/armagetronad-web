@@ -1,0 +1,52 @@
+# The menu-flicker gate: does the canvas ever show a half-drawn (black) frame
+# while a menu is open over a networked game? Run it with
+# web/tools/run-menu-flicker-gate.sh, which decides PASS/FAIL.
+#
+# WHAT IS MEASURED. A requestAnimationFrame loop copies the game canvas into a
+# 64x48 thumbnail on every browser frame and records its mean brightness --
+# i.e. what the compositor could show at that moment (the canvas is created
+# with preserveDrawingBuffer, so the copy is the current drawing buffer). A
+# frame darker than half the segment's median is a "dark" frame. The menu
+# loop clears the canvas right after each swap and then does its network work
+# before drawing; any yield to the browser in that stretch is a dark frame.
+# Measured 2026-09-30 before the fix: 47 dark of ~570 frames in the in-game
+# menu while a server waits for players, every one of them during a tDelay()
+# or eWebNet::Poll() yield (sleep sites tagged in a diagnostic build).
+#
+# THE UNIDENTIFIED-KEY FILTER: see web/tools/resource-gate.steps.
+until:1:90000:[PERSIST] populate ok
+wait:1000
+until:1:120000:[BOOT] autostart
+eval:(()=>{if(window.__keyFilter)return 'filter on';window.__keyFilter=true;for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'unidentified-key filter on'})()
+wait:9000
+key:Enter
+wait:3000
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+eval:(()=>{if(window.__keyFilter)return 'filter on';window.__keyFilter=true;for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'unidentified-key filter on'})()
+wait:6000
+eval:(()=>{const c=document.getElementById('canvas');const t=document.createElement('canvas');t.width=64;t.height=48;const x=t.getContext('2d',{willReadFrequently:true});window.__lum=[];window.__mark=(m)=>{window.__lum.push(m);return 'mark '+m};const f=()=>{try{x.drawImage(c,0,0,64,48);const d=x.getImageData(0,0,64,48).data;let s=0;for(let i=0;i<d.length;i+=4)s+=d[i]+d[i+1]+d[i+2];window.__lum.push(Math.round(s/(64*48*3)*10)/10);}catch(e){}requestAnimationFrame(f)};requestAnimationFrame(f);return 'frame sampler on'})()
+mark:WALK-TO-SERVER-BOOKMARKS-AND-CONNECT
+key:Enter
+wait:2500
+key:Enter
+wait:3500
+key:Down:3
+wait:1500
+key:Enter
+wait:3000
+key:Enter
+wait:15000
+eval:window.__mark('waiting-for-players')
+wait:6000
+shot:waiting-for-players
+key:Escape
+wait:1500
+eval:window.__mark('ingame-menu-while-waiting')
+wait:10000
+shot:ingame-menu-while-waiting
+eval:(()=>{const out=[];let seg=null;for(const v of window.__lum){if(typeof v==='string'){seg={name:v,vals:[]};out.push(seg);}else if(seg)seg.vals.push(v);}for(const s of out){const a=s.vals.slice().sort((p,q)=>p-q);const med=a[Math.floor(a.length/2)]||0;const dark=s.vals.filter(v=>v<med*0.5).length;console.log('[FLICKER] '+s.name+' frames='+s.vals.length+' median='+med+' dark='+dark+' min='+a[0]);}return 'reported'})()
