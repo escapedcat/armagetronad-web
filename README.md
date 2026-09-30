@@ -24,6 +24,16 @@ Scan the code to open it on a phone. It needs no install and no account.
   Chrome and Brave on Android.
 - **iPhone / Safari:** untested.
 
+<table>
+<tr>
+<td align="center"><img src="docs/screenshots/desktop.jpg" alt="Desktop: a round against three AI opponents, with the HUD" width="560"><br><sub>Desktop</sub></td>
+<td align="center" rowspan="2"><img src="docs/screenshots/phone-portrait.jpg" alt="Phone in portrait: the game in a square with a Game Boy pad below" width="200"><br><sub>Phone, portrait</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/phone-landscape.jpg" alt="Phone in landscape: tap the left or right half to turn" width="560"><br><sub>Phone, landscape</sub></td>
+</tr>
+</table>
+
 ### Controls
 
 **Desktop:**
