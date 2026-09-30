@@ -132,9 +132,9 @@ void ReportNoBridge()
     tOutput title, message;
     title   << "Network play unavailable";
     if ( configured )
-        message << "The bridge on this page's ?bridge= address did not answer, "
-                   "so there is no way to send UDP. Check that the relay is "
-                   "running and reload. Single player is unaffected.";
+        message << "The relay this page uses to reach game servers did not "
+                   "answer, so there is no way to send UDP. Try again in a "
+                   "moment, or reload. Single player is unaffected.";
     else
         message << "This page was loaded without a bridge, so there is no way "
                    "to send UDP from a browser. Reload with "

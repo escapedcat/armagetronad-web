@@ -20,6 +20,13 @@ mergeInto(LibraryManager.library, {
     MAX_ADDR: 255,       // one byte of address length on the wire
     url: null,
     urlChecked: false,
+    // THE PUBLISHED PAGE IS ONLINE BY DEFAULT (M-C). On that host, and only
+    // there, a page with no ?bridge= uses the public relay, which admits this
+    // page's visitors without a token (bridge/README.md, "Who may connect").
+    // Anywhere else -- localhost, the Wi-Fi test server, CI -- nothing changes:
+    // no ?bridge= means no network, so no local run or gate ever dials Fly.
+    DEFAULT_HOST: 'escapedcat.github.io',
+    DEFAULT_URL: 'wss://armagetronad-bridge.fly.dev/',
     VERSION: 1,
     TYPE: { BIND: 1, BOUND: 2, DATA: 3, CLOSE: 4, ERROR: 5 },
 
@@ -28,7 +35,13 @@ mergeInto(LibraryManager.library, {
         AABridge.urlChecked = true;
         try {
           var v = new URLSearchParams(location.search).get('bridge');
-          AABridge.url = (v && /^wss?:\/\//.test(v)) ? v : null;
+          if (v && /^wss?:\/\//.test(v)) {
+            AABridge.url = v;              // ?bridge=<url> always wins
+          } else if (v === null && location.hostname === AABridge.DEFAULT_HOST) {
+            AABridge.url = AABridge.DEFAULT_URL;
+          } else {
+            AABridge.url = null;           // incl. ?bridge=0: online play off
+          }
         } catch (e) { AABridge.url = null; }
       }
       return AABridge.url;
