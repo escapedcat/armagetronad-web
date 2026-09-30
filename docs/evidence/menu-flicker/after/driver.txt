@@ -1,0 +1,123 @@
+[   1516ms] [harness] chrome: Chrome/154.0.8037.92
+[   1516ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010
+[      6ms] [harness] until 1x <<[PERSIST] populate ok>> (timeout 90000ms, have 0)
+[     16ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[     16ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[   2442ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 8192
+[   2831ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[   2834ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[   2848ms] [page] load event fired
+[   2849ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[   3086ms] [console.log] [PERSIST] populate ok in 223ms
+[   3135ms] [harness] until SATISFIED: saw 1x <<[PERSIST] populate ok>>
+[   4136ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 0)
+[   4687ms] [console.log] [PERSIST] runtime initialized, starting the game
+[   4687ms] [console.log] [CAMERA] stock camera (factor 1)
+[   4687ms] [console.log] [SPARKS] stock sparks, nothing written
+[   4688ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[   4893ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 8192
+[   4895ms] [console.log] [BOOT] autostart: calling main
+[   4898ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   4898ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   4900ms] [console.error] 
+[   4900ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   4902ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   4902ms] [console.log] 
+[   4948ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   5026ms] [console.log] [L] ENCODING latin1
+[   5100ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   5107ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   5472ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   5476ms] [console.error] TODO: glShadeModel
+[   5479ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[   5524ms] [console.log] [PRESENT] hidden framebuffer startup -> 1024x768, depth bits 24
+[   5525ms] [harness] eval (()=>{if(window.__keyFilter)return 'filter on';window.__keyFilter=true;for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'unidentified-key filter on'})() => "unidentified-key filter on"
+[   5527ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5528ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5528ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5528ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5528ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[  14542ms] [console.log] [AUDIO] resumed on keydown
+[  14568ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  14569ms] [harness] key Enter (1/1)
+[  17908ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  17910ms] [harness] key Escape (1/1)
+[  18214ms] [harness] until 1x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  18214ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  21222ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  21222ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  21223ms] [harness] eval location.reload() => undefined
+[  21223ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  21261ms] [console.log] [TOUCH] enabled=false (media query -> false) maxTouchPoints=0
+[  21261ms] [console.log] [DISPLAY] layout=full (from the orientation) at parse
+[  21272ms] [console.log] [DISPLAY] at load: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 8192
+[  21275ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  21275ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  21281ms] [page] load event fired
+[  21290ms] [console.log] [PERSIST] populate ok in 4ms
+[  21313ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  21314ms] [console.log] [CAMERA] stock camera (factor 1)
+[  21314ms] [console.log] [SPARKS] stock sparks, nothing written
+[  21314ms] [console.log] [DISPLAY] layout=full (from the orientation) before main
+[  21323ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  21324ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[  21325ms] [console.log] [DISPLAY] before main: viewport 1024x768 dpr 1 -> canvas 1024x768 aspect 1.3333 gpu-axis-limit 8192
+[  21326ms] [console.log] [BOOT] autostart: calling main
+[  21326ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  21327ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  21327ms] [console.error] 
+[  21327ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  21327ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  21327ms] [console.log] 
+[  21425ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  21446ms] [console.log] [L] ENCODING latin1
+[  21451ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  21466ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  21469ms] [console.error] TODO: glShadeModel
+[  21472ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  21489ms] [console.log] [PRESENT] hidden framebuffer startup -> 1024x768, depth bits 24
+[  21491ms] [harness] eval (()=>{if(window.__keyFilter)return 'filter on';window.__keyFilter=true;for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'unidentified-key filter on'})() => "unidentified-key filter on"
+[  27496ms] [harness] eval (()=>{const c=document.getElementById('canvas');const t=document.createElement('canvas');t.width=64;t.height=48;const x=t.getContext('2d',{willReadFrequently:true});window.__lum=[];window.__mark=(m)=>{window.__lum.push(m);return 'mark '+m};const f=()=>{try{x.drawImage(c,0,0,64,48);const d=x.getImageData(0,0,64,48).data;let s=0;for(let i=0;i<d.length;i+=4)s+=d[i]+d[i+1]+d[i+2];window.__lum.push(Math.round(s/(64*48*3)*10)/10);}catch(e){}requestAnimationFrame(f)};requestAnimationFrame(f);return 'frame sampler on'})() => "frame sampler on"
+[  27497ms] [harness] === WALK-TO-SERVER-BOOKMARKS-AND-CONNECT ===
+[  27544ms] [harness] key Enter (1/1)
+[  30375ms] [console.log] [BRIDGE] open ws://127.0.0.1:8010
+[  30380ms] [harness] key Enter (1/1)
+[  34221ms] [harness] key Down (1/3)
+[  34566ms] [harness] key Down (2/3)
+[  34919ms] [harness] key Down (3/3)
+[  36758ms] [harness] key Enter (1/1)
+[  40101ms] [harness] key Enter (1/1)
+[  40206ms] [console.log] [BRIDGE] handle 1 bound to udp port 61423
+[  40231ms] [console.log] [BRIDGE] peer 127.0.0.1 -> 127.0.0.1 (literal)
+[  40791ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  40794ms] [console.log] [L] NEW_ROUND 2026-09-30 16:07:27 UTC+0200
+[  40813ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  40814ms] [console.log] [SND] live voices peaked at 1 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  40936ms] [console.log] [L] TEAM_PLAYER_ADDED web_user web_user
+[  41415ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gcc
+[  41416ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team latex
+[  41416ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team gdb
+[  41570ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  41773ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  41773ms] [console.log] [SND] live voices peaked at 8 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  41875ms] [console.error] warning: Audio callback had starved sending audio by 0.7827981859411004 seconds
+[  41940ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  42903ms] [console.error] warning: Audio callback had starved sending audio by 0.05053514739227083 seconds
+[  48208ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  48476ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  54011ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  54012ms] [console.log] [L] NEW_ROUND 2026-09-30 16:07:41 UTC+0200
+[  54689ms] [console.error] warning: Audio callback had starved sending audio by 0.683968253968068 seconds
+[  55426ms] [harness] eval window.__mark('waiting-for-players') => "mark waiting-for-players"
+[  61639ms] [harness] screenshot -> docs/evidence/menu-flicker/after/waiting-for-players.png
+[  61692ms] [harness] key Escape (1/1)
+[  63504ms] [harness] eval window.__mark('ingame-menu-while-waiting') => "mark ingame-menu-while-waiting"
+[  66876ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_user
+[  66877ms] [console.log] [L] NEW_ROUND 2026-09-30 16:07:54 UTC+0200
+[  67521ms] [console.error] warning: Audio callback had starved sending audio by 0.6611836734700702 seconds
+[  73680ms] [harness] screenshot -> docs/evidence/menu-flicker/after/ingame-menu-while-waiting.png
+[  73689ms] [console.log] [FLICKER] waiting-for-players frames=432 median=10.6 dark=0 min=7.4
+[  73690ms] [console.log] [FLICKER] ingame-menu-while-waiting frames=569 median=9.1 dark=0 min=5
+[  73692ms] [harness] eval (()=>{const out=[];let seg=null;for(const v of window.__lum){if(typeof v==='string'){seg={name:v,vals:[]};out.push(seg);}else if(seg)seg.vals.push(v);}for(const s of out){const a=s.vals.slice().sort((p,q)=>p-q);const med=a[Math.floor(a.length/2)]||0;const dark=s.vals.filter(v=>v<med*0.5).length;console.log('[FLICKER] '+s.name+' frames='+s.vals.length+' median='+med+' dark='+dark+' min='+a[0]);}return 'reported'})() => "reported"
+
+Transcript: docs/evidence/menu-flicker/after/console.log
