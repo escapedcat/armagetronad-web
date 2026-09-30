@@ -14,6 +14,9 @@
 #include "tDirectories.h"
 #include "tResourceManager.h"
 #include "tString.h"
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+#include "eWebFetch.h"
+#endif
 
 #ifdef LIBCURL_PROTOCOL_HTTP
 #include <curl/curl.h>
@@ -74,6 +77,22 @@ static tSettingItem<tString> conf_res_repo("RESOURCE_REPOSITORY_CLIENT", tResour
 
 tResourceManager::Result tResourceManager::FetchURI(const char* URI, std::ostream& o)
 {
+#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
+    // A page cannot open the TCP socket nanoHTTP needs; the relay fetches for
+    // us -- see src/emscripten/eWebFetch.cpp. Status 0 (nothing answered) is
+    // ERROR_Unknown, NOT static_cast<Result>(0): myFetch reads 0 as success
+    // and would hand the map loader a file it has just deleted.
+    {
+        int rc = eWebFetch( URI, o );
+        if ( rc != 200 )
+        {
+            con << tOutput( rc == 404 ? "$resource_fetcherror_404" : "$resource_fetcherror", rc );
+            return rc == 0 ? ERROR_Unknown : static_cast< tResourceManager::Result >( rc );
+        }
+        con << "OK\n";
+        return RESULT_Ok;
+    }
+#endif
 #ifdef LIBCURL_PROTOCOL_HTTP
     {
         tCurlLocal handle;
