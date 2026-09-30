@@ -1,0 +1,34 @@
+PASS N0: the saved name, no prompt after the reload
+PASS N1: no chat button before joining
+PASS N1 passed
+PASS N2: chat button once connected
+PASS the server saw the chosen name join
+PASS the server logged the chat line
+PASS the server logged the rename
+PASS no Emscripten abort
+server log, the client's lines:
+  [L] PLAYER_ENTERED phoneplayer 192.168.215.1 phoneplayer
+  [L] TEAM_CREATED phoneplayer
+  [L] TEAM_PLAYER_ADDED phoneplayer phoneplayer
+  [1] phoneplayer entered the game.
+  [L] DEATH_FRAG phoneplayer gcc
+  [0] Gcc core dumped phoneplayer for 3 points.
+  [0] phoneplayer lost 2 points since it caused a general protection fault.
+  [1] phoneplayer: hello from a phone
+  [L] CHAT phoneplayer hello from a phone
+  [L] ROUND_SCORE -2 phoneplayer phoneplayer
+  [L] ROUND_SCORE_TEAM -2 phoneplayer
+  [L] DEATH_FRAG phoneplayer gdb
+  [0] Gdb core dumped phoneplayer for 3 points.
+  [0] phoneplayer lost 2 points since it caused a general protection fault.
+  [L] ROUND_SCORE -2 phoneplayer phoneplayer
+  [L] ROUND_SCORE_TEAM -2 phoneplayer
+  [L] PLAYER_RENAMED phoneplayer phonerenamed 192.168.215.1 phonerenamed
+  [0] phoneplayer renamed to phonerenamed.
+  [L] TEAM_RENAMED phoneplayer phonerenamed
+  [L] DEATH_FRAG phonerenamed gdb
+  [0] Gdb core dumped phonerenamed for 3 points.
+  [0] phonerenamed lost 2 points since it caused a general protection fault.
+  [L] ROUND_SCORE -2 phonerenamed phonerenamed
+  [L] ROUND_SCORE_TEAM -2 phonerenamed
+--- text-net gate: ALL PASSED ---

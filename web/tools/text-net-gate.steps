@@ -1,0 +1,39 @@
+# Task 4: a phone player names itself, joins the local server, renames while
+# connected, and chats. The runner reads the server's ladder log.
+until:1:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+wait:4000
+eval:(()=>{document.getElementById('aa-name').value='phoneplayer';document.getElementById('aa-nameform').requestSubmit();return 'named'})()
+until:1:10000:[TEXT] name set to phoneplayer
+key:Enter
+wait:2500
+key:Escape
+until:1:30000:[PERSISTSAVE] menu-leave
+wait:3000
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+wait:6000
+eval:(()=>{const open=!document.getElementById('aa-namedlg').hidden;console.log('[TEXTGATE] N0 no-prompt-after-naming '+JSON.stringify({open,PASS:!open}));return 'N0'})()
+eval:(()=>{const s=getComputedStyle(document.getElementById('chatbtn')).display;console.log('[TEXTGATE] N1 no-chat-before-joining '+JSON.stringify({chatbtn:s,PASS:s==='none'}));return 'N1'})()
+key:Enter
+wait:2500
+key:Enter
+wait:3500
+key:Down:3
+wait:1500
+key:Enter
+wait:3000
+key:Enter
+wait:12000
+eval:(()=>{const s=getComputedStyle(document.getElementById('chatbtn')).display;console.log('[TEXTGATE] N2 chat-when-connected '+JSON.stringify({chatbtn:s,PASS:s!=='none'}));return 'N2'})()
+eval:(()=>{document.getElementById('chatbtn').click();document.getElementById('aa-chat').value='hello from a phone';document.getElementById('aa-chatform').requestSubmit();return 'chat submitted'})()
+until:1:10000:[TEXT] chat sent
+key:Escape
+wait:2000
+eval:(()=>{document.getElementById('namebtn').click();document.getElementById('aa-name').value='phonerenamed';document.getElementById('aa-nameform').requestSubmit();return 'renamed'})()
+until:1:10000:[TEXT] name set to phonerenamed
+# The server applies a client's new name at the next round (ePlayer.cpp,
+# UpdateName), as for desktop players, so wait across a round change.
+wait:25000
