@@ -61,9 +61,12 @@ Mode* back to Off.
   off it. Its Enter confirms. If you fold the keyboard away, tap the game to
   bring it back. New players start as `web_` plus four digits. On a server a
   new name takes effect at the next round, as on desktop.
-- **Chat:** on a server, tap **Enter** during a round. The game's chat line
-  opens with the keyboard; the keyboard's Enter sends it. Your cycle keeps
-  driving while you type, so chat between rounds or while watching.
+- **Chat:** on a server, once you've crashed, between rounds or while
+  watching, the pad's Enter says **Chat**: tap it (or the picture) and the
+  game's chat line opens with the keyboard. The keyboard's Enter sends. While
+  your cycle is alive the pad's Enter does nothing, so a stray tap can't turn
+  your arrows into typing. Pasting works from the keyboard's clipboard (on
+  Android, the clipboard chip above the keys), for example a link to this page.
 
 ## What works
 

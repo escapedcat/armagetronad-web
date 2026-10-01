@@ -5,8 +5,10 @@
 # 2026-09-30-game-text-keyboard.md). An emulated phone (portrait) joins the
 # local aa-dedicated container (bridge/test-server/text-var: waits for a
 # second player, so it stays connected, and writes chat to the ladder log,
-# echoed into the server's output), opens the game's own chat line with Enter,
-# types into the keyboard's hidden field and sends with the keyboard's Enter.
+# echoed into the server's output), crashes, opens the game's own chat line
+# with the pad's Enter (labelled Chat by then),
+# pastes into the keyboard's hidden field and sends with the keyboard's Enter.
+# Look at chat-label.png, chat-typing.png and chat-sent.png.
 # Run from the repository root, with a static server on 8008 and the
 # aa-dedicated image built:
 #
@@ -60,12 +62,15 @@ check() { # check <name> <command...>
 }
 # Anchored on eval RESULTS ('=> "..."'): the harness also logs each eval's source.
 check "connected to the server" grep -qF '=> "connected=1"' "$C"
-check "the server saw a web_NNNN player join" grep -qE 'PLAYER_ENTERED web_[0-9]{4} ' "$OUT/server.log"
-check "Enter in the round opened the keyboard with the chat line" grep -qF '=> "chat-line-keyboard=1"' "$C"
-check "the server logged the chat line" grep -qE 'CHAT web_[0-9]{4} hello from a phone' "$OUT/server.log"
+# The display name, last on the line: the log name before it spells 0 as o.
+check "the server saw a web_NNNN player join" grep -qE 'PLAYER_ENTERED .* web_[0-9]{4}$' "$OUT/server.log"
+check "while driving the pad says Enter" grep -qF '=> "driving-label=Enter"' "$C"
+check "after the crash the pad says Chat" grep -qF '=> "crashed-label=Chat"' "$C"
+check "tapping Chat opened the chat line and the keyboard" grep -qF '=> "after-tap-keyboard=1"' "$C"
+check "the server logged the pasted link" grep -qF 'Play it on your phone: https://escapedcat.github.io/armagetronad-web/' "$OUT/server.log"
 check "the keyboard closed after sending" grep -qF '=> "after-send-keyboard=0"' "$C"
 check "no Emscripten abort" sh -c "! grep -qiE 'abort\(|Aborted\(|RuntimeError: abort' '$C'"
 echo "server log, the client's lines:"
-grep -E 'web_[0-9]{4}|CHAT' "$OUT/server.log" | sed 's/^/  /' || true
+grep -E 'PLAYER_ENTERED|CHAT' "$OUT/server.log" | sed 's/^/  /' || true
 if [ "$FAILS" -gt 0 ]; then echo "--- text-net gate: $FAILS FAILED ---"; exit 1; fi
 echo "--- text-net gate: ALL PASSED ---"

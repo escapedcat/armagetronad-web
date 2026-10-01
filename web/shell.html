@@ -1626,6 +1626,8 @@
       const ime = document.getElementById('aa-ime');
       const REST = ' ';   // what the field holds between edits: backspace always has something to delete
       let prev = REST, composing = false, onField = false;
+      const padEnter = document.querySelector('#pad .pad-a');
+      let chatLabel = false;
       const fire = (type, init) => document.dispatchEvent(
         new KeyboardEvent(type, Object.assign({ bubbles: true, cancelable: true }, init)));
       const press = (key, kc) => {
@@ -1703,6 +1705,21 @@
         if (now && !onField) open();
         if (!now && onField) close('left the field');
         onField = now;
+        // THE PAD'S ENTER SAYS "Chat" when that is what it does: on a server,
+        // with no menu up and no cycle of ours alive (crashed, watching,
+        // between rounds), Enter is the chat key (config/default.cfg). While
+        // driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS A
+        // MENU KEY ONLY" above); in menus and local games it is plain Enter.
+        let chat = false;
+        try {
+          chat = Module._aa_web_connected() === 1 && (Module._aa_web_input_context() & 3) === 0;
+        } catch (e) {}
+        if (chat !== chatLabel) {
+          chatLabel = chat;
+          padEnter.textContent = chat ? 'Chat' : 'Enter';
+          padEnter.setAttribute('aria-label', chat ? 'Chat' : 'Enter');
+          console.log('[KBD] pad Enter label: ' + padEnter.textContent);
+        }
       }, 100);
     })();
 
