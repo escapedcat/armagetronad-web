@@ -1650,8 +1650,10 @@
     //  - The keyboard's Enter is the game's Enter and closes the keyboard.
     //    Folding the keyboard away releases the field, or the next tap would
     //    bring it back. A tap on the picture shows or hides the keyboard while
-    //    a text field is still highlighted. An empty chat line is closed, not
-    //    sent (src/engine/ePlayer.cpp, eMenuItemChat::Event).
+    //    a text field is still highlighted; on the chat line, putting the
+    //    keyboard away (folded, or a tap on the picture) closes the line
+    //    unsent. An empty chat line is closed, not sent (src/engine/ePlayer.cpp,
+    //    eMenuItemChat::Event).
     // Touch devices only: a desktop has a keyboard.
     (() => {
       if (!window.AA_TOUCH) return;
@@ -1695,10 +1697,21 @@
         try { ime.setSelectionRange(1, 1); } catch (e) {}
         console.log('[KBD] open');
       };
+      const chatOpen = () => {
+        try { return Module._aa_web_chat_open() === 1; } catch (e) { return false; }
+      };
       const close = (why) => {
         if (document.activeElement !== ime) return;
         ime.blur();
         console.log('[KBD] closed: ' + why);
+        // PUTTING THE KEYBOARD AWAY ENDS A CHAT. Folded by the player, or
+        // hidden by a tap on the picture: an open "Say:" line with no keyboard
+        // is a dead end, so Escape closes it, unsent, as on a desktop. A name
+        // field just loses the keyboard.
+        if ((why === 'folded' || why === 'tap on the picture') && chatOpen()) {
+          press('Escape', 27);
+          console.log('[KBD] chat line closed: the keyboard was put away');
+        }
       };
       ime.addEventListener('compositionstart', () => { composing = true; });
       ime.addEventListener('compositionend', () => { composing = false; sync(); });
