@@ -26,11 +26,12 @@ Scan the code to open it on a phone. It needs no install and no account.
 
 <table>
 <tr>
-<td align="center"><img src="docs/screenshots/desktop.jpg" alt="Desktop: a round against three AI opponents, with the HUD" width="560"><br><sub>Desktop</sub></td>
-<td align="center" rowspan="2"><img src="docs/screenshots/phone-portrait.jpg" alt="Phone in portrait: the game in a square with a Game Boy pad below" width="200"><br><sub>Phone, portrait</sub></td>
+<td align="center"><img src="docs/screenshots/desktop.jpg" alt="Desktop: a round against three AI opponents, with the HUD" width="520"><br><sub>Desktop</sub></td>
+<td align="center" rowspan="2"><img src="docs/screenshots/phone-portrait.jpg" alt="Phone in portrait, driving: the game in a square, below it two big turn halves, a brake bar and a small Esc" width="180"><br><sub>Phone, portrait: driving</sub></td>
+<td align="center" rowspan="2"><img src="docs/screenshots/phone-portrait-menu.jpg" alt="Phone in portrait, in a menu: the Game Boy pad with a cross, Enter and Esc" width="180"><br><sub>Phone, portrait: menus</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/phone-landscape.jpg" alt="Phone in landscape: tap the left or right half to turn" width="560"><br><sub>Phone, landscape</sub></td>
+<td align="center"><img src="docs/screenshots/phone-landscape.jpg" alt="Phone in landscape: tap the left or right half to turn" width="520"><br><sub>Phone, landscape</sub></td>
 </tr>
 </table>
 
@@ -50,11 +51,15 @@ accident you only watch from then on, until you set *Player Setup → Spectator
 Mode* back to Off.
 
 **Phone:**
-- **Portrait:** the game sits in a square at the top, with a Game Boy pad
-  below: a cross (← → turn, ↓ brake), Enter and Esc.
-  While driving, **hold the game picture to look around**: the left or right
-  half looks that way, the bottom quarter looks back, and letting go looks
-  ahead. The legend under the pad says so.
+- **Portrait:** the game sits in a square at the top, with controls below.
+  - **In menus**, a Game Boy pad: a cross, Enter and Esc.
+  - **While driving**, two big halves: left thumb turns left, right thumb
+    turns right, and sliding from one half into the other switches the turn.
+    The bar along the bottom brakes while held. The small Esc opens the menu
+    only on a long press, so a stray thumb can't pause the round.
+  - **Hold the game picture to look around** while driving: the left or right
+    half looks that way, the bottom quarter looks back, and letting go looks
+    ahead. The line under the pad says so.
 - **Landscape:** tap the left or right half of the screen to turn. In menus a
   tap is Enter, and there are small Up, Down and Escape buttons.
 - **The layout is chosen when the game starts.** The rotate button in the

@@ -1,0 +1,142 @@
+[   1043ms] [harness] mobile emulation: 412x915 CSS px dpr 3 (= 1236x2745 device px), touch on
+[   1046ms] [harness] chrome: Chrome/154.0.8037.92
+[   1046ms] [harness] navigating to http://localhost:8008/armagetronad.html
+[      4ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 0)
+[     26ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     28ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) at parse
+[   3060ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 8192 gameboy square 412css
+[   3060ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[   3060ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[   3068ms] [console.log] [TOUCH] orientation portrait=true (layout stays gameboy) via resize
+[   3096ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[   3096ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[   4891ms] [page] load event fired
+[   4892ms] [console.log] [TEXT] default name web_2946
+[   4909ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[   4969ms] [console.log] [PERSIST] populate ok in 1848ms
+[   5176ms] [console.log] [PERSIST] runtime initialized, starting the game
+[   5176ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[   5177ms] [console.log] [SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[   5177ms] [console.log] [HINTS] camera and glance hints off (touch device)
+[   5178ms] [console.log] [WALLS] WALL_CUT 1 written to /data/webdefaults/autoexec.cfg before main()
+[   5178ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) before main
+[   5374ms] [console.log] [DISPLAY] before main: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 8192 gameboy square 412css
+[   5375ms] [console.log] [BOOT] autostart: calling main
+[   5376ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   5376ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   5376ms] [console.error] 
+[   5377ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   5377ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   5377ms] [console.log] 
+[   5453ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   5503ms] [console.log] [L] ENCODING latin1
+[   5520ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   5525ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   5806ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   5813ms] [console.error] TODO: glShadeModel
+[   5813ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[   5874ms] [console.log] [PRESENT] hidden framebuffer startup -> 1236x1236, depth bits 24
+[   5875ms] [harness] eval (()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);const S={};S.cfg=()=>{Module._aa_web_save_config();return Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'})};S.slot1=(k)=>{const m=new RegExp('^\\s*'+k+'\\s+(.*)$','m').exec(S.cfg());return m?Number(m[1].trim().split(/\s+/)[1]):null};S.vis=(id)=>{const e=document.getElementById(id);return !!e&&getComputedStyle(e).display!=='none'&&e.getBoundingClientRect().height>0};S.whenDriving=(tag)=>{const t=document.getElementById('touch');const go=()=>{if(t.classList.contains('aa-driving')){o.disconnect();console.log('[DPGATE-READY] '+tag);}};const o=new MutationObserver(go);o.observe(t,{attributes:true,attributeFilter:['class']});setTimeout(go,200);return 'waiting: '+tag};S.finger=(type,id,fx,fy,pid)=>{const z=document.getElementById(id);const r=z.getBoundingClientRect();z.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:pid||21,isPrimary:true,pointerType:'touch',clientX:r.left+r.width*fx,clientY:r.top+r.height*fy}));return type+' '+id};S.keys=[];for(const t of ['keydown','keyup'])document.addEventListener(t,ev=>{if(/^Arrow|Escape/.test(ev.key))S.keys.push((t==='keydown'?'+':'-')+ev.key.replace('Arrow',''))},true);S.take=()=>{const k=S.keys.join(' ');S.keys.length=0;return k};window.__dp=S;return 'ready'})() => "ready"
+[   5878ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5879ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5879ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5880ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5880ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   6661ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  14915ms] [console.log] [AUDIO] resumed on keydown
+[  14925ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  14935ms] [harness] key Enter (1/1)
+[  17738ms] [console.log] [DPGATE] D1 game-boy-pad-in-menus {"drivepad":false,"cross":true,"PASS":true}
+[  17738ms] [harness] eval (()=>{const S=__dp;const r={drivepad:S.vis('drivepad'),cross:S.vis('pad-cross')};console.log('[DPGATE] D1 game-boy-pad-in-menus '+JSON.stringify(Object.assign(r,{PASS:!r.drivepad&&r.cross})));return 'D1'})() => "D1"
+[  17775ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  17786ms] [harness] key Escape (1/1)
+[  17826ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  20607ms] [console.log] [L] PLAYER_ENTERED web_2946  web_2946
+[  20608ms] [console.log] [L] TEAM_CREATED web_2946
+[  20608ms] [console.log] [L] TEAM_PLAYER_ADDED web_2946 web_2946
+[  20610ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  20612ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_2946
+[  20612ms] [console.log] [L] NEW_ROUND 2026-10-01 16:21:06 UTC+0200
+[  20629ms] [console.log] [L] TEAM_CREATED ai_team
+[  20629ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  20629ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  20630ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  20630ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  20656ms] [harness] key Space (1/1)
+[  20661ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  20661ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  20664ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  20805ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  20900ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  20966ms] [harness] eval __dp.whenDriving('d2') => "waiting: d2"
+[  20966ms] [harness] until 1x <<[DPGATE-READY] d2>> (timeout 60000ms, have 0)
+[  21535ms] [console.log] [DPGATE-READY] d2
+[  21536ms] [console.error] warning: Audio callback had starved sending audio by 0.04574603174602476 seconds
+[  21573ms] [harness] until SATISFIED: saw 1x <<[DPGATE-READY] d2>>
+[  21886ms] [console.log] [DPGATE] D2 driving-pad-while-driving {"drivepad":true,"cross":false,"ab":false,"legend":"hold picture: look around","PASS":true}
+[  21887ms] [harness] eval (()=>{const S=__dp;const lg=document.getElementById('pad-legend').innerText.trim();const r={drivepad:S.vis('drivepad'),cross:S.vis('pad-cross'),ab:S.vis('pad-ab'),legend:lg};console.log('[DPGATE] D2 driving-pad-while-driving '+JSON.stringify(Object.assign(r,{PASS:r.drivepad&&!r.cross&&!r.ab&&lg==='hold picture: look around'})));return 'D2'})() => "D2"
+[  21887ms] [harness] eval (()=>{__dp.take();return 'recording'})() => "recording"
+[  22375ms] [harness] tap #dp-right at 304,618 (1/1)
+[  22386ms] [console.error] warning: Audio callback had starved sending audio by 0.05496145124716456 seconds
+[  23084ms] [console.log] [DPGATE] D4 right-half-sends-right {"keys":"+Right -Right","PASS":true}
+[  23084ms] [harness] eval (()=>{const k=__dp.take();console.log('[DPGATE] D4 right-half-sends-right '+JSON.stringify({keys:k,PASS:k==='+Right -Right'}));return 'D4'})() => "D4"
+[  27087ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  27099ms] [harness] eval __dp.whenDriving('d3') => "waiting: d3"
+[  27100ms] [harness] until 1x <<[DPGATE-READY] d3>> (timeout 60000ms, have 0)
+[  27319ms] [console.log] [DPGATE-READY] d3
+[  27403ms] [harness] until SATISFIED: saw 1x <<[DPGATE-READY] d3>>
+[  27437ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  27438ms] [harness] eval (()=>{window.__l0=__dp.slot1('CYCLE_TURN_LEFT_TOOLTIP');return 'left before '+window.__l0})() => "left before 2"
+[  27458ms] [console.log] [L] DEATH_FRAG web_2946 excel
+[  27459ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  27588ms] [harness] tap #dp-left at 108,618 (1/1)
+[  27628ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  28405ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  28406ms] [console.log] [DPGATE] D3 left-half-turns-left {"before":2,"after":1,"PASS":true}
+[  28407ms] [harness] eval (()=>{const v=__dp.slot1('CYCLE_TURN_LEFT_TOOLTIP');console.log('[DPGATE] D3 left-half-turns-left '+JSON.stringify({before:window.__l0,after:v,PASS:v===window.__l0-1}));return 'D3'})() => "D3"
+[  28435ms] [harness] eval __dp.whenDriving('d5') => "waiting: d5"
+[  28435ms] [harness] until 1x <<[DPGATE-READY] d5>> (timeout 60000ms, have 0)
+[  28863ms] [console.log] [L] ROUND_WINNER ai_team notepad excel word
+[  32928ms] [console.log] [L] ROUND_SCORE -2 web_2946 web_2946
+[  32929ms] [console.log] [L] ROUND_SCORE_TEAM -2 web_2946
+[  32929ms] [console.log] [L] NEW_ROUND 2026-10-01 16:21:19 UTC+0200
+[  32931ms] [console.log] [L] TEAM_PLAYER_REMOVED ai_team notepad
+[  32931ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team outlook
+[  33057ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  33057ms] [console.log] [DPGATE-READY] d5
+[  33101ms] [harness] until SATISFIED: saw 1x <<[DPGATE-READY] d5>>
+[  33108ms] [harness] eval (()=>{__dp.take();__dp.finger('pointerdown','drivepad',0.25,0.3);return 'thumb down on the left half'})() => "thumb down on the left half"
+[  33360ms] [console.log] [TOUCH] slid from ArrowLeft to ArrowRight
+[  33361ms] [harness] eval __dp.finger('pointermove','drivepad',0.75,0.3) => "pointermove drivepad"
+[  33816ms] [harness] eval __dp.finger('pointerup','drivepad',0.75,0.3) => "pointerup drivepad"
+[  33816ms] [console.error] warning: Audio callback had starved sending audio by 0.09976870748307931 seconds
+[  34118ms] [console.log] [DPGATE] D5 slide-left-to-right-switches-the-turn {"keys":"+Left -Left +Right -Right","PASS":true}
+[  34119ms] [harness] eval (()=>{const k=__dp.take();console.log('[DPGATE] D5 slide-left-to-right-switches-the-turn '+JSON.stringify({keys:k,PASS:k==='+Left -Left +Right -Right'}));return 'D5'})() => "D5"
+[  34120ms] [harness] eval __dp.whenDriving('d6') => "waiting: d6"
+[  34120ms] [harness] until 1x <<[DPGATE-READY] d6>> (timeout 60000ms, have 0)
+[  34329ms] [console.log] [DPGATE-READY] d6
+[  34423ms] [harness] until SATISFIED: saw 1x <<[DPGATE-READY] d6>>
+[  34424ms] [harness] eval (()=>{__dp.take();__dp.finger('pointerdown','dp-brake',0.5,0.5,22);return 'brake down'})() => "brake down"
+[  34845ms] [console.log] [DPGATE] D6 brake-bar-holds-brake {"while_held":"+Down","keys":"+Down -Down","PASS":true}
+[  34845ms] [harness] eval (()=>{const held=__dp.keys.join(' ');__dp.finger('pointerup','dp-brake',0.5,0.5,22);const k=__dp.take();console.log('[DPGATE] D6 brake-bar-holds-brake '+JSON.stringify({while_held:held,keys:k,PASS:held==='+Down'&&k==='+Down -Down'}));return 'D6'})() => "D6"
+[  34851ms] [harness] eval __dp.whenDriving('d7') => "waiting: d7"
+[  34852ms] [harness] until 1x <<[DPGATE-READY] d7>> (timeout 60000ms, have 0)
+[  35062ms] [console.log] [DPGATE-READY] d7
+[  35156ms] [harness] until SATISFIED: saw 1x <<[DPGATE-READY] d7>>
+[  35171ms] [harness] eval (()=>{__dp.take();return __dp.finger('pointerdown','dp-esc',0.5,0.5,23)})() => "pointerdown dp-esc"
+[  35321ms] [console.log] [TOUCH] Esc too short while driving: ignored
+[  35322ms] [harness] eval __dp.finger('pointerup','dp-esc',0.5,0.5,23) => "pointerup dp-esc"
+[  36031ms] [console.log] [DPGATE] D7 short-esc-does-nothing {"menu":false,"keys":"","PASS":true}
+[  36031ms] [harness] eval (()=>{const m=(Module._aa_web_input_context()&1)===1;const k=__dp.take();console.log('[DPGATE] D7 short-esc-does-nothing '+JSON.stringify({menu:m,keys:k,PASS:!m&&!/Escape/.test(k)}));return 'D7'})() => "D7"
+[  36057ms] [harness] eval __dp.whenDriving('d8') => "waiting: d8"
+[  36057ms] [harness] until 1x <<[DPGATE-READY] d8>> (timeout 60000ms, have 0)
+[  36263ms] [console.log] [DPGATE-READY] d8
+[  36361ms] [harness] until SATISFIED: saw 1x <<[DPGATE-READY] d8>>
+[  36733ms] [harness] screenshot -> /tmp/dp/driving-pad.png
+[  36742ms] [harness] eval __dp.finger('pointerdown','dp-esc',0.5,0.5,24) => "pointerdown dp-esc"
+[  37252ms] [console.log] [TOUCH] Esc held: the in-game menu
+[  37356ms] [console.log] [TOUCH] context 3 (menu yes, cycle alive) -> TAP=ENTER
+[  37571ms] [harness] eval __dp.finger('pointerup','dp-esc',0.5,0.5,24) => "pointerup dp-esc"
+[  38273ms] [console.log] [DPGATE] D8 long-esc-opens-the-menu {"menu":true,"PASS":true}
+[  38273ms] [harness] eval (()=>{const m=(Module._aa_web_input_context()&1)===1;console.log('[DPGATE] D8 long-esc-opens-the-menu '+JSON.stringify({menu:m,PASS:m}));return 'D8'})() => "D8"
+[  38610ms] [harness] screenshot -> /tmp/dp/menu-after-long-esc.png

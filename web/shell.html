@@ -434,6 +434,28 @@
                        box-shadow:0 1px 0 #070a10, 0 2px 4px rgba(0,0,0,.5), inset 0 2px 6px rgba(0,0,0,.55);
                        text-shadow:0 0 14px rgba(53,214,255,.9); }
     .pad-b.aa-down { text-shadow:0 0 14px rgba(255,63,164,.9); }
+    /* THE DRIVING PAD. While a cycle of ours is alive the cross and Enter/Esc
+       give way to two big halves (left thumb turns left, right thumb right),
+       a brake bar along the bottom, and a small Esc that needs a long press.
+       Only ◀ ▶ ▼ matter in a round, and a drifting thumb missed the small
+       cross. Menus get the Game Boy pad back. */
+    #drivepad { display:none; }
+    html.aa-gameboy #touch.aa-driving #pad-cross,
+    html.aa-gameboy #touch.aa-driving #pad-ab { display:none; }
+    html.aa-gameboy #touch.aa-driving #drivepad {
+      display:grid; grid-column:1 / -1; grid-row:1; align-self:stretch; justify-self:stretch;
+      position:relative; grid-template-columns:1fr 1fr; grid-template-rows:1fr minmax(56px, 24%);
+      gap:12px; padding:58px 0 8px; touch-action:none; }
+    #dp-left, #dp-right { display:grid; place-items:center; font-size:min(2.4rem, 10vw); }
+    #dp-brake { grid-column:1 / -1; display:grid; place-items:center; font-size:min(1rem, 4.2vw); }
+    /* grid-area:auto undoes .pad-b's grid-area: on an absolutely positioned grid
+       child a grid area becomes its containing block, which put Esc on the brake bar. */
+    #dp-esc { position:absolute; grid-area:auto; top:2px; right:0; width:48px; height:48px; min-width:0; min-height:0;
+              font-size:.8rem; border-radius:50%; }
+    #dp-esc.arming::after { content:""; position:absolute; inset:-5px; border-radius:50%;
+                            border:3px solid #ff3fa4; animation:dp-arm 500ms linear forwards; }
+    @keyframes dp-arm { from { opacity:.15; transform:scale(.7); } to { opacity:1; transform:scale(1); } }
+    @media (prefers-reduced-motion: reduce) { #dp-esc.arming::after { animation:none; } }
     @media (prefers-reduced-motion: reduce) { .pad-btn { transition:none; } }
 
     /* THE LAYOUT SWITCH (M9). One button, inside #touch so a desktop never
@@ -620,7 +642,17 @@
         <button type="button" class="pad-btn pad-b" data-aakey="Escape" aria-label="Escape: back, or the in-game menu">Esc</button>
         <button type="button" class="pad-btn pad-a" data-aakey="Enter"  aria-label="Enter">Enter</button>
       </div>
-      <div id="pad-legend" aria-hidden="true"><span class="lg-menu"><b>&#9664; &#9654;</b> turn &middot; <b>&#9660;</b> brake &middot; <b>Enter</b> &middot; <b>Esc</b> menu</span><span class="lg-drive"><b>&#9664; &#9654;</b> turn &middot; <b>&#9660;</b> brake &middot; <b>hold picture</b>: look</span></div>
+      <!-- THE DRIVING PAD (script: "THE DRIVING PAD"): replaces the cross and
+           Enter/Esc while a cycle of ours is alive. No data-aakey: these zones
+           have their own handlers, for sliding between halves and the long
+           press on Esc. -->
+      <div id="drivepad" aria-label="Driving controls">
+        <div id="dp-left" class="pad-btn" aria-label="Turn left">&#9664;</div>
+        <div id="dp-right" class="pad-btn" aria-label="Turn right">&#9654;</div>
+        <div id="dp-brake" class="pad-btn" aria-label="Brake">&#9660; hold to brake</div>
+        <button type="button" id="dp-esc" class="pad-btn pad-b" aria-label="Escape: hold for the in-game menu">esc</button>
+      </div>
+      <div id="pad-legend" aria-hidden="true"><span class="lg-menu"><b>&#9664; &#9654;</b> turn &middot; <b>&#9660;</b> brake &middot; <b>Enter</b> &middot; <b>Esc</b> menu</span><span class="lg-drive"><b>hold picture</b>: look around</span></div>
     </div>
     <!--
       M9, THE LAYOUT SWITCH. No data-aakey: it is a page control, not a key.
@@ -1252,6 +1284,98 @@
         el.addEventListener('pointercancel', up);
       }
 
+      // ---- THE DRIVING PAD ------------------------------------------------
+      // While driving (portrait) the pad is two big halves and a brake bar
+      // (CSS "THE DRIVING PAD"). A finger's key follows where it IS, not where
+      // it landed: sliding from one half into the other releases the first
+      // turn and presses the second, so a thumb can rock instead of lifting.
+      // The keys are the cross's own (ArrowLeft/Right/Down), counted per key
+      // so two thumbs on one half hold it until both lift. Esc needs a long
+      // press while driving, so a brush doesn't open the menu mid-round.
+      const ESC_HOLD_MS = 500;
+      const dp = document.getElementById('drivepad');
+      const dpEls = { ArrowLeft: document.getElementById('dp-left'),
+                      ArrowRight: document.getElementById('dp-right'),
+                      ArrowDown: document.getElementById('dp-brake') };
+      const dpEsc = document.getElementById('dp-esc');
+      const dpFingers = new Map();   // pointerId -> key
+      const dpHeld = new Map();      // key -> fingers on it
+      const dpKeyAt = (x, y) => {
+        if (y >= dpEls.ArrowDown.getBoundingClientRect().top - 6) return 'ArrowDown';
+        const r = dp.getBoundingClientRect();
+        return x < r.left + r.width / 2 ? 'ArrowLeft' : 'ArrowRight';
+      };
+      const dpPress = (key) => {
+        const n = (dpHeld.get(key) || 0) + 1;
+        dpHeld.set(key, n);
+        if (n > 1) return;
+        dpEls[key].classList.add('aa-down');
+        pulse();
+        sendKey('keydown', key);
+      };
+      const dpRelease = (key) => {
+        const n = (dpHeld.get(key) || 0) - 1;
+        if (n > 0) { dpHeld.set(key, n); return; }
+        dpHeld.delete(key);
+        dpEls[key].classList.remove('aa-down');
+        sendKey('keyup', key);
+      };
+      dp.addEventListener('pointerdown', (ev) => {
+        if (ev.target.closest('#dp-esc')) return;
+        ev.preventDefault();
+        try { dp.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
+        const key = dpKeyAt(ev.clientX, ev.clientY);
+        dpFingers.set(ev.pointerId, key);
+        dpPress(key);
+      });
+      dp.addEventListener('pointermove', (ev) => {
+        const was = dpFingers.get(ev.pointerId);
+        if (!was) return;
+        const key = dpKeyAt(ev.clientX, ev.clientY);
+        if (key === was) return;
+        dpFingers.set(ev.pointerId, key);
+        dpRelease(was);
+        dpPress(key);
+        console.log('[TOUCH] slid from ' + was + ' to ' + key);
+      });
+      const dpLift = (ev) => {
+        const key = dpFingers.get(ev.pointerId);
+        if (!key) return;
+        dpFingers.delete(ev.pointerId);
+        dpRelease(key);
+      };
+      dp.addEventListener('pointerup', dpLift);
+      dp.addEventListener('pointercancel', dpLift);
+      const dpReleaseAll = (why) => {
+        if (!dpFingers.size) return;
+        for (const key of dpFingers.values()) dpRelease(key);
+        dpFingers.clear();
+        console.log('[TOUCH] driving pad released: ' + why);
+      };
+      let escTimer = null;
+      dpEsc.addEventListener('pointerdown', (ev) => {
+        ev.preventDefault();
+        dpEsc.classList.add('arming');
+        escTimer = setTimeout(() => {
+          escTimer = null;
+          dpEsc.classList.remove('arming');
+          pulse();
+          sendKey('keydown', 'Escape');
+          sendKey('keyup', 'Escape');
+          console.log('[TOUCH] Esc held: the in-game menu');
+        }, ESC_HOLD_MS);
+      });
+      const escLift = () => {
+        dpEsc.classList.remove('arming');
+        if (!escTimer) return;
+        clearTimeout(escTimer);
+        escTimer = null;
+        console.log('[TOUCH] Esc too short while driving: ignored');
+      };
+      dpEsc.addEventListener('pointerup', escLift);
+      dpEsc.addEventListener('pointercancel', escLift);
+      dpEsc.addEventListener('pointerleave', escLift);
+
       // ---- PHONE FEEDBACK ROUND 2: which key does a tap on the screen mean?
       //
       // THE GAME ANSWERS, NOT THE PAGE. src/emscripten/eWebInput.cpp exports
@@ -1322,7 +1446,7 @@
         const wasDriving = lastCtx >= 0 && isDriving(lastCtx);
         lastCtx = ctx;
         const driving = isDriving(ctx);
-        if (driving !== wasDriving) releaseAllKeys('input context changed');
+        if (driving !== wasDriving) { releaseAllKeys('input context changed'); dpReleaseAll('input context changed'); }
         touchEl.classList.toggle('aa-driving', driving);
         // One machine-readable line per transition, so the touch gate can
         // assert the state the game was in rather than inferring it from a
