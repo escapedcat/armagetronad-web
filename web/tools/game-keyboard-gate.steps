@@ -4,6 +4,7 @@
 # is "typed" (the field's value changed and an input event fired, the way a
 # phone keyboard does it) lands in the game's own field, and it closes again.
 # Headless Chrome opens no real keyboard; focus on #aa-ime stands in for it.
+# A real tap on the picture shows the keyboard (K8) and hides it (K9).
 # The typed words stay under the 15-character name limit (see the known edge
 # in shell.html); ▲ is sent the way the pad sends it.
 #
@@ -11,7 +12,7 @@
 #   node web/tools/drive-browser.mjs --out /tmp/kbd --mobile 412,915,3 \
 #     --url http://localhost:8008/armagetronad.html \
 #     --script-file web/tools/game-keyboard-gate.steps
-#   grep -c '\[KBDGATE\] .*"PASS":true' /tmp/kbd/console.log    # 7
+#   grep -c '\[KBDGATE\] .*"PASS":true' /tmp/kbd/console.log    # 10
 until:1:120000:[BOOT] autostart
 eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
 wait:6000
@@ -23,7 +24,7 @@ wait:1000
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K2 opens-on-name '+JSON.stringify({focused:f,PASS:f}));return 'K2'})()
 eval:(()=>{const i=document.getElementById('aa-ime');window.__nameBefore=(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);return m?m[1].trim().replace(/\\(.)/g,'$1'):null})();i.value=' Zoë';i.dispatchEvent(new InputEvent('input',{inputType:'insertText',data:'Zoë'}));return 'typed Zoë after '+window.__nameBefore})()
 wait:800
-eval:(()=>{const i=document.getElementById('aa-ime');i.dispatchEvent(new CompositionEvent('compositionstart'));for(const v of [' h',' hi',' Hi']){i.value=v;i.dispatchEvent(new InputEvent('input',{inputType:'insertCompositionText',data:v.trim()}));}i.dispatchEvent(new CompositionEvent('compositionend'));return 'suggestion rewrote hi -> Hi'})()
+eval:(()=>{const i=document.getElementById('aa-ime');const base=i.value;i.dispatchEvent(new CompositionEvent('compositionstart'));for(const w of ['h','hi','Hi']){const v=base+w;i.value=v;i.dispatchEvent(new InputEvent('input',{inputType:'insertCompositionText',data:v.trim()}));}i.dispatchEvent(new CompositionEvent('compositionend'));return 'suggestion rewrote hi -> Hi'})()
 wait:800
 # key:X types a lower-case x (the driver presses no Shift).
 key:X
@@ -33,8 +34,29 @@ shot:name-typed
 eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'keyboard enter'})()
 wait:1500
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K6 enter-closes '+JSON.stringify({focused:f,PASS:!f}));return 'K6'})()
-eval:(()=>{document.getElementById('canvas').dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));return 'tap the game'})()
-wait:500
+tap:#tapzone
+wait:600
+eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K8 tap-on-picture-shows-keyboard '+JSON.stringify({focused:f,PASS:f}));return 'K8'})()
+tap:#tapzone
+wait:600
+eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K9 tap-on-picture-hides-keyboard '+JSON.stringify({focused:f,PASS:!f}));return 'K9'})()
+tap:#tapzone
+wait:600
 eval:(()=>{for(const t of ['keydown','keyup'])document.dispatchEvent(new KeyboardEvent(t,{key:'ArrowUp',code:'ArrowUp',keyCode:38,which:38,bubbles:true,cancelable:true}));return 'pad up'})()
 wait:1000
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K7 up-closes '+JSON.stringify({focused:f,PASS:!f}));return 'K7'})()
+# K10: SWIPED WORDS KEEP THEIR SPACE. Back onto Name, clear it, then two words
+# arrive the way a swipe keyboard sends them: it reads the text before the
+# cursor and adds a space only if that doesn't already end in one. The field
+# must still hold " hi" when the second word comes (it is not reset between
+# edits); reset to " ", the keyboard sees a space, adds none, and the game
+# gets "hiyo".
+eval:(()=>{for(const t of ['keydown','keyup'])document.dispatchEvent(new KeyboardEvent(t,{key:'ArrowDown',code:'ArrowDown',keyCode:40,which:40,bubbles:true,cancelable:true}));return 'pad down'})()
+wait:1000
+eval:(()=>{const i=document.getElementById('aa-ime');for(let n=0;n<16;n++){i.value='';i.dispatchEvent(new InputEvent('input',{inputType:'deleteContentBackward'}));}return 'cleared'})()
+wait:600
+eval:(()=>{const i=document.getElementById('aa-ime');i.dispatchEvent(new CompositionEvent('compositionstart'));const b=i.value;i.value=b+((b.length&&!b.endsWith(' '))?' ':'')+'hi';i.dispatchEvent(new InputEvent('input',{inputType:'insertCompositionText'}));i.dispatchEvent(new CompositionEvent('compositionend'));return 'swiped hi: field '+JSON.stringify(i.value)})()
+wait:400
+eval:(()=>{const i=document.getElementById('aa-ime');i.dispatchEvent(new CompositionEvent('compositionstart'));const b=i.value;i.value=b+((b.length&&!b.endsWith(' '))?' ':'')+'yo';i.dispatchEvent(new InputEvent('input',{inputType:'insertCompositionText'}));i.dispatchEvent(new CompositionEvent('compositionend'));return 'swiped yo: field '+JSON.stringify(i.value)})()
+wait:800
+eval:(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m?m[1].trim().replace(/\\(.)/g,'$1'):null;console.log('[KBDGATE] K10 swiped-words-keep-their-space '+JSON.stringify({saved:v,PASS:v==='hi yo'}));return 'K10'})()
