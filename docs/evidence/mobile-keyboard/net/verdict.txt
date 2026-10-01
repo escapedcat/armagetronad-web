@@ -1,22 +1,12 @@
 PASS connected to the server
 PASS the server saw a web_NNNN player join
-PASS Enter in the round opened the keyboard with the chat line
-PASS the server logged the chat line
+PASS while driving the pad says Enter
+PASS after the crash the pad says Chat
+PASS tapping Chat opened the chat line and the keyboard
+PASS the server logged the pasted link
 PASS the keyboard closed after sending
 PASS no Emscripten abort
 server log, the client's lines:
-  [L] PLAYER_ENTERED web_8226 192.168.215.1 web_8226
-  [L] TEAM_CREATED web_8226
-  [L] TEAM_PLAYER_ADDED web_8226 web_8226
-  [1] web_8226 entered the game.
-  [L] DEATH_FRAG web_8226 gcc
-  [0] Gcc core dumped web_8226 for 3 points.
-  [0] web_8226 lost 2 points since it caused a general protection fault.
-  [L] ROUND_SCORE -2 web_8226 web_8226
-  [L] ROUND_SCORE_TEAM -2 web_8226
-  [1] web_8226: hello from a phone
-  [L] CHAT web_8226 hello from a phone
-  [L] DEATH_FRAG web_8226 gdb
-  [0] Gdb core dumped web_8226 for 3 points.
-  [0] web_8226 lost 2 points since it caused a general protection fault.
+  [L] PLAYER_ENTERED web_2889 192.168.215.1 web_2889
+  [L] CHAT web_2889 Play it on your phone: https://escapedcat.github.io/armagetronad-web/
 --- text-net gate: ALL PASSED ---

@@ -29,6 +29,7 @@ wait:800
 key:X
 wait:800
 eval:(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m?m[1].trim().replace(/\\(.)/g,'$1'):null;const want=window.__nameBefore+'Zoë';console.log('[KBDGATE] K3 typed-into-the-game '+JSON.stringify({saved:v,PASS:!!v&&v.startsWith(want)}));console.log('[KBDGATE] K4 suggestion-exact '+JSON.stringify({PASS:!!v&&v.startsWith(want+'Hi')}));console.log('[KBDGATE] K5 real-key-once '+JSON.stringify({PASS:!!v&&v===want+'Hix'}));return 'K3-K5'})()
+shot:name-typed
 eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'keyboard enter'})()
 wait:1500
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K6 enter-closes '+JSON.stringify({focused:f,PASS:!f}));return 'K6'})()

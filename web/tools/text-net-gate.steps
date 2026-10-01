@@ -1,15 +1,26 @@
 # The phone keyboard against a real server (web/tools/run-text-net-gate.sh).
-# A phone joins under its web_NNNN default name; Enter during the round opens
-# the game's own chat line (Enter is the chat key, config/default.cfg), the
-# keyboard's hidden field opens with it, a line is "typed" into it, and the
-# keyboard's Enter sends it. The runner reads the server's ladder log.
+# A phone joins under its web_NNNN default name and plays a round. While its
+# cycle is alive the pad's Enter is inert and labelled "Enter" (Enter is the
+# chat key, and the pad suppresses it while driving); after the crash it says
+# "Chat". A real touch tap on it opens the game's own chat line and the
+# keyboard's hidden field; a link is pasted into it, and the keyboard's Enter
+# sends it. The runner reads the server's ladder log.
 until:1:120000:[BOOT] autostart
 eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
-wait:6000
+# 9 s, as in leave-hidden-gate: an Enter before the language menu is up
+# leaves first setup unfinished, and boot 2 then starts in a local round.
+wait:9000
 key:Enter
 wait:2500
 key:Escape
-until:1:30000:[PERSISTSAVE] menu-leave
+until:2:30000:[PERSISTSAVE] menu-leave
+# SAVE AGAIN BEFORE THE RELOAD. The game clears FIRST_USE only after First
+# Setup has closed (gArmagetron.cpp), so the save as it closes still says
+# FIRST_USE 1, and boot 2 would be a first run again whenever the unload-time
+# save lost the race with the reload. (Dismissing the welcome message to get a
+# third menu save was tried: its own key-up sometimes dismisses it first.)
+wait:2000
+eval:(()=>{Module._aa_web_save_config();return 'saved after first setup'})()
 wait:3000
 eval:location.reload()
 until:2:90000:[PERSIST] populate ok
@@ -27,11 +38,21 @@ wait:3000
 key:Enter
 wait:12000
 eval:'connected='+Module._aa_web_connected()
-key:Enter
-wait:1500
-eval:'chat-line-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
-eval:(()=>{const i=document.getElementById('aa-ime');i.value=' hello from a phone';i.dispatchEvent(new InputEvent('input',{inputType:'insertText',data:'hello from a phone'}));return 'typed'})()
+eval:(()=>{const t=document.getElementById('touch');let seen=false;new MutationObserver(()=>{if(!seen&&t.classList.contains('aa-driving')){seen=true;console.log('[ALIVE] driving');}else if(seen===true&&!t.classList.contains('aa-driving')){seen='dead';console.log('[ALIVE] crashed');}}).observe(t,{attributes:true,attributeFilter:['class']});return 'armed'})()
+until:1:90000:[ALIVE] driving
+wait:300
+eval:'driving-label='+document.querySelector('#pad .pad-a').textContent
+until:1:90000:[ALIVE] crashed
+wait:600
+eval:'crashed-label='+document.querySelector('#pad .pad-a').textContent
+shot:chat-label
+tap:.pad-a
 wait:800
-eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'keyboard enter'})()
-wait:3000
+eval:'after-tap-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
+eval:(()=>{const i=document.getElementById('aa-ime');i.value=' Play it on your phone: https://escapedcat.github.io/armagetronad-web/';i.dispatchEvent(new InputEvent('input',{inputType:'insertFromPaste'}));return 'pasted'})()
+wait:400
+shot:chat-typing
+eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'sent'})()
+wait:2500
 eval:'after-send-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
+shot:chat-sent

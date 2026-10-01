@@ -35,13 +35,17 @@ throwaway spike the maintainer tried on his phone.
   - `web_NNNN` default names (`Module.ENV.USER`);
   - `interactive-widget=resizes-visual`.
 - **Layout button:** icon only, and the `aria-label` names the target layout.
+- **The pad's Enter says "Chat"** on a server when no menu is up and no cycle of
+  ours is alive: that's when Enter opens chat. While driving, the pad suppresses
+  Enter (M7.1), so the label stays "Enter". Added after the maintainer asked.
 
 ## Constraints
 
 - **Dedicated wasm stays at 2488298 bytes / `9718a2a64978cb6e9b95ea2f0454cca5`.**
   `uMenu.cpp` is compiled into it too.
-- **Never call a wasm export with a string from a browser event.** Only
-  `aa_web_text_selected()` is read, and it takes no arguments.
+- **Never call a wasm export with a string from a browser event.** The page only
+  reads `aa_web_text_selected()`, `aa_web_connected()` and
+  `aa_web_input_context()`, none of which take arguments.
 
 ## Tasks
 

@@ -28,22 +28,40 @@ All 7 pass.
 
 ## Against a real server: `net/`
 
-The same phone joins the local `aa-dedicated` container through a local
-relay. Enter during the round opens the game's chat line and the keyboard. A
-line is typed, and the keyboard's Enter sends it.
+The same phone joins the local `aa-dedicated` container through a local relay
+and plays a round:
+
+- **While its cycle is alive,** the pad's Enter says "Enter" and does nothing.
+  Since M7.1 the pad suppresses Enter while driving, because Enter is the chat
+  key.
+- **After the crash** it says **Chat**.
+- **A real touch tap on it** opens the game's own chat line and the keyboard's
+  hidden field.
+- **A link is pasted** into the field, and the keyboard's Enter sends it.
 
 ```sh
 sh web/tools/run-text-net-gate.sh docs/evidence/mobile-keyboard/net
 ```
 
-The server's own lines (`net/server.log`):
+The server's own line (`net/server.log`):
 
 ```
-[L] PLAYER_ENTERED web_8226 192.168.215.1 web_8226
-[L] CHAT web_8226 hello from a phone
+[L] CHAT web_NNNN Play it on your phone: https://escapedcat.github.io/armagetronad-web/
 ```
 
-All 6 checks pass (`net/verdict.txt`).
+All 9 checks pass (`net/verdict.txt`), on two runs in a row.
+
+**Two things made earlier runs flaky.** Both were fixed in the steps:
+- **The first boot pressed Enter before the language menu was up.** The steps
+  now wait 9 s, as `leave-hidden-gate` does.
+- **The reload raced the save.** The game clears `FIRST_USE` only after First
+  Setup closes, so the save as it closes still says 1. The steps now save once
+  more before reloading. Without that, the second boot was a first run again
+  and the menu keys went into the tutorial round.
+
+## Screenshots: `screens/`
+
+![The keyboard in the name field, the Chat label, the chat line, the sent line](screens/overview.jpg)
 
 ## Default name: `web/tools/default-name-gate.steps`
 
