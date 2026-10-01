@@ -39,7 +39,7 @@ wait:3000
 key:Enter
 wait:12000
 eval:'connected='+Module._aa_web_connected()
-eval:(()=>{window.__whenChat=(tag)=>{const b=document.querySelector('#pad .pad-a');const go=()=>{if(b.textContent==='Chat'){o.disconnect();console.log('[NETGATE] '+tag);}};const o=new MutationObserver(go);o.observe(b,{childList:true,characterData:true,subtree:true});setTimeout(go,300);return 'waiting for Chat: '+tag};return 'helper'})()
+eval:(()=>{window.__whenChat=(tag)=>{const b=document.querySelector('#pad .pad-a');let done=false;const iv=setInterval(()=>{if(done)return;if(b.textContent==='Chat'&&b.getBoundingClientRect().height>0){done=true;clearInterval(iv);console.log('[NETGATE] '+tag);}},100);return 'waiting for a visible Chat: '+tag};return 'helper'})()
 eval:(()=>{const t=document.getElementById('touch');let seen=false;new MutationObserver(()=>{if(!seen&&t.classList.contains('aa-driving')){seen=true;console.log('[ALIVE] driving');}else if(seen===true&&!t.classList.contains('aa-driving')){seen='dead';console.log('[ALIVE] crashed');}}).observe(t,{attributes:true,attributeFilter:['class']});return 'armed'})()
 until:1:90000:[ALIVE] driving
 wait:300
@@ -51,6 +51,8 @@ shot:chat-label
 tap:#tapzone
 wait:800
 eval:'picture-tap-chat='+((Module._aa_web_input_context()&1)?1:0)+','+(document.activeElement.id==='aa-ime'?1:0)
+eval:__whenChat('chat-ready-first')
+until:1:90000:[NETGATE] chat-ready-first
 tap:.pad-a
 wait:800
 eval:'after-tap-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
@@ -80,7 +82,7 @@ shot:chat-sent
 # have started; then that is after the next crash), open the chat line and
 # press the keyboard's Enter with nothing typed. The runner counts the
 # server's CHAT lines (one).
-eval:(()=>{const b=document.querySelector('#pad .pad-a');const go=()=>{if(b.textContent==='Chat'){o.disconnect();console.log('[NETGATE] chat-ready-again');}};const o=new MutationObserver(go);o.observe(b,{childList:true,characterData:true,subtree:true});setTimeout(go,1500);return 'waiting for Chat'})()
+eval:__whenChat('chat-ready-again')
 until:1:90000:[NETGATE] chat-ready-again
 wait:300
 tap:.pad-a

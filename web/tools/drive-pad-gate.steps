@@ -1,0 +1,72 @@
+# DRIVING PAD GATE (web/shell.html "THE DRIVING PAD"). An emulated phone in
+# portrait, in the first-run tutorial round. While driving, the Game Boy pad
+# becomes two big turn halves, a brake bar and a small Esc that needs a long
+# press; in menus the Game Boy pad is back. The witness for a turn or a brake
+# end to end (D3) is the game's own per-player tooltip counter
+# (CYCLE_TURN_LEFT_TOOLTIP, slot 1), which uBindPlayer::DoActivate counts down
+# only when the press reached player 1's turn. It moves only while its hint is
+# due, so the other checks read the keys the pad sends instead, in order: a
+# key recorder on document, where SDL listens.
+#
+#   python3 -m http.server 8008 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --out /tmp/dp --mobile 412,915,3 \
+#     --url http://localhost:8008/armagetronad.html --script-file web/tools/drive-pad-gate.steps
+#   grep -o '\[DPGATE\] .*' /tmp/dp/console.log    # every line "PASS":true
+until:1:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);const S={};S.cfg=()=>{Module._aa_web_save_config();return Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'})};S.slot1=(k)=>{const m=new RegExp('^\\s*'+k+'\\s+(.*)$','m').exec(S.cfg());return m?Number(m[1].trim().split(/\s+/)[1]):null};S.vis=(id)=>{const e=document.getElementById(id);return !!e&&getComputedStyle(e).display!=='none'&&e.getBoundingClientRect().height>0};S.whenDriving=(tag)=>{const t=document.getElementById('touch');const go=()=>{if(t.classList.contains('aa-driving')){o.disconnect();console.log('[DPGATE-READY] '+tag);}};const o=new MutationObserver(go);o.observe(t,{attributes:true,attributeFilter:['class']});setTimeout(go,200);return 'waiting: '+tag};S.finger=(type,id,fx,fy,pid)=>{const z=document.getElementById(id);const r=z.getBoundingClientRect();z.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:pid||21,isPrimary:true,pointerType:'touch',clientX:r.left+r.width*fx,clientY:r.top+r.height*fy}));return type+' '+id};S.keys=[];for(const t of ['keydown','keyup'])document.addEventListener(t,ev=>{if(/^Arrow|Escape/.test(ev.key))S.keys.push((t==='keydown'?'+':'-')+ev.key.replace('Arrow',''))},true);S.take=()=>{const k=S.keys.join(' ');S.keys.length=0;return k};window.__dp=S;return 'ready'})()
+wait:9000
+key:Enter
+wait:2500
+eval:(()=>{const S=__dp;const r={drivepad:S.vis('drivepad'),cross:S.vis('pad-cross')};console.log('[DPGATE] D1 game-boy-pad-in-menus '+JSON.stringify(Object.assign(r,{PASS:!r.drivepad&&r.cross})));return 'D1'})()
+key:Escape
+wait:2500
+key:Space
+eval:__dp.whenDriving('d2')
+until:1:60000:[DPGATE-READY] d2
+wait:300
+eval:(()=>{const S=__dp;const lg=document.getElementById('pad-legend').innerText.trim();const r={drivepad:S.vis('drivepad'),cross:S.vis('pad-cross'),ab:S.vis('pad-ab'),legend:lg};console.log('[DPGATE] D2 driving-pad-while-driving '+JSON.stringify(Object.assign(r,{PASS:r.drivepad&&!r.cross&&!r.ab&&lg==='hold picture: look around'})));return 'D2'})()
+# D4 checks only the keys the pad sends, so it runs during the countdown,
+# before a turn can steer the cycle into a wall.
+eval:(()=>{__dp.take();return 'recording'})()
+tap:#dp-right
+wait:400
+eval:(()=>{const k=__dp.take();console.log('[DPGATE] D4 right-half-sends-right '+JSON.stringify({keys:k,PASS:k==='+Right -Right'}));return 'D4'})()
+# The round opens with a countdown in which the game ignores turns
+# (ePlayer::Act passes them on only once se_GameTime() >= 0): wait it out.
+wait:4000
+eval:__dp.whenDriving('d3')
+until:1:60000:[DPGATE-READY] d3
+eval:(()=>{window.__l0=__dp.slot1('CYCLE_TURN_LEFT_TOOLTIP');return 'left before '+window.__l0})()
+tap:#dp-left
+wait:500
+eval:(()=>{const v=__dp.slot1('CYCLE_TURN_LEFT_TOOLTIP');console.log('[DPGATE] D3 left-half-turns-left '+JSON.stringify({before:window.__l0,after:v,PASS:v===window.__l0-1}));return 'D3'})()
+eval:__dp.whenDriving('d5')
+until:1:60000:[DPGATE-READY] d5
+eval:(()=>{__dp.take();__dp.finger('pointerdown','drivepad',0.25,0.3);return 'thumb down on the left half'})()
+wait:250
+eval:__dp.finger('pointermove','drivepad',0.75,0.3)
+wait:250
+eval:__dp.finger('pointerup','drivepad',0.75,0.3)
+wait:300
+eval:(()=>{const k=__dp.take();console.log('[DPGATE] D5 slide-left-to-right-switches-the-turn '+JSON.stringify({keys:k,PASS:k==='+Left -Left +Right -Right'}));return 'D5'})()
+eval:__dp.whenDriving('d6')
+until:1:60000:[DPGATE-READY] d6
+eval:(()=>{__dp.take();__dp.finger('pointerdown','dp-brake',0.5,0.5,22);return 'brake down'})()
+wait:400
+eval:(()=>{const held=__dp.keys.join(' ');__dp.finger('pointerup','dp-brake',0.5,0.5,22);const k=__dp.take();console.log('[DPGATE] D6 brake-bar-holds-brake '+JSON.stringify({while_held:held,keys:k,PASS:held==='+Down'&&k==='+Down -Down'}));return 'D6'})()
+eval:__dp.whenDriving('d7')
+until:1:60000:[DPGATE-READY] d7
+eval:(()=>{__dp.take();return __dp.finger('pointerdown','dp-esc',0.5,0.5,23)})()
+wait:120
+eval:__dp.finger('pointerup','dp-esc',0.5,0.5,23)
+wait:700
+eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;const k=__dp.take();console.log('[DPGATE] D7 short-esc-does-nothing '+JSON.stringify({menu:m,keys:k,PASS:!m&&!/Escape/.test(k)}));return 'D7'})()
+eval:__dp.whenDriving('d8')
+until:1:60000:[DPGATE-READY] d8
+shot:driving-pad
+eval:__dp.finger('pointerdown','dp-esc',0.5,0.5,24)
+wait:800
+eval:__dp.finger('pointerup','dp-esc',0.5,0.5,24)
+wait:700
+eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;console.log('[DPGATE] D8 long-esc-opens-the-menu '+JSON.stringify({menu:m,PASS:m}));return 'D8'})()
+shot:menu-after-long-esc
