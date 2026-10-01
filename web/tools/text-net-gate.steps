@@ -3,8 +3,9 @@
 # cycle is alive the pad's Enter is inert and labelled "Enter" (Enter is the
 # chat key, and the pad suppresses it while driving); after the crash it says
 # "Chat". A real touch tap on it opens the game's own chat line and the
-# keyboard's hidden field; a link is pasted into it, and the keyboard's Enter
-# sends it. The runner reads the server's ladder log.
+# keyboard's hidden field. Putting the keyboard away closes the chat line
+# unsent: a tap on the picture, then a fold (simulated: visualViewport shrinks
+# and grows back). Then a link is pasted and the keyboard's Enter sends it. The runner reads the server's ladder log.
 until:1:120000:[BOOT] autostart
 eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
 # 9 s, as in leave-hidden-gate: an Enter before the language menu is up
@@ -38,6 +39,7 @@ wait:3000
 key:Enter
 wait:12000
 eval:'connected='+Module._aa_web_connected()
+eval:(()=>{window.__whenChat=(tag)=>{const b=document.querySelector('#pad .pad-a');const go=()=>{if(b.textContent==='Chat'){o.disconnect();console.log('[NETGATE] '+tag);}};const o=new MutationObserver(go);o.observe(b,{childList:true,characterData:true,subtree:true});setTimeout(go,300);return 'waiting for Chat: '+tag};return 'helper'})()
 eval:(()=>{const t=document.getElementById('touch');let seen=false;new MutationObserver(()=>{if(!seen&&t.classList.contains('aa-driving')){seen=true;console.log('[ALIVE] driving');}else if(seen===true&&!t.classList.contains('aa-driving')){seen='dead';console.log('[ALIVE] crashed');}}).observe(t,{attributes:true,attributeFilter:['class']});return 'armed'})()
 until:1:90000:[ALIVE] driving
 wait:300
@@ -53,11 +55,20 @@ tap:.pad-a
 wait:800
 eval:'after-tap-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
 tap:#tapzone
-wait:600
-eval:'picture-hides-keyboard='+(document.activeElement.id==='aa-ime'?0:1)+','+((Module._aa_web_input_context()&1)?1:0)
-tap:#tapzone
-wait:600
-eval:'picture-shows-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
+wait:800
+eval:'picture-tap-closes-chat='+(document.activeElement.id==='aa-ime'?1:0)+','+((Module._aa_web_input_context()&1)?1:0)
+eval:__whenChat('chat-ready-fold')
+until:1:90000:[NETGATE] chat-ready-fold
+tap:.pad-a
+wait:1000
+eval:'reopened-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
+eval:(()=>{window.__openBeforeFold=(Module._aa_web_input_context()&1)?1:0;const vv=window.visualViewport;const full=window.innerHeight;let h=full*0.5;Object.defineProperty(vv,'height',{configurable:true,get:()=>h});vv.dispatchEvent(new Event('resize'));h=full;vv.dispatchEvent(new Event('resize'));delete vv.height;return 'keyboard folded'})()
+wait:1000
+eval:'fold-closes-chat='+window.__openBeforeFold+','+(document.activeElement.id==='aa-ime'?1:0)+','+((Module._aa_web_input_context()&1)?1:0)
+eval:__whenChat('chat-ready-send')
+until:1:90000:[NETGATE] chat-ready-send
+tap:.pad-a
+wait:1000
 eval:(()=>{const i=document.getElementById('aa-ime');i.value=' Play it on your phone: https://escapedcat.github.io/armagetronad-web/';i.dispatchEvent(new InputEvent('input',{inputType:'insertFromPaste'}));return 'pasted'})()
 wait:400
 shot:chat-typing

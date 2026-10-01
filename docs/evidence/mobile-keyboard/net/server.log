@@ -1,27 +1,27 @@
 [0] Command HUD_CACHE_THRESHOLD unknown.
 [0] 
 [L] ENCODING latin1
-[0] Bound socket to *.*.*.*:44038.
+[0] Bound socket to *.*.*.*:47827.
 [0] Bound socket to *.*.*.*:4534.
 [0] Setting CYCLE_BRAKE_REFILL (Group: Annoying) deviates from its default value; clients older than 0.2.5.0 may experience problems.
 [0] Nobody there. Taking a nap...
-[0] Timestamp: 2026/10/01 12:48:01
+[0] Timestamp: 2026/10/01 13:18:25
 [0] Closing socket bound to *.*.*.*:4534
 [0] Bound socket to *.*.*.*:4534.
-[1] Received login from 192.168.215.1:35993 via socket *.*.*.*:4534, network version: 0.2.9_alpha (ID: 17).
+[1] Received login from 192.168.215.1:38359 via socket *.*.*.*:4534, network version: 0.2.9_alpha (ID: 17).
 [1] New user: 1
-[L] PLAYER_ENTERED web_2o39 192.168.215.1 web_2039
-[L] TEAM_CREATED web_2o39
-[L] TEAM_PLAYER_ADDED web_2o39 web_2o39
-[1] web_2039 entered the game.
-[L] NEW_ROUND 2026-10-01 12:48:53 UTC
-[L] NEW_MATCH 2026-10-01 12:48:53 UTC
-[0] Time:     51.996 seconds
-Sent:     6850 bytes in 40 packets (131.741 bytes/s)
-Received: 2342 bytes in 35 packets (45.0419 bytes/s)
-[0] Timestamp: 2026/10/01 12:48:53
+[L] PLAYER_ENTERED web_1984 192.168.215.1 web_1984
+[L] TEAM_CREATED web_1984
+[L] TEAM_PLAYER_ADDED web_1984 web_1984
+[1] web_1984 entered the game.
+[L] NEW_ROUND 2026-10-01 13:19:17 UTC
+[L] NEW_MATCH 2026-10-01 13:19:17 UTC
+[0] Time:     52.5389 seconds
+Sent:     7364 bytes in 40 packets (140.163 bytes/s)
+Received: 2354 bytes in 34 packets (44.8049 bytes/s)
+[0] Timestamp: 2026/10/01 13:19:17
 [0] Creating grid...
-[0] Ping charity changed from 0 to 300.
+[0] Ping charity changed from 0 to 213.
 [L] TEAM_CREATED ai_team
 [L] TEAM_PLAYER_ADDED ai_team latex
 [0] LaTeX entered the game.
@@ -37,58 +37,81 @@ Received: 2342 bytes in 35 packets (45.0419 bytes/s)
 [0] 2
 [0] 1
 [0] 0
-[L] DEATH_FRAG web_2o39 gcc
-[0] Gcc core dumped web_2039 for 3 points.
-[0] web_2039 lost 2 points since it caused a general protection fault.
+[L] DEATH_FRAG web_1984 gcc
+[0] Gcc core dumped web_1984 for 3 points.
+[0] web_1984 lost 2 points since it caused a general protection fault.
 [0] AI team was awarded 10 points for being last active team.
 [0] Winner: AI team
 [L] ROUND_WINNER ai_team gdb gcc latex
 [0] Deleting objects...
 [0] Deleting grid...
 [0] 
-[L] ROUND_SCORE -2 web_2o39 web_2o39
-[L] ROUND_SCORE_TEAM -2 web_2o39
-[L] NEW_ROUND 2026-10-01 12:49:06 UTC
-[0] Time:     12.6935 seconds
-Sent:     15200 bytes in 153 packets (1197.46 bytes/s)
-Received: 5990 bytes in 129 packets (471.895 bytes/s)
-[0] Timestamp: 2026/10/01 12:49:06
+[L] ROUND_SCORE -2 web_1984 web_1984
+[L] ROUND_SCORE_TEAM -2 web_1984
+[L] NEW_ROUND 2026-10-01 13:19:31 UTC
+[0] Time:     13.7309 seconds
+Sent:     15060 bytes in 152 packets (1096.8 bytes/s)
+Received: 6060 bytes in 131 packets (441.341 bytes/s)
+[0] Timestamp: 2026/10/01 13:19:31
 [0] Creating grid...
-[0] Ping charity changed from 300 to 100.
+[0] Ping charity changed from 213 to 100.
 [0] done!
 [0] Go (round 2 of 10)!
 [0] 3
 [0] 2
 [0] 1
 [0] 0
-[L] DEATH_FRAG web_2o39 gdb
-[0] Gdb core dumped web_2039 for 3 points.
-[0] web_2039 lost 2 points since it caused a general protection fault.
+[L] DEATH_FRAG web_1984 gdb
+[0] Gdb core dumped web_1984 for 3 points.
+[0] web_1984 lost 2 points since it caused a general protection fault.
 [0] AI team was awarded 10 points for being last active team.
 [0] Winner: AI team
 [L] ROUND_WINNER ai_team gdb gcc latex
 [0] Deleting objects...
 [0] Deleting grid...
 [0] 
-[L] ROUND_SCORE -2 web_2o39 web_2o39
-[L] ROUND_SCORE_TEAM -2 web_2o39
-[L] NEW_ROUND 2026-10-01 12:49:19 UTC
-[0] Time:     12.6557 seconds
-Sent:     13136 bytes in 145 packets (1037.95 bytes/s)
-Received: 5324 bytes in 118 packets (420.679 bytes/s)
-[0] Timestamp: 2026/10/01 12:49:19
+[L] ROUND_SCORE -2 web_1984 web_1984
+[L] ROUND_SCORE_TEAM -2 web_1984
+[L] NEW_ROUND 2026-10-01 13:19:44 UTC
+[0] Time:     12.8095 seconds
+Sent:     13274 bytes in 150 packets (1036.26 bytes/s)
+Received: 6060 bytes in 133 packets (473.087 bytes/s)
+[0] Timestamp: 2026/10/01 13:19:44
 [0] Creating grid...
 [0] done!
 [0] Go (round 3 of 10)!
-[1] web_2039: Play it on your phone: https://escapedcat.github.io/armagetronad-web/
-[L] CHAT web_2o39 Play it on your phone: https://escapedcat.github.io/armagetronad-web/
 [0] 3
 [0] 2
 [0] 1
 [0] 0
-[L] DEATH_FRAG web_2o39 gdb
-[0] Gdb core dumped web_2039 for 3 points.
-[0] web_2039 lost 2 points since it caused a general protection fault.
+[L] DEATH_FRAG web_1984 gdb
+[0] Gdb core dumped web_1984 for 3 points.
+[0] web_1984 lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[L] ROUND_WINNER ai_team gdb gcc latex
+[1] web_1984: Play it on your phone: https://escapedcat.github.io/armagetronad-web/
+[L] CHAT web_1984 Play it on your phone: https://escapedcat.github.io/armagetronad-web/
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[L] ROUND_SCORE -2 web_1984 web_1984
+[L] ROUND_SCORE_TEAM -2 web_1984
+[L] NEW_ROUND 2026-10-01 13:19:56 UTC
+[0] Time:     12.7521 seconds
+Sent:     13376 bytes in 152 packets (1048.93 bytes/s)
+Received: 6028 bytes in 130 packets (472.707 bytes/s)
+[0] Timestamp: 2026/10/01 13:19:57
+[0] Creating grid...
+[0] done!
+[0] Go (round 4 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[L] DEATH_FRAG web_1984 gdb
+[0] Gdb core dumped web_1984 for 3 points.
+[0] web_1984 lost 2 points since it caused a general protection fault.
 [0] AI team was awarded 10 points for being last active team.
 [0] Winner: AI team
 [L] ROUND_WINNER ai_team gdb gcc latex

@@ -69,7 +69,8 @@ Mode* back to Off.
   opens with the keyboard. The keyboard's Enter sends; an empty line just
   closes. While your cycle is alive the pad's Enter does nothing, so a stray
   tap can't turn your arrows into typing. A tap on the picture never opens
-  chat; while you type, it hides or shows the keyboard. Pasting works from
+  chat. Putting the keyboard away, by folding it or with a tap on the
+  picture, closes the chat line without sending. Pasting works from
   the keyboard's clipboard (on Android, the clipboard chip above the keys).
 - **Single player** against the AI, on desktop and on phones, with sound.
 - **Online multiplayer on the real community servers.** Play → Multiplayer →
