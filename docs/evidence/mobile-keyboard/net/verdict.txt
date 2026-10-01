@@ -2,11 +2,17 @@ PASS connected to the server
 PASS the server saw a web_NNNN player join
 PASS while driving the pad says Enter
 PASS after the crash the pad says Chat
+PASS a tap on the picture after the crash opened no chat
+PASS with the chat line open, a tap on the picture hid the keyboard
+PASS and a second tap showed it again
 PASS tapping Chat opened the chat line and the keyboard
 PASS the server logged the pasted link
+PASS the chat line was open for the empty test
+PASS Enter on an empty chat line closed it
+PASS the empty line was not sent (one CHAT line in all)
 PASS the keyboard closed after sending
 PASS no Emscripten abort
 server log, the client's lines:
-  [L] PLAYER_ENTERED web_2889 192.168.215.1 web_2889
-  [L] CHAT web_2889 Play it on your phone: https://escapedcat.github.io/armagetronad-web/
+  [L] PLAYER_ENTERED web_2o39 192.168.215.1 web_2039
+  [L] CHAT web_2o39 Play it on your phone: https://escapedcat.github.io/armagetronad-web/
 --- text-net gate: ALL PASSED ---

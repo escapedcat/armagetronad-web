@@ -65,14 +65,12 @@ Mode* back to Off.
   bring it back. New players start as `web_` plus four digits. On a server a
   new name takes effect at the next round, as on desktop.
 - **Chat:** on a server, once you've crashed, between rounds or while
-  watching, the pad's Enter says **Chat**: tap it (or the picture) and the
-  game's chat line opens with the keyboard. The keyboard's Enter sends. While
-  your cycle is alive the pad's Enter does nothing, so a stray tap can't turn
-  your arrows into typing. Pasting works from the keyboard's clipboard (on
-  Android, the clipboard chip above the keys), for example a link to this page.
-
-## What works
-
+  watching, the pad's Enter says **Chat**: tap it and the game's chat line
+  opens with the keyboard. The keyboard's Enter sends; an empty line just
+  closes. While your cycle is alive the pad's Enter does nothing, so a stray
+  tap can't turn your arrows into typing. A tap on the picture never opens
+  chat; while you type, it hides or shows the keyboard. Pasting works from
+  the keyboard's clipboard (on Android, the clipboard chip above the keys).
 - **Single player** against the AI, on desktop and on phones, with sound.
 - **Online multiplayer on the real community servers.** Play → Multiplayer →
   Online Multiplayer lists the live servers, and you join like any desktop

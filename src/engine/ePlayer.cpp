@@ -3868,16 +3868,16 @@ public:
     eMenuItemChat(uMenu *M,tString &c,ePlayer *Me):
     uMenuItemStringWithHistory(M,"$chat_title_text","",c, se_SpamMaxLen, se_chatHistory, se_chatHistoryMaxSize),me(Me) {}
 
-
     virtual ~eMenuItemChat(){ }
-
-    //virtual void Render(REAL x,REAL y,REAL alpha=1,bool selected=0);
 
     virtual bool Event(SDL_Event &e){
 #ifndef DEDICATED
         if (e.type==SDL_KEYDOWN &&
                 (e.key.keysym.sym==SDLK_KP_ENTER || e.key.keysym.sym==SDLK_RETURN)){
 
+#if defined(__EMSCRIPTEN__) // web: Enter on an empty chat line closes it without sending (spare lines above went to make room)
+            if ( content->Len() <= 1 ) { MyMenu()->Exit(); return true; }
+#endif
             for(int i=se_PlayerNetIDs.Len()-1;i>=0;i--)
                 if (se_PlayerNetIDs(i)->pID==me->ID())
                     se_PlayerNetIDs(i)->Chat(*content);

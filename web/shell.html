@@ -1376,6 +1376,23 @@
           console.log('[TOUCH] tap ignored: the game is asking for steering');
           return;
         }
+        // ON A TEXT FIELD (a name, the chat line) A TAP SHOWS OR HIDES THE
+        // PHONE KEYBOARD instead of pressing Enter: Enter there would send the
+        // chat line, and folding the keyboard is what a tap on the picture
+        // means to a phone user. See "THE PHONE KEYBOARD".
+        if (window.AA_KBD && window.AA_KBD.onField()) {
+          window.AA_KBD.toggle('tap on the picture');
+          return;
+        }
+        // IN A ROUND, THE PICTURE DOESN'T OPEN CHAT IN PORTRAIT. With no menu
+        // up, Enter is the chat key; the pad's Enter (labelled "Chat" then) is
+        // how a portrait player opens chat, so a stray tap on the picture
+        // doesn't. Landscape has no pad, so its tap stays Enter.
+        if (document.documentElement.classList.contains('aa-gameboy') &&
+            (readContext() & AA_CTX_MENU) === 0) {
+          console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
+          return;
+        }
         pulse();
         sendKey('keydown', 'Enter');
         sendKey('keyup', 'Enter');
@@ -1632,13 +1649,14 @@
     //    can delete one too many.
     //  - The keyboard's Enter is the game's Enter and closes the keyboard.
     //    Folding the keyboard away releases the field, or the next tap would
-    //    bring it back; a tap on the game (not on a pad key) brings it back
-    //    while a text field is still highlighted.
+    //    bring it back. A tap on the picture shows or hides the keyboard while
+    //    a text field is still highlighted. An empty chat line is closed, not
+    //    sent (src/engine/ePlayer.cpp, eMenuItemChat::Event).
     // Touch devices only: a desktop has a keyboard.
     (() => {
       if (!window.AA_TOUCH) return;
       const ime = document.getElementById('aa-ime');
-      const REST = ' ';   // what the field holds between edits: backspace always has something to delete
+      const REST = ' ';   // what the field starts with: backspace always has something to delete
       let prev = REST, composing = false, onField = false;
       const padEnter = document.querySelector('#pad .pad-a');
       let chatLabel = false;
@@ -1664,7 +1682,12 @@
         for (let i = 0; i < gone; i++) press('Backspace', 8);
         for (const ch of came) typeChar(ch);
         prev = cur;
-        if (!composing && cur !== REST) { ime.value = REST; prev = REST; }
+        // THE FIELD KEEPS WHAT WAS TYPED while it is open (it is cleared on
+        // open): a keyboard reads the text before the cursor to decide on the
+        // space before a swiped word, and on capitals and suggestions. Reset
+        // to the bare REST space after every edit, it saw a space and added
+        // none, and swiped words ran together. Only a deleted REST is put back.
+        if (!composing && !cur.startsWith(REST)) { ime.value = REST; prev = REST; }
       };
       const open = () => {
         ime.value = REST; prev = REST; composing = false;
@@ -1707,11 +1730,12 @@
           else if (shrunk) { shrunk = false; close('folded'); }
         });
       }
-      document.addEventListener('pointerup', (e) => {
-        if (!onField || document.activeElement === ime) return;
-        if (e.target.closest && e.target.closest('[data-aakey], #layoutbtn')) return;
-        open();
-      }, true);
+      // A tap on the picture shows or hides the keyboard while a text field is
+      // highlighted (the tap layer's handler, "ON A TEXT FIELD", calls this).
+      window.AA_KBD = {
+        onField: () => onField,
+        toggle: (why) => { if (document.activeElement === ime) close(why); else open(); },
+      };
       setInterval(() => {
         if (window.AA_RUNTIME_READY !== true) return;
         let now = false;

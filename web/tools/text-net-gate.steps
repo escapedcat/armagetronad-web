@@ -46,9 +46,18 @@ until:1:90000:[ALIVE] crashed
 wait:600
 eval:'crashed-label='+document.querySelector('#pad .pad-a').textContent
 shot:chat-label
+tap:#tapzone
+wait:800
+eval:'picture-tap-chat='+((Module._aa_web_input_context()&1)?1:0)+','+(document.activeElement.id==='aa-ime'?1:0)
 tap:.pad-a
 wait:800
 eval:'after-tap-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
+tap:#tapzone
+wait:600
+eval:'picture-hides-keyboard='+(document.activeElement.id==='aa-ime'?0:1)+','+((Module._aa_web_input_context()&1)?1:0)
+tap:#tapzone
+wait:600
+eval:'picture-shows-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
 eval:(()=>{const i=document.getElementById('aa-ime');i.value=' Play it on your phone: https://escapedcat.github.io/armagetronad-web/';i.dispatchEvent(new InputEvent('input',{inputType:'insertFromPaste'}));return 'pasted'})()
 wait:400
 shot:chat-typing
@@ -56,3 +65,16 @@ eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('ke
 wait:2500
 eval:'after-send-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
 shot:chat-sent
+# AN EMPTY LINE IS NOT SENT: once the pad says Chat again (a new round may
+# have started; then that is after the next crash), open the chat line and
+# press the keyboard's Enter with nothing typed. The runner counts the
+# server's CHAT lines (one).
+eval:(()=>{const b=document.querySelector('#pad .pad-a');const go=()=>{if(b.textContent==='Chat'){o.disconnect();console.log('[NETGATE] chat-ready-again');}};const o=new MutationObserver(go);o.observe(b,{childList:true,characterData:true,subtree:true});setTimeout(go,1500);return 'waiting for Chat'})()
+until:1:90000:[NETGATE] chat-ready-again
+wait:300
+tap:.pad-a
+wait:1200
+eval:'empty-test-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
+eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'empty enter'})()
+wait:2500
+eval:'after-empty-enter-menu='+((Module._aa_web_input_context()&1)?1:0)
