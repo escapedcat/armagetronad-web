@@ -4,7 +4,12 @@
 and switch the camera view. On desktop these are held keys (GLANCE_LEFT,
 GLANCE_RIGHT, GLANCE_BACK) and a pressed key (SWITCH_VIEW).
 
-**Status:** proposal, for the maintainer to approve before building.
+**Status:** built. The maintainer decided:
+- **Look back is a bottom strip** (a quarter of the picture), not two fingers.
+- **No camera button.**
+- **Landscape later.**
+- **Discovery:** the pad's legend says `hold picture: look` while driving. No
+  overlay and no glow.
 
 ## Design
 
@@ -15,10 +20,11 @@ hidden under `.aa-driving`. That makes it free for looking.
 
 - **Hold the left half of the picture:** look left while held.
 - **Hold the right half:** look right while held.
-- **Hold with two fingers anywhere on the picture:** look back.
+- **Hold the bottom quarter of the picture:** look back.
 - **Let go:** look ahead again.
-- **Camera button:** a small button in the picture's bottom-right corner
-  switches the camera view, once per tap. It shows only while driving.
+- **Legend:** while driving, the line under the pad reads
+  `◀ ▶ turn · ▼ brake · hold picture: look`. Enter does nothing on the pad
+  then, so it isn't shown.
 
 In menus, and after a crash, the picture keeps its current job: a tap is Enter
 or Chat. Landscape is unchanged, because both halves of the screen already

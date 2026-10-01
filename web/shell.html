@@ -405,6 +405,17 @@
                   color:#8a8f9c; font:400 min(.8rem, 3.4vw)/1.3 ui-monospace, Menlo, "Roboto Mono", monospace;
                   letter-spacing:.02em; white-space:nowrap; -webkit-user-select:none; user-select:none; }
     #pad-legend b { color:#cfd3dc; font-weight:400; }
+    /* While driving, Enter does nothing on the pad (see "ENTER ON THE PAD IS
+       A MENU KEY ONLY"), so the legend says how to look around instead. */
+    #touch.aa-driving #pad-legend .lg-menu,
+    #touch:not(.aa-driving) #pad-legend .lg-drive { display:none; }
+    /* THE LOOK ZONE covers the square, in the Game Boy layout, while driving.
+       Its bottom quarter looks back, the halves above it look left and right
+       (script: "LOOKING AROUND"). */
+    #lookzone { display:none; position:absolute; left:0; right:0; top:0;
+                height:var(--aa-square, 100vw); touch-action:none;
+                -webkit-tap-highlight-color:transparent; }
+    html.aa-gameboy #touch.aa-driving #lookzone { display:block; }
     .pad-btn { min-width:44px; min-height:44px; width:100%; height:100%; padding:0;
                font:700 min(1.1rem, 4.6vw)/1 ui-monospace, Menlo, "Roboto Mono", monospace; color:#35d6ff;
                background:linear-gradient(180deg, #3f4654 0%, #2b3039 55%, #232730 100%);
@@ -568,6 +579,9 @@
       one of them not also count as a tap on the screen.
     -->
     <div id="tapzone" aria-hidden="true"></div>
+    <!-- LOOKING AROUND (script: "LOOKING AROUND"): over the picture, portrait
+         only, and only while driving, when the picture takes no other taps. -->
+    <div id="lookzone" aria-hidden="true"></div>
     <div class="tz" id="tz-left"  data-aakey="ArrowLeft"  aria-hidden="true"></div>
     <div class="tz" id="tz-right" data-aakey="ArrowRight" aria-hidden="true"></div>
     <button type="button" id="escbtn" data-aakey="Escape"
@@ -606,7 +620,7 @@
         <button type="button" class="pad-btn pad-b" data-aakey="Escape" aria-label="Escape: back, or the in-game menu">Esc</button>
         <button type="button" class="pad-btn pad-a" data-aakey="Enter"  aria-label="Enter">Enter</button>
       </div>
-      <div id="pad-legend" aria-hidden="true"><b>&#9664; &#9654;</b> turn &middot; <b>&#9660;</b> brake &middot; <b>Enter</b> &middot; <b>Esc</b> menu</div>
+      <div id="pad-legend" aria-hidden="true"><span class="lg-menu"><b>&#9664; &#9654;</b> turn &middot; <b>&#9660;</b> brake &middot; <b>Enter</b> &middot; <b>Esc</b> menu</span><span class="lg-drive"><b>&#9664; &#9654;</b> turn &middot; <b>&#9660;</b> brake &middot; <b>hold picture</b>: look</span></div>
     </div>
     <!--
       M9, THE LAYOUT SWITCH. No data-aakey: it is a page control, not a key.
@@ -1721,6 +1735,56 @@
           console.log('[KBD] pad Enter label: ' + padEnter.textContent);
         }
       }, 100);
+    })();
+
+    // ---- LOOKING AROUND --------------------------------------------------
+    // A finger held on the game picture while driving (portrait) looks the way
+    // a desktop player's held glance key does: the left or right half looks
+    // left or right, the bottom quarter looks back, and letting go looks ahead.
+    // The legend under the pad says "hold picture: look" while driving.
+    // The page only reports which looks are held, as bits (1 left, 2 right,
+    // 4 back), through aa_web_look(); src/emscripten/eWebLook.cpp presses the
+    // game's own GLANCE_* actions from the game's frame loop. Leaving the
+    // driving state (a crash, a menu) lets go of everything, so a finger the
+    // page lost track of can't leave the camera looking sideways.
+    (() => {
+      if (!window.AA_TOUCH) return;
+      const zone = document.getElementById('lookzone');
+      const touchEl = document.getElementById('touch');
+      const fingers = new Map();   // pointerId -> bit
+      let sent = 0;
+      const bitAt = (x, y) => {
+        const r = zone.getBoundingClientRect();
+        if (y >= r.top + r.height * 0.75) return 4;
+        return x < r.left + r.width / 2 ? 1 : 2;
+      };
+      const send = () => {
+        let bits = 0;
+        for (const b of fingers.values()) bits |= b;
+        if (bits === sent) return;
+        sent = bits;
+        try { Module._aa_web_look(bits); } catch (e) {}
+      };
+      zone.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        try { zone.setPointerCapture(e.pointerId); } catch (err) {}
+        fingers.set(e.pointerId, bitAt(e.clientX, e.clientY));
+        send();
+      });
+      zone.addEventListener('pointermove', (e) => {
+        if (!fingers.has(e.pointerId)) return;
+        fingers.set(e.pointerId, bitAt(e.clientX, e.clientY));
+        send();
+      });
+      const lift = (e) => { fingers.delete(e.pointerId); send(); };
+      zone.addEventListener('pointerup', lift);
+      zone.addEventListener('pointercancel', lift);
+      new MutationObserver(() => {
+        if (!touchEl.classList.contains('aa-driving') && (fingers.size || sent)) {
+          fingers.clear();
+          send();
+        }
+      }).observe(touchEl, { attributes: true, attributeFilter: ['class'] });
     })();
 
     // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------

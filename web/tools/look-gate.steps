@@ -1,0 +1,46 @@
+# LOOK GATE (web/shell.html "LOOKING AROUND", src/emscripten/eWebLook.cpp).
+# An emulated phone in portrait, in the first-run tutorial round: holding the
+# picture's left or right half looks that way, holding its bottom strip looks
+# back, letting go looks ahead, and a crash with a finger still down lets go.
+# Fingers are PointerEvents on #lookzone (the page's handlers don't care
+# whether an event is trusted); the witness is the game's own answer, logged
+# by the hook: "[LOOK] left on (handled 1)" means the camera took the action.
+#
+#   python3 -m http.server 8008 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --out /tmp/look --mobile 412,915,3 \
+#     --url http://localhost:8008/armagetronad.html --script-file web/tools/look-gate.steps
+#   grep -o '\[LOOKGATE\] .*' /tmp/look/console.log    # L1, L2: "PASS":true
+#   for l in 'left on (handled 1)' 'left off' 'back on (handled 1)' 'back off' \
+#            'right on (handled 1)' 'right off'; do
+#     grep -qF "[LOOK] $l" /tmp/look/console.log && echo "PASS $l" || echo "FAIL $l"; done
+# L3-L5 are those six lines: left and back each on and off again, and the
+# right look held into the crash and released by it (the finger never lifts).
+until:1:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);window.__finger=(type,fx,fy,id)=>{const z=document.getElementById('lookzone');const r=z.getBoundingClientRect();z.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id||11,isPrimary:true,pointerType:'touch',clientX:r.left+r.width*fx,clientY:r.top+r.height*fy}));return type};return 'ready'})()
+wait:9000
+key:Enter
+wait:2500
+eval:(()=>{const z=document.getElementById('lookzone');const d=z?getComputedStyle(z).display:null;console.log('[LOOKGATE] L1 no-lookzone-in-menus '+JSON.stringify({display:d,PASS:!!z&&d==='none'}));return 'L1'})()
+key:Escape
+# The welcome message waits for a key. Space dismisses it, and is harmless if
+# the round has already begun: the cursor-keys setup binds it to player 2.
+wait:2500
+key:Space
+until:1:60000:-> STEERING
+wait:500
+eval:(()=>{const z=document.getElementById('lookzone');const d=getComputedStyle(z).display;const el=document.getElementById('pad-legend');const lg=el.innerText;const r=el.getBoundingClientRect();const fits=r.left>=0&&r.right<=window.innerWidth&&el.scrollWidth<=el.clientWidth+1;console.log('[LOOKGATE] L2 lookzone-and-legend-while-driving '+JSON.stringify({display:d,legend:lg,fits,PASS:d!=='none'&&/hold picture/.test(lg)&&/look/.test(lg)&&fits}));return 'L2'})()
+eval:__finger('pointerdown',0.2,0.3)
+wait:400
+eval:__finger('pointerup',0.2,0.3)
+wait:400
+shot:look-ahead
+eval:__finger('pointerdown',0.5,0.9)
+wait:900
+shot:look-back-held
+eval:__finger('pointerup',0.5,0.9)
+wait:400
+eval:(()=>{const t=document.getElementById('touch');const o=new MutationObserver(()=>{if(!t.classList.contains('aa-driving')){o.disconnect();console.log('[LOOKGATE] crashed');}});o.observe(t,{attributes:true,attributeFilter:['class']});return 'watching for the crash'})()
+eval:__finger('pointerdown',0.8,0.3)
+until:1:60000:[LOOKGATE] crashed
+wait:600
+shot:look-after-crash
