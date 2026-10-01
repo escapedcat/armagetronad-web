@@ -1,0 +1,15 @@
+# TOUCH HINTS GATE (web/shell.html "NO KEYBOARD HINTS FOR KEYS A PHONE DOESN'T
+# HAVE"). On a touch device the camera and glance tooltips ("Press <v> or <c>
+# to switch camera modes", ...) are switched off before main(); a desktop is
+# left alone. Run it twice:
+#
+#   python3 -m http.server 8008 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --out /tmp/hints-phone --mobile 412,915,3 \
+#     --url http://localhost:8008/armagetronad.html --script-file web/tools/touch-hints-gate.steps
+#   node web/tools/drive-browser.mjs --out /tmp/hints-desk \
+#     --url http://localhost:8008/armagetronad.html --script-file web/tools/touch-hints-gate.steps
+#   grep -o '\[HINTGATE\] .*' /tmp/hints-*/console.log    # every line "PASS":true
+until:1:120000:[BOOT] autostart
+wait:4000
+eval:(()=>{const touch=!!window.AA_TOUCH;const a=Module.FS.readFile('/data/webdefaults/autoexec.cfg',{encoding:'utf8'});const want=['SWITCH_VIEW_TOOLTIP','GLANCE_BACK_TOOLTIP','GLANCE_LEFT_TOOLTIP','GLANCE_RIGHT_TOOLTIP'];const has=want.filter(k=>new RegExp('^'+k+' 0 0 0 0 0$','m').test(a));const pass=touch?has.length===4:(has.length===0&&!/TOOLTIP/.test(a));console.log('[HINTGATE] H1 startup-config '+JSON.stringify({touch,written:has,PASS:pass}));return 'H1'})()
+eval:(()=>{Module._aa_web_save_config();const c=Module.FS.readFile('/persist/var/user.cfg',{encoding:'utf8'});const line=(k)=>{const m=new RegExp('^\\s*'+k+'\\s+(.*)$','m').exec(c);return m?m[1].trim().replace(/\s+/g,' '):null};const touch=!!window.AA_TOUCH;const v=line('SWITCH_VIEW_TOOLTIP'),g=line('GLANCE_LEFT_TOOLTIP'),t=line('CYCLE_TURN_LEFT_TOOLTIP');const pass=touch?(v==='0 0 0 0 0'&&g==='0 0 0 0 0'&&t!=='0 0 0 0 0'):(v==='0 2 1 1 1');console.log('[HINTGATE] H2 game-sees-it '+JSON.stringify({touch,switch_view:v,glance_left:g,turn_left_untouched:t,PASS:pass}));return 'H2'})()

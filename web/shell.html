@@ -1889,6 +1889,32 @@
       }
     }
 
+    // ---- NO KEYBOARD HINTS FOR KEYS A PHONE DOESN'T HAVE --------------------
+    // The game shows a tooltip the first times an action is due: "Press <v> or
+    // <c> to switch camera modes", "... to glance left", and so on. On a phone
+    // those name keys that don't exist, so a touch device switches the camera
+    // and glance tooltips off. Each *_TOOLTIP is a counter of how many more
+    // times to show it (config/default.cfg); all zeros means never. Appended
+    // to the same file and for the same reason as the sparks above: it has to
+    // be conditional on something only the page knows, and the file is read
+    // after user.cfg, so it wins on every boot. A desktop is left alone.
+    // The turn and chat tooltips stay: the touch and portrait gates count them.
+    const TOUCH_HINTS_OFF = ['SWITCH_VIEW_TOOLTIP 0 0 0 0 0', 'GLANCE_BACK_TOOLTIP 0 0 0 0 0',
+                             'GLANCE_LEFT_TOOLTIP 0 0 0 0 0', 'GLANCE_RIGHT_TOOLTIP 0 0 0 0 0'];
+    function applyTouchHints() {
+      if (!window.AA_TOUCH) return;
+      try {
+        const path = '/data/webdefaults/autoexec.cfg';
+        const lines = ['', '# appended at runtime by web/shell.html: no camera or glance hints on a touch device']
+                      .concat(TOUCH_HINTS_OFF, ['']);
+        Module.FS.writeFile(
+          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
+        console.log('[HINTS] camera and glance hints off (touch device)');
+      } catch (e) {
+        console.log('[HINTS] skipped: ' + e);
+      }
+    }
+
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
@@ -2088,6 +2114,7 @@
         // touch camera tuning below is here rather than in preRun.
         applyTouchCameraTuning();
         applyTouchSparksTuning();
+        applyTouchHints();
         applyWallCutParam();
         let manual = false;
         try {
