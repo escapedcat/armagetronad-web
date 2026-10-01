@@ -1,0 +1,97 @@
+[    731ms] [harness] mobile emulation: 360x780 CSS px dpr 3 (= 1080x2340 device px), touch on
+[    732ms] [harness] chrome: Chrome/154.0.8037.92
+[    732ms] [harness] navigating to http://localhost:8008/armagetronad.html
+[      4ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 0)
+[    543ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[    548ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) at parse
+[   1943ms] [console.log] [DISPLAY] at load: viewport 360x780 dpr 3 -> canvas 1080x1080 aspect 1.0000 gpu-axis-limit 8192 gameboy square 360css
+[   1944ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[   1944ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[   2210ms] [console.log] [TOUCH] orientation portrait=true (layout stays gameboy) via resize
+[   2219ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[   2220ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[   2221ms] [page] load event fired
+[   2226ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[   2238ms] [console.log] [TEXT] default name web_8495
+[   2455ms] [console.log] [PERSIST] populate ok in 217ms
+[   2667ms] [console.log] [PERSIST] runtime initialized, starting the game
+[   2668ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[   2669ms] [console.log] [SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[   2669ms] [console.log] [HINTS] camera and glance hints off (touch device)
+[   2669ms] [console.log] [WALLS] WALL_CUT 1 written to /data/webdefaults/autoexec.cfg before main()
+[   2669ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) before main
+[   4530ms] [console.log] [DISPLAY] before main: viewport 360x780 dpr 3 -> canvas 1080x1080 aspect 1.0000 gpu-axis-limit 8192 gameboy square 360css
+[   4531ms] [console.log] [BOOT] autostart: calling main
+[   4543ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   4550ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   4550ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   4552ms] [console.error] 
+[   4552ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   4553ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   4553ms] [console.log] 
+[   4659ms] [console.log] [L] ENCODING latin1
+[   4670ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   4671ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   4975ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   4981ms] [console.error] TODO: glShadeModel
+[   4983ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[   5065ms] [console.log] [PRESENT] hidden framebuffer startup -> 1080x1080, depth bits 24
+[   5066ms] [harness] eval (()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);window.__finger=(type,fx,fy,id)=>{const z=document.getElementById('lookzone');const r=z.getBoundingClientRect();z.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id||11,isPrimary:true,pointerType:'touch',clientX:r.left+r.width*fx,clientY:r.top+r.height*fy}));return type};return 'ready'})() => "ready"
+[   5066ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5066ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5067ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5067ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5069ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   5332ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  14073ms] [console.log] [AUDIO] resumed on keydown
+[  14092ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  14100ms] [harness] key Enter (1/1)
+[  16904ms] [console.log] [LOOKGATE] L1 no-lookzone-in-menus {"display":"none","PASS":true}
+[  16904ms] [harness] eval (()=>{const z=document.getElementById('lookzone');const d=z?getComputedStyle(z).display:null;console.log('[LOOKGATE] L1 no-lookzone-in-menus '+JSON.stringify({display:d,PASS:!!z&&d==='none'}));return 'L1'})() => "L1"
+[  16936ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  16939ms] [harness] key Escape (1/1)
+[  16944ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  19763ms] [console.log] [L] PLAYER_ENTERED web_8495  web_8495
+[  19764ms] [console.log] [L] TEAM_CREATED web_8495
+[  19765ms] [console.log] [L] TEAM_PLAYER_ADDED web_8495 web_8495
+[  19766ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 1)
+[  19768ms] [console.log] [L] ROUND_SCORE_TEAM 0 web_8495
+[  19769ms] [console.log] [L] NEW_ROUND 2026-10-01 12:11:07 UTC+0200
+[  19784ms] [console.log] [L] TEAM_CREATED ai_team
+[  19785ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team word
+[  19785ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team excel
+[  19785ms] [console.log] [L] TEAM_PLAYER_ADDED ai_team notepad
+[  19786ms] [console.log] [WAV] loaded /data/sound/cyclrun.wav: 40403 bytes, 8-bit mono @ 22050 Hz (fopen misses so far: 2)
+[  19874ms] [harness] key Space (1/1)
+[  19875ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 2)
+[  19876ms] [console.log] [WAV] retiring a voice on moviesounds/intro.wav: loaded but zero samples
+[  19876ms] [console.log] [SND] live voices peaked at 9 (SOUND_SOURCES 10, loudness_thresh 0.0000)
+[  20000ms] [console.log] [TOUCH] context 2 (menu no, cycle alive) -> STEERING
+[  20088ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[  20176ms] [harness] until 1x <<-> STEERING>> (timeout 60000ms, have 1)
+[  20176ms] [harness] until SATISFIED: saw 1x <<-> STEERING>>
+[  20680ms] [console.log] [LOOKGATE] L2 lookzone-and-legend-while-driving {"display":"block","legend":"◀ ▶ turn · ▼ brake · hold picture: look","fits":true,"PASS":true}
+[  20681ms] [harness] eval (()=>{const z=document.getElementById('lookzone');const d=getComputedStyle(z).display;const el=document.getElementById('pad-legend');const lg=el.innerText;const r=el.getBoundingClientRect();const fits=r.left>=0&&r.right<=window.innerWidth&&el.scrollWidth<=el.clientWidth+1;console.log('[LOOKGATE] L2 lookzone-and-legend-while-driving '+JSON.stringify({display:d,legend:lg,fits,PASS:d!=='none'&&/hold picture/.test(lg)&&/look/.test(lg)&&fits}));return 'L2'})() => "L2"
+[  20681ms] [console.error] warning: Audio callback had starved sending audio by 0.05641269841269114 seconds
+[  20682ms] [harness] eval __finger('pointerdown',0.2,0.3) => "pointerdown"
+[  20688ms] [console.log] [LOOK] left on (handled 1)
+[  21088ms] [harness] eval __finger('pointerup',0.2,0.3) => "pointerup"
+[  21095ms] [console.log] [LOOK] left off (handled 1)
+[  21822ms] [harness] screenshot -> /tmp/look/look-ahead.png
+[  21835ms] [harness] eval __finger('pointerdown',0.5,0.9) => "pointerdown"
+[  21840ms] [console.log] [LOOK] back on (handled 1)
+[  22964ms] [harness] screenshot -> /tmp/look/look-back-held.png
+[  22975ms] [harness] eval __finger('pointerup',0.5,0.9) => "pointerup"
+[  22981ms] [console.log] [LOOK] back off (handled 1)
+[  23385ms] [harness] eval (()=>{const t=document.getElementById('touch');const o=new MutationObserver(()=>{if(!t.classList.contains('aa-driving')){o.disconnect();console.log('[LOOKGATE] crashed');}});o.observe(t,{attributes:true,attributeFilter:['class']});return 'watching for the crash'})() => "watching for the crash"
+[  23392ms] [harness] eval __finger('pointerdown',0.8,0.3) => "pointerdown"
+[  23392ms] [harness] until 1x <<[LOOKGATE] crashed>> (timeout 60000ms, have 0)
+[  23394ms] [console.log] [LOOK] right on (handled 1)
+[  26246ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 3)
+[  26607ms] [console.log] [L] DEATH_FRAG web_8495 excel
+[  26608ms] [console.log] [WAV] loaded /data/sound/expl.wav: 11937 bytes, 8-bit mono @ 11025 Hz (fopen misses so far: 4)
+[  26715ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  26716ms] [console.log] [LOOKGATE] crashed
+[  26723ms] [console.log] [LOOK] right off (handled 1)
+[  26766ms] [harness] until SATISFIED: saw 1x <<[LOOKGATE] crashed>>
+[  27834ms] [harness] screenshot -> /tmp/look/look-after-crash.png

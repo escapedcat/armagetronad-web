@@ -52,6 +52,9 @@ Mode* back to Off.
 **Phone:**
 - **Portrait:** the game sits in a square at the top, with a Game Boy pad
   below: a cross (← → turn, ↓ brake), Enter and Esc.
+  While driving, **hold the game picture to look around**: the left or right
+  half looks that way, the bottom quarter looks back, and letting go looks
+  ahead. The legend under the pad says so.
 - **Landscape:** tap the left or right half of the screen to turn. In menus a
   tap is Enter, and there are small Up, Down and Escape buttons.
 - **The layout is chosen when the game starts.** The rotate button in the
