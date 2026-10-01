@@ -1,5 +1,7 @@
 # Mobile Keyboard (Name and Chat) — Implementation Plan
 
+> **Superseded** by [2026-09-30-game-text-keyboard.md](2026-09-30-game-text-keyboard.md): the name dialog and chat bar below were replaced by the phone keyboard typing into the game's own text fields.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Phone players can pick their name and chat on the servers. They type into ordinary HTML text boxes, which bring up the phone's own keyboard. Every new player also gets a unique default name instead of everyone being `web_user`.

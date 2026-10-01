@@ -1,0 +1,67 @@
+[0] Command HUD_CACHE_THRESHOLD unknown.
+[0] 
+[L] ENCODING latin1
+[0] Bound socket to *.*.*.*:36075.
+[0] Bound socket to *.*.*.*:4534.
+[0] Setting CYCLE_BRAKE_REFILL (Group: Annoying) deviates from its default value; clients older than 0.2.5.0 may experience problems.
+[0] Nobody there. Taking a nap...
+[0] Timestamp: 2026/09/30 20:00:34
+[0] Closing socket bound to *.*.*.*:4534
+[0] Bound socket to *.*.*.*:4534.
+[1] Received login from 192.168.215.1:19019 via socket *.*.*.*:4534, network version: 0.2.9_alpha (ID: 17).
+[1] New user: 1
+[L] PLAYER_ENTERED web_8226 192.168.215.1 web_8226
+[L] TEAM_CREATED web_8226
+[L] TEAM_PLAYER_ADDED web_8226 web_8226
+[1] web_8226 entered the game.
+[L] NEW_ROUND 2026-09-30 20:01:21 UTC
+[L] NEW_MATCH 2026-09-30 20:01:21 UTC
+[0] Time:     47.0853 seconds
+Sent:     7312 bytes in 39 packets (155.293 bytes/s)
+Received: 2306 bytes in 33 packets (48.975 bytes/s)
+[0] Timestamp: 2026/09/30 20:01:21
+[0] Creating grid...
+[0] Ping charity changed from 0 to 300.
+[L] TEAM_CREATED ai_team
+[L] TEAM_PLAYER_ADDED ai_team latex
+[0] LaTeX entered the game.
+[L] TEAM_PLAYER_ADDED ai_team gcc
+[0] Gcc entered the game.
+[L] TEAM_PLAYER_ADDED ai_team gdb
+[0] Gdb entered the game.
+[0] done!
+[0] Resetting scores...
+[0] New Match
+[0] Go (round 1 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[L] DEATH_FRAG web_8226 gcc
+[0] Gcc core dumped web_8226 for 3 points.
+[0] web_8226 lost 2 points since it caused a general protection fault.
+[0] AI team was awarded 10 points for being last active team.
+[0] Winner: AI team
+[L] ROUND_WINNER ai_team gdb gcc latex
+[0] Deleting objects...
+[0] Deleting grid...
+[0] 
+[L] ROUND_SCORE -2 web_8226 web_8226
+[L] ROUND_SCORE_TEAM -2 web_8226
+[L] NEW_ROUND 2026-09-30 20:01:35 UTC
+[0] Time:     13.7176 seconds
+Sent:     14958 bytes in 154 packets (1090.43 bytes/s)
+Received: 6280 bytes in 137 packets (457.807 bytes/s)
+[0] Timestamp: 2026/09/30 20:01:35
+[0] Creating grid...
+[0] done!
+[1] web_8226: hello from a phone
+[L] CHAT web_8226 hello from a phone
+[0] Go (round 2 of 10)!
+[0] 3
+[0] 2
+[0] 1
+[0] 0
+[L] DEATH_FRAG web_8226 gdb
+[0] Gdb core dumped web_8226 for 3 points.
+[0] web_8226 lost 2 points since it caused a general protection fault.

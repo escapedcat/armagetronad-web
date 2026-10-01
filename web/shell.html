@@ -41,8 +41,13 @@
        overlay below turns taps into game input, so a pinch-zoom leaves the
        player looking at a corner of a game they can no longer aim at. iOS
        Safari ignores it anyway. -->
+  <!-- interactive-widget=resizes-visual: the phone keyboard (THE PHONE
+       KEYBOARD below) must shrink only the VISUAL viewport. With
+       resizes-content, the default on some browsers, it shrinks the layout
+       viewport, and this page is 100dvh, so the game would be squeezed while
+       the player types. -->
   <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
   <title>Armagetron Advanced</title>
   <style>
     html, body { height:100%; }
@@ -446,7 +451,7 @@
     #layoutbtn { display:none; position:absolute; align-items:center; gap:.4rem;
                  top:calc(.6rem + env(safe-area-inset-top, 0px));
                  right:calc(.6rem + env(safe-area-inset-right, 0px));
-                 min-height:44px; min-width:44px; padding:.35rem .7rem;
+                 min-height:44px; min-width:44px; padding:.35rem; justify-content:center;
                  color:#cfd3dc; background:rgba(0,0,0,.55);
                  border:1px solid rgba(255,255,255,.3); border-radius:.5rem;
                  font:600 .8rem/1.2 ui-monospace, Menlo, "Roboto Mono", monospace;
@@ -460,7 +465,13 @@
        in what is left. --aa-square is the square's CSS side, the same number
        the pad's own top edge uses. */
     html.aa-gameboy #layoutbtn { top:calc(var(--aa-square, 100vw) + .5rem); }
+    #aa-ime { position:fixed; left:0; top:0; width:1px; height:1px; opacity:0;
+              font-size:16px; border:0; padding:0; z-index:-1; }
     #touch:not(.aa-driving) #layoutbtn { display:inline-flex; }
+    /* ICON ONLY. The label span stays, because labelLayoutButton() keeps it
+       and the aria-label in step, but only the icon is shown; the aria-label
+       still names the layout the tap goes to. */
+    #layoutbtn-label { display:none; }
     /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
        z-index 40 puts it above everything, the reload chip included, because
        the numbers are most interesting exactly when something on the screen
@@ -538,6 +549,13 @@
     dispatched as KeyboardEvents at `document`; what moved is which surface
     sends which key and when. See the .aa-driving comment in the stylesheet.
   -->
+  <!-- THE PHONE KEYBOARD's field (script: "THE PHONE KEYBOARD"). Never seen:
+       it exists so a phone has something to open its keyboard for, and what is
+       typed into it goes to the game's own text field. 16 px so iOS doesn't
+       zoom; no autocorrect or capitalisation, which rewrite what was typed. -->
+  <input id="aa-ime" type="text" autocomplete="off" autocorrect="off"
+         autocapitalize="off" spellcheck="false" enterkeyhint="done"
+         aria-hidden="true" tabindex="-1">
   <div id="touch" hidden>
     <!--
       The tapzone below is Enter and nothing else. It is a LAYER rather than a
@@ -596,7 +614,7 @@
       stylesheet shows it only while the game is not driving.
     -->
     <button type="button" id="layoutbtn" aria-label="Switch layout">
-      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
         <rect class="lb-screen" x="9.5" y="4.5" width="9" height="15" rx="1.8"
               fill="none" stroke="currentColor" stroke-width="1.7"/>
         <path d="M6.2 10.5 A6.4 6.4 0 0 1 11.6 3.3" fill="none" stroke="currentColor"
@@ -1574,6 +1592,120 @@
       document.addEventListener('visibilitychange', onVisibility);
     })();
 
+    // ---- THE PHONE KEYBOARD TYPES INTO THE GAME'S OWN TEXT FIELDS ----------
+    // A phone opens its keyboard only for a focused field in the page, and the
+    // game's text fields (Player Setup's name, Custom Connect, the chat line
+    // that Enter opens during a round) are drawn into the canvas. So:
+    //  - The game says when one is highlighted: aa_web_text_selected()
+    //    (src/emscripten/eWebKeyboard.cpp). Polled here; moving onto one
+    //    focuses #aa-ime, which opens the keyboard (the tap that moved there
+    //    is the user activation the phone asks for), and moving off blurs it.
+    //  - What is typed into #aa-ime goes to the game as key events: the change
+    //    since last time, as backspaces for what went and characters for what
+    //    came. Word suggestions and autocorrect rewrite whole words, and this
+    //    handles that the same way. A character is a keydown and a keypress
+    //    carrying charCode; Emscripten's SDL 1 copies that into
+    //    keysym.unicode, and uMenuItemString::Event inserts 32-255 (latin-1;
+    //    anything above becomes "?"). The keydown says "a" (keyCode 65): the
+    //    text field reads only unicode, and SDL ignores key codes it doesn't
+    //    know.
+    //  - The field's own key events stop at the field, so SDL (listening on
+    //    document) sees each character once: the synthetic copy.
+    //  - A known edge: the game's text fields have a length limit and refuse
+    //    characters past it without telling the page. A suggestion that
+    //    rewrites a word which ran into the limit then sends one backspace
+    //    per character the page sent, not per character the game kept, and
+    //    can delete one too many.
+    //  - The keyboard's Enter is the game's Enter and closes the keyboard.
+    //    Folding the keyboard away releases the field, or the next tap would
+    //    bring it back; a tap on the game (not on a pad key) brings it back
+    //    while a text field is still highlighted.
+    // Touch devices only: a desktop has a keyboard.
+    (() => {
+      if (!window.AA_TOUCH) return;
+      const ime = document.getElementById('aa-ime');
+      const REST = ' ';   // what the field holds between edits: backspace always has something to delete
+      let prev = REST, composing = false, onField = false;
+      const fire = (type, init) => document.dispatchEvent(
+        new KeyboardEvent(type, Object.assign({ bubbles: true, cancelable: true }, init)));
+      const press = (key, kc) => {
+        fire('keydown', { key, code: key, keyCode: kc, which: kc });
+        fire('keyup', { key, code: key, keyCode: kc, which: kc });
+      };
+      const typeChar = (ch) => {
+        let c = ch.codePointAt(0);
+        if (c < 32 || (c >= 127 && c < 160)) return;
+        if (c > 255) c = 63;   // "?": the game's names and chat are latin-1
+        fire('keydown', { key: ch, keyCode: 65, which: 65 });
+        fire('keypress', { key: ch, charCode: c, keyCode: c, which: c });
+        fire('keyup', { key: ch, keyCode: 65, which: 65 });
+      };
+      const sync = () => {
+        const cur = ime.value;
+        let p = 0;
+        while (p < prev.length && p < cur.length && prev[p] === cur[p]) p++;
+        const gone = Array.from(prev.slice(p)).length, came = Array.from(cur.slice(p));
+        for (let i = 0; i < gone; i++) press('Backspace', 8);
+        for (const ch of came) typeChar(ch);
+        prev = cur;
+        if (!composing && cur !== REST) { ime.value = REST; prev = REST; }
+      };
+      const open = () => {
+        ime.value = REST; prev = REST; composing = false;
+        ime.focus();
+        try { ime.setSelectionRange(1, 1); } catch (e) {}
+        console.log('[KBD] open');
+      };
+      const close = (why) => {
+        if (document.activeElement !== ime) return;
+        ime.blur();
+        console.log('[KBD] closed: ' + why);
+      };
+      ime.addEventListener('compositionstart', () => { composing = true; });
+      ime.addEventListener('compositionend', () => { composing = false; sync(); });
+      ime.addEventListener('input', sync);
+      for (const t of ['keydown', 'keypress', 'keyup']) {
+        ime.addEventListener(t, (e) => {
+          // Arrow keys (a tablet's hardware keyboard) go on to the game as
+          // they are; they type nothing, so they can't arrive twice.
+          if (e.key && e.key.startsWith('Arrow')) { e.preventDefault(); return; }
+          e.stopPropagation();
+          if (t !== 'keydown') return;
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (composing) { composing = false; sync(); }
+            press('Return', 13);
+            close('enter');
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            close('escape');
+            press('Escape', 27);
+          }
+        });
+      }
+      let shrunk = false;
+      if (window.visualViewport) {
+        visualViewport.addEventListener('resize', () => {
+          const small = visualViewport.height < window.innerHeight * 0.85;
+          if (small) shrunk = true;
+          else if (shrunk) { shrunk = false; close('folded'); }
+        });
+      }
+      document.addEventListener('pointerup', (e) => {
+        if (!onField || document.activeElement === ime) return;
+        if (e.target.closest && e.target.closest('[data-aakey], #layoutbtn')) return;
+        open();
+      }, true);
+      setInterval(() => {
+        if (window.AA_RUNTIME_READY !== true) return;
+        let now = false;
+        try { now = typeof Module._aa_web_text_selected === 'function' && Module._aa_web_text_selected() === 1; } catch (e) {}
+        if (now && !onField) open();
+        if (!now && onField) close('left the field');
+        onField = now;
+      }, 100);
+    })();
+
     // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------
     // The maintainer's phone played in silence for 3-7 minutes before the
     // sound came on. Emscripten's $autoResumeAudioContext (libcore.js) calls
@@ -1861,6 +1993,19 @@
           console.log('[PERSIST] populate FAILED before it started: ' + e);
           release();
         }
+      },
+      // THE DEFAULT NAME. Emscripten's environment says USER=web_user, and the
+      // game reads getenv("USER") for the name a new player starts with -- so
+      // every browser player was "web_user". A saved name (user.cfg) still
+      // wins; this is only what a first visit starts from.
+      () => {
+        const name = 'web_' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        try {
+          Module.ENV.USER = name;
+          Module.ENV.LOGNAME = name;
+          window.AA_DEFAULT_NAME = name;
+          console.log('[TEXT] default name ' + name);
+        } catch (e) { console.log('[TEXT] default name not set: ' + e); }
       }],
       // noInitialRun + an explicit callMain from onRuntimeInitialized, rather
       // than letting the runtime auto-run. Two reasons, neither of them the

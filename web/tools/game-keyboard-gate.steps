@@ -1,0 +1,39 @@
+# THE PHONE KEYBOARD GATE (web/shell.html "THE PHONE KEYBOARD",
+# src/emscripten/eWebKeyboard.cpp). An emulated phone on First Setup: the
+# keyboard's hidden field opens when the game highlights its Name field, what
+# is "typed" (the field's value changed and an input event fired, the way a
+# phone keyboard does it) lands in the game's own field, and it closes again.
+# Headless Chrome opens no real keyboard; focus on #aa-ime stands in for it.
+# The typed words stay under the 15-character name limit (see the known edge
+# in shell.html); ▲ is sent the way the pad sends it.
+#
+#   python3 -m http.server 8008 --directory web/dist-m1 &
+#   node web/tools/drive-browser.mjs --out /tmp/kbd --mobile 412,915,3 \
+#     --url http://localhost:8008/armagetronad.html \
+#     --script-file web/tools/game-keyboard-gate.steps
+#   grep -c '\[KBDGATE\] .*"PASS":true' /tmp/kbd/console.log    # 7
+until:1:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+wait:6000
+key:Enter
+wait:3000
+eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K1 closed-on-accept '+JSON.stringify({focused:f,PASS:!f}));return 'K1'})()
+key:Down
+wait:1000
+eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K2 opens-on-name '+JSON.stringify({focused:f,PASS:f}));return 'K2'})()
+eval:(()=>{const i=document.getElementById('aa-ime');window.__nameBefore=(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);return m?m[1].trim().replace(/\\(.)/g,'$1'):null})();i.value=' Zoë';i.dispatchEvent(new InputEvent('input',{inputType:'insertText',data:'Zoë'}));return 'typed Zoë after '+window.__nameBefore})()
+wait:800
+eval:(()=>{const i=document.getElementById('aa-ime');i.dispatchEvent(new CompositionEvent('compositionstart'));for(const v of [' h',' hi',' Hi']){i.value=v;i.dispatchEvent(new InputEvent('input',{inputType:'insertCompositionText',data:v.trim()}));}i.dispatchEvent(new CompositionEvent('compositionend'));return 'suggestion rewrote hi -> Hi'})()
+wait:800
+# key:X types a lower-case x (the driver presses no Shift).
+key:X
+wait:800
+eval:(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m?m[1].trim().replace(/\\(.)/g,'$1'):null;const want=window.__nameBefore+'Zoë';console.log('[KBDGATE] K3 typed-into-the-game '+JSON.stringify({saved:v,PASS:!!v&&v.startsWith(want)}));console.log('[KBDGATE] K4 suggestion-exact '+JSON.stringify({PASS:!!v&&v.startsWith(want+'Hi')}));console.log('[KBDGATE] K5 real-key-once '+JSON.stringify({PASS:!!v&&v===want+'Hix'}));return 'K3-K5'})()
+eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'keyboard enter'})()
+wait:1500
+eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K6 enter-closes '+JSON.stringify({focused:f,PASS:!f}));return 'K6'})()
+eval:(()=>{document.getElementById('canvas').dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));return 'tap the game'})()
+wait:500
+eval:(()=>{for(const t of ['keydown','keyup'])document.dispatchEvent(new KeyboardEvent(t,{key:'ArrowUp',code:'ArrowUp',keyCode:38,which:38,bubbles:true,cancelable:true}));return 'pad up'})()
+wait:1000
+eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K7 up-closes '+JSON.stringify({focused:f,PASS:!f}));return 'K7'})()
