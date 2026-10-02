@@ -14,6 +14,6 @@ PASS the empty line was not sent (one CHAT line in all)
 PASS the keyboard closed after sending
 PASS no Emscripten abort
 server log, the client's lines:
-  [L] PLAYER_ENTERED web_1984 192.168.215.1 web_1984
-  [L] CHAT web_1984 Play it on your phone: https://escapedcat.github.io/armagetronad-web/
+  [L] PLAYER_ENTERED web_1634 192.168.215.1 web_1634
+  [L] CHAT web_1634 Play it on your phone: https://escapedcat.github.io/armagetronad-web/
 --- text-net gate: ALL PASSED ---

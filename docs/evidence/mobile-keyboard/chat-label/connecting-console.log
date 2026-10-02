@@ -1,0 +1,109 @@
+[    772ms] [harness] mobile emulation: 412x915 CSS px dpr 3 (= 1236x2745 device px), touch on
+[    787ms] [harness] chrome: Chrome/154.0.8037.97
+[    788ms] [harness] navigating to http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010
+[      7ms] [harness] until 1x <<[BOOT] autostart>> (timeout 120000ms, have 0)
+[     22ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[     22ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) at parse
+[   2432ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 8192 gameboy square 412css
+[   2433ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[   2433ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[   2816ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[   2817ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[   2820ms] [page] load event fired
+[   2821ms] [browser.error/network] Failed to load resource: the server responded with a status of 404 (File not found)   <- http://localhost:8008/favicon.ico
+[   2838ms] [console.log] [TEXT] default name web_3009
+[   3066ms] [console.log] [PERSIST] populate ok in 228ms
+[   3310ms] [console.log] [PERSIST] runtime initialized, starting the game
+[   3312ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[   3312ms] [console.log] [SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[   3313ms] [console.log] [HINTS] camera and glance hints off (touch device)
+[   3313ms] [console.log] [WALLS] WALL_CUT 1 written to /data/webdefaults/autoexec.cfg before main()
+[   3313ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) before main
+[   5374ms] [console.log] [DISPLAY] before main: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 8192 gameboy square 412css
+[   5394ms] [console.log] [BOOT] autostart: calling main
+[   5404ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[   5406ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[   5407ms] [console.error] 
+[   5413ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[   5433ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[   5442ms] [console.log] 
+[   5467ms] [harness] until SATISFIED: saw 1x <<[BOOT] autostart>>
+[   5512ms] [console.log] [L] ENCODING latin1
+[   5566ms] [console.log] Trying to start sound. Just restart Armagetron Advanced in case of crash.
+[   5569ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[   6221ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[   6230ms] [console.error] TODO: glShadeModel
+[   6230ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[   6475ms] [console.log] [PRESENT] hidden framebuffer startup -> 1236x1236, depth bits 24
+[   6476ms] [harness] eval (()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})() => "filter on"
+[   6476ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   6477ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   6477ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   6477ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   6478ms] [browser.warning/other] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio   <- http://localhost:8008/armagetronad.js
+[   7348ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  15640ms] [harness] key Enter (1/1)
+[  15655ms] [console.log] [AUDIO] resumed on keydown
+[  15658ms] [console.log] [PERSISTSAVE] menu-leave n=1
+[  18549ms] [harness] key Escape (1/1)
+[  18559ms] [console.log] [PERSISTSAVE] menu-leave n=2
+[  18691ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  18851ms] [harness] until 2x <<[PERSISTSAVE] menu-leave>> (timeout 30000ms, have 2)
+[  18851ms] [harness] until SATISFIED: saw 2x <<[PERSISTSAVE] menu-leave>>
+[  20326ms] [console.error] warning: Audio callback had starved sending audio by 0.06479365079364552 seconds
+[  20897ms] [console.log] [PERSISTSAVE] js-backstop n=3
+[  20898ms] [harness] eval (()=>{Module._aa_web_save_config();return 'saved after first setup'})() => "saved after first setup"
+[  23927ms] [console.log] [PERSISTSAVE] js-backstop n=4
+[  23928ms] [console.log] [PERSISTBACKSTOP] beforeunload
+[  23929ms] [harness] eval location.reload() => undefined
+[  23929ms] [harness] until 2x <<[PERSIST] populate ok>> (timeout 90000ms, have 1)
+[  24035ms] [console.log] [TOUCH] enabled=true (media query -> true) maxTouchPoints=5
+[  24036ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) at parse
+[  24086ms] [console.log] [DISPLAY] at load: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 8192 gameboy square 412css
+[  24087ms] [console.log] [TOUCH] haptics=on (12 ms per sent press)
+[  24087ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  24090ms] [console.error] WARNING: using emscripten GL emulation. This is a collection of limited workarounds, do not expect it to work.
+[  24091ms] [console.error] WARNING: using emscripten GL emulation unsafe opts. If weirdness happens, try -sGL_UNSAFE_OPTS=0
+[  24094ms] [page] load event fired
+[  24100ms] [console.log] [TOUCH] orientation portrait=true (layout stays gameboy) via resize
+[  24103ms] [console.log] [TEXT] default name web_1317
+[  24109ms] [console.log] [PERSIST] populate ok in 6ms
+[  24132ms] [harness] until SATISFIED: saw 2x <<[PERSIST] populate ok>>
+[  24132ms] [harness] until 2x <<[BOOT] autostart>> (timeout 120000ms, have 1)
+[  24136ms] [console.log] [PERSIST] runtime initialized, starting the game
+[  24137ms] [console.log] [CAMERA] camera distance x0.5 written to /data/webdefaults/autoexec.cfg before main()
+[  24138ms] [console.log] [SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg before main() (touch device)
+[  24138ms] [console.log] [HINTS] camera and glance hints off (touch device)
+[  24139ms] [console.log] [WALLS] WALL_CUT 1 written to /data/webdefaults/autoexec.cfg before main()
+[  24140ms] [console.log] [DISPLAY] layout=gameboy (from the orientation) before main
+[  24184ms] [console.log] [DISPLAY] before main: viewport 412x915 dpr 3 -> canvas 1236x1236 aspect 1.0000 gpu-axis-limit 8192 gameboy square 412css
+[  24185ms] [console.log] [BOOT] autostart: calling main
+[  24185ms] [console.error] Error: Error in tString GeneratePrefix() in src/tools/tDirectories.cpp:1380 : 
+[  24185ms] [console.error]  	Relocation error. The binary was supposed to be installed into /usr/local/bin and found itself in . and could not find out what this means for the prefix /usr/local.
+[  24186ms] [console.error] 
+[  24186ms] [console.log] Warning in void FindConfigurationPath() in src/tools/tDirectories.cpp:1465 : 
+[  24186ms] [console.log]  	Could not determine path to configuration files. Using defaults or command line arguments.
+[  24187ms] [console.log] 
+[  24234ms] [harness] until SATISFIED: saw 2x <<[BOOT] autostart>>
+[  24311ms] [console.log] [L] ENCODING latin1
+[  24315ms] [console.log] [SND] device opened: 22050 Hz, 2 ch, 16-bit, 1024 frames/callback (46.4 ms per callback, SOUND_BUFFER_SHIFT 1)
+[  24349ms] [console.error] WARNING: using emscripten GL immediate mode emulation. This is very limited in what it supports
+[  24350ms] [console.error] TODO: glShadeModel
+[  24353ms] [browser.warning/rendering] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently   <- http://localhost:8008/armagetronad.js
+[  24385ms] [console.log] [PRESENT] hidden framebuffer startup -> 1236x1236, depth bits 24
+[  24385ms] [harness] eval (()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})() => "filter on"
+[  24386ms] [console.log] [TOUCH] context 1 (menu yes, cycle no) -> TAP=ENTER
+[  30424ms] [harness] key Enter (1/1)
+[  33256ms] [console.log] [BRIDGE] open ws://127.0.0.1:8010
+[  33270ms] [harness] key Enter (1/1)
+[  37113ms] [harness] key Down (1/3)
+[  37472ms] [harness] key Down (2/3)
+[  37822ms] [harness] key Down (3/3)
+[  39668ms] [harness] key Enter (1/1)
+[  42974ms] [harness] eval (()=>{const b=document.querySelector('#pad .pad-a');window.__cl={samples:0,connected:0,chat_while_connecting:0,labels:{}};const iv=setInterval(()=>{let c=0;try{c=Module._aa_web_connected()}catch(e){}const l=b.textContent;const S=window.__cl;S.samples++;S.labels[l]=(S.labels[l]||0)+1;if(c===1){S.connected++;if(l==='Chat')S.chat_while_connecting++;}},200);return 'sampling'})() => "sampling"
+[  43008ms] [harness] key Enter (1/1)
+[  43039ms] [console.log] [BRIDGE] handle 1 bound to udp port 60835
+[  43091ms] [console.log] [TOUCH] context 0 (menu no, cycle no) -> TAP=ENTER
+[  48022ms] [console.log] [BRIDGE] handle 2 bound to udp port 53787
+[  53312ms] [console.log] [CLGATE] C1 no-chat-label-while-connecting {"samples":51,"connected":50,"chat_while_connecting":0,"labels":{"Enter":51},"PASS":true}
+[  53312ms] [harness] eval (()=>{const S=window.__cl;console.log('[CLGATE] C1 no-chat-label-while-connecting '+JSON.stringify(Object.assign({},S,{PASS:S.connected>=20&&S.chat_while_connecting===0})));return 'C1'})() => "C1"

@@ -1881,13 +1881,14 @@
         if (!now && onField) close('left the field');
         onField = now;
         // THE PAD'S ENTER SAYS "Chat" when that is what it does: on a server,
-        // with no menu up and no cycle of ours alive (crashed, watching,
-        // between rounds), Enter is the chat key (config/default.cfg). While
+        // in a game (aa_web_chat_possible: not while connecting, logging in or
+        // loading), with no menu up and no cycle of ours alive (crashed,
+        // watching, between rounds), Enter is the chat key (config/default.cfg). While
         // driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS A
         // MENU KEY ONLY" above); in menus and local games it is plain Enter.
         let chat = false;
         try {
-          chat = Module._aa_web_connected() === 1 && (Module._aa_web_input_context() & 3) === 0;
+          chat = Module._aa_web_chat_possible() === 1 && (Module._aa_web_input_context() & 3) === 0;
         } catch (e) {}
         if (chat !== chatLabel) {
           chatLabel = chat;
