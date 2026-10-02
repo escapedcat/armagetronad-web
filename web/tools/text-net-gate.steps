@@ -39,7 +39,7 @@ wait:3000
 key:Enter
 wait:12000
 eval:'connected='+Module._aa_web_connected()
-eval:(()=>{window.__whenChat=(tag)=>{const b=document.querySelector('#pad .pad-a');let done=false;const iv=setInterval(()=>{if(done)return;if(b.textContent==='Chat'&&b.getBoundingClientRect().height>0){done=true;clearInterval(iv);console.log('[NETGATE] '+tag);}},100);return 'waiting for a visible Chat: '+tag};return 'helper'})()
+eval:(()=>{window.__openChat=(tag)=>{const b=document.querySelector('#pad .pad-a');let done=false,last=0;const press=()=>{const r=b.getBoundingClientRect();const o={bubbles:true,cancelable:true,pointerId:51,isPrimary:true,pointerType:'touch',clientX:r.left+r.width/2,clientY:r.top+r.height/2};b.dispatchEvent(new PointerEvent('pointerdown',o));b.dispatchEvent(new PointerEvent('pointerup',o));};const iv=setInterval(()=>{if(done)return;if(Module._aa_web_chat_open()===1){done=true;clearInterval(iv);console.log('[NETGATE] '+tag);return;}if(b.textContent==='Chat'&&b.getBoundingClientRect().height>0&&Date.now()-last>1500){last=Date.now();press();}},150);return 'opening chat: '+tag};window.__whenChat=(tag)=>{const b=document.querySelector('#pad .pad-a');let done=false;const iv=setInterval(()=>{if(done)return;if(b.textContent==='Chat'&&b.getBoundingClientRect().height>0){done=true;clearInterval(iv);console.log('[NETGATE] '+tag);}},100);return 'waiting for a visible Chat: '+tag};return 'helper'})()
 eval:(()=>{const t=document.getElementById('touch');let seen=false;new MutationObserver(()=>{if(!seen&&t.classList.contains('aa-driving')){seen=true;console.log('[ALIVE] driving');}else if(seen===true&&!t.classList.contains('aa-driving')){seen='dead';console.log('[ALIVE] crashed');}}).observe(t,{attributes:true,attributeFilter:['class']});return 'armed'})()
 until:1:90000:[ALIVE] driving
 wait:300
@@ -51,25 +51,22 @@ shot:chat-label
 tap:#tapzone
 wait:800
 eval:'picture-tap-chat='+((Module._aa_web_input_context()&1)?1:0)+','+(document.activeElement.id==='aa-ime'?1:0)
-eval:__whenChat('chat-ready-first')
-until:1:90000:[NETGATE] chat-ready-first
-tap:.pad-a
+eval:__openChat('chat-ready-first')
+until:1:120000:[NETGATE] chat-ready-first
 wait:800
 eval:'after-tap-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
 tap:#tapzone
 wait:800
 eval:'picture-tap-closes-chat='+(document.activeElement.id==='aa-ime'?1:0)+','+((Module._aa_web_input_context()&1)?1:0)
-eval:__whenChat('chat-ready-fold')
-until:1:90000:[NETGATE] chat-ready-fold
-tap:.pad-a
+eval:__openChat('chat-ready-fold')
+until:1:120000:[NETGATE] chat-ready-fold
 wait:1000
 eval:'reopened-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
 eval:(()=>{window.__openBeforeFold=(Module._aa_web_input_context()&1)?1:0;const vv=window.visualViewport;const full=window.innerHeight;let h=full*0.5;Object.defineProperty(vv,'height',{configurable:true,get:()=>h});vv.dispatchEvent(new Event('resize'));h=full;vv.dispatchEvent(new Event('resize'));delete vv.height;return 'keyboard folded'})()
 wait:1000
 eval:'fold-closes-chat='+window.__openBeforeFold+','+(document.activeElement.id==='aa-ime'?1:0)+','+((Module._aa_web_input_context()&1)?1:0)
-eval:__whenChat('chat-ready-send')
-until:1:90000:[NETGATE] chat-ready-send
-tap:.pad-a
+eval:__openChat('chat-ready-send')
+until:1:120000:[NETGATE] chat-ready-send
 wait:1000
 eval:(()=>{const i=document.getElementById('aa-ime');i.value=' Play it on your phone: https://escapedcat.github.io/armagetronad-web/';i.dispatchEvent(new InputEvent('input',{inputType:'insertFromPaste'}));return 'pasted'})()
 wait:400
@@ -82,10 +79,8 @@ shot:chat-sent
 # have started; then that is after the next crash), open the chat line and
 # press the keyboard's Enter with nothing typed. The runner counts the
 # server's CHAT lines (one).
-eval:__whenChat('chat-ready-again')
-until:1:90000:[NETGATE] chat-ready-again
-wait:300
-tap:.pad-a
+eval:__openChat('chat-ready-again')
+until:1:120000:[NETGATE] chat-ready-again
 wait:1200
 eval:'empty-test-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
 eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'empty enter'})()

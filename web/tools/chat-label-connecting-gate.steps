@@ -1,0 +1,48 @@
+# CHAT LABEL WHILE CONNECTING (web/shell.html "THE PAD'S ENTER SAYS Chat",
+# src/emscripten/eWebKeyboard.cpp aa_web_chat_possible). The phone joins the
+# 127.0.0.1 bookmark through a local relay with NO game server behind it, so
+# the game sits in "connecting" (connected, but no player or game yet). The
+# pad's Enter must not say "Chat" there: chat is impossible until a game runs.
+# Sampled every 200 ms for 10 s; C1 needs >= 20 connected samples and none
+# with the label "Chat".
+#
+#   python3 -m http.server 8008 --directory web/dist-m1 &
+#   node bridge/relay.mjs --port 8010 --allow-private &      # and no aa-server
+#   node web/tools/drive-browser.mjs --out /tmp/cl --mobile 412,915,3 \
+#     --url 'http://localhost:8008/armagetronad.html?bridge=ws://127.0.0.1:8010' \
+#     --script-file web/tools/chat-label-connecting-gate.steps
+#   grep -o '\[CLGATE\] .*' /tmp/cl/console.log
+until:1:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+# 9 s, as in leave-hidden-gate: an Enter before the language menu is up
+# leaves first setup unfinished, and boot 2 then starts in a local round.
+wait:9000
+key:Enter
+wait:2500
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+# SAVE AGAIN BEFORE THE RELOAD. The game clears FIRST_USE only after First
+# Setup has closed (gArmagetron.cpp), so the save as it closes still says
+# FIRST_USE 1, and boot 2 would be a first run again whenever the unload-time
+# save lost the race with the reload. (Dismissing the welcome message to get a
+# third menu save was tried: its own key-up sometimes dismisses it first.)
+wait:2000
+eval:(()=>{Module._aa_web_save_config();return 'saved after first setup'})()
+wait:3000
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+wait:6000
+key:Enter
+wait:2500
+key:Enter
+wait:3500
+key:Down:3
+wait:1500
+key:Enter
+wait:3000
+eval:(()=>{const b=document.querySelector('#pad .pad-a');window.__cl={samples:0,connected:0,chat_while_connecting:0,labels:{}};const iv=setInterval(()=>{let c=0;try{c=Module._aa_web_connected()}catch(e){}const l=b.textContent;const S=window.__cl;S.samples++;S.labels[l]=(S.labels[l]||0)+1;if(c===1){S.connected++;if(l==='Chat')S.chat_while_connecting++;}},200);return 'sampling'})()
+key:Enter
+wait:10000
+eval:(()=>{const S=window.__cl;console.log('[CLGATE] C1 no-chat-label-while-connecting '+JSON.stringify(Object.assign({},S,{PASS:S.connected>=20&&S.chat_while_connecting===0})));return 'C1'})()

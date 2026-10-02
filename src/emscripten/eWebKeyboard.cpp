@@ -17,6 +17,8 @@
 #include <emscripten.h>
 
 #include "ePlayer.h"
+#include "eTimer.h"
+#include "nNetwork.h"
 #include "tSysTime.h"
 
 static double se_textSelectedAt = -1;
@@ -42,3 +44,17 @@ extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_chat_open( void )
     return ( net && net->IsChatting() ) ? 1 : 0;
 }
 
+// 1 when Enter would really open a chat line on a server: connected, player 1
+// has its network player with an ID the server assigned, and a game (its
+// timer) is running. Connecting, logging in and downloading the map are all
+// "connected" but have none of that yet, so the page's "Chat" label waits for
+// this rather than for the connection alone. Waiting for the next round as a
+// spectator counts: chat works there.
+extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_chat_possible( void )
+{
+    if ( sn_GetNetState() != nCLIENT || !se_mainGameTimer )
+        return 0;
+    ePlayer * local = ePlayer::PlayerConfig( 0 );
+    ePlayerNetID * net = local ? static_cast< ePlayerNetID * >( local->netPlayer ) : 0;
+    return ( net && net->ID() != 0 ) ? 1 : 0;
+}

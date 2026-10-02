@@ -32,8 +32,12 @@ tap:#dp-right
 wait:400
 eval:(()=>{const k=__dp.take();console.log('[DPGATE] D4 right-half-sends-right '+JSON.stringify({keys:k,PASS:k==='+Right -Right'}));return 'D4'})()
 # The round opens with a countdown in which the game ignores turns
-# (ePlayer::Act passes them on only once se_GameTime() >= 0): wait it out.
-wait:4000
+# (ePlayer::Act passes them on only once se_GameTime() >= 0): wait it out, but
+# not longer. Game time zero is at about NEW_ROUND+3.5 s and an AI frags an
+# idle human from about +7 s (portrait-boot-gate PB4 measures both); D4 ends
+# near +2.7 s, so 2 s puts the tap near +4.7 s. 4 s put it near +6.6 s and lost
+# the race with the frag in about one run of three.
+wait:2000
 eval:__dp.whenDriving('d3')
 until:1:60000:[DPGATE-READY] d3
 eval:(()=>{window.__l0=__dp.slot1('CYCLE_TURN_LEFT_TOOLTIP');return 'left before '+window.__l0})()
