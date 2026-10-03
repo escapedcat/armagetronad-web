@@ -108,6 +108,35 @@ unmodified and don't know a browser is involved.
   - **A player who keeps the tab visible but sits idle** can still be kicked,
     so don't park on a server.
 
+## For server owners
+
+If web players show up on your server from one data-center address, this is
+probably why:
+
+- **Every browser player arrives from the relay's address**, currently
+  `89.222.108.19`. ipinfo.io reports its network as
+  **`AS60068 Datacamp Limited`**, the upstream of the Fly.io Frankfurt
+  region the relay runs in, so VPN filters that match "Datacamp" or
+  "DataPacket" catch it. It isn't a VPN. The address can change when the relay
+  is redeployed.
+- **What the relay allows:**
+  - only pages from this project's site may use it;
+  - it sends only to public game servers on ports 4533–4599;
+  - it limits each player to 4 connections and caps packets and bytes per
+    second;
+  - the page leaves a server with a regular logout after its tab has been
+    hidden for a minute, so web players don't sit idle until they're kicked.
+- **The catch:** all web players share that address, so an IP ban hits all of
+  them. Players who log in with a Global ID can be told apart by it; most web
+  players don't have one.
+- **What you can ask for**, by opening an issue in this repository:
+  - **opt out:** the relay stops sending to your server;
+  - **block one player:** the relay sees each player's real address and can
+    block that one person, not every web player. Include the name, the time
+    and your server's address.
+- **Privacy:** for exactly that, the relay logs which player address plays on
+  which server, in Fly's short-lived logs, and nothing else about the game.
+
 ## Known limitations
 
 - **Things a browser can't do:**
