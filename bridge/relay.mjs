@@ -55,6 +55,15 @@ export function startRelay({
   // Hosts the /resource route may fetch from (resource.mjs). Replaces the
   // default when given; tests list their local upstream as 'host:port'.
   resourceHosts = DEFAULT_RESOURCE_HOSTS,
+  // ABUSE CONTROLS. Every web player reaches game servers from this relay's
+  // one address, so a server can't tell them apart and an IP ban there hits
+  // all of them; the relay sees each player's real address and can do better.
+  // blockedClients: players' real addresses refused outright (they are
+  // personal data, so set them as a secret, not in fly.toml).
+  // blockedServers: game servers whose owners asked not to receive web
+  // players, as 'ip' (every port) or 'ip:port'; nothing is sent to them.
+  blockedClients = [],
+  blockedServers = [],
   // Injectable ONLY so a test can count resolutions. That count is the only
   // way to observe from outside that a destination the policy REFUSED is not
   // left behind in the cache below; the default is real DNS and the relay
@@ -90,6 +99,14 @@ export function startRelay({
                     'reflector into game servers');
   }
   const L = { ...DEFAULT_LIMITS, ...limits };
+  const blockedClientSet = new Set(blockedClients.map((s) => String(s).trim()).filter(Boolean));
+  const blockedServerSet = new Set(blockedServers.map((s) => String(s).trim()).filter(Boolean));
+  const serverOptedOut = (ip, port) => blockedServerSet.has(ip) || blockedServerSet.has(ip + ':' + port);
+  // A connection that has sent this many datagrams to one server is playing
+  // there, not just pinging it from the server browser (one or two each):
+  // logged once, so an abuse report ("this player, at this time, on my
+  // server") can be matched to a real address.
+  const PLAYING_AFTER = 100;
   const perIp = ipCounter(L.perIp);
   let limited = 0; // datagrams dropped by the per-connection rate limits
   const noteLimited = (ip) => {
@@ -190,6 +207,10 @@ export function startRelay({
   const wss = new WebSocketServer({ noServer: true });
   server.on('upgrade', (req, socket, head) => {
     const ip = clientIp(req);
+    if (blockedClientSet.has(ip)) {
+      log('refused a blocked player (' + ip + ')');
+      return refuse(socket, 403, 'Forbidden');
+    }
     const status = admission(req);
     if (status === 403) {
       log('refused an upgrade from origin ' + JSON.stringify(req.headers.origin || null) + ' (' + ip + ')');
@@ -237,6 +258,7 @@ export function startRelay({
     // milestone, so it is keyed the same way: to the destination the datagram
     // was actually sent to, not to a guess made backwards from the reply.
     const peers = new Map();
+    const sentTo = new Map(); // "ip:port" -> datagrams this connection sent there (the playing log)
 
     const send = (frame) => { if (ws.readyState === ws.OPEN) ws.send(encode(frame)); };
     const fail = (handle, reason) => send({ type: TYPE.ERROR, handle, port: 0, addr: '', payload: Buffer.from(reason, 'ascii') });
@@ -302,6 +324,9 @@ export function startRelay({
         }
         const refusal = checkDestination(dst, f.port, { allowPrivate });
         if (refusal) return fail(f.handle, refusal);
+        if (serverOptedOut(dst, f.port)) {
+          return fail(f.handle, 'server ' + dst + ':' + f.port + ' does not take web players (its owner opted out)');
+        }
         // CACHE ONLY WHAT THE POLICY LET THROUGH. Caching before the check
         // meant a refused destination was remembered anyway, so the cache
         // filled up with names the relay will never send to and a later
@@ -309,6 +334,10 @@ export function startRelay({
         resolved.set(f.addr, dst);
         const byPeer = peers.get(f.handle);
         if (byPeer) byPeer.set(dst + ':' + f.port, f.addr);
+        const key = dst + ':' + f.port;
+        const n = (sentTo.get(key) || 0) + 1;
+        sentTo.set(key, n);
+        if (n === PLAYING_AFTER) log(ip + ' is playing on ' + key);
         if (lose()) return;
         sock.send(f.payload, f.port, dst);
         return;
@@ -377,6 +406,10 @@ if (import.meta.url === 'file://' + process.argv[1]) {
       // parseOrigins is a plain comma splitter; reusing it for hosts is deliberate.
       resourceHosts: parseOrigins(process.env.BRIDGE_RESOURCE_HOSTS).length
         ? parseOrigins(process.env.BRIDGE_RESOURCE_HOSTS) : undefined,
+      // Abuse controls (see startRelay). Set as Fly secrets: player addresses
+      // are personal data and must not sit in fly.toml or the repo.
+      blockedClients: parseOrigins(process.env.BRIDGE_BLOCK_CLIENTS),
+      blockedServers: parseOrigins(process.env.BRIDGE_BLOCK_SERVERS),
       allowPrivate: process.argv.includes('--allow-private'),
       drop,
       log: (m) => console.log('[bridge] ' + m),
@@ -391,6 +424,8 @@ if (import.meta.url === 'file://' + process.argv[1]) {
                 (parseOrigins(process.env.BRIDGE_ORIGINS).length ? ' (open to pages from ' + parseOrigins(process.env.BRIDGE_ORIGINS).join(', ') + ')' : '') +
                 (process.env.BRIDGE_CLIENT_IP_HEADER ? ' (client IP from ' + process.env.BRIDGE_CLIENT_IP_HEADER + ')' : '') +
                 (process.env.BRIDGE_RESOURCE_HOSTS ? ' (map downloads from ' + process.env.BRIDGE_RESOURCE_HOSTS + ')' : '') +
+                (parseOrigins(process.env.BRIDGE_BLOCK_CLIENTS).length ? ' (' + parseOrigins(process.env.BRIDGE_BLOCK_CLIENTS).length + ' blocked players)' : '') +
+                (parseOrigins(process.env.BRIDGE_BLOCK_SERVERS).length ? ' (' + parseOrigins(process.env.BRIDGE_BLOCK_SERVERS).length + ' servers opted out)' : '') +
                 (process.argv.includes('--allow-private') ? ' (private destinations ALLOWED - local testing only)' : '') +
                 (drop > 0 ? ' DISCARDING ' + (drop * 100) + '% OF DATAGRAMS - testing aid, see README' : ''));
   });

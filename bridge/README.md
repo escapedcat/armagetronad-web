@@ -131,6 +131,33 @@ Repository hosts players were refused, the evidence for widening
 
     fly logs -a armagetronad-bridge | grep -o 'resource 403 0 [a-z]*://[^/ ]*' | sort | uniq -c | sort -rn
 
+## Abuse controls
+
+Every web player reaches game servers from the relay's one address, so a
+server can't tell web players apart, and an IP ban there hits all of them. The
+relay sees each player's real address and can act on one player instead.
+
+- **`BRIDGE_BLOCK_CLIENTS`**: comma-separated real player addresses the relay
+  refuses outright (403, logged as `refused a blocked player (<ip>)`). These
+  are personal data: set them as a **secret**, never in `fly.toml` or the
+  repository.
+- **`BRIDGE_BLOCK_SERVERS`**: comma-separated game servers whose owners asked
+  not to receive web players, as `ip` (every port) or `ip:port`. Nothing is
+  sent to them, and the client gets an error saying the server does not take
+  web players.
+- **The playing log:** once a connection has sent 100 datagrams to one
+  server, the relay logs `<player ip> is playing on <server ip:port>` once.
+  The server browser's pings (one or two each) aren't logged. This is what
+  ties an abuse report ("this name, at this time, on my server") to a real
+  address:
+
+      fly logs -a armagetronad-bridge | grep 'is playing on <server ip>'
+
+Changing a secret restarts the relay, which drops current games:
+
+    fly secrets set BRIDGE_BLOCK_CLIENTS=198.51.100.23 -a armagetronad-bridge
+    fly secrets set BRIDGE_BLOCK_SERVERS=203.0.113.5:4534 -a armagetronad-bridge
+
 ## Deploying to Fly
 
 `fly.toml` sets the allowlist and the client-IP header; the token is a secret:
