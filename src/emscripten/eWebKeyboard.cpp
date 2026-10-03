@@ -10,7 +10,7 @@
  *
  * uMenuItemString::Render calls se_WebTextSelected() each time it draws a
  * highlighted text field, and the page polls aa_web_text_selected(): 1 while
- * that happened within the last 0.3 s. A value read, no string crosses, no
+ * that happened within the last 0.3 s, 2 when that field is a password. A value read, no string crosses, no
  * game state changes. Client-only (CLIENT_OBJS), so the dedicated build never
  * sees it; the call site in uMenu.cpp is guarded the same way.
  */
@@ -20,17 +20,31 @@
 #include "eTimer.h"
 #include "nNetwork.h"
 #include "tSysTime.h"
+#include "uMenu.h"
+
+#include <string.h>
+#include <typeinfo>
 
 static double se_textSelectedAt = -1;
+static bool se_textIsPassword = false;
 
-void se_WebTextSelected()
+// A PASSWORD FIELD IS TOLD APART BY ITS CLASS. The login prompt's field is an
+// eMenuItemPassword (src/engine/ePlayer.cpp), local to that file, so it is
+// recognised here by its RTTI name rather than by a change there. The page
+// then makes its hidden input a password field, so the phone keyboard offers
+// no suggestions and learns nothing typed into it.
+void se_WebTextSelected( uMenuItemString * item )
 {
     se_textSelectedAt = tSysTimeFloat();
+    se_textIsPassword = item && strstr( typeid( *item ).name(), "eMenuItemPassword" ) != 0;
 }
 
+// 0: no text field highlighted; 1: a text field; 2: a password field.
 extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_text_selected( void )
 {
-    return ( se_textSelectedAt >= 0 && tSysTimeFloat() - se_textSelectedAt < 0.3 ) ? 1 : 0;
+    if ( !( se_textSelectedAt >= 0 && tSysTimeFloat() - se_textSelectedAt < 0.3 ) )
+        return 0;
+    return se_textIsPassword ? 2 : 1;
 }
 
 // 1 while player 1's chat line is open (the game marks a chatting player for
