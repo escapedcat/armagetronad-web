@@ -1,0 +1,13 @@
+PASS connected to the server
+PASS the server got the login request
+PASS the server sent a password request back
+PASS the keyboard opened as a password field
+PASS the authority answered (made-up user)
+PASS after the prompt, the keyboard field is plain text again
+PASS the password never appears in the page's log
+PASS no Emscripten abort
+server log, the client's lines:
+  [1] User 1 requests authentication as "nosuchuser12345@forums".
+  [0] Password request sent to user 1, username "nosuchuser12345", method md5, message "Login with Authority forums".
+  [1] Login failed, reason: User does not exist, authentication server returned "".
+--- login gate: ALL PASSED ---

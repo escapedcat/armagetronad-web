@@ -819,7 +819,7 @@ void uMenuItemString::Render(REAL x,REAL y,
         cmode=1;
         if (counter & 32) cmode=2;
 #if defined(__EMSCRIPTEN__) && !defined(DEDICATED)
-        { extern void se_WebTextSelected(); se_WebTextSelected(); } // eWebKeyboard.cpp: the page opens the phone keyboard
+        { extern void se_WebTextSelected( uMenuItemString * ); se_WebTextSelected( this ); } // eWebKeyboard.cpp: the page opens the phone keyboard
 #endif
     }
 

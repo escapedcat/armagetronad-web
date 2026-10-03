@@ -1,0 +1,52 @@
+# LOGIN GATE (web/tools/run-login-gate.sh). A phone joins the local server
+# with a made-up Global ID (nosuchuser12345@forums) and Auto Login on. The
+# server asks the real forums authority over the internet, sends a password
+# request back through the relay, and the game shows its password screen. The
+# phone keyboard must open there AS A PASSWORD FIELD (no suggestions, nothing
+# learned), and the wrong password goes back to the authority, which answers
+# "User does not exist". Needs internet access from the server container.
+#
+# The Global ID is appended to user.cfg before the reload, and the page's
+# unload save is switched off for this one load: it rewrites user.cfg from
+# memory, which doesn't have the appended lines.
+until:1:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+# 9 s, as in leave-hidden-gate: an Enter before the language menu is up
+# leaves first setup unfinished, and boot 2 then starts in a local round.
+wait:9000
+key:Enter
+wait:2500
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+# SAVE AGAIN BEFORE THE RELOAD. The game clears FIRST_USE only after First
+# Setup has closed (gArmagetron.cpp), so the save as it closes still says
+# FIRST_USE 1, and boot 2 would be a first run again whenever the unload-time
+# save lost the race with the reload. (Dismissing the welcome message to get a
+# third menu save was tried: its own key-up sometimes dismisses it first.)
+wait:2000
+eval:(()=>{Module._aa_web_save_config();const p='/persist/var/user.cfg';const c=Module.FS.readFile(p,{encoding:'utf8'});Module.FS.writeFile(p,c+'\nUSER_1 nosuchuser12345@forums\nAUTO_LOGIN_1 1\n');Module._aa_web_save_config=()=>console.log('[LOGINGATE] unload save skipped');return 'global id set'})()
+wait:3000
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+wait:6000
+key:Enter
+wait:2500
+key:Enter
+wait:3500
+key:Down:3
+wait:1500
+key:Enter
+wait:3000
+key:Enter
+wait:12000
+eval:'connected='+Module._aa_web_connected()
+until:1:40000:[KBD] open
+wait:1500
+eval:(()=>{const i=document.getElementById('aa-ime');const r={type:i.type,focused:document.activeElement===i};console.log('[LOGINGATE] L1 password-prompt-uses-a-password-field '+JSON.stringify(Object.assign(r,{PASS:r.focused&&r.type==='password'})));return 'L1'})()
+eval:(()=>{const i=document.getElementById('aa-ime');i.value=i.value+'wrongpassword';i.dispatchEvent(new InputEvent('input',{inputType:'insertText'}));return 'typed'})()
+wait:600
+eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'enter'})()
+wait:12000
+eval:(()=>{const i=document.getElementById('aa-ime');console.log('[LOGINGATE] L2 back-to-a-text-field '+JSON.stringify({type:i.type,PASS:i.type==='text'}));return 'L2'})()

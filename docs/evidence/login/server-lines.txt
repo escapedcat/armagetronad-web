@@ -1,0 +1,3 @@
+[1] User 1 requests authentication as "nosuchuser12345@forums".
+[0] Password request sent to user 1, username "nosuchuser12345", method md5, message "Login with Authority forums".
+[1] Login failed, reason: User does not exist, authentication server returned "".

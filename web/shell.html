@@ -1875,8 +1875,19 @@
       };
       setInterval(() => {
         if (window.AA_RUNTIME_READY !== true) return;
-        let now = false;
-        try { now = typeof Module._aa_web_text_selected === 'function' && Module._aa_web_text_selected() === 1; } catch (e) {}
+        let sel = 0;   // 0 no text field, 1 a text field, 2 a password field
+        try { sel = typeof Module._aa_web_text_selected === 'function' ? Module._aa_web_text_selected() : 0; } catch (e) {}
+        const now = sel > 0;
+        // A PASSWORD PROMPT GETS A PASSWORD FIELD: the phone keyboard then
+        // offers no suggestions and learns nothing typed. Switched before the
+        // keyboard opens, or reopened on the spot if the highlight moves
+        // between a name and a password with the keyboard up.
+        const kind = sel === 2 ? 'password' : 'text';
+        if (ime.type !== kind) {
+          const up = document.activeElement === ime;
+          ime.type = kind;
+          if (up && now) open();
+        }
         if (now && !onField) open();
         if (!now && onField) close('left the field');
         onField = now;
