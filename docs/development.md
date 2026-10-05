@@ -108,7 +108,8 @@ tripwire would have passed it. **There are now two platform pins, not one.**
 That figure is the Mac pin, measured on the maintainer's machine; `checks.yml`'s
 own first run showed a Linux runner on the identical emsdk 6.0.8 does not
 reproduce it — same source, same toolchain, a dedicated wasm 16 bytes smaller
-at 2,488,282 bytes, md5 `ecb69e501f47c1a35cfe544ec0fe4e15` — so CI asserts
+at 2,514,078 bytes, md5 `7dcd33ff6bf86c442af8770990240dfa` since the October 2026
+merge (2,488,282 / `ecb69e50…` before) — so CI asserts
 whichever of the two pins the platform it runs on actually produces (see the
 comment above `LINUX_PIN_BYTES` in `checks.yml` for the run that established
 the second number) rather than weakening the check to size alone or
