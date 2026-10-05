@@ -108,34 +108,89 @@ unmodified and don't know a browser is involved.
   - **A player who keeps the tab visible but sits idle** can still be kicked,
     so don't park on a server.
 
+### Log in with a Global ID (recommended)
+
+You can play without an account. But if you play online regularly, log in
+with a free **Global ID**, the game's own player account.
+
+**Why we recommend it:**
+- **Servers can't tell web players apart otherwise.** Every browser player
+  reaches a server from the relay's one address, and anyone can pick any name.
+  A login is the one thing that says "this is really me".
+- **It protects every web player.** Without a login, the only tool a server
+  owner has against one troublemaker is banning the relay's address, and that
+  locks out *all* web players. Logged-in players can be recognised, and dealt
+  with, one by one, which makes it easier for owners to keep welcoming web
+  players.
+- **Servers can treat logged-in players better.** Some give them extra rights,
+  and stats pages list logged-in players under their account (`name@lt`), so
+  your scores stay yours whatever name you play under. A server owner who
+  blocks data-center addresses could also let logged-in web players through.
+
+**How to get one:**
+- **The official forums no longer accept new sign-ups.** Register instead at
+  **[Lightron](https://lightron.org/)** ("Don't have an account?" under Log
+  In). Your Global ID is then `yourname@lt`.
+- In the game, open **Player Setup → Player 1**, set **Global ID** to
+  `yourname@lt` and turn on **Auto Login**. On a server that supports it, the
+  game asks for your Lightron password when you join. On a phone, the keyboard
+  opens in private mode, without suggestions.
+- Or log in by hand on a server: type `/login yourname@lt` into the chat.
+- **Your name and your login are separate.** The login doesn't change the name
+  you play under; set that under **Name** in Player Setup.
+- **Not every server has logins switched on.** On those, you just play
+  without one.
+
 ## For server owners
 
-If web players show up on your server from one data-center address, this is
-probably why:
+**Do you need to do anything?** No. Web players are ordinary game clients
+speaking the normal protocol, and your server needs no changes. This section
+is for when you notice them, or want to handle them differently.
 
-- **Every browser player arrives from the relay's address**, currently
-  `89.222.108.19`. ipinfo.io reports its network as
-  **`AS60068 Datacamp Limited`**, the upstream of the Fly.io Frankfurt
-  region the relay runs in, so VPN filters that match "Datacamp" or
-  "DataPacket" catch it. It isn't a VPN. The address can change when the relay
-  is redeployed.
-- **What the relay allows:**
-  - only pages from this project's site may use it;
-  - it sends only to public game servers on ports 4533–4599;
-  - it limits each player to 4 connections and caps packets and bytes per
-    second;
-  - the page leaves a server with a regular logout after its tab has been
-    hidden for a minute, so web players don't sit idle until they're kicked.
-- **The catch:** all web players share that address, so an IP ban hits all of
-  them. Players who log in with a Global ID can be told apart by it; most web
-  players don't have one.
-- **What you can ask for**, by opening an issue in this repository:
-  - **opt out:** the relay stops sending to your server;
-  - **block one player:** the relay sees each player's real address and can
-    block that one person, not every web player. Include the name, the time
-    and your server's address.
-- **Privacy:** for exactly that, the relay logs which player address plays on
-  which server, in Fly's short-lived logs, and nothing else about the game.
+**How to recognise a web player:**
+- **They all come from the relay's address**, currently `89.222.108.19`.
+  ipinfo.io reports its network as **`AS60068 Datacamp Limited`**, the
+  upstream of the Fly.io Frankfurt region the relay runs in. That's why VPN
+  filters matching "Datacamp" or "DataPacket" catch it, though it isn't a VPN.
+  The address can change when the relay is redeployed.
+- **Many play under a default name** like `web_1234`, unless they picked one.
+- **Some log in with a Global ID.** The README asks them to (see "Log in with a
+  Global ID" above). That login is the only thing that tells one web player
+  from another.
+
+**If you block VPN or data-center addresses** and want to let web players in:
+- Allow the relay's address in your filter, or let it through only for
+  players who log in.
+- For now the address isn't fixed, so an allowance can stop working after a
+  redeploy. If you'd rely on one, say so in an issue: a fixed address is
+  possible.
+
+**If one web player causes trouble:**
+- **Don't ban the relay's address.** That locks out every web player, the same
+  as an autoban after repeated kicks of web players.
+- **If they're logged in,** ban or restrict their Global ID, like any other
+  player.
+- **If they aren't,** report them (see below). The relay sees each player's
+  real address and can block that one person.
+
+**What you can ask for**, with the [server owner form](https://github.com/escapedcat/armagetronad-web/issues/new?template=server-owner.yml):
+- **Opt out:** the relay stops sending to your server, and web players see
+  that it doesn't take them.
+- **Block one player:** give their name, the time (with time zone) and your
+  server's address. Real addresses are never posted publicly; the block
+  happens on the relay.
+- **A question,** or a fixed address for your allowlist.
+
+**What the relay does on its side:**
+- only pages from this project's site may use it;
+- it sends only to public game servers on ports 4533–4599;
+- it limits each player to 4 connections and caps packets and bytes per
+  second;
+- the page leaves a server with a regular logout after its tab has been
+  hidden for a minute, so web players don't sit idle until they're kicked.
+
+**Privacy:** to trace a report, the relay logs which player address plays on
+which server, in Fly's short-lived logs, and nothing else about the game.
 
 ## Known limitations
 
