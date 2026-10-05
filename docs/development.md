@@ -100,14 +100,16 @@ deliberately unchanged so its wasm stays byte-identical. The dedicated server is
 a build-validation artifact, not part of the Demo, so nothing on the roadmap
 fixes this — it would take adding Asyncify and a yield point to the M0 link,
 which would end the byte-identity check that guards the source files
-both builds share — 2,488,298 bytes **and** md5 `9718a2a64978cb6e9b95ea2f0454cca5`.
+both builds share — 2,514,094 bytes **and** md5 `bdda8209331b2f01b0f4e8fcfc06756b` since the October 2026
+upstream merge (it was 2,488,298 / `9718a2a6…` before; see "Merging upstream" below).
 It is worth naming both halves: M4 task 3 measured an unguarded change that links
 to exactly the right size with the wrong md5, so a size-only reading of this
 tripwire would have passed it. **There are now two platform pins, not one.**
 That figure is the Mac pin, measured on the maintainer's machine; `checks.yml`'s
 own first run showed a Linux runner on the identical emsdk 6.0.8 does not
 reproduce it — same source, same toolchain, a dedicated wasm 16 bytes smaller
-at 2,488,282 bytes, md5 `ecb69e501f47c1a35cfe544ec0fe4e15` — so CI asserts
+at 2,514,078 bytes, md5 `7dcd33ff6bf86c442af8770990240dfa` since the October 2026
+merge (2,488,282 / `ecb69e50…` before) — so CI asserts
 whichever of the two pins the platform it runs on actually produces (see the
 comment above `LINUX_PIN_BYTES` in `checks.yml` for the run that established
 the second number) rather than weakening the check to size alone or
@@ -140,8 +142,37 @@ mechanism.
   - [docs/evidence/](evidence/): what each milestone measured, how, and
     how to re-run it.
   - [docs/superpowers/](superpowers/): specs and implementation plans.
-- **The original project's documentation** is in the plain-text
-  [README](../README) and `README-DEVELOPER`.
+- **The original project's documentation** is in [upstream-README.md](upstream-README.md) (upstream's README, kept as it was
+  when merged) and `README-DEVELOPER`.
+
+## Merging upstream
+
+`web/tools/check-upstream.mjs` (and the scheduled workflow that opens an
+"Upstream drift" issue) reports when upstream's `legacy_0.2.9` has moved and
+which new commits touch files the port patches. To merge:
+
+1. **Get the commits.** `git fetch upstream legacy_0.2.9`. If git can't reach
+   GitLab (seen in October 2026: an SSL error from git while the website
+   answered), upstream's GitHub mirror has the same branch:
+   `git fetch https://github.com/ArmagetronAd/armagetronad.git legacy_0.2.9:refs/remotes/upstream/legacy_0.2.9`
+   (compare its head with GitLab's via `git ls-remote` or the GitLab API).
+2. **Merge on a branch** and resolve conflicts. In the October 2026 merge
+   (298 commits) only `.gitignore`, `CLAUDE.md` and `README.md` conflicted;
+   every patched source file merged on its own. Upstream's own README is kept
+   as `docs/upstream-README.md`.
+3. **Build both targets and run the gates.**
+4. **Move the pin only after proving the port's footprint is unchanged.** An
+   upstream merge legitimately changes the dedicated wasm. The check:
+   - build the dedicated server from **pure upstream** (a worktree at the
+     upstream commit, plus only `web/Makefile` and `src/emscripten/config.h`),
+     at the old base and at the new head;
+   - compare each with the port's build of the same base, byte by byte;
+   - the differences must be the same. Since early in the port it has been
+     exactly one byte: a `__LINE__` (914 upstream, 953 here) in an error
+     message in `src/render/rScreen.cpp`, shifted by port code above it.
+   Then update the Mac pin in `checks.yml`, this file and
+   `docs/evidence/m5-camera/invariant/dedicated-invariant.sh`, and take the
+   Linux pin from the PR's first CI run, which prints the measured value.
 
 ## Toolchain
 

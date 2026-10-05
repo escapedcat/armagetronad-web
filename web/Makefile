@@ -423,8 +423,8 @@ CLIENT_CXXFLAGS := $(BASE_CXXFLAGS) $(CLIENT_DEFS) $(CLIENT_PORTS) $(INCLUDES)
 # measurement.
 #
 # Deliberately NOT added to $(LDFLAGS): the dedicated build's wasm is a
-# byte-identity invariant across the whole port (2,488,298 bytes, md5
-# 9718a2a64978cb6e9b95ea2f0454cca5), and it is a Node diagnostic tool, not a
+# byte-identity invariant across the whole port (2,514,094 bytes, md5
+# bdda8209331b2f01b0f4e8fcfc06756b since the October 2026 upstream merge), and it is a Node diagnostic tool, not a
 # shipped artefact, so it has nothing to gain and an invariant to lose.
 CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   $(CLIENT_PORTS) -sLEGACY_GL_EMULATION=1 \

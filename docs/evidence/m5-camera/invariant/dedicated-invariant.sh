@@ -1,6 +1,7 @@
 #!/bin/bash
 # M5 task 2b: the dedicated wasm must still be 2,488,298 bytes AND md5
-# 9718a2a64978cb6e9b95ea2f0454cca5. SIZE ALONE IS NOT SUFFICIENT -- M4 task 3
+# bdda8209331b2f01b0f4e8fcfc06756b (2,514,094 bytes since the October 2026 upstream merge;
+# 9718a2a64978cb6e9b95ea2f0454cca5 / 2,488,298 before). SIZE ALONE IS NOT SUFFICIENT -- M4 task 3
 # found this project's byte-size invariant could not detect its own change --
 # so the last step here is a control that proves the md5 half has detection
 # power the size half does not.
@@ -17,8 +18,8 @@ set -u
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
 WASM=web/dist-m0/armagetronad-dedicated.wasm
-WANT_BYTES=2488298
-WANT_MD5=9718a2a64978cb6e9b95ea2f0454cca5
+WANT_BYTES=2514094
+WANT_MD5=bdda8209331b2f01b0f4e8fcfc06756b
 SRC=src/network/nNetwork.cpp
 OBJ=web/build-m0/network/nNetwork.o
 CTL=$(mktemp -d)
