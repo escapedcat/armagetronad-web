@@ -9,7 +9,17 @@ It is not a rewrite or a look-alike. The original C++ engine, physics, AI and
 network protocol are compiled to WebAssembly with
 [Emscripten](https://emscripten.org/).
 
-## ▶ Play it
+**Contents**
+- **Players:** [Play it](#play-it) · [Controls](#controls) ·
+  [How online play works](#how-online-play-works) ·
+  [Log in with a Global ID](#log-in-with-a-global-id-recommended) ·
+  [Known limitations](#known-limitations)
+- **Server owners:** [For server owners](#for-server-owners)
+- **Developers:** [Why this approach](#why-this-approach) ·
+  [Build and run it](#build-and-run-it) · [Repo layout](#repo-layout) ·
+  [License](#license)
+
+## Play it
 
 **<https://escapedcat.github.io/armagetronad-web/>**
 
