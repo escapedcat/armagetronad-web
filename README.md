@@ -108,6 +108,39 @@ unmodified and don't know a browser is involved.
   - **A player who keeps the tab visible but sits idle** can still be kicked,
     so don't park on a server.
 
+### Log in with a Global ID (recommended)
+
+You can play without an account. But if you play online regularly, log in
+with a free **Global ID**, the game's own player account.
+
+**Why we recommend it:**
+- **Servers can't tell web players apart otherwise.** Every browser player
+  reaches a server from the relay's one address, and anyone can pick any name.
+  A login is the one thing that says "this is really me".
+- **It protects every web player.** Without a login, the only tool a server
+  owner has against one troublemaker is banning the relay's address, and that
+  locks out *all* web players. Logged-in players can be recognised, and dealt
+  with, one by one, which makes it easier for owners to keep welcoming web
+  players.
+- **Servers can treat logged-in players better.** Some give them extra rights,
+  and stats pages list logged-in players under their account (`name@lt`), so
+  your scores stay yours whatever name you play under. A server owner who
+  blocks data-center addresses could also let logged-in web players through.
+
+**How to get one:**
+- **The official forums no longer accept new sign-ups.** Register instead at
+  **[Lightron](https://lightron.org/)** ("Don't have an account?" under Log
+  In). Your Global ID is then `yourname@lt`.
+- In the game, open **Player Setup → Player 1**, set **Global ID** to
+  `yourname@lt` and turn on **Auto Login**. On a server that supports it, the
+  game asks for your Lightron password when you join. On a phone, the keyboard
+  opens in private mode, without suggestions.
+- Or log in by hand on a server: type `/login yourname@lt` into the chat.
+- **Your name and your login are separate.** The login doesn't change the name
+  you play under; set that under **Name** in Player Setup.
+- **Not every server has logins switched on.** On those, you just play
+  without one.
+
 ## For server owners
 
 If web players show up on your server from one data-center address, this is
@@ -127,8 +160,9 @@ probably why:
   - the page leaves a server with a regular logout after its tab has been
     hidden for a minute, so web players don't sit idle until they're kicked.
 - **The catch:** all web players share that address, so an IP ban hits all of
-  them. Players who log in with a Global ID can be told apart by it; most web
-  players don't have one.
+  them. Players who log in with a Global ID can be told apart by it, and
+  logging in works through the relay. Web players are asked to log in (see
+  "Log in with a Global ID" above), but most won't have an account.
 - **What you can ask for**, by opening an issue in this repository:
   - **opt out:** the relay stops sending to your server;
   - **block one player:** the relay sees each player's real address and can
