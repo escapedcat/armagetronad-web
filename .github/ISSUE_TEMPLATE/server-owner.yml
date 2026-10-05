@@ -1,0 +1,46 @@
+name: Server owner request
+description: Opt your server out of web players, report one web player, or ask a question.
+title: "[server] "
+labels: ["server-owner"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for running a server. Web players all reach you from the relay's one address, so we can act on a single player where you can't (see "For server owners" in the README).
+        **This issue is public.** Don't post anyone's IP address here; the relay knows the real address and the block happens there.
+  - type: dropdown
+    id: request
+    attributes:
+      label: What do you need?
+      options:
+        - Opt my server out (the relay stops sending to it)
+        - Block one web player
+        - A fixed relay address for my allowlist
+        - A question
+    validations:
+      required: true
+  - type: input
+    id: server
+    attributes:
+      label: Your server's name and address
+      description: The address players connect to, e.g. 203.0.113.5:4534
+      placeholder: "My Server, 203.0.113.5:4534"
+    validations:
+      required: true
+  - type: input
+    id: player
+    attributes:
+      label: Player name (and Global ID if they were logged in)
+      description: Only for "Block one web player".
+      placeholder: "web_1234"
+  - type: input
+    id: when
+    attributes:
+      label: When it happened, with time zone
+      description: Only for "Block one web player". The relay keeps its log only for a short time, so please report soon.
+      placeholder: "2026-10-05 21:40 UTC"
+  - type: textarea
+    id: details
+    attributes:
+      label: Anything else
+      description: What happened, or your question.

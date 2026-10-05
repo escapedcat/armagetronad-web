@@ -143,33 +143,54 @@ with a free **Global ID**, the game's own player account.
 
 ## For server owners
 
-If web players show up on your server from one data-center address, this is
-probably why:
+**Do you need to do anything?** No. Web players are ordinary game clients
+speaking the normal protocol, and your server needs no changes. This section
+is for when you notice them, or want to handle them differently.
 
-- **Every browser player arrives from the relay's address**, currently
-  `89.222.108.19`. ipinfo.io reports its network as
-  **`AS60068 Datacamp Limited`**, the upstream of the Fly.io Frankfurt
-  region the relay runs in, so VPN filters that match "Datacamp" or
-  "DataPacket" catch it. It isn't a VPN. The address can change when the relay
-  is redeployed.
-- **What the relay allows:**
-  - only pages from this project's site may use it;
-  - it sends only to public game servers on ports 4533–4599;
-  - it limits each player to 4 connections and caps packets and bytes per
-    second;
-  - the page leaves a server with a regular logout after its tab has been
-    hidden for a minute, so web players don't sit idle until they're kicked.
-- **The catch:** all web players share that address, so an IP ban hits all of
-  them. Players who log in with a Global ID can be told apart by it, and
-  logging in works through the relay. Web players are asked to log in (see
-  "Log in with a Global ID" above), but most won't have an account.
-- **What you can ask for**, by opening an issue in this repository:
-  - **opt out:** the relay stops sending to your server;
-  - **block one player:** the relay sees each player's real address and can
-    block that one person, not every web player. Include the name, the time
-    and your server's address.
-- **Privacy:** for exactly that, the relay logs which player address plays on
-  which server, in Fly's short-lived logs, and nothing else about the game.
+**How to recognise a web player:**
+- **They all come from the relay's address**, currently `89.222.108.19`.
+  ipinfo.io reports its network as **`AS60068 Datacamp Limited`**, the
+  upstream of the Fly.io Frankfurt region the relay runs in. That's why VPN
+  filters matching "Datacamp" or "DataPacket" catch it, though it isn't a VPN.
+  The address can change when the relay is redeployed.
+- **Many play under a default name** like `web_1234`, unless they picked one.
+- **Some log in with a Global ID.** The README asks them to (see "Log in with a
+  Global ID" above). That login is the only thing that tells one web player
+  from another.
+
+**If you block VPN or data-center addresses** and want to let web players in:
+- Allow the relay's address in your filter, or let it through only for
+  players who log in.
+- For now the address isn't fixed, so an allowance can stop working after a
+  redeploy. If you'd rely on one, say so in an issue: a fixed address is
+  possible.
+
+**If one web player causes trouble:**
+- **Don't ban the relay's address.** That locks out every web player, the same
+  as an autoban after repeated kicks of web players.
+- **If they're logged in,** ban or restrict their Global ID, like any other
+  player.
+- **If they aren't,** report them (see below). The relay sees each player's
+  real address and can block that one person.
+
+**What you can ask for**, with the [server owner form](https://github.com/escapedcat/armagetronad-web/issues/new?template=server-owner.yml):
+- **Opt out:** the relay stops sending to your server, and web players see
+  that it doesn't take them.
+- **Block one player:** give their name, the time (with time zone) and your
+  server's address. Real addresses are never posted publicly; the block
+  happens on the relay.
+- **A question,** or a fixed address for your allowlist.
+
+**What the relay does on its side:**
+- only pages from this project's site may use it;
+- it sends only to public game servers on ports 4533–4599;
+- it limits each player to 4 connections and caps packets and bytes per
+  second;
+- the page leaves a server with a regular logout after its tab has been
+  hidden for a minute, so web players don't sit idle until they're kicked.
+
+**Privacy:** to trace a report, the relay logs which player address plays on
+which server, in Fly's short-lived logs, and nothing else about the game.
 
 ## Known limitations
 
