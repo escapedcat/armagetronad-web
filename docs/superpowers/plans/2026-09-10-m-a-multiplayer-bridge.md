@@ -1644,7 +1644,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 ### Task 5: Nothing else moved (gate B5), and the documentation
 
 **Files:**
-- Modify: `PLAN.md`, `web/README.md`, `docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md`
+- Modify: `PLAN.md`, `docs/development.md`, `docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md`
 - Create: `docs/evidence/m-a-bridge/README.md`
 
 **Interfaces:**
@@ -1677,7 +1677,7 @@ Expected: 2,488,298 bytes, md5 `9718a2a64978cb6e9b95ea2f0454cca5`. Record both i
 
 In `docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md`, the Files section names `src/network/nSocketWeb.{cpp,h}`. Replace it with `src/emscripten/eWebNet.{h,cpp}` and add one sentence saying why, in the repo's habit of showing what changed rather than quietly editing: `$(SRCS)` wildcards `src/network/` into both builds, and an empty translation unit is not a non-existent one.
 
-- [ ] **Step 6: Update `web/README.md`**
+- [ ] **Step 6: Update `docs/development.md`**
 
 Add `?bridge=ws://host:port` to the parameter table, one line, in the table's existing style: what it does, what happens when it is absent (nothing — no socket is attempted), and a pointer to `bridge/README.md`.
 
@@ -1688,7 +1688,7 @@ Under Phase 2, add an M-A block recording: what shipped, the four gate verdicts,
 - [ ] **Step 8: Commit**
 
 ```bash
-git add PLAN.md web/README.md docs/evidence/m-a-bridge/ \
+git add PLAN.md docs/development.md docs/evidence/m-a-bridge/ \
         docs/superpowers/specs/2026-09-10-m-a-multiplayer-bridge-design.md
 git commit -F /tmp/task5-msg.txt
 ```

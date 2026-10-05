@@ -478,7 +478,7 @@ not merely persuasive. Three smaller over-claims (`keymap[1104]` for
 
 One provenance note, so the history is navigable: these corrections landed in
 commit `535162f7`, whose message describes unrelated `gArmagetron.cpp` and
-`web/README.md` work — a concurrent commit swept the then-uncommitted files in.
+`docs/development.md` work — a concurrent commit swept the then-uncommitted files in.
 The content is intact and verified; only the commit message is silent about it.
 
 ---

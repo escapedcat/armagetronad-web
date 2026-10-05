@@ -840,7 +840,7 @@ int main(int argc,char **argv){
             //  - SDL_QUIT: a real loss, but a smaller one than this comment
             //    used to claim. It said the st_SaveConfig() in filter() "is
             //    what saves settings when the window closes", and M4's plan
-            //    and web/README.md both inherited that reading. It is wrong:
+            //    and docs/development.md both inherited that reading. It is wrong:
             //    st_SaveConfig has a dozen call sites, and sr_InitDisplay and
             //    lowlevel_sr_InitDisplay (rScreen.cpp) call it unconditionally
             //    on EVERY boot -- a crash detector persisting FAILED_ATTEMPTS

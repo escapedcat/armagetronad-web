@@ -941,7 +941,7 @@ git commit -F /tmp/msg-task4.txt   # "gate: join a server whose map is not bundl
 - Create: `web/resource-bundle/…` (fetched files, committed)
 - Modify: `web/Makefile` (`CLIENT_LDFLAGS` preload; link-rule prerequisites)
 - Modify: `web/tools/run-resource-gate.sh` (new `bundled` arm)
-- Modify: `web/README.md` (section "Bundled maps")
+- Modify: `docs/development.md` (section "Bundled maps")
 
 **Interfaces:**
 - Consumes: the engine's resource read path `/data/resource` (third entry in `tPathResource::Paths`, `src/tools/tDirectories.cpp`) — searched before any download.
@@ -1046,14 +1046,14 @@ Run it: `sh web/tools/run-resource-gate.sh docs/evidence/map-downloads/bundled b
 
 - [ ] **Step 7: Docs**
 
-`web/README.md`, section **"Bundled maps"**: what the bundle is, where it lands and why (`/data/resource`), how to add a map (edit the list, run the script, commit both), how to find candidates (relay log command from `bridge/README.md`), and that a missing map is only a download, never a failure.
+`docs/development.md`, section **"Bundled maps"**: what the bundle is, where it lands and why (`/data/resource`), how to add a map (edit the list, run the script, commit both), how to find candidates (relay log command from `bridge/README.md`), and that a missing map is only a download, never a failure.
 
 In `PLAN.md`, the libxml2 row of the build-strategy table says "runtime HTTP fails gracefully → bundled maps": append a dated correction in the document's existing style — **corrected 2026-09-30:** runtime HTTP did not fail gracefully (status 0, "Return value 0 != 200"); map downloads now go through the relay's `/resource` route, with a preloaded bundle in front; see this plan.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add web/resource-bundle.txt web/tools/fetch-resource-bundle.sh web/resource-bundle web/Makefile web/tools/run-resource-gate.sh bridge/test-server/resource-var-bundled web/README.md PLAN.md docs/evidence/map-downloads
+git add web/resource-bundle.txt web/tools/fetch-resource-bundle.sh web/resource-bundle web/Makefile web/tools/run-resource-gate.sh bridge/test-server/resource-var-bundled docs/development.md PLAN.md docs/evidence/map-downloads
 git commit -F /tmp/msg-task5.txt   # "web: bundle popular server maps"
 ```
 

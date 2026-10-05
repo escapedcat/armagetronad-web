@@ -741,7 +741,7 @@ Note for later, not for now: `config/keys_cursor.cfg` binds SDL 1.2 numeric keyc
 ### Task 8: M1 exit
 
 **Files:**
-- Modify: `web/README.md`, `README.md`
+- Modify: `docs/development.md`, `README.md`
 - Create: ~~`docs/m1/`~~ **`docs/evidence/m1-task7/`** — evidence
 
 > **Correction (Task 8).** Steps 1 and 2 were overtaken by events. Task 7 committed the evidence as it captured it, under `docs/evidence/m1-task7/` rather than `docs/m1/` — 20 screenshots and 2 console transcripts, from a run of `web/tools/menu-gate.steps` in each browser. That evidence is the milestone gate, so Task 8 did **not** re-run Step 1's clean rebuild: a rebuild that produced different screenshots would replace the gate with an unreviewed one, and one that produced identical screenshots would prove nothing the committed set does not. Task 8 was executed as documentation only, no rebuild and no relink, and re-verified the dedicated wasm by measuring the existing artifact (2,488,298 bytes). Every command written into the docs was executed first.
@@ -763,7 +763,7 @@ Screenshots of the menu in Chrome and Firefox into `docs/m1/`, plus the devtools
 
 - [ ] **Step 3: Document building and running the client**
 
-Extend `web/README.md`'s Quickstart with the client target and the local-server step, and note the network dependency on first link (zlib and libpng ports). Update the root `README.md` status.
+Extend `docs/development.md`'s Quickstart with the client target and the local-server step, and note the network dependency on first link (zlib and libpng ports). Update the root `README.md` status.
 
 Be as scrupulous about scope as M0's status is: a main menu is not a playable game, and M2 is what makes it one.
 

@@ -31,7 +31,7 @@
 # Expect the first run to be the slowest; the header of the first successful run
 # is where the real number lives.
 #
-# REPRODUCIBILITY, STATED HONESTLY. web/README.md's "byte-identical from a clean
+# REPRODUCIBILITY, STATED HONESTLY. docs/development.md's "byte-identical from a clean
 # build" was measured on ONE machine. Whether a Linux runner's wasm matches the
 # maintainer's macOS build is a question the first CI deploy answers, not one this
 # file assumes: `sh web/tools/wire-facts.sh` compares the deployed sha256 with a
@@ -91,7 +91,7 @@ jobs:
         with:
           node-version: '22'
 
-      # The documented install, verbatim (web/README.md "Toolchain"), so a
+      # The documented install, verbatim (docs/development.md "Toolchain"), so a
       # runner and a laptop build with the same thing. The whole SDK directory is
       # cached, and because the cache is saved at the END of the job it also
       # carries Emscripten's own cache of ports (SDL, libpng) and the system libs
@@ -191,7 +191,7 @@ jobs:
           echo "Deployed $(git rev-parse --short HEAD) from ${GITHUB_REF_NAME}"
 
       # gh-pages reports "Published" the instant the push succeeds; the Pages
-      # BUILD that actually serves it takes about 20 s more (web/README.md
+      # BUILD that actually serves it takes about 20 s more (docs/development.md
       # "Deploying to GitHub Pages"). A wire check run against the still-old
       # edge would fail for a reason that has nothing to do with this deploy,
       # so wait for the edge to agree with what was just pushed before judging

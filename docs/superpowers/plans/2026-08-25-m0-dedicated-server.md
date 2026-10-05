@@ -37,10 +37,10 @@
 **Files:**
 - Modify: `.gitignore` (repo root)
 - Create: `deps/emsdk/` (cloned, gitignored — never committed)
-- Create: `web/README.md` (toolchain section)
+- Create: `docs/development.md` (toolchain section)
 
 **Interfaces:**
-- Produces: working `emcc`/`em++`/`emconfigure`/`emmake` on PATH after `source deps/emsdk/emsdk_env.sh`; pinned SDK version recorded in `web/README.md`. All later tasks assume the environment is sourced.
+- Produces: working `emcc`/`em++`/`emconfigure`/`emmake` on PATH after `source deps/emsdk/emsdk_env.sh`; pinned SDK version recorded in `docs/development.md`. All later tasks assume the environment is sourced.
 
 - [ ] **Step 1: Ignore toolchain and build dirs**
 
@@ -81,7 +81,7 @@ Expected: `emcc (Emscripten gcc/clang-like replacement …) <version>` and `v22.
 
 - [ ] **Step 5: Record the pin**
 
-Create `web/README.md`:
+Create `docs/development.md`:
 
 ```markdown
 # Web build (Emscripten port)
@@ -105,8 +105,8 @@ Replace the placeholder with the real `emcc --version` first line.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add web/README.md
-git commit -m "docs: record pinned Emscripten toolchain in web/README"
+git add docs/development.md
+git commit -m "docs: record pinned Emscripten toolchain in docs/development.md"
 ```
 
 ---
@@ -115,7 +115,7 @@ git commit -m "docs: record pinned Emscripten toolchain in web/README"
 
 **Files:**
 - Create: `deps/build-libxml2.sh`
-- Modify: `web/README.md` (dependencies section)
+- Modify: `docs/development.md` (dependencies section)
 
 **Interfaces:**
 - Produces: `deps/build/libxml2-install/lib/libxml2.a` and headers under `deps/build/libxml2-install/include/libxml2/`, HTTP module enabled. The Makefile (Task 4) consumes exactly these paths.
@@ -181,7 +181,7 @@ Expected: the `#define LIBXML_HTTP_ENABLED` branch is active (`#if 1` above it).
 
 - [ ] **Step 4: Document + commit**
 
-Append to `web/README.md`:
+Append to `docs/development.md`:
 
 ```markdown
 ## Dependencies
@@ -192,7 +192,7 @@ comment in the script for why. Re-run only after `rm -rf deps/build/libxml2-*`.
 ```
 
 ```bash
-git add deps/build-libxml2.sh web/README.md
+git add deps/build-libxml2.sh docs/development.md
 git commit -m "feat: wasm libxml2 build script, pinned 2.12.x with HTTP module"
 ```
 
@@ -299,7 +299,7 @@ git commit -m "feat: hand-written Emscripten config.h (dedicated) + nTrueVersion
 **Files:**
 - Create: `web/Makefile`
 - Modify (only as errors demand, always `#ifdef __EMSCRIPTEN__`-guarded): files under `src/`
-- Modify: `web/README.md` (build section)
+- Modify: `docs/development.md` (build section)
 
 **Interfaces:**
 - Consumes: Task 2's libxml2 install paths, Task 3's headers.
@@ -409,7 +409,7 @@ Expected: `armagetronad-dedicated.js` + `armagetronad-dedicated.wasm` exist. Und
 
 - [ ] **Step 6: Document + commit**
 
-Append to `web/README.md`:
+Append to `docs/development.md`:
 
 ```markdown
 ## Building the M0 dedicated server
@@ -422,7 +422,7 @@ Output: web/dist-m0/armagetronad-dedicated.{js,wasm}. `make -f web/Makefile clea
 ```
 
 ```bash
-git add web/README.md
+git add docs/development.md
 git commit -m "docs: M0 build instructions"
 ```
 
@@ -432,7 +432,7 @@ git commit -m "docs: M0 build instructions"
 
 **Files:**
 - Modify (only as runtime failures demand, guarded as in Task 4): files under `src/`
-- Modify: `web/README.md` (run section)
+- Modify: `docs/development.md` (run section)
 
 **Interfaces:**
 - Consumes: `web/dist-m0/armagetronad-dedicated.js` from Task 4.
@@ -461,7 +461,7 @@ Same classification, same guard style, same per-fix commits. Likely suspects fla
 
 - [ ] **Step 4: Document + commit**
 
-Append to `web/README.md`:
+Append to `docs/development.md`:
 
 ```markdown
 ## Running the M0 server
@@ -474,7 +474,7 @@ success is a clean boot with the map parsed.
 ```
 
 ```bash
-git add web/README.md
+git add docs/development.md
 git commit -m "docs: M0 run instructions"
 ```
 
@@ -482,7 +482,7 @@ git commit -m "docs: M0 run instructions"
 
 ### Task 6: Native demo playback under wasm (best-effort — DIAGNOSTIC, NOT A GATE)
 
-Per PLAN.md/ADR discipline: replay is a diagnostic. If this task fights back for more than ~half a day, record what happened in `web/README.md` and move on. Skipping it does NOT block M0 exit.
+Per PLAN.md/ADR discipline: replay is a diagnostic. If this task fights back for more than ~half a day, record what happened in `docs/development.md` and move on. Skipping it does NOT block M0 exit.
 
 **Files:**
 - Create: nothing committed except a README note (recordings and native build stay untracked)
@@ -522,10 +522,10 @@ Expected (best-effort): playback runs; divergence or early stop is *recorded as 
 
 - [ ] **Step 4: Record the outcome**
 
-Append one honest paragraph to `web/README.md` ("Playback diagnostic: <what happened>"). Commit:
+Append one honest paragraph to `docs/development.md` ("Playback diagnostic: <what happened>"). Commit:
 
 ```bash
-git add web/README.md
+git add docs/development.md
 git commit -m "docs: record M0 playback diagnostic outcome"
 ```
 

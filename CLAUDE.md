@@ -25,7 +25,7 @@ Committed scope is **the Demo** only: single-player vs AI, desktop Chrome + Fire
 
 ## Build commands
 
-**WASM build (the port):** a hand-written `web/Makefile` plus hand-written `src/emscripten/config.h` — autotools is *not* used for wasm. Created in M0; per PLAN.md it must stay documented in `web/README.md` well enough that a non-C++ dev can drive it. Precedent for hand-written platform config headers: `src/config_ide.h`, `src/win32/config.h`.
+**WASM build (the port):** a hand-written `web/Makefile` plus hand-written `src/emscripten/config.h` — autotools is *not* used for wasm. Created in M0; per PLAN.md it must stay documented in `docs/development.md` well enough that a non-C++ dev can drive it. Precedent for hand-written platform config headers: `src/config_ide.h`, `src/win32/config.h`.
 
 **Native build (autotools)** — used to verify port patches don't break native:
 
