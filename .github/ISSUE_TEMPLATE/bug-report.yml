@@ -1,0 +1,61 @@
+name: Report a problem
+description: Something doesn't work or looks wrong when playing in the browser.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping. A few details make it much easier to find. This issue is public, so leave out passwords and anything private.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: And what did you expect instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - Android phone
+        - iPhone
+        - Tablet
+        - Desktop or laptop
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: layout
+    attributes:
+      label: Layout (phones)
+      options:
+        - Portrait
+        - Landscape
+        - Not on a phone
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: "Chrome 141, Firefox, Safari, Brave…"
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where in the game?
+      description: A menu, a local game, or a server (its name).
+      placeholder: "Online, on <server name>"
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
+      placeholder: |
+        1. Open the page
+        2. …
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or screen recording
+      description: Drag a file in here, if you have one.

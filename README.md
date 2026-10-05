@@ -1,7 +1,10 @@
 # Armagetron Advanced → in the browser
 
+<img src="docs/screenshots/phone-portrait-play.gif" alt="A round on a phone in portrait: the cycle drives, turns with the two big pad halves, and crashes into a wall" width="200" align="right">
+
 **▶ Play now: <https://escapedcat.github.io/armagetronad-web/>** on a
 desktop or a phone, with no install and no account.
+Something wrong? [Report a problem](https://github.com/escapedcat/armagetronad-web/issues/new?template=bug-report.yml).
 
 This is a fork of [Armagetron Advanced](https://www.armagetronad.org/), the
 classic 3D lightcycle game, with one goal: run the real game in a web browser
@@ -181,7 +184,9 @@ They're stored in your browser for this site, so a private window, clearing
 site data or another browser starts fresh.
 
 **Does it work on an iPhone?**
-Not tested yet. If you try it, tell us how it went in an issue.
+Not tested yet. If you try it, tell us how it went:
+[report a problem](https://github.com/escapedcat/armagetronad-web/issues/new?template=bug-report.yml),
+even if everything worked.
 
 **How do I quit?**
 Close the tab. There's no Exit in the menu, because a web page can't close
