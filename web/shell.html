@@ -2152,6 +2152,31 @@
       }
     }
 
+    // ---- web_user BECOMES web_NNNN, ONCE -----------------------------------
+    // Before new players got a web_NNNN default (THE DEFAULT NAME, preRun),
+    // every browser player started as "web_user", and a saved profile keeps
+    // that name. So on load, a saved Player 1 named exactly web_user is
+    // renamed to this load's fresh web_NNNN before main() reads user.cfg. Any
+    // name the player chose is left alone, and once renamed it is not
+    // web_user any more, so this happens once per profile.
+    function renameOldDefaultName() {
+      try {
+        const path = '/persist/var/user.cfg';
+        if (!Module.FS.analyzePath(path).exists) return;
+        let cfg = '';
+        for (const b of Module.FS.readFile(path)) cfg += String.fromCharCode(b);   // latin-1
+        const line = /^(\s*PLAYER_1\s+)web_user[ \t]*$/m;
+        if (!line.test(cfg)) return;
+        const name = window.AA_DEFAULT_NAME ||
+                     'web_' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        cfg = cfg.replace(line, '$1' + name);
+        Module.FS.writeFile(path, Uint8Array.from(cfg, (ch) => ch.charCodeAt(0)));
+        console.log('[NAME] the old default web_user is now ' + name);
+      } catch (e) {
+        console.log('[NAME] web_user rename skipped: ' + e);
+      }
+    }
+
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
@@ -2352,6 +2377,7 @@
         applyTouchCameraTuning();
         applyTouchSparksTuning();
         applyTouchHints();
+        renameOldDefaultName();
         applyWallCutParam();
         let manual = false;
         try {
