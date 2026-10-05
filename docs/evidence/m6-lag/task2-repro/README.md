@@ -199,7 +199,7 @@ question Task 3 inherits. What is recorded:
   Round 1 logged nothing because its peak was 11 (`live voices peaked at
   11`), which does not exceed 11.
 - **Where that work is counted.** `fill_audio` is the SDL audio callback, and
-  in this port it runs on the main thread (`web/README.md`, the cockpit-HUD
+  in this port it runs on the main thread (`docs/development.md`, the cockpit-HUD
   bullet — "per-callback mixing work landing on the main thread" — and "Sound
   is produced, but nobody has heard it", which also says the limiter had
   never engaged at the shipped AI count and that raising `SP_NUM_AIS` would

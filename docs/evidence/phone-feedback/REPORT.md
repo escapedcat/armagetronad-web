@@ -11,7 +11,7 @@ Commits on `m5-exit`:
 |---|---|
 | `ae5a0c69` | the portrait boot hold, the `100dvh` body, the honest chip text, the GPU axis clamp, `?dpr` / `?cam` / `?diag`, the touch camera tuning |
 | `728d8aba` | the hold's release made robust after it hung for 69 s; the probes and all the evidence; both gates in both browsers |
-| *(this one)* | the report, the evidence README, and `web/README.md`'s parameter documentation |
+| *(this one)* | the report, the evidence README, and `docs/development.md`'s parameter documentation |
 
 ---
 

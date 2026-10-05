@@ -32,7 +32,7 @@
 5. **The chip already covers both directions.** `applyOrientation()` sets `chipEl.hidden = (portrait === sizedForPortrait)` (search `applyOrientation`), so the chip appears on any orientation mismatch. Its text says "letterboxed and soft… Reload"; it does not say the round restarts.
 6. **What gets deleted** (all in `web/shell.html`): markup `#rotate` with `#rotate-held`, `#rotate-play`, `#rotate-restart` and its comment; CSS `#rotate`, `#rotate .glyph`, `#rotate p`, `#rotate .dim`, `#rotate button`; script `PORTRAIT_KEY`, `readPortraitChoice`, `storePortraitChoice`, `clearPortraitChoice`, `playInPortrait`, `askPortraitAgain`, `window.AA_BOOT_HELD_FOR_PORTRAIT`, `holdPoll`, `window.AA_RELEASE_PORTRAIT_HOLD`, the `rotate-play` click handler, the hold branch inside `onOrientationChange`, and in `onRuntimeInitialized` the `else if (window.AA_BOOT_HELD_FOR_PORTRAIT)` branch. `rotateEl`, `heldNoteEl`, `restartNoteEl` lookups go with them.
 7. **Gate files:** `web/tools/touch-gate.steps` (T1…T7; T4 rotates with `metrics:412:915:3` and asserts the rotate prompt — obsolete; T7 is P1–P6 for the "Play in portrait" flow — obsolete) and `web/tools/menu-gate.steps` (desktop; D1 is the sparks check). `docs/evidence/portrait-choice/` documents the flow being removed.
-8. **Docs that name the old behaviour:** `README.md` "On a phone it plays…" bullet (portrait prompt sentence); `web/README.md` parameter table row `?portrait=ask` and the "portrait holds the boot" bullet; `PLAN.md` Phase 3 annotations (the M6 paragraph ends the section; the M7 block goes after it, before `### Phase 2`).
+8. **Docs that name the old behaviour:** `README.md` "On a phone it plays…" bullet (portrait prompt sentence); `docs/development.md` parameter table row `?portrait=ask` and the "portrait holds the boot" bullet; `PLAN.md` Phase 3 annotations (the M6 paragraph ends the section; the M7 block goes after it, before `### Phase 2`).
 
 ---
 
@@ -399,7 +399,7 @@ Subject: `Rotation is an offered reload in both directions, and landscape and de
 ### Task 5: Docs, the plan's close, the evidence index, the PR
 
 **Files:**
-- Modify: `README.md`, `web/README.md`, `PLAN.md`
+- Modify: `README.md`, `docs/development.md`, `PLAN.md`
 - Create: `docs/evidence/m7-gameboy/README.md`
 - Delete nothing under `docs/evidence/portrait-choice/` (history); add one line to its README saying M7 replaced the flow.
 
@@ -407,7 +407,7 @@ Subject: `Rotation is an offered reload in both directions, and landscape and de
 
 In the "On a phone it plays…" bullet, replace the portrait sentences with: `In portrait the game is a square at the top of the screen with a Game Boy pad below it — a cross for the arrows, A for Enter, B for Escape — and it looks better than landscape does (the square is the aspect the game's projection was designed near). Rotating after load offers a reload; it never forces one.`
 
-- [ ] **Step 2: web/README.md**
+- [ ] **Step 2: docs/development.md**
 
 Delete the `?portrait=ask` table row. Rewrite the "portrait holds the boot" bullet as "portrait is the Game Boy layout": what `html.aa-gameboy` is, that the decision is touch AND portrait at load, the 60 % cap, the pad's keys, that the chip is the only rotation handling, and that `localStorage aa.portrait` is no longer read.
 

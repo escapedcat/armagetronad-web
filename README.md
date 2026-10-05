@@ -1,15 +1,27 @@
 # Armagetron Advanced → in the browser
 
+<img src="docs/screenshots/phone-portrait-play.gif" alt="A round on a phone in portrait: the cycle drives, turns with the two big pad halves, and crashes into a wall" width="200" align="right">
+
+**▶ Play now: <https://escapedcat.github.io/armagetronad-web/>** on a
+desktop or a phone, with no install and no account.
+Something wrong? [Report a problem](https://github.com/escapedcat/armagetronad-web/issues/new?template=bug-report.yml).
+
 This is a fork of [Armagetron Advanced](https://www.armagetronad.org/), the
-classic 3D lightcycle game, with one goal: **run the real game in a web
-browser**, on desktop and on phones, and play on the existing community
-servers.
+classic 3D lightcycle game, with one goal: run the real game in a web browser
+and play on the existing community servers. It is not a rewrite or a
+look-alike: the original C++ engine, physics, AI and network protocol are
+compiled to WebAssembly with [Emscripten](https://emscripten.org/).
 
-It is not a rewrite or a look-alike. The original C++ engine, physics, AI and
-network protocol are compiled to WebAssembly with
-[Emscripten](https://emscripten.org/).
+**Contents**
+- **Players:** [Play it](#play-it) · [Controls](#controls) ·
+  [How online play works](#how-online-play-works) ·
+  [Log in with a Global ID](#log-in-with-a-global-id-recommended) ·
+  [FAQ](#faq) · [Known limitations](#known-limitations)
+- **Server owners:** [For server owners](#for-server-owners)
+- **Developers:** [For developers](#for-developers) ·
+  [Why this approach](#why-this-approach) · [License](#license)
 
-## ▶ Play it
+## Play it
 
 **<https://escapedcat.github.io/armagetronad-web/>**
 
@@ -141,6 +153,45 @@ with a free **Global ID**, the game's own player account.
 - **Not every server has logins switched on.** On those, you just play
   without one.
 
+## FAQ
+
+**A server kicked me, or says my network is banned. Why?**
+Every web player reaches servers through the relay's one address, a
+data-center address, and some servers block those to keep out VPNs. Others
+autoban an address after several kicks, which then hits every web player for
+a while. Try another server. Logging in with a Global ID (above) helps
+servers tell you apart, and server owners can find out how to let web players
+in under "For server owners".
+
+**Why am I called `web_1234`?**
+That's the default name for new players. Change it under
+**Player Setup → Player 1 → Name**. On a phone the keyboard opens by itself
+on the name field.
+
+**How do I chat on a phone?**
+On a server, once you've crashed, between rounds or while watching, the pad's
+Enter turns into **Chat**: tap it, type, and send with the keyboard's Enter.
+While your cycle is alive chat is off, so a stray tap can't turn your arrows
+into typing. In landscape, tap the screen instead (after a crash or between
+rounds).
+
+**How do I look around on a phone?**
+In portrait, while driving, hold the game picture: the left or right half
+looks that way, the bottom strip looks back.
+
+**My settings and name are gone.**
+They're stored in your browser for this site, so a private window, clearing
+site data or another browser starts fresh.
+
+**Does it work on an iPhone?**
+Not tested yet. If you try it, tell us how it went:
+[report a problem](https://github.com/escapedcat/armagetronad-web/issues/new?template=bug-report.yml),
+even if everything worked.
+
+**How do I quit?**
+Close the tab. There's no Exit in the menu, because a web page can't close
+itself.
+
 ## For server owners
 
 **Do you need to do anything?** No. Web players are ordinary game clients
@@ -222,71 +273,19 @@ re-create that feel by hand, such as
 rewrite. Compiling the actual engine avoids that problem. The reasoning is in
 [ADR 0000](docs/adr/0000-port-real-codebase-via-emscripten.md).
 
-## Build and run it
+## For developers
 
-The full sequence (toolchain, dependencies, build, run) is the
-**[Quickstart in `web/README.md`](web/README.md#quickstart)**. It takes about
-15 minutes from a fresh clone, mostly spent downloading the Emscripten SDK.
-
-```sh
-source deps/emsdk/emsdk_env.sh
-
-# The browser client. It MUST be served over HTTP: a file:// open cannot fetch
-# the .wasm and .data, and the page says so instead of starting.
-make -f web/Makefile client -j8
-python3 -m http.server 8000 --directory web/dist-m1
-# open http://localhost:8000/armagetronad.html
-
-# Online play from a local build: run the relay and point the page at it.
-(cd bridge && npm install && node relay.mjs --port 8010)
-# open http://localhost:8000/armagetronad.html?bridge=ws://127.0.0.1:8010
-
-# The dedicated server, compiled to wasm and run under Node.
-make -f web/Makefile dedicated -j8
-node web/dist-m0/armagetronad-dedicated.js \
-    --datadir . --userdatadir /tmp/aa-persist --daemon < /dev/null
-```
-
-The page connects to the public relay by default only on the published page.
-Locally it stays offline unless you pass `?bridge=`.
-
-**Tests and gates:**
-- **Relay tests:** `cd bridge && npm test`.
-- **Browser gates:** the `.steps` scripts in `web/tools/`, driven by
-  `web/tools/drive-browser.mjs` in headless Chrome. The `run-*-gate.sh` scripts
-  run the complete ones. Each one's header says what it proves and how to run
-  it.
-
-**Deploys:**
-- **Pages:** every merge to `main` builds the client and publishes it.
-- **Relay:** changes under `bridge/` redeploy the relay to Fly
-  (`.github/workflows/`).
-- **Dedicated server:** CI rebuilds its wasm on every pull request and checks
-  that it is byte-identical to the pin, because every port change must leave
-  the native and dedicated builds untouched.
-
-## Repo layout
-
-- **Based on upstream's `legacy_0.2.9` branch**, the current stable line. The
-  `upstream` remote points to the
-  [official GitLab repository](https://gitlab.com/armagetronad/armagetronad),
-  so upstream fixes merge cleanly.
-- **Port code is additive:** new files under `src/emscripten/`, `web/` and
-  `bridge/`, with preprocessor guards elsewhere.
-  - The guard for browser-only code is
-    `#if defined(__EMSCRIPTEN__) && !defined(DEDICATED)`, because the wasm
-    dedicated server defines `__EMSCRIPTEN__` too.
-    [docs/porting/browser-runtime-notes.md](docs/porting/browser-runtime-notes.md)
-    § 1 explains which form applies where.
-- **Where the history lives:**
-  - [PLAN.md](PLAN.md): the plan and milestone history.
-  - [CONTEXT.md](CONTEXT.md): shared vocabulary.
-  - [docs/adr/](docs/adr/): founding decisions.
-  - [docs/evidence/](docs/evidence/): what each milestone measured, how, and
-    how to re-run it.
-  - [docs/superpowers/](docs/superpowers/): specs and implementation plans.
-- **The original project's documentation** is in the plain-text
-  [README](README) and `README-DEVELOPER`.
+- **Start with [docs/development.md](docs/development.md):** the toolchain,
+  building the client and the dedicated server, running them, the page's URL
+  parameters, and the test gates. The Quickstart takes about 15 minutes from a
+  fresh clone.
+- **The relay** (online play) has its own [bridge/README.md](bridge/README.md).
+- **Tests:** `cd bridge && npm test` for the relay, and the `.steps` and
+  `run-*-gate.sh` scripts in `web/tools/` for the browser, each explaining
+  itself in its header.
+- **Deploys:** a merge to `main` publishes the page; changes under `bridge/`
+  redeploy the relay; CI checks every pull request leaves the dedicated
+  server byte-identical.
 
 ## License
 

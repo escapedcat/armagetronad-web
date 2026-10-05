@@ -6,7 +6,7 @@
 #   dedicated-pin  Builds the OTHER wasm -- the M0 dedicated server -- which
 #                  deploy-pages.yml never touches, and asserts the byte
 #                  invariant this project has otherwise kept by hand since M0:
-#                  web/README.md "both builds share -- 2,488,298 bytes AND md5
+#                  docs/development.md "both builds share -- 2,488,298 bytes AND md5
 #                  9718a2a64978cb6e9b95ea2f0454cca5". Size alone has already
 #                  passed a build with the wrong md5 once (M4 task 3); this
 #                  asserts both halves, the way every milestone since has had
@@ -15,7 +15,7 @@
 #                  source under the same emsdk 6.0.8 does not reproduce the
 #                  Mac pin -- see the comment above LINUX_PIN_BYTES below for
 #                  the run that established the second number, and
-#                  web/README.md for why the Mac pin still stands as the
+#                  docs/development.md for why the Mac pin still stands as the
 #                  local invariant.
 #
 #   bridge-tests   `npm test` in bridge/, the relay's own suite. Until M-C it
@@ -129,7 +129,7 @@ jobs:
           make -f web/Makefile dedicated -j"$(nproc)"
           ls -l web/dist-m0/
 
-      # THE INVARIANT. web/README.md's 2,488,298 B / md5 9718a2a6... was
+      # THE INVARIANT. docs/development.md's 2,488,298 B / md5 9718a2a6... was
       # measured on the maintainer's macOS. The first CI client build
       # (deploy-pages.yml) showed the Linux .wasm differs from the Mac one by
       # 16 bytes on the SAME emsdk 6.0.8, so whether the dedicated wasm
@@ -140,7 +140,7 @@ jobs:
       #
       # THIS IS NOT THE ONLY PLACE THESE NUMBERS ARE WRITTEN DOWN. If either
       # pin ever legitimately moves, it has to move in three places, not just
-      # here: web/README.md (the human-readable invariant, both platforms),
+      # here: docs/development.md (the human-readable invariant, both platforms),
       # and docs/evidence/m5-camera/invariant/dedicated-invariant.sh (a
       # positive/negative-control script that asserts the Mac figure locally
       # and predates this workflow). A future change that updates this file
@@ -152,13 +152,13 @@ jobs:
           MD5=$(md5sum "$WASM" | cut -d' ' -f1)
           echo "measured: $BYTES bytes, md5 $MD5"
 
-          # The local invariant (web/README.md), established on the
+          # The local invariant (docs/development.md), established on the
           # maintainer's macOS.
           MAC_PIN_BYTES=2488298
           MAC_PIN_MD5=9718a2a64978cb6e9b95ea2f0454cca5
-          echo "Mac pin (web/README.md, local invariant): $MAC_PIN_BYTES bytes, md5 $MAC_PIN_MD5"
+          echo "Mac pin (docs/development.md, local invariant): $MAC_PIN_BYTES bytes, md5 $MAC_PIN_MD5"
 
-          # This workflow's own first run answered the question web/README.md
+          # This workflow's own first run answered the question docs/development.md
           # asks (does a Linux runner reproduce the Mac pin?) with "no": same
           # source, same emsdk 6.0.8, a wasm 16 bytes SMALLER with a different
           # md5. That run (warm cache, shared with deploy-pages.yml's client
@@ -171,7 +171,7 @@ jobs:
           # equivalent), reproduced the IDENTICAL pin from scratch --
           # https://github.com/escapedcat/armagetronad-web/actions/runs/33781875180/job/100737268664
           # -- so this is not an artifact of a shared, pre-warmed cache.
-          # Recorded here rather than silently adopted, per web/README.md's
+          # Recorded here rather than silently adopted, per docs/development.md's
           # "Deploying to GitHub Pages" note on why there are now two
           # platform pins. The Mac pin above stays the local invariant; this
           # is what CI actually asserts.

@@ -46,7 +46,7 @@ No C++ (the dedicated byte pin is untouched by construction; the CI check enforc
 
 - `web/shell.html`: the layout CSS (a portrait rule setting `--aa-aspect: 1`, top-anchored, and the pad's grid), the pad markup, the pad's touch handlers (reusing the existing key-synthesis function), the portrait branch in the sizing block, removal of the hold/prompt/choice code and markup, the reload chip made two-directional.
 - `web/tools/touch-gate.steps`: the gates above. `docs/evidence/m7-gameboy/`: logs, screenshots, README.
-- `README.md` ("On a phone" section), `web/README.md` (the parameter table loses `?portrait=ask`; the portrait paragraph rewritten), `PLAN.md` (an M7 block under Phase 3).
+- `README.md` ("On a phone" section), `docs/development.md` (the parameter table loses `?portrait=ask`; the portrait paragraph rewritten), `PLAN.md` (an M7 block under Phase 3).
 
 ## Out of scope, recorded
 

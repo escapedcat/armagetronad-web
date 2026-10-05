@@ -107,7 +107,7 @@ The counter-argument is real but early: a relay that other people might one day 
 - new `web/library_bridge.js`; `web/Makefile` (`--js-library`)
 - new `bridge/` — the Node relay, its `package.json`, and a README saying how to run it
 - new `web/tools/bridge-gate.steps`, `docs/evidence/m-a-bridge/`
-- `web/README.md` (how to point the page at a bridge), `PLAN.md` (M-A block)
+- `docs/development.md` (how to point the page at a bridge), `PLAN.md` (M-A block)
 - **Not** `nNetwork.cpp`, `nServerInfo.cpp`, `gServerBrowser.cpp` or `config/master.srv` — the design's claim is that the game above the socket layer needs no changes at all, and any edit to those files is a signal the design went wrong.
 
 ## What could make this fail

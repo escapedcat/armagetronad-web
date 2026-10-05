@@ -2,7 +2,7 @@
 
 Three complaints from the first run of this port on real Android hardware. This
 directory is the measurements; `web/shell.html` carries the fixes and their
-arguments; `web/README.md` documents the switches.
+arguments; `docs/development.md` documents the switches.
 
 **The headline is that the first complaint's leading hypothesis was wrong.** The
 CSS does not stretch the picture and cannot: measured at 0.00 % aspect error in

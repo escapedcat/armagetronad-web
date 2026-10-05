@@ -37,10 +37,10 @@
 
 ## What reconnaissance refuted — do not rebuild the plan's assumptions
 
-`PLAN.md`'s M4 entry and `web/README.md` are wrong in five places. All measured.
+`PLAN.md`'s M4 entry and `docs/development.md` are wrong in five places. All measured.
 
 1. **"`st_SaveConfig()` never runs on tab close" implies settings are never saved. The implication is false.** `st_SaveConfig` has ~~eleven~~ **a dozen** call sites; `sr_InitDisplay` and `lowlevel_sr_InitDisplay` (`rScreen.cpp`) call it **unconditionally twice on every boot**, and again on every resolution change — it is a deliberate crash-detector persisting `FAILED_ATTEMPTS`. The `SDL_QUIT` path in `filter` is one lost site. **CORRECTED AT M4 EXIT: "eleven" was wrong and reached three files before Task 2's review caught it.** Counted on a stated basis: **12 tree-wide** before M4, **10** compiled by any build here (`src/macosx` is not wildcarded), **11** in the browser client, and **13** tree-wide once Task 2 adds its own. Eleven is right for exactly one of those readings — the browser client — which none of the sentences using it meant. **The real gap is narrower: no save follows a settings-menu change.** Restate the cause, do not repeat it.
-2. **The key-name table is NOT a deferred item.** `su_EmscriptenKeyName` has been in `uInput.cpp` since M2 task 6 (`422dfb2b`, 2026-08-27 19:46), wired into `keyname()` under the correct guard. `web/README.md` declared it outstanding in `5f09142e` at 21:31 the same day — **1h45m after the fix landed in the same tree.** The line was never true. Delete it.
+2. **The key-name table is NOT a deferred item.** `su_EmscriptenKeyName` has been in `uInput.cpp` since M2 task 6 (`422dfb2b`, 2026-08-27 19:46), wired into `keyname()` under the correct guard. `docs/development.md` declared it outstanding in `5f09142e` at 21:31 the same day — **1h45m after the fix landed in the same tree.** The line was never true. Delete it.
 3. **`pagehide` is NOT the safer unload hook — it is strictly worse.** Measured twice: the handler provably runs (proved with `sessionStorage`), the write reaches MEMFS, and the data is **lost**, because `queuePersist`'s `setTimeout(0)` never gets serviced. `beforeunload` works where `pagehide` does not. Do not "improve" this later.
 4. **`autoPersist` does not cover the unload path reliably.** It survives at 50 KB and 500 KB of delta and loses **everything in the batch** at 2 MB — including small files written in the same handler, because `queuePersist` batches the whole mount into one transaction. An explicit `FS.syncfs` does **not** rescue it. It is the *delta* that matters, not the mount size (2 MB written mid-run persists fine, and a later small write on top of it survives).
 5. **The resolution menu works.** Measured: four mode changes, canvas resizes, GL context and textures survive (`texAlive=1`), `glGetError()` clean, `SDL_VideoModeOK` returns 32, and `SDL_ListModes` returning −1 makes the menu populate correctly. **Do not hide it.**
@@ -159,11 +159,11 @@ A player-chosen `MAX_FPS` must survive a reload now. That is the whole point of 
 
 ### Task 5: M4 exit
 
-**Files:** `web/README.md`, `README.md`, `PLAN.md`, `src/tron/gArmagetron.cpp`; this plan
+**Files:** `docs/development.md`, `README.md`, `PLAN.md`, `src/tron/gArmagetron.cpp`; this plan
 
 - [ ] **Step 1: Verify from a clean rebuild** — dedicated still 2,488,298 bytes **and md5 `9718a2a64978cb6e9b95ea2f0454cca5`** (size alone would not catch Task 3's class of change — see Global Constraints), gate passes in both browsers.
 
-- [ ] **Step 2: Delete the two false items in `web/README.md`** — the key-name item (refutation 2, never true) and the stated *cause* of "nothing persists" (refutation 1). Restate the latter as: the save runs, there was nowhere durable for it to land, and no save point followed a settings change.
+- [ ] **Step 2: Delete the two false items in `docs/development.md`** — the key-name item (refutation 2, never true) and the stated *cause* of "nothing persists" (refutation 1). Restate the latter as: the save runs, there was nowhere durable for it to land, and no save point followed a settings change.
 
 - [ ] **Step 3: Correct the comment in `gArmagetron.cpp`'s `SDL_SetEventFilter` block.** It says the `st_SaveConfig` in `filter` "is what saves settings when the window closes", which seeded this plan's wrong premise. It also cites a bare line number, which this milestone's rules forbid — name `filter` instead.
 
