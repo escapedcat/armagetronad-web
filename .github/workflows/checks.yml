@@ -154,8 +154,11 @@ jobs:
 
           # The local invariant (docs/development.md), established on the
           # maintainer's macOS.
-          MAC_PIN_BYTES=2488298
-          MAC_PIN_MD5=9718a2a64978cb6e9b95ea2f0454cca5
+          # Moved with the October 2026 upstream merge (was 2488298 / 9718a2a6...):
+          # docs/development.md "Merging upstream" for how the new figure was
+          # checked to carry the port's same one-byte footprint as before.
+          MAC_PIN_BYTES=2514094
+          MAC_PIN_MD5=bdda8209331b2f01b0f4e8fcfc06756b
           echo "Mac pin (docs/development.md, local invariant): $MAC_PIN_BYTES bytes, md5 $MAC_PIN_MD5"
 
           # This workflow's own first run answered the question docs/development.md

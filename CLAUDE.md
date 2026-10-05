@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **Upstream's own guide for AI agents:** every directory of the game source has an `AGENTS.md` with local instructions (added upstream in October 2026). Read them when a directory becomes relevant; this file covers the browser port.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What this repo is
