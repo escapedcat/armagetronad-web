@@ -73,12 +73,9 @@ shot:pb-02-pad
 # LB1 (M9): THE LAYOUT SWITCH IS UP IN A MENU and names the layout a tap goes
 # to. In the Game Boy that is "Landscape layout".
 eval:(()=>{const lb=document.getElementById('layoutbtn');const b=lb?lb.getBoundingClientRect():null;const sq=document.getElementById('canvas').getBoundingClientRect();const r={present:!!lb,display:lb?getComputedStyle(lb).display:null,label:lb?lb.textContent.trim():null,top:b?Math.round(b.top):null,square_bottom:Math.round(sq.bottom),ctx:Module._aa_web_input_context()|0};r.PASS=r.present&&r.display!=='none'&&r.label==='Landscape layout'&&r.top>=r.square_bottom;console.log('[M9GATE] LB1 layout-button-in-menu '+JSON.stringify(r));return 'LB1 '+r.PASS})()
-# HAPTICS (M7.2): navigator.vibrate is stubbed HERE, after the page has decided
-# haptics=on (it tests typeof navigator.vibrate at load; desktop Chrome has the
-# function and no motor) and before the first press. Every pulse the page asks
-# for lands in window.__vib; PB7 asserts a suppressed Enter adds none, PB8 that
-# the two turns add exactly two of 12 ms and that the count at that point is 5
-# (three Enters through the menus + two turns).
+# NO VIBRATION. The pad used to pulse navigator.vibrate on every sent press
+# (M7.2); it never worked on the maintainer's phone and was removed. The stub
+# stays so PB7 and PB8 can assert it is never called.
 eval:(()=>{window.__vib=[];navigator.vibrate=(p)=>{window.__vib.push(p);return true};return 'vibrate stubbed'})()
 
 # THE MENUS ARE REACHED BY A ALONE. These three taps were tap:#tapzone before
@@ -157,7 +154,7 @@ wait:1200
 tap:#dp-right
 wait:1200
 eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const b=window.__pb4||{};const r={ctx:Module._aa_web_input_context()|0,before:b,after:{left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')}};r.PASS=typeof b.left==='number'&&typeof b.right==='number'&&r.after.left===b.left-1&&r.after.right===b.right-1;console.log('[M7GATE] PB4 pad-turns-sent '+JSON.stringify(r));return 'PB4 '+r.PASS})()
-eval:(()=>{const v=window.__vib||[];const b=window.__vib0|0;const r={before:b,after:v.length,values:v.slice(b)};r.PASS=r.after===b+2&&r.after===5&&r.values.every(x=>x===12);console.log('[M7GATE] PB8 haptic-pulse-per-press '+JSON.stringify(r));return 'PB8 '+r.PASS})()
+eval:(()=>{const v=window.__vib||[];const r={calls:v.length};r.PASS=v.length===0;console.log('[M7GATE] PB8 no-vibration '+JSON.stringify(r));return 'PB8 '+r.PASS})()
 shot:pb-03-after-pad-turns
 
 # PB5: A LONG ESC OPENS THE IN-GAME MENU AND B CLOSES IT, WITH THE CROSS WORKING INSIDE

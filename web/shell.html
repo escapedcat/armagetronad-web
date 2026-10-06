@@ -1211,23 +1211,6 @@
       if (!decision.on) return;
       touchEl.hidden = false;
 
-      // HAPTICS (M7.2). One 12 ms pulse on every press that SENDS a key -- the
-      // pad, the turn zones, the strip, the tap-for-Enter on the picture -- and
-      // none on a press that sends nothing (a suppressed Enter, an ignored
-      // tap), so the buzz means "the game got it". navigator.vibrate is the
-      // whole mechanism: Android Chrome vibrates, iOS Safari has no Vibration
-      // API and stays silent, a desktop Chrome has the function and no motor.
-      // It needs a user gesture, and the pointerdown that carries the key is
-      // one. Twelve milliseconds is a tick, not a rumble; the maintainer asked
-      // for it on 2026-09-06 after the pad's second cut. `?haptics=0` turns it
-      // off; the [TOUCH] line says which of the three states this load is in.
-      const HAPTIC_MS = 12;
-      const hapticsWanted = readNumberParam('haptics', 0, 1) !== 0;
-      const haptics = hapticsWanted && typeof navigator.vibrate === 'function';
-      const pulse = () => { if (haptics) { try { navigator.vibrate(HAPTIC_MS); } catch (e) { /* not fatal */ } } };
-      console.log('[TOUCH] haptics=' + (haptics ? 'on' : (hapticsWanted ? 'unsupported' : 'off')) +
-                  ' (' + HAPTIC_MS + ' ms per sent press)');
-
       // ---- wiring ------------------------------------------------------
       //
       // Pointer events rather than touch events: they are what Chrome emits for
@@ -1268,7 +1251,6 @@
           console.log('[TOUCH] pad Enter suppressed while driving (Enter is CHAT in a round)');
           return;
         }
-        pulse();
         sendKey('keydown', name);
       };
       const up = (ev) => {
@@ -1310,7 +1292,6 @@
         dpHeld.set(key, n);
         if (n > 1) return;
         dpEls[key].classList.add('aa-down');
-        pulse();
         sendKey('keydown', key);
       };
       const dpRelease = (key) => {
@@ -1359,7 +1340,6 @@
         escTimer = setTimeout(() => {
           escTimer = null;
           dpEsc.classList.remove('arming');
-          pulse();
           sendKey('keydown', 'Escape');
           sendKey('keyup', 'Escape');
           console.log('[TOUCH] Esc held: the in-game menu');
@@ -1517,7 +1497,6 @@
           console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
           return;
         }
-        pulse();
         sendKey('keydown', 'Enter');
         sendKey('keyup', 'Enter');
       };
@@ -1958,6 +1937,72 @@
           send();
         }
       }).observe(touchEl, { attributes: true, attributeFilter: ['class'] });
+    })();
+
+    // ---- INPUT LAG PROBE (?inputlag=1) -------------------------------------
+    // Times every turn from the press (a left or right key reaching the page,
+    // from the touch pad or a keyboard) to the frame in which the game's local
+    // cycle has taken it: src/emscripten/eWebInputLag.cpp counts its turns and
+    // the frames drawn. A small overlay shows the frame rate, the last turn's
+    // delay and the median; every turn is also logged as "[INPUTLAG] turn N ms".
+    // Turns pressed in a round's countdown are ignored by the game, so presses
+    // with no turn are dropped rather than timed (a turn is timed from the
+    // most recent press). The reading
+    // is taken once per animation frame, so it can be up to one frame late.
+    (() => {
+      if (readNumberParam('inputlag', 0, 1) !== 1) return;
+      const L = window.AA_INPUTLAG = { samples: [], fps: 0 };
+      const box = document.createElement('div');
+      box.id = 'aa-inputlag';
+      box.setAttribute('aria-hidden', 'true');
+      box.style.cssText = 'position:fixed;left:6px;top:6px;z-index:40;pointer-events:none;' +
+        'font:12px/1.3 ui-monospace,Menlo,monospace;color:#e8ebf2;background:rgba(0,0,0,.6);' +
+        'padding:3px 6px;border-radius:4px;white-space:nowrap';
+      box.textContent = 'input lag: waiting';
+      document.body.appendChild(box);
+      const presses = [];
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') presses.push(performance.now());
+      }, true);
+      let lastTurns = -1, lastFrames = -1, fpsAt = performance.now();
+      const median = () => {
+        const v = L.samples.slice().sort((a, b) => a - b);
+        return v.length ? v[Math.floor(v.length / 2)] : 0;
+      };
+      const show = () => {
+        const last = L.samples.length ? L.samples[L.samples.length - 1] : null;
+        box.textContent = 'fps ' + L.fps + ' · turn ' + (last === null ? '–' : last + ' ms') +
+          ' · median ' + (L.samples.length ? median() + ' ms' : '–') + ' (n ' + L.samples.length + ')';
+      };
+      const tick = () => {
+        requestAnimationFrame(tick);
+        if (window.AA_RUNTIME_READY !== true) return;
+        let frames = 0, turns = -1;
+        try { frames = Module._aa_web_lag_frames(); turns = Module._aa_web_lag_turns(); } catch (e) { return; }
+        const now = performance.now();
+        if (now - fpsAt >= 1000) {
+          if (lastFrames >= 0) L.fps = Math.round((frames - lastFrames) * 1000 / (now - fpsAt));
+          lastFrames = frames; fpsAt = now; show();
+        }
+        while (presses.length && now - presses[0] > 1000) presses.shift();
+        if (turns > lastTurns && lastTurns >= 0) {
+          // Each turn is timed from the most recent press: a press the game
+          // ignored (in the countdown, or with the cycle dead) stays in the
+          // list, and timing a later turn from it would add its age.
+          const k = Math.min(turns - lastTurns, presses.length);
+          const used = presses.splice(presses.length - k, k);
+          presses.length = 0;
+          for (const t0 of used) {
+            const ms = Math.round(now - t0);
+            L.samples.push(ms);
+            console.log('[INPUTLAG] turn ' + ms + ' ms (fps ' + L.fps + ')');
+          }
+          show();
+        }
+        lastTurns = turns;
+      };
+      requestAnimationFrame(tick);
+      console.log('[INPUTLAG] probe on');
     })();
 
     // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------
