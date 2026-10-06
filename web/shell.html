@@ -397,17 +397,16 @@
     #pad-ab { display:grid; grid-template-columns:repeat(2, var(--pad-ab)); grid-template-rows:repeat(2, var(--pad-ab)); gap:8px; }
     .pad-b { grid-area:2 / 1; }
     .pad-a { grid-area:1 / 2; }
-    /* The legend is the key map in one line, because "A" and "B" meant nothing
-       to the maintainer: the cross IS the arrow keys (Left/Right turn, Down
-       brakes -- the game's own cursor-keys binding), Enter and Esc are named
-       after the keys they send. It spans both columns at the bottom. */
+    /* THE LINE UNDER THE PAD. It used to be the key map ("◀ ▶ turn · ▼ brake ·
+       Enter · Esc menu"); the buttons carry their own names, and in menus the
+       cross only moves the highlight, so the menus show nothing here now.
+       While driving it says how to look around, the one thing the pad can't
+       show. It spans both columns at the bottom. */
     #pad-legend { grid-column:1 / -1; align-self:end; padding-top:.4rem;
                   color:#8a8f9c; font:400 min(.8rem, 3.4vw)/1.3 ui-monospace, Menlo, "Roboto Mono", monospace;
                   letter-spacing:.02em; white-space:nowrap; -webkit-user-select:none; user-select:none; }
     #pad-legend b { color:#cfd3dc; font-weight:400; }
-    /* While driving, Enter does nothing on the pad (see "ENTER ON THE PAD IS
-       A MENU KEY ONLY"), so the legend says how to look around instead. */
-    #touch.aa-driving #pad-legend .lg-menu,
+    /* Only while driving (CSS "THE DRIVING PAD"). */
     #touch:not(.aa-driving) #pad-legend .lg-drive { display:none; }
     /* THE LOOK ZONE covers the square, in the Game Boy layout, while driving.
        Its bottom quarter looks back, the halves above it look left and right
@@ -652,7 +651,7 @@
         <div id="dp-brake" class="pad-btn" aria-label="Brake">&#9660; hold to brake</div>
         <button type="button" id="dp-esc" class="pad-btn pad-b" aria-label="Escape: hold for the in-game menu">esc</button>
       </div>
-      <div id="pad-legend" aria-hidden="true"><span class="lg-menu"><b>&#9664; &#9654;</b> turn &middot; <b>&#9660;</b> brake &middot; <b>Enter</b> &middot; <b>Esc</b> menu</span><span class="lg-drive"><b>hold picture</b>: look around</span></div>
+      <div id="pad-legend" aria-hidden="true"><span class="lg-drive"><b>hold picture</b>: look around</span></div>
     </div>
     <!--
       M9, THE LAYOUT SWITCH. No data-aakey: it is a page control, not a key.
