@@ -1,0 +1,36 @@
+# RELAY RETRY GATE (web/tools/run-relay-retry-gate.sh). The page loads with
+# ?bridge= pointing at a relay that is NOT running: Multiplayer is refused
+# with "Network play unavailable". The runner then starts the relay (it waits
+# for the [RETRYGATE] start-relay line below, then this waits 7 s), and Multiplayer, asked again,
+# must open a fresh connection to it instead of being refused a second time.
+# Before the retry, a relay that had failed once stayed failed until reload.
+until:1:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+wait:9000
+key:Enter
+wait:2500
+key:Escape
+until:2:30000:[PERSISTSAVE] menu-leave
+wait:2000
+eval:(()=>{Module._aa_web_save_config();return 'saved after first setup'})()
+wait:3000
+eval:location.reload()
+until:2:90000:[PERSIST] populate ok
+until:2:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
+wait:6000
+key:Enter
+wait:2500
+key:Enter
+until:1:30000:network menu refused
+wait:2000
+shot:refused-while-the-relay-is-down
+key:Enter
+wait:2000
+eval:(()=>{console.log('[RETRYGATE] start-relay');return 'asked the runner to start the relay'})()
+# The runner starts the relay within about a second of that line; the
+# driver can't see the runner, so this waits rather than listening.
+wait:7000
+key:Enter
+wait:4000
+shot:after-asking-again

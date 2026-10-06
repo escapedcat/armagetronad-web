@@ -155,17 +155,37 @@ mergeInto(LibraryManager.library, {
   aa_bridge_state: function () {
     var url = AABridge.getUrl();
     if (!url) return -1;
+    // A RELAY THAT FAILED IS TRIED AGAIN. A refused connection (the relay full
+    // or down) or one that dropped (a restart mid-game) used to leave the page
+    // offline until a reload. This is only called when the game is about to
+    // use the network (a network menu, a connect), so asking again is the
+    // player saying "try again"; at most one attempt a second. Every handle of
+    // the old connection is gone with it: the game binds new ones.
+    if (AABridge.ws && AABridge.state === 2 && Date.now() - (AABridge.failedAt || 0) >= 1000) {
+      try { AABridge.ws.close(); } catch (e) { /* already closed */ }
+      AABridge.ws = null;
+      AABridge.queues = {};
+      AABridge.bound = {};
+      AABridge.binding = {};
+      AABridge.sentSinceBind = {};
+      console.log('[BRIDGE] retrying the relay');
+    }
     if (!AABridge.ws) {
       try {
-        AABridge.ws = new WebSocket(url);
-        AABridge.ws.binaryType = 'arraybuffer';
+        var ws = new WebSocket(url);
+        AABridge.ws = ws;
+        ws.binaryType = 'arraybuffer';
         AABridge.state = 0;
-        AABridge.ws.onopen = function () { AABridge.state = 1; console.log('[BRIDGE] open ' + url); };
-        AABridge.ws.onclose = function () { AABridge.state = 2; console.log('[BRIDGE] closed'); };
-        AABridge.ws.onerror = function () { AABridge.state = 2; console.log('[BRIDGE] error'); };
-        AABridge.ws.onmessage = AABridge.onmessage;
+        // Events of a connection that has been replaced are ignored, or a late
+        // close of the old one would mark the new one failed.
+        var mine = function () { return AABridge.ws === ws; };
+        ws.onopen = function () { if (!mine()) return; AABridge.state = 1; console.log('[BRIDGE] open ' + url); };
+        ws.onclose = function () { if (!mine()) return; AABridge.state = 2; AABridge.failedAt = Date.now(); console.log('[BRIDGE] closed'); };
+        ws.onerror = function () { if (!mine()) return; AABridge.state = 2; AABridge.failedAt = Date.now(); console.log('[BRIDGE] error'); };
+        ws.onmessage = function (ev) { if (mine()) AABridge.onmessage(ev); };
       } catch (e) {
         AABridge.state = 2;
+        AABridge.failedAt = Date.now();
         console.log('[BRIDGE] cannot open ' + url + ': ' + e);
       }
     }
