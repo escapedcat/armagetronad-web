@@ -13,13 +13,19 @@ look-alike: the original C++ engine, physics, AI and network protocol are
 compiled to WebAssembly with [Emscripten](https://emscripten.org/).
 
 **Contents**
-- **Players:** [Play it](#play-it) · [Controls](#controls) ·
-  [How online play works](#how-online-play-works) ·
-  [Log in with a Global ID](#log-in-with-a-global-id-recommended) ·
-  [FAQ](#faq) · [Known limitations](#known-limitations)
-- **Server owners:** [For server owners](#for-server-owners)
-- **Developers:** [For developers](#for-developers) ·
-  [Why this approach](#why-this-approach) · [License](#license)
+- **Players**
+  - [Play it](#play-it)
+  - [Controls](#controls)
+  - [How online play works](#how-online-play-works)
+  - [Log in with a Global ID](#log-in-with-a-global-id-recommended)
+  - [FAQ](#faq)
+  - [Known limitations](#known-limitations)
+- **Server owners**
+  - [For server owners](#for-server-owners)
+- **Developers**
+  - [For developers](#for-developers)
+  - [Why this approach](#why-this-approach)
+  - [License](#license)
 
 ## Play it
 
