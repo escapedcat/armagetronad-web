@@ -308,7 +308,6 @@ person holding it a switch and a readout.
 | `?dpr=N` | `devicePixelRatio` | sizes the backing store with `N` instead of the real device pixel ratio. **`?dpr=1` on a dpr-3 phone loads the same build at one ninth of the pixels.** |
 | `?cam=F` | `0.5` on touch, `1` otherwise | scales the `CAMERA_CUSTOM_*` / `CAMERA_GLANCE_*` distances. `?cam=1` is stock. |
 | `?sparks=1` / `?sparks=0` | cheap sparks on touch, stock otherwise | `1` appends `SPARKS 1` (the stock sparks: four-second bursts, one per frame while grinding — the M6 lag, kept for the comparison), `0` appends `SPARKS 0`. With no parameter a touch device gets **cheap sparks** (M8): `SPARKS 1`, `SPARKS_LIFETIME 1`, `SPARKS_INTERVAL 0.05`, two client-only settings whose defaults are the upstream behaviour, so a desktop with no parameter is untouched — `web/tools/menu-gate.steps` D1 asserts the shipped file has no SPARKS line. `docs/evidence/m8-cheap-sparks/` for the price. |
-| `?haptics=0` | on wherever `navigator.vibrate` exists | turns off the 12 ms vibration pulse on every press of a touch control that sends a key (pad, turn zones, strip, tap-for-Enter); a press that sends nothing never pulses. Android Chrome vibrates; iOS Safari has no Vibration API and is silent either way. |
 | `?diag=1` | off | a live readout: device pixel ratio, viewport, backing store, **the WebGL drawing buffer the driver actually allocated**, the displayed box, the aspect error between the last two, and buffer swaps per second. |
 | `?layout=portrait` / `?layout=landscape` | the orientation at start | forces the Game Boy or the full layout on a touch device regardless of how the phone is held (a desktop ignores it). The in-menu layout button sets it on a reload; nothing stores it. |
 | `?bridge=ws://host:port` | absent | carries the game's UDP over a WebSocket to a relay that speaks UDP to a real server, so the browser can join one. With no `?bridge=`, nothing is attempted — no `WebSocket` is constructed and the network menu refuses to open rather than hang or crash. `bridge/README.md` for how to run the relay. |
@@ -382,10 +381,8 @@ then differs from the desktop page in four ways, all of them in
   arrow after it until Escape; the pad now sends Enter only while a menu is up
   or no cycle is alive, the rule the picture's tap already followed, and counts
   what it dropped in `window.AA_PAD_ENTER_SUPPRESSED` for the gate.
-  **Every press that sends a key vibrates for 12 ms** (`navigator.vibrate`,
-  M7.2): Android Chrome buzzes, iOS Safari has no Vibration API, and a press
-  that sends nothing — a suppressed Enter, an ignored tap — never pulses, so
-  the buzz means the game got the key. `?haptics=0` turns it off.
+  **No vibration.** M7.2 pulsed `navigator.vibrate` for 12 ms on every sent
+  press; it never worked on the maintainer's phone and was removed.
   **A rotation after start changes nothing (M9).** The layout is decided when
   the game starts and stays: the backing store is the game's (read once at
   `main()`), the square's CSS side is the number the page published
