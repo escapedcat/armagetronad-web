@@ -181,8 +181,6 @@ CLIENT_OBJDIR := web/build-m1
 #                                  the phone keyboard; same byte-pin reason.
 #   src/emscripten/eWebLook.cpp    presses the game's own glance actions for a
 #                                  finger held on the picture; same reason.
-#   src/emscripten/eWebInputLag.cpp counts frames and the local cycle's turns
-#                                  for the ?inputlag=1 probe; same reason.
 #
 # They have to be named here because $(SRCS) above wildcards the six game
 # source directories only, and src/emscripten/ is not one of them (it holds
@@ -206,8 +204,7 @@ CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eWebFetch.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebLeave.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebKeyboard.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebLook.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebInputLag.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebLook.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # THE MAP BUNDLE (web/resource-bundle.txt, web/tools/fetch-resource-bundle.sh):
 # popular server maps preloaded so joining those servers needs no download.
