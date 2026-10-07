@@ -423,6 +423,7 @@
                           inset 0 1px 0 rgba(53,214,255,.35), inset 0 -2px 0 rgba(0,0,0,.35);
                text-shadow:0 0 6px rgba(53,214,255,.35);
                touch-action:none; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
+               -webkit-touch-callout:none;
                transition:transform 60ms ease-out, box-shadow 60ms ease-out, text-shadow 60ms ease-out; }
     .pad-a, .pad-b { border-radius:50%; }
     .pad-b { color:#ff3fa4; text-shadow:0 0 6px rgba(255,63,164,.35);
@@ -1335,6 +1336,9 @@
       let escTimer = null;
       dpEsc.addEventListener('pointerdown', (ev) => {
         ev.preventDefault();
+        // The finger stays this button's until it lifts, so a thumb drifting
+        // past the 48 px edge doesn't cancel the hold; only lifting does.
+        try { dpEsc.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
         dpEsc.classList.add('arming');
         escTimer = setTimeout(() => {
           escTimer = null;
@@ -1353,7 +1357,12 @@
       };
       dpEsc.addEventListener('pointerup', escLift);
       dpEsc.addEventListener('pointercancel', escLift);
-      dpEsc.addEventListener('pointerleave', escLift);
+
+      // NO LONG-PRESS MENU ON THE TOUCH CONTROLS. Android turns a finger held
+      // still for about half a second into a context menu and cancels the
+      // touch (pointercancel). That cut the 500 ms Esc hold short, and would
+      // let go of a held brake bar or turn. The canvas already blocks it.
+      touchEl.addEventListener('contextmenu', (ev) => ev.preventDefault(), true);
 
       // ---- PHONE FEEDBACK ROUND 2: which key does a tap on the screen mean?
       //

@@ -74,3 +74,20 @@ eval:__dp.finger('pointerup','dp-esc',0.5,0.5,24)
 wait:700
 eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;console.log('[DPGATE] D8 long-esc-opens-the-menu '+JSON.stringify({menu:m,PASS:m}));return 'D8'})()
 shot:menu-after-long-esc
+# Close the menu D8 opened, so D9 starts from driving with no menu up.
+key:Escape
+wait:1500
+# D9: A HELD ESC SURVIVES A THUMB SLIDING OFF IT. Only lifting cancels: the
+# button captures the finger, so a drift past its 48 px edge (pointerleave)
+# doesn't. D10: THE PAD BLOCKS THE BROWSER'S LONG-PRESS MENU. Android turns a
+# ~0.5 s hold into a context menu and cancels the touch, which cut the Esc
+# hold short and would release a held brake; a contextmenu event on any
+# driving-pad control must be prevented.
+eval:__dp.whenDriving('d9')
+until:1:90000:[DPGATE-READY] d9
+eval:(()=>{window.__d9menu=(Module._aa_web_input_context()&1)===1;__dp.finger('pointerdown','dp-esc',0.5,0.5,25);document.getElementById('dp-esc').dispatchEvent(new PointerEvent('pointerleave',{bubbles:false,pointerId:25,pointerType:'touch'}));return 'esc held, finger slid off'})()
+wait:800
+eval:__dp.finger('pointerup','dp-esc',0.5,0.5,25)
+wait:700
+eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;console.log('[DPGATE] D9 held-esc-survives-sliding-off '+JSON.stringify({menu_before:window.__d9menu,menu:m,PASS:!window.__d9menu&&m}));return 'D9'})()
+eval:(()=>{const ids=['dp-esc','dp-brake','dp-left','dp-right'];const r={};for(const id of ids){const e=new MouseEvent('contextmenu',{bubbles:true,cancelable:true});document.getElementById(id).dispatchEvent(e);r[id]=e.defaultPrevented;}console.log('[DPGATE] D10 pad-blocks-long-press-menu '+JSON.stringify(Object.assign(r,{PASS:Object.values(r).every(Boolean)})));return 'D10'})()
