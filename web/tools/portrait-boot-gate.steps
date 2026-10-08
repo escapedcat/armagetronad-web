@@ -150,7 +150,10 @@ wait:1800
 eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const r={left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')};window.__pb4=r;console.log('[M7GATE] PB4 turn-counters-before '+JSON.stringify(r));return 'PB4 before '+JSON.stringify(r)})()
 eval:(()=>{window.__vib0=(window.__vib||[]).length;return "vib0 "+window.__vib0})()
 tap:#dp-left
-wait:1200
+# 0.5 s, not 1.2: after the left turn the cycle can reach a wall before a
+# later right tap (seen: left counted, cycle dead by the right). Still well
+# above the game's 100 ms minimum between turns.
+wait:500
 tap:#dp-right
 wait:1200
 eval:(()=>{const S=window.__tg;S.save();const c=S.rd('/persist/var/user.cfg');const n=(k)=>{const v=S.line(c,k);return v===null?null:parseInt(v.split(' ')[1],10)};const b=window.__pb4||{};const r={ctx:Module._aa_web_input_context()|0,before:b,after:{left:n('CYCLE_TURN_LEFT_TOOLTIP'),right:n('CYCLE_TURN_RIGHT_TOOLTIP')}};r.PASS=typeof b.left==='number'&&typeof b.right==='number'&&r.after.left===b.left-1&&r.after.right===b.right-1;console.log('[M7GATE] PB4 pad-turns-sent '+JSON.stringify(r));return 'PB4 '+r.PASS})()

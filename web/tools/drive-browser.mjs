@@ -45,6 +45,7 @@
 //   key:NAME:N            press it N times, 150ms apart
 //   tap:SELECTOR          dispatch a real TOUCH tap at the centre of an element
 //   tap:SELECTOR:N        tap it N times
+//   hold:SELECTOR:MS      a real TOUCH held down MS ms (with 1 px wobbles)
 //   metrics:W:H:DPR       re-apply the device metrics mid-run, i.e. rotate the
 //                         emulated phone. Needs --mobile to have set the rest.
 //   eval:EXPR             Runtime.evaluate an expression, print the result
@@ -521,6 +522,37 @@ async function main() {
             // when its Asyncify-chopped loop next drains the SDL queue.
             await sleep(300);
           }
+          break;
+        }
+        // A REAL TOUCH HELD DOWN: hold:SELECTOR:MS. touchStart at the element's
+        // centre, a touchMove every 50 ms that wobbles by a pixel (a thumb is
+        // never perfectly still, and some browser gestures react to moves),
+        // then touchEnd. Unlike page-level PointerEvents these are trusted and
+        // go through the browser's own gesture handling (long-press, cancels).
+        case 'hold': {
+          const m = /^(.*):(\d+)$/.exec(arg);
+          if (!m) throw new Error(`hold needs SELECTOR:MS, got: ${arg}`);
+          const [, selector, msStr] = m;
+          const r = await send('Runtime.evaluate', {
+            expression: `(() => { const e = document.querySelector(${JSON.stringify(selector)});
+                                  if (!e) return null;
+                                  const b = e.getBoundingClientRect();
+                                  return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; })()`,
+            returnByValue: true,
+          });
+          const at = r.result.value;
+          if (!at) throw new Error(`hold: no element matches ${selector}`);
+          const base = { x: Math.round(at.x), y: Math.round(at.y), radiusX: 12, radiusY: 12, force: 1 };
+          await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [base] });
+          const ms = Number(msStr);
+          for (let t = 0; t < ms; t += 50) {
+            await sleep(50);
+            const d = (t / 50) % 2 ? 1 : 0;
+            await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...base, x: base.x + d, y: base.y + d }] });
+          }
+          await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+          record(`[harness] hold ${selector} at ${base.x},${base.y} for ${ms}ms`);
+          await sleep(300);
           break;
         }
         // Rotate the emulated phone. Deliberately separate from --mobile rather

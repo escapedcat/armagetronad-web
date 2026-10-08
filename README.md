@@ -73,8 +73,8 @@ Mode* back to Off.
   - **In menus**, a Game Boy pad: a cross, Enter and Esc.
   - **While driving**, two big halves: left thumb turns left, right thumb
     turns right, and sliding from one half into the other switches the turn.
-    The bar along the bottom brakes while held. The small Esc opens the menu
-    only on a long press, so a stray thumb can't pause the round.
+    The bar along the bottom brakes while held. The small esc in the corner
+    opens the menu.
   - **Hold the game picture to look around** while driving: the left or right
     half looks that way, the bottom quarter looks back, and letting go looks
     ahead. The line under the pad says so.
