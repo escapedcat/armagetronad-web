@@ -1,7 +1,7 @@
 # DRIVING PAD GATE (web/shell.html "THE DRIVING PAD"). An emulated phone in
 # portrait, in the first-run tutorial round. While driving, the Game Boy pad
-# becomes two big turn halves, a brake bar and a small Esc that needs a long
-# press; in menus the Game Boy pad is back. The witness for a turn or a brake
+# becomes two big turn halves, a brake bar and a small esc in the corner; in
+# menus the Game Boy pad is back. The witness for a turn or a brake
 # end to end (D3) is the game's own per-player tooltip counter
 # (CYCLE_TURN_LEFT_TOOLTIP, slot 1), which uBindPlayer::DoActivate counts down
 # only when the press reached player 1's turn. It moves only while its hint is
@@ -64,7 +64,9 @@ eval:(()=>{__dp.take();return __dp.finger('pointerdown','dp-esc',0.5,0.5,23)})()
 wait:120
 eval:__dp.finger('pointerup','dp-esc',0.5,0.5,23)
 wait:700
-eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;const k=__dp.take();console.log('[DPGATE] D7 short-esc-does-nothing '+JSON.stringify({menu:m,keys:k,PASS:!m&&!/Escape/.test(k)}));return 'D7'})()
+eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;const k=__dp.take();console.log('[DPGATE] D7 short-esc-opens-the-menu '+JSON.stringify({menu:m,keys:k,PASS:m&&/\+Escape/.test(k)}));return 'D7'})()
+key:Escape
+wait:1500
 eval:__dp.whenDriving('d8')
 until:1:60000:[DPGATE-READY] d8
 shot:driving-pad
@@ -74,20 +76,11 @@ eval:__dp.finger('pointerup','dp-esc',0.5,0.5,24)
 wait:700
 eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;console.log('[DPGATE] D8 long-esc-opens-the-menu '+JSON.stringify({menu:m,PASS:m}));return 'D8'})()
 shot:menu-after-long-esc
-# Close the menu D8 opened, so D9 starts from driving with no menu up.
+# Close the menu D8 opened.
 key:Escape
 wait:1500
-# D9: A HELD ESC SURVIVES A THUMB SLIDING OFF IT. Only lifting cancels: the
-# button captures the finger, so a drift past its 48 px edge (pointerleave)
-# doesn't. D10: THE PAD BLOCKS THE BROWSER'S LONG-PRESS MENU. Android turns a
-# ~0.5 s hold into a context menu and cancels the touch, which cut the Esc
-# hold short and would release a held brake; a contextmenu event on any
-# driving-pad control must be prevented.
-eval:__dp.whenDriving('d9')
-until:1:90000:[DPGATE-READY] d9
-eval:(()=>{window.__d9menu=(Module._aa_web_input_context()&1)===1;__dp.finger('pointerdown','dp-esc',0.5,0.5,25);document.getElementById('dp-esc').dispatchEvent(new PointerEvent('pointerleave',{bubbles:false,pointerId:25,pointerType:'touch'}));return 'esc held, finger slid off'})()
-wait:800
-eval:__dp.finger('pointerup','dp-esc',0.5,0.5,25)
-wait:700
-eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;console.log('[DPGATE] D9 held-esc-survives-sliding-off '+JSON.stringify({menu_before:window.__d9menu,menu:m,PASS:!window.__d9menu&&m}));return 'D9'})()
+# D10: THE PAD BLOCKS THE BROWSER'S LONG-PRESS MENU. Android turns a ~0.5 s
+# hold into a context menu and cancels the touch, which would let go of a
+# held brake bar or turn; a contextmenu event on any driving-pad control
+# must be prevented.
 eval:(()=>{const ids=['dp-esc','dp-brake','dp-left','dp-right'];const r={};for(const id of ids){const e=new MouseEvent('contextmenu',{bubbles:true,cancelable:true});document.getElementById(id).dispatchEvent(e);r[id]=e.defaultPrevented;}console.log('[DPGATE] D10 pad-blocks-long-press-menu '+JSON.stringify(Object.assign(r,{PASS:Object.values(r).every(Boolean)})));return 'D10'})()
