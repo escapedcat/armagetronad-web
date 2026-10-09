@@ -23,6 +23,7 @@ compiled to WebAssembly with [Emscripten](https://emscripten.org/).
 - **Server owners**
   - [For server owners](#for-server-owners)
 - **Developers**
+  - [Run it yourself](#run-it-yourself)
   - [For developers](#for-developers)
   - [Why this approach](#why-this-approach)
   - [License](#license)
@@ -278,6 +279,40 @@ re-create that feel by hand, such as
 [Armawebtron](https://github.com/Armawebtron/Armawebtron), a JS/Three.js
 rewrite. Compiling the actual engine avoids that problem. The reasoning is in
 [ADR 0000](docs/adr/0000-port-real-codebase-via-emscripten.md).
+
+## Run it yourself
+
+Three levels, from no tools at all to your own online setup.
+
+**1. Serve the built game (single player, no build).** The published files
+are on the `gh-pages` branch. Any static web server will do, but it has to be
+HTTP: opening the file from disk can't load the game data.
+
+```sh
+git clone --branch gh-pages --depth 1 https://github.com/escapedcat/armagetronad-web.git aa-web
+python3 -m http.server 8000 --directory aa-web
+# open http://localhost:8000/
+```
+
+Online play is off on any address other than the published page, because the
+public relay only accepts that page.
+
+**2. Build it from source.** The [Quickstart in
+docs/development.md](docs/development.md#quickstart) installs the toolchain
+and builds and runs the client and a dedicated server, in about 15 minutes.
+
+**3. Play online from your own copy.** The game needs a relay to reach
+servers. Run one with Node (`cd bridge && npm install && node relay.mjs --port 8010`)
+and open your page with `?bridge=ws://127.0.0.1:8010`, see
+[bridge/README.md](bridge/README.md). To host a fork publicly:
+
+- deploy the relay under your own name, see [Deploying to
+  Fly](bridge/README.md#deploying-to-fly);
+- in `bridge/fly.toml`, set `BRIDGE_ORIGINS` to your page's origin;
+- in `web/library_bridge.js`, set `DEFAULT_HOST` to your page's host name and
+  `DEFAULT_URL` to your relay, so the page connects without `?bridge=`;
+- publish the page, see [Deploying to GitHub
+  Pages](docs/development.md#deploying-to-github-pages).
 
 ## For developers
 
