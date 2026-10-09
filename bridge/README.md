@@ -165,6 +165,10 @@ Changing a secret restarts the relay, which drops current games:
     fly secrets set BRIDGE_TOKEN=<at least 16 characters> -a armagetronad-bridge
     fly deploy
 
+**In a fork,** the name `armagetronad-bridge` is taken. Pick your own: change
+`app` and `BRIDGE_ORIGINS` in `fly.toml`, create the app once with
+`fly apps create <your-name>`, and use `-a <your-name>` in the commands here.
+
 The published page connects to `wss://armagetronad-bridge.fly.dev/` by
 default (`web/library_bridge.js`); `?bridge=<url>` overrides it and
 `?bridge=0` turns online play off.
