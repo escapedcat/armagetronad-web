@@ -237,12 +237,12 @@ as if the player had picked Disconnect.
 
 void ret_to_MainMenu(); // src/tron/gGame.cpp -- what the in-game menu's Disconnect calls
 
-static bool sg_leaveRequested = false;
+static bool se_leaveRequested = false;
 
 // Called by the page (web/page/game.js, requestLeave).
 extern "C" EMSCRIPTEN_KEEPALIVE void aa_web_request_leave( void )
 {
-    sg_leaveRequested = true;
+    se_leaveRequested = true;
 }
 
 // 1 while connected to a server, so the page knows whether leaving means
@@ -252,11 +252,11 @@ extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_connected( void )
     return sn_GetNetState() == nCLIENT ? 1 : 0;
 }
 
-static void sg_LeaveIfRequested()
+static void se_LeaveIfRequested()
 {
-    if ( !sg_leaveRequested )
+    if ( !se_leaveRequested )
         return;
-    sg_leaveRequested = false;
+    se_leaveRequested = false;
     if ( sn_GetNetState() != nCLIENT )
         return;
     emscripten_log( EM_LOG_CONSOLE, "[LEAVE] page hidden: leaving the server with a regular logout" );
@@ -267,7 +267,7 @@ static void sg_LeaveIfRequested()
 // Registered before se_lookTask below, as it was when the two lived in
 // eWebLeave.o and eWebLook.o (linked in that order): rPerFrameTask inserts at
 // the head of its list, so the look task still runs first in each frame.
-static rPerFrameTask sg_leaveTask( &sg_LeaveIfRequested );
+static rPerFrameTask se_leaveTask( &se_LeaveIfRequested );
 
 /*
 ===========================================================================
