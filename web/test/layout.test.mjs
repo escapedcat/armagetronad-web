@@ -6,14 +6,6 @@ import { loadPageModule, readRepoFile } from './load-page-module.mjs';
 const L = loadPageModule('web/page/layout.js', 'AALayout', { URLSearchParams });
 const MAX = 3840 * 2160;
 
-test('numberParam: absent, in range, out of range (ignored, never clamped)', () => {
-  assert.deepEqual({ ...L.numberParam('', 'dpr', 0.05, 8) }, { value: null, ignored: null });
-  assert.deepEqual({ ...L.numberParam('?dpr=1.5', 'dpr', 0.05, 8) }, { value: 1.5, ignored: null });
-  assert.deepEqual({ ...L.numberParam('?dpr=9', 'dpr', 0.05, 8) },
-    { value: null, ignored: '[DISPLAY] ?dpr=9 ignored (want 0.05..8)' });
-  assert.equal(L.numberParam('?cam=abc', 'cam', 0.15, 4).value, null);
-});
-
 test('decideTouch: the parameter wins, then the media query', () => {
   assert.deepEqual({ ...L.decideTouch('?touch=1', false) }, { on: true, why: '?touch=1' });
   assert.deepEqual({ ...L.decideTouch('?touch=0', true) }, { on: false, why: '?touch=0' });

@@ -692,6 +692,7 @@
   <!-- @page-module web/page/game.js -->
   <!-- @page-module web/page/page-config.js -->
   <!-- @page-module web/page/touch-input.js -->
+  <!-- @page-module web/page/params.js -->
   <!-- @page-module web/page/layout.js -->
   <!-- @page-module web/page/phone-keyboard.js -->
 
@@ -908,9 +909,9 @@
     // A value out of (0, 8] is ignored rather than clamped, because a typo that
     // silently half-ran the experiment would be worse than one that visibly
     // did nothing -- the [DISPLAY] line says which happened either way.
-    const readNumberParam = (name, min, max) => {
+    const readNumberParam = (tag, name, min, max) => {
       try {
-        const p = AALayout.numberParam(location.search, name, min, max);
+        const p = AAParams.number(location.search, tag, name, min, max);
         if (p.ignored) console.log(p.ignored);
         return p.value;
       } catch (e) { return null; }  // a browser without URLSearchParams
@@ -1089,7 +1090,7 @@
                       canvas.width + 'x' + canvas.height);
           return;
         }
-        const dprOverride = readNumberParam('dpr', 0.05, 8);
+        const dprOverride = readNumberParam('[DISPLAY]', 'dpr', 0.05, 8);
         const dpr = dprOverride !== null ? dprOverride
                                          : (window.devicePixelRatio || 1);
         // THE ARITHMETIC IS AALayout.canvasSize (web/page/layout.js). What it
@@ -1465,7 +1466,7 @@
     //
     // ?leaveafter=<seconds> (5..3600) overrides the 60 s, for testing.
     (() => {
-      const q = readNumberParam('leaveafter', 5, 3600);
+      const q = readNumberParam('[LEAVE]', 'leaveafter', 5, 3600);
       const LEAVE_AFTER = (q !== null ? q : 60) * 1000;
       let timer = null;
       const onVisibility = () => {
@@ -1797,9 +1798,9 @@
         // page's, so a preRun hook cannot read /data at all. That is why the
         // page's config is written here rather than in preRun.
         AAPageConfig.apply(Module.FS, touchDecision.on, {
-          cam:     readNumberParam('cam', 0.15, 4),
-          sparks:  readNumberParam('sparks', 0, 1),
-          wallcut: readNumberParam('wallcut', 0, 1),
+          cam:     readNumberParam('[CAMERA]', 'cam', 0.15, 4),
+          sparks:  readNumberParam('[SPARKS]', 'sparks', 0, 1),
+          wallcut: readNumberParam('[WALLS]', 'wallcut', 0, 1),
         }, (line) => console.log(line));
         AAPageConfig.applyRename(Module.FS,
           defaultName || AAPageConfig.defaultName(), (line) => console.log(line));

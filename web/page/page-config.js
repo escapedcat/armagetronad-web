@@ -107,7 +107,7 @@ var AAPageConfig = (function () {
     }
 
     // sparks. 0 and 1 are the only meaningful values: ?sparks=2 never gets
-    // here (out of range, readNumberParam logged it under [DISPLAY]), and
+    // here (out of range, the page's readNumberParam logged it), and
     // ?sparks=0.5 is in range but not a bool, so it is ignored out loud here.
     var q = isNull(p.sparks) ? null : p.sparks;
     var fromParam = q === 0 || q === 1;

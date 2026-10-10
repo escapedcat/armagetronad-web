@@ -150,6 +150,8 @@ mechanism.
     game once per 100 ms tick for all of them, and has the surfaces' geometry.
   - `web/page/layout.js` decides touch or not, which layout, and the canvas
     size (pure arithmetic; the shell reads the browser and applies it).
+  - `web/page/params.js` reads the numeric URL parameters (`?dpr=`, `?cam=`,
+    …); an out-of-range value is ignored and logged under the feature's tag.
   - `web/page/phone-keyboard.js` types into the game's own text fields.
   - What is left in `web/shell.html`'s script wires these to the DOM in the
     order the page starts, written out at the top of the script.
