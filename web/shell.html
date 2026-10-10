@@ -707,9 +707,11 @@
     //      the default name; onRuntimeInitialized: the page config
     //      (web/page/page-config.js), then startGame)
     //   5. the save backstop and the ?diag readout
-    // Blocks reach each other only through the names declared here, never
-    // through window.*; the window.AA_* names left are for gates and
-    // measurement pages.
+    // Blocks reach each other only through the names declared in this script.
+    // window.AA_* is for gates and measurement pages: the page writes
+    // AA_TOUCH, AA_GAMEBOY, AA_DEFAULT_NAME, AA_INPUT_CONTEXT, AA_START and two
+    // counters, and reads back only the counters (to add to them) and
+    // AA_CANVAS_SIZE, which a measurement page sets.
     const statusEl  = document.getElementById('status');
     const overlayEl = document.getElementById('overlay');
 
@@ -1039,11 +1041,13 @@
       try { return AALayout.layoutParam(location.search); } catch (e) { return null; }
     })();
     const decideGameboy = () =>
-      AALayout.decideGameboy(window.AA_TOUCH, layoutParam, viewportIsPortrait());
+      AALayout.decideGameboy(touchDecision.on, layoutParam, viewportIsPortrait());
+    let gameboy = false;
     const applyLayoutDecision = (why) => {
-      window.AA_GAMEBOY = decideGameboy();
-      document.documentElement.classList.toggle('aa-gameboy', !!window.AA_GAMEBOY);
-      console.log('[DISPLAY] layout=' + (window.AA_GAMEBOY ? 'gameboy' : 'full') +
+      gameboy = decideGameboy();
+      window.AA_GAMEBOY = gameboy;   // for the gates
+      document.documentElement.classList.toggle('aa-gameboy', gameboy);
+      console.log('[DISPLAY] layout=' + (gameboy ? 'gameboy' : 'full') +
                   (layoutParam ? ' (from ?layout=' + layoutParam + ')' : ' (from the orientation)') +
                   ' ' + why);
     };
@@ -1110,7 +1114,7 @@
         const axisLimit = gpuAxisLimit();
         const size = AALayout.canvasSize({
           vw: window.innerWidth, vh: window.innerHeight, dpr, layout: layoutParam,
-          gameboy: !!window.AA_GAMEBOY, maxPixels: MAX_CANVAS_PIXELS, axisLimit,
+          gameboy, maxPixels: MAX_CANVAS_PIXELS, axisLimit,
         });
         if (!size) {
           console.log('[DISPLAY] no usable viewport, keeping canvas ' +
@@ -1136,7 +1140,7 @@
         // full layout, whose rules are all html.aa-gameboy-scoped and never
         // read it.
         document.documentElement.style.setProperty('--aa-square',
-          window.AA_GAMEBOY ? squareCss + 'px' : '0px');
+          gameboy ? squareCss + 'px' : '0px');
         console.log('[DISPLAY] ' + why + ': viewport ' + vw + 'x' + vh +
                     ' dpr ' + dpr +
                     (dprOverride !== null ? ' (?dpr override)' : '') +
@@ -1145,7 +1149,7 @@
                     (capped ? ' (capped at ' + MAX_CANVAS_PIXELS + ' px)' : '') +
                     ' gpu-axis-limit ' + (axisLimit || 'unknown') +
                     (axisClamped ? ' (CLAMPED to it)' : '') +
-                    (window.AA_GAMEBOY ? ' gameboy square ' + squareCss + 'css'
+                    (gameboy ? ' gameboy square ' + squareCss + 'css'
                                        : ''));
       } catch (e) {
         // Falling back to the attributes on the element is a working game at
@@ -1169,7 +1173,7 @@
       // The SPAN, not the button: the button also holds the icon, and
       // assigning textContent to it would delete that. The aria-label says
       // the same thing for anything that reads the button rather than sees it.
-      const text = window.AA_GAMEBOY ? 'Landscape layout' : 'Portrait layout';
+      const text = gameboy ? 'Landscape layout' : 'Portrait layout';
       document.getElementById('layoutbtn-label').textContent = text;
       document.getElementById('layoutbtn').setAttribute('aria-label',
         'Switch to the ' + text.toLowerCase());
@@ -1420,7 +1424,7 @@
       try { mq = window.matchMedia('(orientation: portrait)'); } catch (e) { mq = null; }
       const onOrientationChange = (why) => {
         console.log('[TOUCH] orientation portrait=' + viewportIsPortrait() +
-                    ' (layout stays ' + (window.AA_GAMEBOY ? 'gameboy' : 'full') + ')' +
+                    ' (layout stays ' + (gameboy ? 'gameboy' : 'full') + ')' +
                     ' via ' + why);
       };
       if (mq && mq.addEventListener) mq.addEventListener('change', () => onOrientationChange('media query'));
@@ -1430,7 +1434,7 @@
       const layoutBtn = document.getElementById('layoutbtn');
       labelLayoutButton();
       layoutBtn.addEventListener('click', () => {
-        const other = window.AA_GAMEBOY ? 'landscape' : 'portrait';
+        const other = gameboy ? 'landscape' : 'portrait';
         console.log('[TOUCH] layout switch -> ?layout=' + other + ' (reload)');
         try {
           const u = new URL(location.href);
@@ -1523,7 +1527,7 @@
     // driving state (a crash, a menu) lets go of everything, so a finger the
     // page lost track of can't leave the camera looking sideways.
     (() => {
-      if (!window.AA_TOUCH) return;
+      if (!touchDecision.on) return;
       const zone = document.getElementById('lookzone');
       const fingers = new Map();   // pointerId -> bit
       let sent = 0;
@@ -1594,6 +1598,9 @@
       window.addEventListener(type, resumeAudio, { capture: true, passive: true });
     }
 
+    // This load's default player name, from preRun; onRuntimeInitialized renames
+    // an old saved web_user to it.
+    let defaultName = null;
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
@@ -1725,7 +1732,8 @@
         try {
           Module.ENV.USER = name;
           Module.ENV.LOGNAME = name;
-          window.AA_DEFAULT_NAME = name;
+          defaultName = name;
+          window.AA_DEFAULT_NAME = name;   // for the gates
           console.log('[TEXT] default name ' + name);
         } catch (e) { console.log('[TEXT] default name not set: ' + e); }
       }],
@@ -1791,13 +1799,13 @@
         // earlier: the file packager appends ITS preRun callback after this
         // page's, so a preRun hook cannot read /data at all. That is why the
         // page's config is written here rather than in preRun.
-        AAPageConfig.apply(Module.FS, window.AA_TOUCH, {
+        AAPageConfig.apply(Module.FS, touchDecision.on, {
           cam:     readNumberParam('cam', 0.15, 4),
           sparks:  readNumberParam('sparks', 0, 1),
           wallcut: readNumberParam('wallcut', 0, 1),
         }, (line) => console.log(line));
         AAPageConfig.applyRename(Module.FS,
-          window.AA_DEFAULT_NAME || AAPageConfig.defaultName(), (line) => console.log(line));
+          defaultName || AAPageConfig.defaultName(), (line) => console.log(line));
         let manual = false;
         try {
           manual = new URLSearchParams(location.search).get('autostart') === '0';
@@ -2048,12 +2056,12 @@
             'gl  ' + (gl ? gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight +
                            (dbOK ? '  MATCH' : '  CLAMPED') : '(no context yet)'),
             'fps ' + swapsPerSec + ' swaps/s' +
-              '   cam x' + (window.AA_TOUCH ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1) +
-              '   touch ' + (window.AA_TOUCH ? 'on' : 'off'),
+              '   cam x' + (touchDecision.on ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1) +
+              '   touch ' + (touchDecision.on ? 'on' : 'off'),
             // The two bits src/emscripten/eWebPage.cpp reports and the one
             // decision the overlay makes from them. On a phone this is the
             // only way to see WHY a tap did what it did.
-            'ctx ' + (window.AA_TOUCH ?
+            'ctx ' + (touchDecision.on ?
                         (() => { const c = game.context();
                                  return c.raw + ' menu ' + (c.menu ? 'y' : 'n') +
                                         ' cycle ' + (c.cycle ? 'y' : 'n') +

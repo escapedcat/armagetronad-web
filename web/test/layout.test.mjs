@@ -73,3 +73,9 @@ test('shell.html no longer does the arithmetic or reaches across blocks through 
   assert.deepEqual(code.match(/Math\.sqrt\(MAX_CANVAS_PIXELS/g) || [], []);
   assert.deepEqual(code.match(/window\.AA_(KBD|LABEL_LAYOUT_BUTTON)\b/g) || [], []);
 });
+
+test('shell.html publishes AA_TOUCH, AA_GAMEBOY and AA_DEFAULT_NAME for gates and never reads them back', () => {
+  const code = readRepoFile('web/shell.html').split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
+  const uses = code.match(/window\.AA_(TOUCH|GAMEBOY|DEFAULT_NAME)\b(\s*=(?!=))?/g) || [];
+  assert.deepEqual(uses.filter((u) => !/=$/.test(u)), [], 'every use is an assignment');
+});
