@@ -65,7 +65,7 @@ aa_web_input_context() returns a bit field, not a verdict:
 
     bit 0  AA_WEB_CTX_MENU     uMenu::MenuActive() -- a uMenu is on screen and
                                its event loop is the thing reading keys.
-    bit 1  AA_WEB_CTX_DRIVING  a LOCAL player has an object and that object is
+    bit 1  AA_WEB_CTX_CYCLE    a LOCAL player has an object and that object is
                                Alive(), i.e. there is a cycle to steer.
 
 The policy that combines them lives in web/page/game.js (context().driving),
@@ -89,7 +89,7 @@ durable; this is about input.
 // The page's copies are CTX_MENU and CTX_CYCLE in web/page/game.js.
 // web/test/game.test.mjs reads these two lines and fails if they differ.
 #define AA_WEB_CTX_MENU     1
-#define AA_WEB_CTX_DRIVING  2
+#define AA_WEB_CTX_CYCLE    2
 
 // ---------------------------------------------------------------------------
 // EMSCRIPTEN_KEEPALIVE puts it in the export table and, with EXPORT_KEEPALIVE
@@ -130,7 +130,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_input_context( void )
         eNetGameObject * object = net->Object();
         if ( object && object->Alive() )
         {
-            ctx |= AA_WEB_CTX_DRIVING;
+            ctx |= AA_WEB_CTX_CYCLE;
             break;
         }
     }

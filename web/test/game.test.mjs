@@ -138,7 +138,7 @@ test('the context bits match the C++ that sets them', () => {
     .map((f) => readRepoFile('src/emscripten/' + f)).join('\n');
   const bit = (name) => Number(new RegExp('#define\\s+' + name + '\\s+(\\d+)').exec(cpp)?.[1]);
   assert.equal(bit('AA_WEB_CTX_MENU'), AAGame.CTX_MENU);
-  assert.equal(bit('AA_WEB_CTX_DRIVING'), AAGame.CTX_CYCLE);
+  assert.equal(bit('AA_WEB_CTX_CYCLE'), AAGame.CTX_CYCLE);
 });
 
 // ---- the seam, checked against the page ------------------------------------

@@ -25,7 +25,7 @@ var AAGame = (function () {
   // a uMenu is on screen, and a local player has a cycle that is Alive(). The
   // page cannot derive either -- a menu item can start the game, a round can
   // end by itself, and Escape mid-round opens the in-game menu, none of which
-  // reaches the page. The values are AA_WEB_CTX_MENU and AA_WEB_CTX_DRIVING in
+  // reaches the page. The values are AA_WEB_CTX_MENU and AA_WEB_CTX_CYCLE in
   // the C++; the test reads them from there so the two cannot drift.
   //
   // THE POLICY IS HERE AND THE FACTS ARE THERE, deliberately. "Driving" means
