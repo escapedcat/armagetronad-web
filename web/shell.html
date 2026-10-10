@@ -692,8 +692,24 @@
   <!-- @page-module web/page/game.js -->
   <!-- @page-module web/page/page-config.js -->
   <!-- @page-module web/page/touch-input.js -->
+  <!-- @page-module web/page/layout.js -->
+  <!-- @page-module web/page/phone-keyboard.js -->
 
   <script>
+    // THE PAGE, IN THE ORDER IT STARTS. The modules are web/page/*.js,
+    // inlined above; this script wires them to the DOM, top to bottom:
+    //   1. failure reporting, then `game` (web/page/game.js)
+    //   2. the touch decision, the layout decision, the canvas size
+    //      (web/page/layout.js), then `touchInput` and `keyboard` on a phone
+    //   3. the touch surfaces: pad, driving pad, tap layer, look zone, and the
+    //      first touch tick
+    //   4. the leave timer, the audio resume, `Module` (preRun: /persist and
+    //      the default name; onRuntimeInitialized: the page config
+    //      (web/page/page-config.js), then startGame)
+    //   5. the save backstop and the ?diag readout
+    // Blocks reach each other only through the names declared here, never
+    // through window.*; the window.AA_* names left are for gates and
+    // measurement pages.
     const statusEl  = document.getElementById('status');
     const overlayEl = document.getElementById('overlay');
 
@@ -739,10 +755,6 @@
       send: (type, init) => document.dispatchEvent(new KeyboardEvent(type,
         Object.assign({ bubbles: true, cancelable: true }, init))),
     });
-    // TOUCH INPUT (web/page/touch-input.js): the held keys of every touch
-    // surface, and one reading of the game per tick for all of them. Created
-    // here, ticked once every surface below has subscribed. Desktop: null.
-    let touchInput = null;
 
     // Without preserveDrawingBuffer the canvas renders BLACK -- not "wrong
     // colours", not "flickering", solid black -- while the game underneath is
@@ -896,15 +908,9 @@
     // did nothing -- the [DISPLAY] line says which happened either way.
     const readNumberParam = (name, min, max) => {
       try {
-        const raw = new URLSearchParams(location.search).get(name);
-        if (raw === null) return null;
-        const v = parseFloat(raw);
-        if (!isFinite(v) || v < min || v > max) {
-          console.log('[DISPLAY] ?' + name + '=' + raw + ' ignored (want ' +
-                      min + '..' + max + ')');
-          return null;
-        }
-        return v;
+        const p = AALayout.numberParam(location.search, name, min, max);
+        if (p.ignored) console.log(p.ignored);
+        return p.value;
       } catch (e) { return null; }  // a browser without URLSearchParams
     };
 
@@ -965,10 +971,11 @@
     // query alone therefore leaves a page's own idea of which way up it is
     // depending on something else repainting it.
     const viewportIsPortrait = () => {
-      const w = window.innerWidth, h = window.innerHeight;
-      if (w > 0 && h > 0) return h > w;
-      try { return window.matchMedia('(orientation: portrait)').matches; }
-      catch (e) { return false; }
+      let media = false;
+      if (!(window.innerWidth > 0 && window.innerHeight > 0)) {
+        try { media = window.matchMedia('(orientation: portrait)').matches; } catch (e) { media = false; }
+      }
+      return AALayout.isPortrait(window.innerWidth, window.innerHeight, media);
     };
 
     // ---- is this a touch device? ------------------------------------
@@ -984,15 +991,11 @@
     // visitor on a device this query gets wrong needs a way out. Nothing in
     // the shipped flow sets either.
     const decideTouch = () => {
-      try {
-        const q = new URLSearchParams(location.search).get('touch');
-        if (q === '1') return { on:true,  why:'?touch=1' };
-        if (q === '0') return { on:false, why:'?touch=0' };
-      } catch (e) { /* a browser without URLSearchParams falls through */ }
-      try {
-        const m = window.matchMedia('(hover: none) and (pointer: coarse)');
-        return { on: m.matches, why: 'media query -> ' + m.matches };
-      } catch (e) { return { on:false, why:'matchMedia threw: ' + e }; }
+      let coarse;
+      try { coarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches; }
+      catch (e) { coarse = e; }
+      try { return AALayout.decideTouch(location.search, coarse); }
+      catch (e) { return AALayout.decideTouch('', coarse); }  // a browser without URLSearchParams
     };
 
     // THE TOUCH DECISION IS MADE HERE, BEFORE SIZING, because the Game Boy
@@ -1010,6 +1013,18 @@
     // than inferring it from a screenshot.
     console.log('[TOUCH] enabled=' + touchDecision.on + ' (' + touchDecision.why + ')' +
                 ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
+    // ON A PHONE: TOUCH INPUT (web/page/touch-input.js), the held keys of
+    // every touch surface and one reading of the game per tick for all of
+    // them, ticked once every surface below has subscribed; and THE PHONE
+    // KEYBOARD (web/page/phone-keyboard.js), which types into the game's own
+    // text fields. A desktop gets neither.
+    const touchInput = touchDecision.on ?
+      AATouchInput.create(game, (line) => console.log(line)) : null;
+    const keyboard = touchDecision.on ? AAPhoneKeyboard.create({
+      game, ime: document.getElementById('aa-ime'), doc: document,
+      log: (line) => console.log(line),
+      viewport: window.visualViewport || null, innerHeight: () => window.innerHeight,
+    }) : null;
     // GAME BOY = a touch device in portrait when the game STARTS -- or told to
     // be, by ?layout=portrait; ?layout=landscape is the full layout regardless
     // of how the phone is held. A desktop never gets the Game Boy whatever its
@@ -1021,13 +1036,10 @@
     // mid-game changes nothing, and the switch is #layoutbtn, a reload with the
     // parameter, offered in menus only.
     const layoutParam = (() => {
-      try {
-        const v = new URLSearchParams(location.search).get('layout');
-        return (v === 'portrait' || v === 'landscape') ? v : null;
-      } catch (e) { return null; }
+      try { return AALayout.layoutParam(location.search); } catch (e) { return null; }
     })();
     const decideGameboy = () =>
-      window.AA_TOUCH && (layoutParam ? layoutParam === 'portrait' : viewportIsPortrait());
+      AALayout.decideGameboy(window.AA_TOUCH, layoutParam, viewportIsPortrait());
     const applyLayoutDecision = (why) => {
       window.AA_GAMEBOY = decideGameboy();
       document.documentElement.classList.toggle('aa-gameboy', !!window.AA_GAMEBOY);
@@ -1076,54 +1088,37 @@
         const dprOverride = readNumberParam('dpr', 0.05, 8);
         const dpr = dprOverride !== null ? dprOverride
                                          : (window.devicePixelRatio || 1);
-        // ?layout= SIZES FOR THE LAYOUT ASKED FOR, NOT FOR THE VIEWPORT HELD:
-        // a phone held landscape that asked for the Game Boy gets a square
-        // sized as if it were upright (and the player turns it), a phone held
-        // upright that asked for landscape gets the wide backing store it will
-        // have once turned. Without the parameter the viewport is the truth.
-        let vw = window.innerWidth, vh = window.innerHeight;
-        if ((layoutParam === 'landscape' && vh > vw) || (layoutParam === 'portrait' && vw > vh)) {
-          const t = vw; vw = vh; vh = t;
-        }
-        let w = Math.floor(vw * dpr);
-        let h = Math.floor(vh * dpr);
-        if (!(w > 0 && h > 0)) {
+        // THE ARITHMETIC IS AALayout.canvasSize (web/page/layout.js). What it
+        // does, in order:
+        //  - ?layout= SIZES FOR THE LAYOUT ASKED FOR, NOT FOR THE VIEWPORT
+        //    HELD: a phone held landscape that asked for the Game Boy gets a
+        //    square sized as if it were upright (and the player turns it), a
+        //    phone held upright that asked for landscape gets the wide backing
+        //    store it will have once turned. Without the parameter the
+        //    viewport is the truth.
+        //  - THE GAME BOY SQUARE. Side = the CSS width, capped at 60 % of the
+        //    CSS height so the pad below keeps at least 40 % on a
+        //    tall-but-wide tablet. Aspect 1 is the best of the three shapes
+        //    this game gets on a phone: rViewport::Perspective makes it 90 x 90
+        //    degrees (landscape ~111 x 67, full portrait ~131 vertical).
+        //    docs/evidence/phone-round2/fov/README.md.
+        //  - The area cap, then the GPU's per-axis limit. Both scale the two
+        //    axes by the SAME factor: the aspect ratio is what
+        //    rViewport::Perspective builds the frustum from, so clamping the
+        //    axes independently would hand the game a shape the window does
+        //    not have -- i.e. it would CAUSE the defect the clamp avoids.
+        const axisLimit = gpuAxisLimit();
+        const size = AALayout.canvasSize({
+          vw: window.innerWidth, vh: window.innerHeight, dpr, layout: layoutParam,
+          gameboy: !!window.AA_GAMEBOY, maxPixels: MAX_CANVAS_PIXELS, axisLimit,
+        });
+        if (!size) {
           console.log('[DISPLAY] no usable viewport, keeping canvas ' +
                       canvas.width + 'x' + canvas.height);
           publishAspect();
           return;
         }
-        // THE GAME BOY SQUARE. Side = the CSS width, capped at 60 % of the CSS
-        // height so the pad below keeps at least 40 % on a tall-but-wide tablet.
-        // Aspect 1 is the best of the three shapes this game gets on a phone:
-        // rViewport::Perspective makes it 90 x 90 degrees (landscape ~111 x 67,
-        // full portrait ~131 vertical). docs/evidence/phone-round2/fov/README.md.
-        let squareCss = 0;
-        if (window.AA_GAMEBOY) {
-          squareCss = Math.min(vw, Math.floor(vh * 0.6));
-          w = h = Math.floor(squareCss * dpr);
-        }
-        const px = w * h;
-        let capped = false;
-        if (px > MAX_CANVAS_PIXELS) {
-          const k = Math.sqrt(MAX_CANVAS_PIXELS / px);
-          w = Math.max(1, Math.round(w * k));
-          h = Math.max(1, Math.round(h * k));
-          capped = true;
-        }
-        // Both axes are scaled by the SAME factor, for the same reason the area
-        // cap is: the aspect ratio is what rViewport::Perspective builds the
-        // frustum from, so clamping the axes independently would hand the game
-        // a shape the window does not have -- i.e. it would CAUSE the defect
-        // this clamp exists to avoid.
-        const axisLimit = gpuAxisLimit();
-        let axisClamped = false;
-        if (axisLimit && (w > axisLimit || h > axisLimit)) {
-          const k = Math.min(axisLimit / w, axisLimit / h);
-          w = Math.max(1, Math.floor(w * k));
-          h = Math.max(1, Math.floor(h * k));
-          axisClamped = true;
-        }
+        const { w, h, vw, vh, squareCss, capped, axisClamped } = size;
         canvas.width  = w;
         canvas.height = h;
         publishAspect();
@@ -1166,6 +1161,18 @@
     const relayoutBeforeMain = () => {
       applyLayoutDecision('before main');
       sizeCanvas('before main');
+    };
+    // #layoutbtn's label names the layout the tap GOES TO. Set on a phone at
+    // parse time and again by startGame once it has made the final decision;
+    // before that the button is behind the loading overlay anyway.
+    const labelLayoutButton = () => {
+      // The SPAN, not the button: the button also holds the icon, and
+      // assigning textContent to it would delete that. The aria-label says
+      // the same thing for anything that reads the button rather than sees it.
+      const text = window.AA_GAMEBOY ? 'Landscape layout' : 'Portrait layout';
+      document.getElementById('layoutbtn-label').textContent = text;
+      document.getElementById('layoutbtn').setAttribute('aria-label',
+        'Switch to the ' + text.toLowerCase());
     };
 
     // ---- PHASE 3: TOUCH INPUT ------------------------------------------
@@ -1213,7 +1220,6 @@
       const decision = touchDecision;
       if (!decision.on) return;
       touchEl.hidden = false;
-      touchInput = AATouchInput.create(game, (line) => console.log(line));
 
       // ---- wiring ------------------------------------------------------
       //
@@ -1373,8 +1379,8 @@
         // PHONE KEYBOARD instead of pressing Enter: Enter there would send the
         // chat line, and folding the keyboard is what a tap on the picture
         // means to a phone user. See "THE PHONE KEYBOARD".
-        if (window.AA_KBD && window.AA_KBD.onField()) {
-          window.AA_KBD.toggle('tap on the picture');
+        if (keyboard.onField()) {
+          keyboard.toggle('tap on the picture');
           return;
         }
         // IN A ROUND, THE PICTURE DOESN'T OPEN CHAT IN PORTRAIT. With no menu
@@ -1422,19 +1428,7 @@
       window.addEventListener('resize', () => onOrientationChange('resize'));
       window.addEventListener('orientationchange', () => onOrientationChange('orientationchange'));
       const layoutBtn = document.getElementById('layoutbtn');
-      // The label names the layout the tap GOES TO, set once startGame has made
-      // the final decision; before that the parse-time one is shown, and the
-      // button is behind the loading overlay anyway.
-      const labelLayoutButton = () => {
-        // The SPAN, not the button: the button also holds the icon, and
-        // assigning textContent to it would delete that. The aria-label says
-        // the same thing for anything that reads the button rather than sees it.
-        const text = window.AA_GAMEBOY ? 'Landscape layout' : 'Portrait layout';
-        document.getElementById('layoutbtn-label').textContent = text;
-        layoutBtn.setAttribute('aria-label', 'Switch to the ' + text.toLowerCase());
-      };
       labelLayoutButton();
-      window.AA_LABEL_LAYOUT_BUTTON = labelLayoutButton;   // startGame calls it after its relayout
       layoutBtn.addEventListener('click', () => {
         const other = window.AA_GAMEBOY ? 'landscape' : 'portrait';
         console.log('[TOUCH] layout switch -> ?layout=' + other + ' (reload)');
@@ -1492,134 +1486,21 @@
       document.addEventListener('visibilitychange', onVisibility);
     })();
 
-    // ---- THE PHONE KEYBOARD TYPES INTO THE GAME'S OWN TEXT FIELDS ----------
-    // A phone opens its keyboard only for a focused field in the page, and the
-    // game's text fields (Player Setup's name, Custom Connect, the chat line
-    // that Enter opens during a round) are drawn into the canvas. So:
-    //  - The game says when one is highlighted: aa_web_text_selected()
-    //    (src/emscripten/eWebKeyboard.cpp). Polled here; moving onto one
-    //    focuses #aa-ime, which opens the keyboard (the tap that moved there
-    //    is the user activation the phone asks for), and moving off blurs it.
-    //  - What is typed into #aa-ime goes to the game as key events: the change
-    //    since last time, as backspaces for what went and characters for what
-    //    came. Word suggestions and autocorrect rewrite whole words, and this
-    //    handles that the same way. How a character becomes a key event is
-    //    game.typeChar (web/page/game.js).
-    //  - The field's own key events stop at the field, so SDL (listening on
-    //    document) sees each character once: the synthetic copy.
-    //  - A known edge: the game's text fields have a length limit and refuse
-    //    characters past it without telling the page. A suggestion that
-    //    rewrites a word which ran into the limit then sends one backspace
-    //    per character the page sent, not per character the game kept, and
-    //    can delete one too many.
-    //  - The keyboard's Enter is the game's Enter and closes the keyboard.
-    //    Folding the keyboard away releases the field, or the next tap would
-    //    bring it back. A tap on the picture shows or hides the keyboard while
-    //    a text field is still highlighted; on the chat line, putting the
-    //    keyboard away (folded, or a tap on the picture) closes the line
-    //    unsent. An empty chat line is closed, not sent (src/engine/ePlayer.cpp,
-    //    eMenuItemChat::Event).
-    // Touch devices only: a desktop has a keyboard.
-    (() => {
-      if (!window.AA_TOUCH) return;
-      const ime = document.getElementById('aa-ime');
-      const REST = ' ';   // what the field starts with: backspace always has something to delete
-      let prev = REST, composing = false, onField = false;
+    // ---- THE PHONE KEYBOARD, AND THE PAD'S "Chat" LABEL ---------------------
+    // The keyboard follows the highlighted text field each touch tick
+    // (web/page/phone-keyboard.js has how and why).
+    if (keyboard) {
+      touchInput.subscribe(keyboard.onState);
+      // THE PAD'S ENTER SAYS "Chat" when that is what it does: on a server, in
+      // a game (game.chatPossible: not while connecting, logging in or
+      // loading), with no menu up and no cycle of ours alive (crashed,
+      // watching, between rounds), Enter is the chat key (config/default.cfg).
+      // While driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS
+      // A MENU KEY ONLY" above); in menus and local games it is plain Enter.
       const padEnter = document.querySelector('#pad .pad-a');
       let chatLabel = false;
-      const sync = () => {
-        const cur = ime.value;
-        let p = 0;
-        while (p < prev.length && p < cur.length && prev[p] === cur[p]) p++;
-        const gone = Array.from(prev.slice(p)).length, came = Array.from(cur.slice(p));
-        for (let i = 0; i < gone; i++) game.press('Backspace');
-        for (const ch of came) game.typeChar(ch);
-        prev = cur;
-        // THE FIELD KEEPS WHAT WAS TYPED while it is open (it is cleared on
-        // open): a keyboard reads the text before the cursor to decide on the
-        // space before a swiped word, and on capitals and suggestions. Reset
-        // to the bare REST space after every edit, it saw a space and added
-        // none, and swiped words ran together. Only a deleted REST is put back.
-        if (!composing && !cur.startsWith(REST)) { ime.value = REST; prev = REST; }
-      };
-      const open = () => {
-        ime.value = REST; prev = REST; composing = false;
-        ime.focus();
-        try { ime.setSelectionRange(1, 1); } catch (e) {}
-        console.log('[KBD] open');
-      };
-      const close = (why) => {
-        if (document.activeElement !== ime) return;
-        ime.blur();
-        console.log('[KBD] closed: ' + why);
-        // PUTTING THE KEYBOARD AWAY ENDS A CHAT. Folded by the player, or
-        // hidden by a tap on the picture: an open "Say:" line with no keyboard
-        // is a dead end, so Escape closes it, unsent, as on a desktop. A name
-        // field just loses the keyboard.
-        if ((why === 'folded' || why === 'tap on the picture') && game.chatOpen()) {
-          game.press('Escape');
-          console.log('[KBD] chat line closed: the keyboard was put away');
-        }
-      };
-      ime.addEventListener('compositionstart', () => { composing = true; });
-      ime.addEventListener('compositionend', () => { composing = false; sync(); });
-      ime.addEventListener('input', sync);
-      for (const t of ['keydown', 'keypress', 'keyup']) {
-        ime.addEventListener(t, (e) => {
-          // Arrow keys (a tablet's hardware keyboard) go on to the game as
-          // they are; they type nothing, so they can't arrive twice.
-          if (e.key && e.key.startsWith('Arrow')) { e.preventDefault(); return; }
-          e.stopPropagation();
-          if (t !== 'keydown') return;
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            if (composing) { composing = false; sync(); }
-            game.press('Return');
-            close('enter');
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            close('escape');
-            game.press('Escape');
-          }
-        });
-      }
-      let shrunk = false;
-      if (window.visualViewport) {
-        visualViewport.addEventListener('resize', () => {
-          const small = visualViewport.height < window.innerHeight * 0.85;
-          if (small) shrunk = true;
-          else if (shrunk) { shrunk = false; close('folded'); }
-        });
-      }
-      // A tap on the picture shows or hides the keyboard while a text field is
-      // highlighted (the tap layer's handler, "ON A TEXT FIELD", calls this).
-      window.AA_KBD = {
-        onField: () => onField,
-        toggle: (why) => { if (document.activeElement === ime) close(why); else open(); },
-      };
       touchInput.subscribe((state) => {
         if (!game.started()) return;
-        const field = state.field;
-        const now = field !== 'none';
-        // A PASSWORD PROMPT GETS A PASSWORD FIELD: the phone keyboard then
-        // offers no suggestions and learns nothing typed. Switched before the
-        // keyboard opens, or reopened on the spot if the highlight moves
-        // between a name and a password with the keyboard up.
-        const kind = field === 'password' ? 'password' : 'text';
-        if (ime.type !== kind) {
-          const up = document.activeElement === ime;
-          ime.type = kind;
-          if (up && now) open();
-        }
-        if (now && !onField) open();
-        if (!now && onField) close('left the field');
-        onField = now;
-        // THE PAD'S ENTER SAYS "Chat" when that is what it does: on a server,
-        // in a game (aa_web_chat_possible: not while connecting, logging in or
-        // loading), with no menu up and no cycle of ours alive (crashed,
-        // watching, between rounds), Enter is the chat key (config/default.cfg). While
-        // driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS A
-        // MENU KEY ONLY" above); in menus and local games it is plain Enter.
         const c = state.context;
         const chat = state.chatPossible && !c.menu && !c.cycle;
         if (chat !== chatLabel) {
@@ -1629,7 +1510,7 @@
           console.log('[KBD] pad Enter label: ' + padEnter.textContent);
         }
       });
-    })();
+    }
 
     // ---- LOOKING AROUND --------------------------------------------------
     // A finger held on the game picture while driving (portrait) looks the way
@@ -1976,7 +1857,7 @@
       if (game.started()) return;
       game.markStarted();             // also arms the backstop and every game.* call
       relayoutBeforeMain();           // M9: the orientation held NOW, see sizeCanvas
-      if (window.AA_LABEL_LAYOUT_BUTTON) window.AA_LABEL_LAYOUT_BUTTON();
+      if (touchDecision.on) labelLayoutButton();
       overlayEl.remove();
       Module.canvas.focus();          // so the menu receives key events
       console.log('[BOOT] autostart: calling main');
