@@ -689,6 +689,7 @@
   -->
   <div id="diag" hidden></div>
 
+  <!-- @page-module web/page/game.js -->
 
   <script>
     const statusEl  = document.getElementById('status');
@@ -727,6 +728,15 @@
     }
     window.onerror = (message) => showFailure(String(message));
     window.onunhandledrejection = (event) => showFailure(String(event.reason));
+
+    // THE GAME, AS THE PAGE SEES IT: web/page/game.js. Every call into the
+    // wasm and every synthetic key goes through this one object. `Module` is
+    // the `var` declared further down, so this asks for it at call time.
+    const game = AAGame.create({
+      module: () => (typeof Module !== 'undefined' ? Module : undefined),
+      send: (type, init) => document.dispatchEvent(new KeyboardEvent(type,
+        Object.assign({ bubbles: true, cancelable: true }, init))),
+    });
 
     // Without preserveDrawingBuffer the canvas renders BLACK -- not "wrong
     // colours", not "flickering", solid black -- while the game underneath is
@@ -1189,20 +1199,8 @@
     // real hazard (a deferred keyup overtaking the next press of the same key)
     // to remove an imaginary one.
     (() => {
-      const KEYCODES = { ArrowLeft:37, ArrowRight:39, ArrowUp:38, ArrowDown:40,
-                         Enter:13, Escape:27 };
-      // `key` and `code` are the same string for all six of these, which is a
-      // property of the six and not a general rule. They are set because they
-      // cost nothing and because receiveEvent does consult event.key (only to
-      // decide whether to preventDefault on Backspace and Tab); keyCode is the
-      // one that decides which action the game performs.
-      const sendKey = (type, name) => {
-        const kc = KEYCODES[name];
-        document.dispatchEvent(new KeyboardEvent(type, {
-          key: name, code: name, keyCode: kc, which: kc,
-          bubbles: true, cancelable: true,
-        }));
-      };
+      // The key codes and the event shape are web/page/game.js's.
+      const sendKey = (type, name) => game.key(type, name);
 
       const touchEl = document.getElementById('touch');
       // REUSED, NOT RE-DERIVED. The decision, its [TOUCH] line and
@@ -1244,7 +1242,7 @@
         // is what the gate reads. The cross and Esc are untouched: Escape is
         // how a chat line gets closed, and the in-game menu needs it.
         const suppressed = name === 'Enter' && el.closest('#pad') !== null &&
-                           isDriving(readContext());
+                           game.context().driving;
         active.set(ev.pointerId, { name, el, sent: !suppressed });
         el.classList.add('aa-down');
         try { el.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
@@ -1345,49 +1343,10 @@
 
       // ---- PHONE FEEDBACK ROUND 2: which key does a tap on the screen mean?
       //
-      // THE GAME ANSWERS, NOT THE PAGE. src/emscripten/eWebInput.cpp exports
-      // aa_web_input_context(), two bits: a uMenu is on screen, and a local
-      // player has a cycle that is Alive(). The page cannot derive either --
-      // a menu item can start the game, a round can end by itself, and Escape
-      // mid-round opens the in-game menu, none of which reaches this script.
-      //
-      // THE POLICY IS HERE AND THE FACTS ARE THERE, deliberately. "Driving"
-      // means a live cycle AND no menu: the in-game menu is reached with
-      // Escape in the middle of a round, so the cycle is still alive while a
-      // menu is asking for Enter, and a rule that looked only at the cycle
-      // would put the turn zones over the top of that menu.
-      //
-      // CALLING INTO WASM FROM HERE IS SAFE FOR ONE SPECIFIC REASON, not as a
-      // general licence: aa_web_input_context() reads a static bool and walks
-      // at most four pointers, so it cannot reach emscripten_sleep, so
-      // Asyncify does not instrument it and there is no second stack unwind to
-      // start on top of the one the game is nearly always parked in. The same
-      // argument the unload backstop stands on, and this one is weaker still
-      // because it writes nothing. Before main() has run the export is a
-      // makeInvalidEarlyAccess stub whose body is abort(), which is what the
-      // gameStarted test guards -- `typeof` would report it as a function.
-      const AA_CTX_MENU = 1, AA_CTX_DRIVING = 2;    // src/emscripten/eWebInput.cpp
-      const readContext = () => {
-        try {
-          // gameStarted IS INSIDE THE try ON PURPOSE. It is a `let` declared
-          // further down this same script, so the first applyContext() below
-          // -- which runs while this IIFE is still executing -- reads it
-          // inside its temporal dead zone and throws a ReferenceError. That
-          // is a correct answer, not an error: before main() there is no
-          // context, and 0 is what this returns. Moving the test outside the
-          // try would make the page fail to load.
-          if (!gameStarted) return 0;
-          return Module._aa_web_input_context() | 0;
-        } catch (e) { return 0; }
-      };
-      // 0 is the honest answer for "the game has not started" and for any
-      // throw, and 0 means NOT driving, i.e. a tap is Enter. That is the safe
-      // side of the failure: a tap that confirms nothing during a round the
-      // player is not in costs a tap, while a tap that TURNS THEM inside a
-      // menu changes a setting they never chose.
-      const isDriving = (ctx) => (ctx & AA_CTX_DRIVING) !== 0 &&
-                                 (ctx & AA_CTX_MENU) === 0;
-
+      // THE GAME ANSWERS: game.context() (web/page/game.js has the bits, the
+      // "driving" policy and why calling into the wasm from here is safe). A
+      // tap is Enter unless the player is driving; before main() and on any
+      // failure the answer is "not driving".
       // RELEASING THE HELD KEYS ON EVERY CHANGE IS A BUG FIX, NOT TIDINESS. A
       // player holding a turn when their cycle dies would otherwise have the
       // zone go display:none under their thumb, and a pointerup on an element
@@ -1408,11 +1367,12 @@
 
       let lastCtx = -1;
       const applyContext = () => {
-        const ctx = readContext();
+        const c = game.context();
+        const ctx = c.raw;
         if (ctx === lastCtx) return;
-        const wasDriving = lastCtx >= 0 && isDriving(lastCtx);
+        const wasDriving = lastCtx >= 0 && AAGame.readContext(lastCtx).driving;
         lastCtx = ctx;
-        const driving = isDriving(ctx);
+        const driving = c.driving;
         if (driving !== wasDriving) { releaseAllKeys('input context changed'); dpReleaseAll('input context changed'); }
         touchEl.classList.toggle('aa-driving', driving);
         // One machine-readable line per transition, so the touch gate can
@@ -1420,11 +1380,12 @@
         // screenshot. It is per TRANSITION, not per poll: at 4 Hz for a whole
         // round the latter would bury the transcript it is meant to explain.
         console.log('[TOUCH] context ' + ctx +
-                    ' (menu ' + ((ctx & AA_CTX_MENU) ? 'yes' : 'no') +
-                    ', cycle ' + ((ctx & AA_CTX_DRIVING) ? 'alive' : 'no') +
+                    ' (menu ' + (c.menu ? 'yes' : 'no') +
+                    ', cycle ' + (c.cycle ? 'alive' : 'no') +
                     ') -> ' + (driving ? 'STEERING' : 'TAP=ENTER'));
       };
-      window.AA_INPUT_CONTEXT = readContext;   // for the gate, not for the page
+      // The raw bits, for the gates, not for the page.
+      window.AA_INPUT_CONTEXT = () => game.context().raw;
       // 250 ms is the appearance only -- a control that is a quarter-second
       // late to appear is invisible to a player, and every tap re-reads the
       // context itself, so nothing acts on a stale value.
@@ -1463,7 +1424,7 @@
                       'px, held ' + held + 'ms)');
           return;
         }
-        if (isDriving(readContext())) {
+        if (game.context().driving) {
           console.log('[TOUCH] tap ignored: the game is asking for steering');
           return;
         }
@@ -1480,7 +1441,7 @@
         // how a portrait player opens chat, so a stray tap on the picture
         // doesn't. Landscape has no pad, so its tap stays Enter.
         if (document.documentElement.classList.contains('aa-gameboy') &&
-            (readContext() & AA_CTX_MENU) === 0) {
+            !game.context().menu) {
           console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
           return;
         }
@@ -1688,19 +1649,16 @@
       const q = readNumberParam('leaveafter', 5, 3600);
       const LEAVE_AFTER = (q !== null ? q : 60) * 1000;
       let timer = null;
-      const exported = () => typeof Module !== 'undefined' &&
-        typeof Module._aa_web_request_leave === 'function' &&
-        typeof Module._aa_web_connected === 'function' && window.AA_RUNTIME_READY === true;
       const onVisibility = () => {
         if (document.visibilityState === 'hidden') {
           if (timer === null) {
             timer = setTimeout(() => {
               timer = null;
-              if (document.visibilityState !== 'hidden' || !exported()) return;
+              if (document.visibilityState !== 'hidden' || !game.started()) return;
               try {
-                if (Module._aa_web_connected()) {
+                if (game.connected()) {
                   console.log('[LEAVE] hidden for ' + (LEAVE_AFTER / 1000) + ' s while connected: asking the game to disconnect');
-                  Module._aa_web_request_leave();
+                  game.requestLeave();
                 }
               } catch (e) { console.log('[LEAVE] could not ask the game to disconnect: ' + e); }
             }, LEAVE_AFTER);
@@ -1724,12 +1682,8 @@
     //  - What is typed into #aa-ime goes to the game as key events: the change
     //    since last time, as backspaces for what went and characters for what
     //    came. Word suggestions and autocorrect rewrite whole words, and this
-    //    handles that the same way. A character is a keydown and a keypress
-    //    carrying charCode; Emscripten's SDL 1 copies that into
-    //    keysym.unicode, and uMenuItemString::Event inserts 32-255 (latin-1;
-    //    anything above becomes "?"). The keydown says "a" (keyCode 65): the
-    //    text field reads only unicode, and SDL ignores key codes it doesn't
-    //    know.
+    //    handles that the same way. How a character becomes a key event is
+    //    game.typeChar (web/page/game.js).
     //  - The field's own key events stop at the field, so SDL (listening on
     //    document) sees each character once: the synthetic copy.
     //  - A known edge: the game's text fields have a length limit and refuse
@@ -1752,27 +1706,13 @@
       let prev = REST, composing = false, onField = false;
       const padEnter = document.querySelector('#pad .pad-a');
       let chatLabel = false;
-      const fire = (type, init) => document.dispatchEvent(
-        new KeyboardEvent(type, Object.assign({ bubbles: true, cancelable: true }, init)));
-      const press = (key, kc) => {
-        fire('keydown', { key, code: key, keyCode: kc, which: kc });
-        fire('keyup', { key, code: key, keyCode: kc, which: kc });
-      };
-      const typeChar = (ch) => {
-        let c = ch.codePointAt(0);
-        if (c < 32 || (c >= 127 && c < 160)) return;
-        if (c > 255) c = 63;   // "?": the game's names and chat are latin-1
-        fire('keydown', { key: ch, keyCode: 65, which: 65 });
-        fire('keypress', { key: ch, charCode: c, keyCode: c, which: c });
-        fire('keyup', { key: ch, keyCode: 65, which: 65 });
-      };
       const sync = () => {
         const cur = ime.value;
         let p = 0;
         while (p < prev.length && p < cur.length && prev[p] === cur[p]) p++;
         const gone = Array.from(prev.slice(p)).length, came = Array.from(cur.slice(p));
-        for (let i = 0; i < gone; i++) press('Backspace', 8);
-        for (const ch of came) typeChar(ch);
+        for (let i = 0; i < gone; i++) game.press('Backspace');
+        for (const ch of came) game.typeChar(ch);
         prev = cur;
         // THE FIELD KEEPS WHAT WAS TYPED while it is open (it is cleared on
         // open): a keyboard reads the text before the cursor to decide on the
@@ -1787,9 +1727,6 @@
         try { ime.setSelectionRange(1, 1); } catch (e) {}
         console.log('[KBD] open');
       };
-      const chatOpen = () => {
-        try { return Module._aa_web_chat_open() === 1; } catch (e) { return false; }
-      };
       const close = (why) => {
         if (document.activeElement !== ime) return;
         ime.blur();
@@ -1798,8 +1735,8 @@
         // hidden by a tap on the picture: an open "Say:" line with no keyboard
         // is a dead end, so Escape closes it, unsent, as on a desktop. A name
         // field just loses the keyboard.
-        if ((why === 'folded' || why === 'tap on the picture') && chatOpen()) {
-          press('Escape', 27);
+        if ((why === 'folded' || why === 'tap on the picture') && game.chatOpen()) {
+          game.press('Escape');
           console.log('[KBD] chat line closed: the keyboard was put away');
         }
       };
@@ -1816,12 +1753,12 @@
           if (e.key === 'Enter') {
             e.preventDefault();
             if (composing) { composing = false; sync(); }
-            press('Return', 13);
+            game.press('Return');
             close('enter');
           } else if (e.key === 'Escape') {
             e.preventDefault();
             close('escape');
-            press('Escape', 27);
+            game.press('Escape');
           }
         });
       }
@@ -1840,15 +1777,14 @@
         toggle: (why) => { if (document.activeElement === ime) close(why); else open(); },
       };
       setInterval(() => {
-        if (window.AA_RUNTIME_READY !== true) return;
-        let sel = 0;   // 0 no text field, 1 a text field, 2 a password field
-        try { sel = typeof Module._aa_web_text_selected === 'function' ? Module._aa_web_text_selected() : 0; } catch (e) {}
-        const now = sel > 0;
+        if (!game.started()) return;
+        const field = game.textField();
+        const now = field !== 'none';
         // A PASSWORD PROMPT GETS A PASSWORD FIELD: the phone keyboard then
         // offers no suggestions and learns nothing typed. Switched before the
         // keyboard opens, or reopened on the spot if the highlight moves
         // between a name and a password with the keyboard up.
-        const kind = sel === 2 ? 'password' : 'text';
+        const kind = field === 'password' ? 'password' : 'text';
         if (ime.type !== kind) {
           const up = document.activeElement === ime;
           ime.type = kind;
@@ -1863,10 +1799,8 @@
         // watching, between rounds), Enter is the chat key (config/default.cfg). While
         // driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS A
         // MENU KEY ONLY" above); in menus and local games it is plain Enter.
-        let chat = false;
-        try {
-          chat = Module._aa_web_chat_possible() === 1 && (Module._aa_web_input_context() & 3) === 0;
-        } catch (e) {}
+        const c = game.context();
+        const chat = game.chatPossible() && !c.menu && !c.cycle;
         if (chat !== chatLabel) {
           chatLabel = chat;
           padEnter.textContent = chat ? 'Chat' : 'Enter';
@@ -1902,7 +1836,7 @@
         for (const b of fingers.values()) bits |= b;
         if (bits === sent) return;
         sent = bits;
-        try { Module._aa_web_look(bits); } catch (e) {}
+        game.look(bits);
       };
       zone.addEventListener('pointerdown', (e) => {
         e.preventDefault();
@@ -2400,10 +2334,9 @@
     // THE COST, STATED: a visitor who types ?autostart=0 gets a page that loads
     // and then sits there. It is a demo, the parameter is not linked from
     // anywhere, and window.AA_START() starts it. That is the whole surface.
-    let gameStarted = false;
     function startGame() {
-      if (gameStarted) return;
-      gameStarted = true;             // also arms the backstop below
+      if (game.started()) return;
+      game.markStarted();             // also arms the backstop and every game.* call
       relayoutBeforeMain();           // M9: the orientation held NOW, see sizeCanvas
       if (window.AA_LABEL_LAYOUT_BUTTON) window.AA_LABEL_LAYOUT_BUTTON();
       overlayEl.remove();
@@ -2489,14 +2422,14 @@
     // perfectly ordinary thing for a player opening the page in a background
     // tab to produce.
     const persistBackstop = (why) => {
-      if (!gameStarted) return;
+      if (!game.started()) return;
       // aa_web_save_config MUST NOT YIELD -- see the long warning on it in
       // src/emscripten/eWebPersist.cpp. Calling into wasm from here is safe
       // only because it does not; a sleep on that path would start a second
       // Asyncify unwind on top of the live one this page is almost always
       // parked in.
       try {
-        Module._aa_web_save_config();
+        game.saveConfig();
         console.log('[PERSISTBACKSTOP] ' + why);
       } catch (e) {
         console.log('[PERSISTBACKSTOP] ' + why + ' FAILED: ' + e);
@@ -2601,12 +2534,11 @@
             // The two bits src/emscripten/eWebInput.cpp reports and the one
             // decision the overlay makes from them. On a phone this is the
             // only way to see WHY a tap did what it did.
-            'ctx ' + (window.AA_INPUT_CONTEXT ?
-                        (() => { const c = window.AA_INPUT_CONTEXT();
-                                 return c + ' menu ' + ((c & 1) ? 'y' : 'n') +
-                                        ' cycle ' + ((c & 2) ? 'y' : 'n') +
-                                        ' -> ' + (((c & 2) && !(c & 1)) ?
-                                                  'STEER' : 'TAP=ENTER'); })()
+            'ctx ' + (window.AA_TOUCH ?
+                        (() => { const c = game.context();
+                                 return c.raw + ' menu ' + (c.menu ? 'y' : 'n') +
+                                        ' cycle ' + (c.cycle ? 'y' : 'n') +
+                                        ' -> ' + (c.driving ? 'STEER' : 'TAP=ENTER'); })()
                       : 'n/a (desktop)')
           ];
           el.textContent = rows.join('\n');

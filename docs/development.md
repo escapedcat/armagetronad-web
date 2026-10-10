@@ -135,6 +135,14 @@ mechanism.
     dedicated server defines `__EMSCRIPTEN__` too.
     [docs/porting/browser-runtime-notes.md](porting/browser-runtime-notes.md)
     § 1 explains which form applies where.
+- **The page's own modules are in `web/page/`** and are inlined into
+  `web/shell.html` at build time (a `<!-- @page-module … -->` marker line;
+  `web/Makefile`, "The page's own modules"). The published page is still one
+  HTML file.
+  - `web/page/game.js` is the page's one way into the game: every
+    `aa_web_*` call and every synthetic key goes through it.
+  - Their tests run in Node with a fake game, no browser and no build:
+    `node --test 'web/test/*.test.mjs'`. CI runs them on every pull request.
 - **Where the history lives:**
   - [PLAN.md](../PLAN.md): the plan and milestone history.
   - [CONTEXT.md](../CONTEXT.md): shared vocabulary.
