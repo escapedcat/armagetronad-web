@@ -57,6 +57,9 @@ import { mkdtempSync, mkdirSync, writeFileSync, appendFileSync, readFileSync, rm
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+// The `probe:` step's source: the helpers every gate shares (web/tools/gate-probe.js).
+const PROBE_SOURCE = readFileSync(new URL('./gate-probe.js', import.meta.url), 'utf8');
+
 function parseArgs(argv) {
   const opt = {
     url: 'http://localhost:8000/armagetronad.html',
@@ -354,6 +357,12 @@ async function main() {
             record(`[harness] key ${name} (${i + 1}/${count})`);
             await sleep(300);
           }
+          break;
+        }
+        case 'probe': {
+          // web/tools/gate-probe.js as window.__aa (the gates' shared helpers).
+          const r = await evaluate(PROBE_SOURCE);
+          record(`[harness] probe => ${remoteToString(r.result)}`);
           break;
         }
         case 'eval': {
