@@ -1,5 +1,5 @@
 # THE PHONE KEYBOARD GATE (web/shell.html "THE PHONE KEYBOARD",
-# src/emscripten/eWebKeyboard.cpp). An emulated phone on First Setup: the
+# src/emscripten/eWebPage.cpp). An emulated phone on First Setup: the
 # keyboard's hidden field opens when the game highlights its Name field, what
 # is "typed" (the field's value changed and an input event fired, the way a
 # phone keyboard does it) lands in the game's own field, and it closes again.

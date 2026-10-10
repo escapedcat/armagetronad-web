@@ -2,7 +2,7 @@
 # shellcheck disable=SC2119 # gate_drive and gate_stop_server take optional arguments
 # sh web/tools/run-leave-hidden-gate.sh <out-dir>
 #
-# The hidden-page leave gate (src/emscripten/eWebLeave.cpp, web/shell.html
+# The hidden-page leave gate (src/emscripten/eWebPage.cpp, web/shell.html
 # "LEAVE A SERVER CLEANLY WHEN THE PAGE HAS BEEN HIDDEN"). The browser client
 # joins the local aa-dedicated container (bridge/test-server/wait-var: waits for
 # a second player, so it stays connected), then:
