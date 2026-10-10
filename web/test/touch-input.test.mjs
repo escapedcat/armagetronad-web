@@ -107,3 +107,23 @@ test('shell.html keeps no key state of its own, and watches the game in one plac
   assert.deepEqual(code.match(/MutationObserver/g) || [], []);
   assert.equal((code.match(/setInterval\(/g) || []).length, 2, 'the touch tick and the ?diag readout');
 });
+
+test('Enter is chat in a round: the pad, the tap and the label follow one rule', () => {
+  const ctx = (menu, cycle) => ({ raw: (menu ? 1 : 0) | (cycle ? 2 : 0), menu, cycle, driving: cycle && !menu });
+  assert.equal(T.padSendsEnter(ctx(false, true)), false, 'driving: the pad sends no Enter');
+  assert.equal(T.padSendsEnter(ctx(true, true)), true, 'the in-game menu over a live round');
+  assert.equal(T.padSendsEnter(ctx(false, false)), true);
+
+  const tap = (c, onField, gameboy) => T.tapMeans(c, { onField, gameboy });
+  assert.equal(tap(ctx(false, true), true, true), 'steering', 'steering wins over a highlighted field');
+  assert.equal(tap(ctx(true, false), true, true), 'keyboard');
+  assert.equal(tap(ctx(false, false), false, true), 'pad-chat', 'portrait, between rounds: the pad opens chat');
+  assert.equal(tap(ctx(false, false), false, false), 'enter', 'landscape has no pad');
+  assert.equal(tap(ctx(true, false), false, true), 'enter', 'a menu wants Enter');
+
+  const st = (chatPossible, c) => ({ chatPossible, context: c });
+  assert.equal(T.enterOpensChat(st(true, ctx(false, false))), true);
+  assert.equal(T.enterOpensChat(st(true, ctx(false, true))), false, 'driving');
+  assert.equal(T.enterOpensChat(st(true, ctx(true, false))), false, 'a menu');
+  assert.equal(T.enterOpensChat(st(false, ctx(false, false))), false, 'local game or connecting');
+});

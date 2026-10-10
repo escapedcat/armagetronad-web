@@ -1247,18 +1247,10 @@
         // resumeAudio() ("SOUND ON A PHONE" below) listens on window for the
         // pointerup that follows, and a stopped event would never reach it.
         ev.preventDefault();
-        // ENTER ON THE PAD IS A MENU KEY ONLY (M7.1). The game binds Enter to
-        // CHAT in a round (config/default.cfg: KEYBOARD 13 PLAYER_BIND CHAT 1),
-        // so a mid-round Enter opened the "Say:" line and every arrow after it
-        // typed into the chat instead of steering, until Escape -- probed on
-        // 2026-09-06: the turn counters froze after one Enter. The pad's Enter
-        // therefore follows the rule the picture's tap already follows: it is
-        // sent only when the game is not driving (a menu is up, or no cycle is
-        // alive). The press still shows, nothing is sent, and the counter below
-        // is what the gate reads. The cross and Esc are untouched: Escape is
-        // how a chat line gets closed, and the in-game menu needs it.
+        // ENTER ON THE PAD IS A MENU KEY ONLY: AATouchInput.padSendsEnter
+        // ("ENTER IS CHAT IN A ROUND"). The counter below is what the gate reads.
         const suppressed = name === 'Enter' && el.closest('#pad') !== null &&
-                           game.context().driving;
+                           !AATouchInput.padSendsEnter(game.context());
         // A suppressed press is held with no key: it shows, and sends nothing.
         touchInput.press(owner(ev), suppressed ? null : name, el);
         try { el.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
@@ -1376,28 +1368,20 @@
           console.log('[TOUCH] tap ignored (' + notTap + ')');
           return;
         }
-        if (game.context().driving) {
-          console.log('[TOUCH] tap ignored: the game is asking for steering');
-          return;
+        // What the tap means: AATouchInput.tapMeans ("ENTER IS CHAT IN A ROUND").
+        switch (AATouchInput.tapMeans(game.context(), { onField: keyboard.onField(), gameboy })) {
+          case 'steering':
+            console.log('[TOUCH] tap ignored: the game is asking for steering');
+            return;
+          case 'keyboard':
+            keyboard.toggle('tap on the picture');
+            return;
+          case 'pad-chat':
+            console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
+            return;
+          default:
+            game.press('Enter');
         }
-        // ON A TEXT FIELD (a name, the chat line) A TAP SHOWS OR HIDES THE
-        // PHONE KEYBOARD instead of pressing Enter: Enter there would send the
-        // chat line, and folding the keyboard is what a tap on the picture
-        // means to a phone user. See "THE PHONE KEYBOARD".
-        if (keyboard.onField()) {
-          keyboard.toggle('tap on the picture');
-          return;
-        }
-        // IN A ROUND, THE PICTURE DOESN'T OPEN CHAT IN PORTRAIT. With no menu
-        // up, Enter is the chat key; the pad's Enter (labelled "Chat" then) is
-        // how a portrait player opens chat, so a stray tap on the picture
-        // doesn't. Landscape has no pad, so its tap stays Enter.
-        if (document.documentElement.classList.contains('aa-gameboy') &&
-            !game.context().menu) {
-          console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
-          return;
-        }
-        game.press('Enter');
       };
       tapzone.addEventListener('pointerup',     (ev) => endTap(ev, true));
       tapzone.addEventListener('pointercancel', (ev) => endTap(ev, false));
@@ -1496,18 +1480,13 @@
     // (web/page/phone-keyboard.js has how and why).
     if (keyboard) {
       touchInput.subscribe(keyboard.onState);
-      // THE PAD'S ENTER SAYS "Chat" when that is what it does: on a server, in
-      // a game (game.chatPossible: not while connecting, logging in or
-      // loading), with no menu up and no cycle of ours alive (crashed,
-      // watching, between rounds), Enter is the chat key (config/default.cfg).
-      // While driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS
-      // A MENU KEY ONLY" above); in menus and local games it is plain Enter.
+      // THE PAD'S ENTER SAYS "Chat" when that is what it does
+      // (AATouchInput.enterOpensChat).
       const padEnter = document.querySelector('#pad .pad-a');
       let chatLabel = false;
       touchInput.subscribe((state) => {
         if (!game.started()) return;
-        const c = state.context;
-        const chat = state.chatPossible && !c.menu && !c.cycle;
+        const chat = AATouchInput.enterOpensChat(state);
         if (chat !== chatLabel) {
           chatLabel = chat;
           padEnter.textContent = chat ? 'Chat' : 'Enter';
