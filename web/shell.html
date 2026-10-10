@@ -254,7 +254,7 @@
 
        WHICH OF THE TWO FULL-SCREEN LAYERS IS LIVE IS THE GAME'S ANSWER, NOT
        THE PAGE'S. #touch carries .aa-driving exactly while
-       aa_web_input_context() (src/emscripten/eWebInput.cpp) reports a live
+       aa_web_input_context() (src/emscripten/eWebPage.cpp) reports a live
        local cycle and no menu on screen. Everything below is that one class
        switching two layers; there is no second source of truth.
 
@@ -1455,7 +1455,7 @@
     // a phone that switched apps stops sending input. A regular logout is not a
     // kick, so after LEAVE_AFTER seconds hidden while connected, the page asks
     // the game for exactly the in-game menu's Disconnect
-    // (src/emscripten/eWebLeave.cpp). Coming back sooner cancels it. A phone
+    // (src/emscripten/eWebPage.cpp). Coming back sooner cancels it. A phone
     // that freezes the tab outright never gets that far -- the server then
     // sees a timeout, which is not a kick either.
     //
@@ -1518,7 +1518,7 @@
     // left or right, the bottom quarter looks back, and letting go looks ahead.
     // The legend under the pad says "hold picture: look" while driving.
     // The page only reports which looks are held, as bits (1 left, 2 right,
-    // 4 back), through aa_web_look(); src/emscripten/eWebLook.cpp presses the
+    // 4 back), through aa_web_look(); src/emscripten/eWebPage.cpp presses the
     // game's own GLANCE_* actions from the game's frame loop. Leaving the
     // driving state (a crash, a menu) lets go of everything, so a finger the
     // page lost track of can't leave the camera looking sideways.
@@ -2050,7 +2050,7 @@
             'fps ' + swapsPerSec + ' swaps/s' +
               '   cam x' + (window.AA_TOUCH ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1) +
               '   touch ' + (window.AA_TOUCH ? 'on' : 'off'),
-            // The two bits src/emscripten/eWebInput.cpp reports and the one
+            // The two bits src/emscripten/eWebPage.cpp reports and the one
             // decision the overlay makes from them. On a phone this is the
             // only way to see WHY a tap did what it did.
             'ctx ' + (window.AA_TOUCH ?

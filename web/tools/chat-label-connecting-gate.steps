@@ -1,5 +1,5 @@
 # CHAT LABEL WHILE CONNECTING (web/shell.html "THE PAD'S ENTER SAYS Chat",
-# src/emscripten/eWebKeyboard.cpp aa_web_chat_possible). The phone joins the
+# src/emscripten/eWebPage.cpp aa_web_chat_possible). The phone joins the
 # 127.0.0.1 bookmark through a local relay with NO game server behind it, so
 # the game sits in "connecting" (connected, but no player or game yet). The
 # pad's Enter must not say "Chat" there: chat is impossible until a game runs.

@@ -1,4 +1,4 @@
-# LOOK GATE (web/shell.html "LOOKING AROUND", src/emscripten/eWebLook.cpp).
+# LOOK GATE (web/shell.html "LOOKING AROUND", src/emscripten/eWebPage.cpp).
 # An emulated phone in portrait, in the first-run tutorial round: holding the
 # picture's left or right half looks that way, holding its bottom strip looks
 # back, letting go looks ahead, and a crash with a finger still down lets go.

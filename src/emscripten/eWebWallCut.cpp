@@ -56,10 +56,6 @@ away (see web/Makefile).
 static bool se_wallCut = false;
 static tSettingItem< bool > se_wallCutConf( "WALL_CUT", se_wallCut );
 
-static int se_wallCutChecked = 0;
-static int se_wallCutPartial = 0;
-static int se_wallCutWhole = 0;
-
 static const float CUT_EPS = 0.05f;
 static const float WALL_LO = 0.0f;
 static const float WALL_HI = 1.05f;
@@ -77,7 +73,6 @@ bool aa_web_wall_cut( eCoord & p1, eCoord & p2, REAL & ta, REAL & te )
 {
     if ( !se_wallCut )
         return true;
-    ++se_wallCutChecked;
 
     // The quantity the GPU divides by is clip-space w, the fourth row of
     // PROJECTION x MODELVIEW. Both are needed: eCamera::Render applies the
@@ -106,12 +101,8 @@ bool aa_web_wall_cut( eCoord & p1, eCoord & p2, REAL & ta, REAL & te )
     if ( lo <= 0 && hi >= 1 )
         return true;                 // the whole piece is safely in front
     if ( lo >= hi )
-    {
-        ++se_wallCutWhole;           // nothing of it is
-        return false;
-    }
+        return false;                // nothing of it is
 
-    ++se_wallCutPartial;
     eCoord d = p2 - p1;
     REAL dt = te - ta;
     eCoord n1 = p1 + d * lo, n2 = p1 + d * hi;
@@ -119,10 +110,5 @@ bool aa_web_wall_cut( eCoord & p1, eCoord & p2, REAL & ta, REAL & te )
     p1 = n1; p2 = n2; ta = nta; te = nte;
     return true;
 }
-
-// For checking the cut is live: pieces examined, shortened, and skipped.
-extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_wall_cut_checked( void ) { return se_wallCutChecked; }
-extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_wall_cut_partial( void ) { return se_wallCutPartial; }
-extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_wall_cut_whole( void ) { return se_wallCutWhole; }
 
 #endif // __EMSCRIPTEN__ && !DEDICATED

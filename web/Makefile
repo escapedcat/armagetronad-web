@@ -162,10 +162,13 @@ PAGE_MODULES := $(wildcard web/page/*.js)
 #   src/emscripten/eWebPersist.cpp M4 task 2: saves the config when the player
 #                                  leaves a menu, and exports the one function
 #                                  web/shell.html's unload backstop calls.
-#   src/emscripten/eWebInput.cpp   phone feedback round 2: exports
-#                                  aa_web_input_context(), the two bits
-#                                  web/shell.html's touch overlay reads to
-#                                  decide whether a tap means Enter or a turn.
+#   src/emscripten/eWebPage.cpp    everything web/shell.html asks the game
+#                                  (aa_web_input_context, whether a text field
+#                                  is highlighted, chat open/possible,
+#                                  connected) and every request it queues for
+#                                  the game loop (leave the server after the
+#                                  page was hidden, look around); same
+#                                  byte-pin reason.
 #   src/emscripten/eWebWallCut.cpp  WALL_CUT (?wallcut=1): keeps player-wall
 #                                  geometry from reaching the GPU level with
 #                                  the camera, investigating the phone combs.
@@ -176,14 +179,6 @@ PAGE_MODULES := $(wildcard web/page/*.js)
 #   src/emscripten/eWebFetch.cpp   map downloads through the relay's /resource
 #                                  route, for the same byte-pin reason as
 #                                  eWebNet.cpp.
-#   src/emscripten/eWebLeave.cpp   leaves a server with a regular logout after
-#                                  the page has been hidden a while, so the
-#                                  shared relay address collects no idle kicks.
-#   src/emscripten/eWebKeyboard.cpp tells the page when one of the game's
-#                                  text fields is highlighted, so it can open
-#                                  the phone keyboard; same byte-pin reason.
-#   src/emscripten/eWebLook.cpp    presses the game's own glance actions for a
-#                                  finger held on the picture; same reason.
 #
 # They have to be named here because $(SRCS) above wildcards the six game
 # source directories only, and src/emscripten/ is not one of them (it holds
@@ -201,13 +196,10 @@ PAGE_MODULES := $(wildcard web/page/*.js)
 CLIENT_OBJS   := $(SRCS:src/%.cpp=$(CLIENT_OBJDIR)/%.o) \
                  $(CLIENT_OBJDIR)/emscripten/eCompat.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebPersist.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebInput.o \
+                 $(CLIENT_OBJDIR)/emscripten/eWebPage.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebNet.o \
                  $(CLIENT_OBJDIR)/emscripten/eWebWallCut.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebFetch.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebLeave.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebKeyboard.o \
-                 $(CLIENT_OBJDIR)/emscripten/eWebLook.o
+                 $(CLIENT_OBJDIR)/emscripten/eWebFetch.o
 CLIENT_DEFS   := -DAA_WEB_CLIENT
 # THE MAP BUNDLE (web/resource-bundle.txt, web/tools/fetch-resource-bundle.sh):
 # popular server maps preloaded so joining those servers needs no download.
