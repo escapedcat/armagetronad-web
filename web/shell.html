@@ -707,7 +707,7 @@
     // startGame) -- and "THE START ORDER" at the bottom runs them, in order.
     // Blocks reach each other only through the names declared in this script.
     // window.AA_* is for gates and measurement pages: the page writes
-    // AA_TOUCH, AA_GAMEBOY, AA_DEFAULT_NAME, AA_INPUT_CONTEXT, AA_START and two
+    // AA_TOUCH, AA_GAMEBOY, AA_DEFAULT_NAME, AA_GAME, AA_START and two
     // counters, and reads back only the counters (to add to them) and
     // AA_CANVAS_SIZE, which a measurement page sets.
     const statusEl  = document.getElementById('status');
@@ -755,6 +755,9 @@
       send: (type, init) => document.dispatchEvent(new KeyboardEvent(type,
         Object.assign({ bubbles: true, cancelable: true }, init))),
     });
+    // The same object for the gates: they ask game.context().menu / .cycle /
+    // .driving and press keys by name, not bits and key codes.
+    window.AA_GAME = game;
 
     // Without preserveDrawingBuffer the canvas renders BLACK -- not "wrong
     // colours", not "flickering", solid black -- while the game underneath is
@@ -1335,8 +1338,6 @@
                     ', cycle ' + (c.cycle ? 'alive' : 'no') +
                     ') -> ' + (driving ? 'STEERING' : 'TAP=ENTER'));
       };
-      // The raw bits, for the gates, not for the page.
-      window.AA_INPUT_CONTEXT = () => game.context().raw;
       touchInput.subscribe(applyContext);
 
       // ---- the tap-anywhere layer ---------------------------------------

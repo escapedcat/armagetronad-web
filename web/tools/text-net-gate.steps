@@ -50,21 +50,21 @@ eval:'crashed-label='+document.querySelector('#pad .pad-a').textContent
 shot:chat-label
 tap:#tapzone
 wait:800
-eval:'picture-tap-chat='+((Module._aa_web_input_context()&1)?1:0)+','+(document.activeElement.id==='aa-ime'?1:0)
+eval:'picture-tap-chat='+(AA_GAME.context().menu?1:0)+','+(document.activeElement.id==='aa-ime'?1:0)
 eval:__openChat('chat-ready-first')
 until:1:120000:[NETGATE] chat-ready-first
 wait:800
 eval:'after-tap-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
 tap:#tapzone
 wait:800
-eval:'picture-tap-closes-chat='+(document.activeElement.id==='aa-ime'?1:0)+','+((Module._aa_web_input_context()&1)?1:0)
+eval:'picture-tap-closes-chat='+(document.activeElement.id==='aa-ime'?1:0)+','+(AA_GAME.context().menu?1:0)
 eval:__openChat('chat-ready-fold')
 until:1:120000:[NETGATE] chat-ready-fold
 wait:1000
 eval:'reopened-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
-eval:(()=>{window.__openBeforeFold=(Module._aa_web_input_context()&1)?1:0;const vv=window.visualViewport;const full=window.innerHeight;let h=full*0.5;Object.defineProperty(vv,'height',{configurable:true,get:()=>h});vv.dispatchEvent(new Event('resize'));h=full;vv.dispatchEvent(new Event('resize'));delete vv.height;return 'keyboard folded'})()
+eval:(()=>{window.__openBeforeFold=AA_GAME.context().menu?1:0;const vv=window.visualViewport;const full=window.innerHeight;let h=full*0.5;Object.defineProperty(vv,'height',{configurable:true,get:()=>h});vv.dispatchEvent(new Event('resize'));h=full;vv.dispatchEvent(new Event('resize'));delete vv.height;return 'keyboard folded'})()
 wait:1000
-eval:'fold-closes-chat='+window.__openBeforeFold+','+(document.activeElement.id==='aa-ime'?1:0)+','+((Module._aa_web_input_context()&1)?1:0)
+eval:'fold-closes-chat='+window.__openBeforeFold+','+(document.activeElement.id==='aa-ime'?1:0)+','+(AA_GAME.context().menu?1:0)
 eval:__openChat('chat-ready-send')
 until:1:120000:[NETGATE] chat-ready-send
 wait:1000
@@ -85,4 +85,4 @@ wait:1200
 eval:'empty-test-keyboard='+(document.activeElement.id==='aa-ime'?1:0)
 eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'empty enter'})()
 wait:2500
-eval:'after-empty-enter-menu='+((Module._aa_web_input_context()&1)?1:0)
+eval:'after-empty-enter-menu='+(AA_GAME.context().menu?1:0)

@@ -64,7 +64,7 @@ eval:(()=>{__dp.take();return __dp.finger('pointerdown','dp-esc',0.5,0.5,23)})()
 wait:120
 eval:__dp.finger('pointerup','dp-esc',0.5,0.5,23)
 wait:700
-eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;const k=__dp.take();console.log('[DPGATE] D7 short-esc-opens-the-menu '+JSON.stringify({menu:m,keys:k,PASS:m&&/\+Escape/.test(k)}));return 'D7'})()
+eval:(()=>{const m=AA_GAME.context().menu;const k=__dp.take();console.log('[DPGATE] D7 short-esc-opens-the-menu '+JSON.stringify({menu:m,keys:k,PASS:m&&/\+Escape/.test(k)}));return 'D7'})()
 key:Escape
 wait:1500
 eval:__dp.whenDriving('d8')
@@ -74,7 +74,7 @@ eval:__dp.finger('pointerdown','dp-esc',0.5,0.5,24)
 wait:800
 eval:__dp.finger('pointerup','dp-esc',0.5,0.5,24)
 wait:700
-eval:(()=>{const m=(Module._aa_web_input_context()&1)===1;console.log('[DPGATE] D8 long-esc-opens-the-menu '+JSON.stringify({menu:m,PASS:m}));return 'D8'})()
+eval:(()=>{const m=AA_GAME.context().menu;console.log('[DPGATE] D8 long-esc-opens-the-menu '+JSON.stringify({menu:m,PASS:m}));return 'D8'})()
 shot:menu-after-long-esc
 # Close the menu D8 opened.
 key:Escape
