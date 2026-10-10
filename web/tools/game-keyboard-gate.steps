@@ -14,6 +14,7 @@
 #     --script-file web/tools/game-keyboard-gate.steps
 #   grep -c '\[KBDGATE\] .*"PASS":true' /tmp/kbd/console.log    # 10
 until:1:120000:[BOOT] autostart
+probe:
 eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
 wait:6000
 key:Enter
@@ -22,14 +23,14 @@ eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K
 key:Down
 wait:1000
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K2 opens-on-name '+JSON.stringify({focused:f,PASS:f}));return 'K2'})()
-eval:(()=>{const i=document.getElementById('aa-ime');window.__nameBefore=(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);return m?m[1].trim().replace(/\\(.)/g,'$1'):null})();i.value=' Zoë';i.dispatchEvent(new InputEvent('input',{inputType:'insertText',data:'Zoë'}));return 'typed Zoë after '+window.__nameBefore})()
+eval:(()=>{const i=document.getElementById('aa-ime');window.__nameBefore=__aa.playerName({save:true});i.value=' Zoë';i.dispatchEvent(new InputEvent('input',{inputType:'insertText',data:'Zoë'}));return 'typed Zoë after '+window.__nameBefore})()
 wait:800
 eval:(()=>{const i=document.getElementById('aa-ime');const base=i.value;i.dispatchEvent(new CompositionEvent('compositionstart'));for(const w of ['h','hi','Hi']){const v=base+w;i.value=v;i.dispatchEvent(new InputEvent('input',{inputType:'insertCompositionText',data:v.trim()}));}i.dispatchEvent(new CompositionEvent('compositionend'));return 'suggestion rewrote hi -> Hi'})()
 wait:800
 # key:X types a lower-case x (the driver presses no Shift).
 key:X
 wait:800
-eval:(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m?m[1].trim().replace(/\\(.)/g,'$1'):null;const want=window.__nameBefore+'Zoë';console.log('[KBDGATE] K3 typed-into-the-game '+JSON.stringify({saved:v,PASS:!!v&&v.startsWith(want)}));console.log('[KBDGATE] K4 suggestion-exact '+JSON.stringify({PASS:!!v&&v.startsWith(want+'Hi')}));console.log('[KBDGATE] K5 real-key-once '+JSON.stringify({PASS:!!v&&v===want+'Hix'}));return 'K3-K5'})()
+eval:(()=>{const v=__aa.playerName({save:true});const want=window.__nameBefore+'Zoë';console.log('[KBDGATE] K3 typed-into-the-game '+JSON.stringify({saved:v,PASS:!!v&&v.startsWith(want)}));console.log('[KBDGATE] K4 suggestion-exact '+JSON.stringify({PASS:!!v&&v.startsWith(want+'Hi')}));console.log('[KBDGATE] K5 real-key-once '+JSON.stringify({PASS:!!v&&v===want+'Hix'}));return 'K3-K5'})()
 shot:name-typed
 eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'keyboard enter'})()
 wait:1500
@@ -59,4 +60,4 @@ eval:(()=>{const i=document.getElementById('aa-ime');i.dispatchEvent(new Composi
 wait:400
 eval:(()=>{const i=document.getElementById('aa-ime');i.dispatchEvent(new CompositionEvent('compositionstart'));const b=i.value;i.value=b+((b.length&&!b.endsWith(' '))?' ':'')+'yo';i.dispatchEvent(new InputEvent('input',{inputType:'insertCompositionText'}));i.dispatchEvent(new CompositionEvent('compositionend'));return 'swiped yo: field '+JSON.stringify(i.value)})()
 wait:800
-eval:(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m?m[1].trim().replace(/\\(.)/g,'$1'):null;console.log('[KBDGATE] K10 swiped-words-keep-their-space '+JSON.stringify({saved:v,PASS:v==='hi yo'}));return 'K10'})()
+eval:(()=>{const v=__aa.playerName({save:true});console.log('[KBDGATE] K10 swiped-words-keep-their-space '+JSON.stringify({saved:v,PASS:v==='hi yo'}));return 'K10'})()

@@ -49,6 +49,8 @@
 //   metrics:W:H:DPR       re-apply the device metrics mid-run, i.e. rotate the
 //                         emulated phone. Needs --mobile to have set the rest.
 //   eval:EXPR             Runtime.evaluate an expression, print the result
+//   probe:                install web/tools/gate-probe.js as window.__aa, the
+//                         helpers the gates share. Again after a reload.
 //   mark:TEXT             write a marker line into the console transcript
 //   cpu:RATE              throttle the CPU RATE times (CDP), 1 = full speed.
 //                         Use it AFTER the boot so only the measured part is slow.
@@ -106,6 +108,9 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, appendFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+// The `probe:` step's source: the helpers every gate shares (web/tools/gate-probe.js).
+const PROBE_SOURCE = readFileSync(new URL('./gate-probe.js', import.meta.url), 'utf8');
 
 // ---------------------------------------------------------------- arguments
 
@@ -565,6 +570,12 @@ async function main() {
             width: w, height: h, deviceScaleFactor: dpr, mobile: !!opt.mobile,
           });
           record(`[harness] metrics -> ${w}x${h} dpr ${dpr}`);
+          break;
+        }
+        case 'probe': {
+          // web/tools/gate-probe.js as window.__aa (the gates' shared helpers).
+          const r = await send('Runtime.evaluate', { expression: PROBE_SOURCE, returnByValue: true, awaitPromise: true });
+          record(`[harness] probe => ${JSON.stringify(r.result?.value ?? r.result?.description)}`);
           break;
         }
         case 'eval': {

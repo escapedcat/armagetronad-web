@@ -6,21 +6,24 @@ wait:3000
 key:Escape
 until:1:30000:[PERSISTSAVE] menu-leave
 wait:2000
-eval:(()=>{const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m&&m[1].trim().replace(/\\(.)/g,'$1');console.log('[TEXTGATE] D1 default-name '+JSON.stringify({saved:v,page:window.AA_DEFAULT_NAME||null,PASS:/^web_\d{4}$/.test(v||'')&&v===window.AA_DEFAULT_NAME}));return 'D1'})()
+probe:
+eval:(()=>{const v=__aa.playerName();return __aa.check('TEXTGATE','D1','default-name',{saved:v,page:window.AA_DEFAULT_NAME||null},/^web_\d{4}$/.test(v||'')&&v===window.AA_DEFAULT_NAME)})()
 # D2: A PROFILE SAVED BEFORE THE web_NNNN DEFAULT STILL SAYS web_user, and so
 # does every other such player: on the next load the page renames exactly
 # web_user, once, to a fresh web_NNNN. D3: a name the player chose is left
 # alone. Each sets PLAYER_1 in user.cfg, switches off the unload save for that
 # load (it would rewrite user.cfg from memory) and reloads.
-eval:(()=>{const p='/persist/var/user.cfg';const b=Module.FS.readFile(p);let c='';for(const x of b)c+=String.fromCharCode(x);c=c.replace(/^(\s*PLAYER_1\s+).*$/m,'$1web_user');Module.FS.writeFile(p,Uint8Array.from(c,ch=>ch.charCodeAt(0)));Module._aa_web_save_config=()=>{};return 'saved name set to web_user'})()
+eval:__aa.setPlayerName('web_user')
 wait:3000
 eval:location.reload()
 until:2:120000:[BOOT] autostart
 wait:6000
-eval:(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m&&m[1].trim().replace(/\\(.)/g,'$1');console.log('[TEXTGATE] D2 web-user-renamed-once '+JSON.stringify({saved:v,PASS:/^web_\d{4}$/.test(v||'')}));return 'D2'})()
-eval:(()=>{const p='/persist/var/user.cfg';const b=Module.FS.readFile(p);let c='';for(const x of b)c+=String.fromCharCode(x);c=c.replace(/^(\s*PLAYER_1\s+).*$/m,'$1escapedcat');Module.FS.writeFile(p,Uint8Array.from(c,ch=>ch.charCodeAt(0)));Module._aa_web_save_config=()=>{};return 'saved name set to escapedcat'})()
+probe:
+eval:(()=>{const v=__aa.playerName({save:true});return __aa.check('TEXTGATE','D2','web-user-renamed-once',{saved:v},/^web_\d{4}$/.test(v||''))})()
+eval:__aa.setPlayerName('escapedcat')
 wait:3000
 eval:location.reload()
 until:3:120000:[BOOT] autostart
 wait:6000
-eval:(()=>{Module._aa_web_save_config();const b=Module.FS.readFile('/persist/var/user.cfg');let c='';for(const x of b)c+=String.fromCharCode(x);const m=/^\s*PLAYER_1\s+(.*)$/m.exec(c);const v=m&&m[1].trim().replace(/\\(.)/g,'$1');console.log('[TEXTGATE] D3 chosen-name-kept '+JSON.stringify({saved:v,PASS:v==='escapedcat'}));return 'D3'})()
+probe:
+eval:(()=>{const v=__aa.playerName({save:true});return __aa.check('TEXTGATE','D3','chosen-name-kept',{saved:v},v==='escapedcat')})()
