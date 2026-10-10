@@ -1792,9 +1792,6 @@
         // the two lines swap order deterministically -- which is how
         // docs/evidence/m4-persist demonstrates that this check can fail.
         console.log('[PERSIST] runtime initialized, starting the game');
-        // Calling a wasm export before this point aborts the page under
-        // ASSERTIONS; the hidden-page leave timer checks this first.
-        window.AA_RUNTIME_READY = true;
         // The preloaded /data tree exists from here on and not one moment
         // earlier: the file packager appends ITS preRun callback after this
         // page's, so a preRun hook cannot read /data at all. That is why the
