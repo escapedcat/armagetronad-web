@@ -74,81 +74,102 @@ var AAPageConfig = (function () {
   // in 112 s of play, 0 in 110 s with the cut). Touch only; ?wallcut=0 turns
   // it off on a phone, ?wallcut=1 on anywhere.
 
+  var HEADER = '# appended at runtime by web/shell.html: ';
+  var given = function (v) { return v !== null && v !== undefined; };
+
+  // THE RULES, in the order their lines are appended. Each rule turns
+  // (touch, params) into a decision with choose(), and the rest is read off
+  // that decision: null means "write nothing" (then `stock` is the log line,
+  // or nothing if the rule has none); anything else is written as `lines`
+  // under `header`, and logged with `written` -- or `failed` if the write did
+  // not happen. `note` is an extra line logged before the rule's own.
+  var RULES = [
+    {
+      tag: 'camera',
+      choose: function (touch, p) {
+        var factor = given(p.cam) ? p.cam : (touch ? CAMERA_TOUCH_FACTOR : 1);
+        return factor === 1 ? null : { factor: factor, fromParam: given(p.cam) };
+      },
+      stock: function (touch, p) { return '[CAMERA] stock camera (factor 1' + (given(p.cam) ? ', from ?cam' : '') + ')'; },
+      header: function (d, touch) { return 'camera x' + d.factor + (touch ? ' (touch device)' : ''); },
+      lines: function (d) {
+        var out = [];
+        for (var k in CAMERA_BASE) out.push(k + ' ' + (Math.round(CAMERA_BASE[k] * d.factor * 1e4) / 1e4));
+        return out;
+      },
+      written: function (d) { return '[CAMERA] camera distance x' + d.factor + ' written to ' + AUTOEXEC + ' before main()'; },
+      failed: function (d, e) { return '[CAMERA] tuning skipped (factor ' + d.factor + '): ' + e; },
+    },
+    {
+      // 0 and 1 are the only meaningful values: ?sparks=2 never gets here (out
+      // of range, the page's readNumberParam logged it), and ?sparks=0.5 is in
+      // range but not a bool, so it is ignored out loud here.
+      tag: 'sparks',
+      note: function (touch, p) {
+        return given(p.sparks) && p.sparks !== 0 && p.sparks !== 1
+          ? '[SPARKS] ?sparks=' + p.sparks + ' ignored (want 0 or 1)' : null;
+      },
+      choose: function (touch, p) {
+        if (p.sparks === 0 || p.sparks === 1) return { value: p.sparks, why: ' (from ?sparks=' + p.sparks + ')' };
+        return touch ? { value: 'cheap', why: ' (touch device)' } : null;
+      },
+      stock: function () { return '[SPARKS] stock sparks, nothing written'; },
+      header: function (d) {
+        var what = d.value === 0 ? 'off' : d.value === 1 ? 'on' : 'on, priced for a phone';
+        return 'crash sparks ' + what + d.why;
+      },
+      lines: function (d) {
+        return d.value === 0 ? ['SPARKS 0'] : d.value === 1 ? ['SPARKS 1'] : SPARKS_CHEAP_LINES.slice();
+      },
+      written: function (d, lines) { return '[SPARKS] ' + lines.join(' / ') + ' written to ' + AUTOEXEC + ' before main()' + d.why; },
+      failed: function (d, e) { return '[SPARKS] tuning skipped (value ' + d.value + '): ' + e; },
+    },
+    {
+      tag: 'hints',
+      choose: function (touch) { return touch ? {} : null; },
+      header: function () { return 'no camera or glance hints on a touch device'; },
+      lines: function () { return TOUCH_HINTS_OFF.slice(); },
+      written: function () { return '[HINTS] camera and glance hints off (touch device)'; },
+      failed: function (d, e) { return '[HINTS] skipped: ' + e; },
+    },
+    {
+      tag: 'wallcut',
+      choose: function (touch, p) {
+        var on = given(p.wallcut) ? p.wallcut === 1 : !!touch;
+        return on ? { why: given(p.wallcut) ? '?wallcut=1' : 'touch device' } : null;
+      },
+      stock: function (touch) { return touch ? '[WALLS] wall cut off (?wallcut=0)' : null; },
+      header: function (d) { return 'wall cut (' + d.why + ')'; },
+      lines: function () { return ['WALL_CUT 1']; },
+      written: function () { return '[WALLS] WALL_CUT 1 written to ' + AUTOEXEC + ' before main()'; },
+      failed: function (d, e) { return '[WALLS] wall cut skipped: ' + e; },
+    },
+  ];
+
   // touch: is the primary input a finger. params: { cam, sparks, wallcut },
   // each a number or null (the page's readNumberParam has range-checked them
   // and logged any it ignored).
   //
   // Returns { text, sections }: text is what is appended to autoexec.cfg, and
-  // each section is { tag, written, ok, failed(e) } -- `ok` is the log line
-  // once the write has worked, `failed` the line if it did not; a section
-  // that writes nothing has only `ok`.
+  // each section is { tag, written, ok, failed(e), before } -- `ok` is the log
+  // line once the write has worked (or the only line, if nothing is written),
+  // `failed` the line if the write did not happen.
   var plan = function (touch, params) {
     var p = params || {};
-    var isNull = function (v) { return v === null || v === undefined; };
-    var sections = [];
-    var add = function (tag, header, body, ok, failed) {
-      sections.push({ tag: tag, written: body !== null,
-                      lines: body === null ? null : [''].concat([header], body, ['']),
-                      ok: ok, failed: failed });
-    };
-
-    // camera
-    var cam = isNull(p.cam) ? null : p.cam;
-    var factor = cam !== null ? cam : (touch ? CAMERA_TOUCH_FACTOR : 1);
-    if (factor === 1) {
-      add('camera', null, null, '[CAMERA] stock camera (factor 1' + (cam !== null ? ', from ?cam' : '') + ')');
-    } else {
-      var camLines = [];
-      for (var k in CAMERA_BASE) camLines.push(k + ' ' + (Math.round(CAMERA_BASE[k] * factor * 1e4) / 1e4));
-      add('camera', '# appended at runtime by web/shell.html: camera x' + factor + (touch ? ' (touch device)' : ''),
-          camLines,
-          '[CAMERA] camera distance x' + factor + ' written to ' + AUTOEXEC + ' before main()',
-          function (e) { return '[CAMERA] tuning skipped (factor ' + factor + '): ' + e; });
-    }
-
-    // sparks. 0 and 1 are the only meaningful values: ?sparks=2 never gets
-    // here (out of range, the page's readNumberParam logged it), and
-    // ?sparks=0.5 is in range but not a bool, so it is ignored out loud here.
-    var q = isNull(p.sparks) ? null : p.sparks;
-    var fromParam = q === 0 || q === 1;
-    var ignored = (q !== null && !fromParam) ? '[SPARKS] ?sparks=' + q + ' ignored (want 0 or 1)' : null;
-    var value = fromParam ? q : (touch ? 'cheap' : null);
-    if (value === null) {
-      add('sparks', null, null, '[SPARKS] stock sparks, nothing written');
-    } else {
-      var why = fromParam ? ' (from ?sparks=' + q + ')' : ' (touch device)';
-      var body = value === 0 ? ['SPARKS 0'] : value === 1 ? ['SPARKS 1'] : SPARKS_CHEAP_LINES.slice();
-      var what = value === 0 ? 'off' : value === 1 ? 'on' : 'on, priced for a phone';
-      add('sparks', '# appended at runtime by web/shell.html: crash sparks ' + what + why, body,
-          '[SPARKS] ' + body.join(' / ') + ' written to ' + AUTOEXEC + ' before main()' + why,
-          function (e) { return '[SPARKS] tuning skipped (value ' + value + '): ' + e; });
-    }
-    if (ignored) sections[sections.length - 1].before = ignored;
-
-    // hints
-    if (touch) {
-      add('hints', '# appended at runtime by web/shell.html: no camera or glance hints on a touch device',
-          TOUCH_HINTS_OFF.slice(),
-          '[HINTS] camera and glance hints off (touch device)',
-          function (e) { return '[HINTS] skipped: ' + e; });
-    }
-
-    // wall cut
-    var wc = isNull(p.wallcut) ? null : p.wallcut;
-    var cut = wc !== null ? wc === 1 : !!touch;
-    if (!cut) {
-      if (touch) add('wallcut', null, null, '[WALLS] wall cut off (?wallcut=0)');
-    } else {
-      add('wallcut', '# appended at runtime by web/shell.html: wall cut (' + (wc !== null ? '?wallcut=1' : 'touch device') + ')',
-          ['WALL_CUT 1'],
-          '[WALLS] WALL_CUT 1 written to ' + AUTOEXEC + ' before main()',
-          function (e) { return '[WALLS] wall cut skipped: ' + e; });
-    }
-
-    var text = '';
-    for (var i = 0; i < sections.length; i++) {
-      if (sections[i].lines) text += sections[i].lines.join('\n');
-    }
+    var text = '', sections = [];
+    RULES.forEach(function (r) {
+      var note = r.note ? r.note(touch, p) : null;
+      var d = r.choose(touch, p);
+      if (d === null) {
+        var stock = r.stock ? r.stock(touch, p) : null;
+        if (stock || note) sections.push({ tag: r.tag, written: false, ok: stock, before: note });
+        return;
+      }
+      var lines = r.lines(d);
+      text += [''].concat([HEADER + r.header(d, touch)], lines, ['']).join('\n');
+      sections.push({ tag: r.tag, written: true, ok: r.written(d, lines), before: note,
+                      failed: function (e) { return r.failed(d, e); } });
+    });
     return { text: text, sections: sections };
   };
 
@@ -166,7 +187,8 @@ var AAPageConfig = (function () {
     for (var i = 0; i < pl.sections.length; i++) {
       var s = pl.sections[i];
       if (s.before) log(s.before);
-      log(err && s.written ? s.failed(err) : s.ok);
+      var line = err && s.written ? s.failed(err) : s.ok;
+      if (line) log(line);
     }
     return pl;
   };
