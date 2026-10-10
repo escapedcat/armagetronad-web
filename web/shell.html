@@ -691,6 +691,7 @@
 
   <!-- @page-module web/page/game.js -->
   <!-- @page-module web/page/page-config.js -->
+  <!-- @page-module web/page/touch-input.js -->
 
   <script>
     const statusEl  = document.getElementById('status');
@@ -738,6 +739,10 @@
       send: (type, init) => document.dispatchEvent(new KeyboardEvent(type,
         Object.assign({ bubbles: true, cancelable: true }, init))),
     });
+    // TOUCH INPUT (web/page/touch-input.js): the held keys of every touch
+    // surface, and one reading of the game per tick for all of them. Created
+    // here, ticked once every surface below has subscribed. Desktop: null.
+    let touchInput = null;
 
     // Without preserveDrawingBuffer the canvas renders BLACK -- not "wrong
     // colours", not "flickering", solid black -- while the game underneath is
@@ -1200,9 +1205,6 @@
     // real hazard (a deferred keyup overtaking the next press of the same key)
     // to remove an imaginary one.
     (() => {
-      // The key codes and the event shape are web/page/game.js's.
-      const sendKey = (type, name) => game.key(type, name);
-
       const touchEl = document.getElementById('touch');
       // REUSED, NOT RE-DERIVED. The decision, its [TOUCH] line and
       // window.AA_TOUCH all moved above sizeCanvas (see the block there), so
@@ -1211,6 +1213,7 @@
       const decision = touchDecision;
       if (!decision.on) return;
       touchEl.hidden = false;
+      touchInput = AATouchInput.create(game, (line) => console.log(line));
 
       // ---- wiring ------------------------------------------------------
       //
@@ -1220,13 +1223,14 @@
       // even when the finger slides off the element it started on -- which on a
       // half-screen steering zone it constantly does.
       //
-      // The map is keyed by pointerId so two thumbs work: pressing both halves
-      // holds both turn keys, and lifting one releases only that one.
-      const active = new Map();
+      // Each finger is its own owner in touchInput, so two thumbs work:
+      // pressing both halves holds both turn keys, and lifting one releases
+      // only that one.
+      const owner = (ev) => 'btn:' + ev.pointerId;
       const down = (ev) => {
         const el = ev.currentTarget;
         const name = el.dataset.aakey;
-        if (!name || active.has(ev.pointerId)) return;
+        if (!name || touchInput.holds(owner(ev)) !== undefined) return;
         // preventDefault suppresses the compatibility mouse events and the
         // double-tap-zoom gesture. It does NOT stop propagation, which matters:
         // resumeAudio() ("SOUND ON A PHONE" below) listens on window for the
@@ -1244,23 +1248,15 @@
         // how a chat line gets closed, and the in-game menu needs it.
         const suppressed = name === 'Enter' && el.closest('#pad') !== null &&
                            game.context().driving;
-        active.set(ev.pointerId, { name, el, sent: !suppressed });
-        el.classList.add('aa-down');
+        // A suppressed press is held with no key: it shows, and sends nothing.
+        touchInput.press(owner(ev), suppressed ? null : name, el);
         try { el.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
         if (suppressed) {
           window.AA_PAD_ENTER_SUPPRESSED = (window.AA_PAD_ENTER_SUPPRESSED | 0) + 1;
           console.log('[TOUCH] pad Enter suppressed while driving (Enter is CHAT in a round)');
-          return;
         }
-        sendKey('keydown', name);
       };
-      const up = (ev) => {
-        const a = active.get(ev.pointerId);
-        if (!a) return;
-        active.delete(ev.pointerId);
-        a.el.classList.remove('aa-down');
-        if (a.sent) sendKey('keyup', a.name);
-      };
+      const up = (ev) => { touchInput.release(owner(ev)); };
       for (const el of touchEl.querySelectorAll('[data-aakey]')) {
         el.addEventListener('pointerdown', down);
         el.addEventListener('pointerup', up);
@@ -1272,65 +1268,33 @@
       // (CSS "THE DRIVING PAD"). A finger's key follows where it IS, not where
       // it landed: sliding from one half into the other releases the first
       // turn and presses the second, so a thumb can rock instead of lifting.
-      // The keys are the cross's own (ArrowLeft/Right/Down), counted per key
-      // so two thumbs on one half hold it until both lift.
+      // The keys are the cross's own (ArrowLeft/Right/Down); touchInput
+      // counts them, so two thumbs on one half hold it until both lift.
       const dp = document.getElementById('drivepad');
       const dpEls = { ArrowLeft: document.getElementById('dp-left'),
                       ArrowRight: document.getElementById('dp-right'),
                       ArrowDown: document.getElementById('dp-brake') };
-      const dpFingers = new Map();   // pointerId -> key
-      const dpHeld = new Map();      // key -> fingers on it
-      const dpKeyAt = (x, y) => {
-        if (y >= dpEls.ArrowDown.getBoundingClientRect().top - 6) return 'ArrowDown';
-        const r = dp.getBoundingClientRect();
-        return x < r.left + r.width / 2 ? 'ArrowLeft' : 'ArrowRight';
-      };
-      const dpPress = (key) => {
-        const n = (dpHeld.get(key) || 0) + 1;
-        dpHeld.set(key, n);
-        if (n > 1) return;
-        dpEls[key].classList.add('aa-down');
-        sendKey('keydown', key);
-      };
-      const dpRelease = (key) => {
-        const n = (dpHeld.get(key) || 0) - 1;
-        if (n > 0) { dpHeld.set(key, n); return; }
-        dpHeld.delete(key);
-        dpEls[key].classList.remove('aa-down');
-        sendKey('keyup', key);
-      };
+      const dpOwner = (ev) => 'dp:' + ev.pointerId;
+      const dpKeyAt = (ev) => AATouchInput.driveKeyAt(ev.clientX, ev.clientY,
+        dp.getBoundingClientRect(), dpEls.ArrowDown.getBoundingClientRect().top);
       dp.addEventListener('pointerdown', (ev) => {
         if (ev.target.closest('#dp-esc')) return;
         ev.preventDefault();
         try { dp.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
-        const key = dpKeyAt(ev.clientX, ev.clientY);
-        dpFingers.set(ev.pointerId, key);
-        dpPress(key);
+        const key = dpKeyAt(ev);
+        touchInput.press(dpOwner(ev), key, dpEls[key]);
       });
       dp.addEventListener('pointermove', (ev) => {
-        const was = dpFingers.get(ev.pointerId);
+        const was = touchInput.holds(dpOwner(ev));
         if (!was) return;
-        const key = dpKeyAt(ev.clientX, ev.clientY);
+        const key = dpKeyAt(ev);
         if (key === was) return;
-        dpFingers.set(ev.pointerId, key);
-        dpRelease(was);
-        dpPress(key);
+        touchInput.press(dpOwner(ev), key, dpEls[key]);   // lets go of `was` first
         console.log('[TOUCH] slid from ' + was + ' to ' + key);
       });
-      const dpLift = (ev) => {
-        const key = dpFingers.get(ev.pointerId);
-        if (!key) return;
-        dpFingers.delete(ev.pointerId);
-        dpRelease(key);
-      };
+      const dpLift = (ev) => { touchInput.release(dpOwner(ev)); };
       dp.addEventListener('pointerup', dpLift);
       dp.addEventListener('pointercancel', dpLift);
-      const dpReleaseAll = (why) => {
-        if (!dpFingers.size) return;
-        for (const key of dpFingers.values()) dpRelease(key);
-        dpFingers.clear();
-        console.log('[TOUCH] driving pad released: ' + why);
-      };
       // Esc on the driving pad is an ordinary pad key (data-aakey="Escape",
       // the generic handlers above): it reacts on press like every other
       // button. It was a 500 ms long press at first, against accidental
@@ -1347,34 +1311,17 @@
       // THE GAME ANSWERS: game.context() (web/page/game.js has the bits, the
       // "driving" policy and why calling into the wasm from here is safe). A
       // tap is Enter unless the player is driving; before main() and on any
-      // failure the answer is "not driving".
-      // RELEASING THE HELD KEYS ON EVERY CHANGE IS A BUG FIX, NOT TIDINESS. A
-      // player holding a turn when their cycle dies would otherwise have the
-      // zone go display:none under their thumb, and a pointerup on an element
-      // with no box is not guaranteed to arrive -- so ArrowLeft would stay
-      // down for ever, from the game's point of view, and steer the next
-      // round. Pointer capture does not save this: the specification releases
-      // it implicitly on removal from the document, and browsers differ on
-      // whether display:none counts.
-      const releaseAllKeys = (why) => {
-        if (!active.size) return;
-        for (const [, a] of active) {
-          a.el.classList.remove('aa-down');
-          sendKey('keyup', a.name);
-        }
-        console.log('[TOUCH] released ' + active.size + ' held key(s): ' + why);
-        active.clear();
-      };
-
+      // failure the answer is "not driving". When driving starts or stops,
+      // every held key is let go (touch-input.js says why that is a bug fix).
       let lastCtx = -1;
-      const applyContext = () => {
-        const c = game.context();
+      const applyContext = (state) => {
+        const c = state.context;
         const ctx = c.raw;
         if (ctx === lastCtx) return;
         const wasDriving = lastCtx >= 0 && AAGame.readContext(lastCtx).driving;
         lastCtx = ctx;
         const driving = c.driving;
-        if (driving !== wasDriving) { releaseAllKeys('input context changed'); dpReleaseAll('input context changed'); }
+        if (driving !== wasDriving) touchInput.releaseAll('input context changed');
         touchEl.classList.toggle('aa-driving', driving);
         // One machine-readable line per transition, so the touch gate can
         // assert the state the game was in rather than inferring it from a
@@ -1387,11 +1334,7 @@
       };
       // The raw bits, for the gates, not for the page.
       window.AA_INPUT_CONTEXT = () => game.context().raw;
-      // 250 ms is the appearance only -- a control that is a quarter-second
-      // late to appear is invisible to a player, and every tap re-reads the
-      // context itself, so nothing acts on a stale value.
-      setInterval(applyContext, 250);
-      applyContext();
+      touchInput.subscribe(applyContext);
 
       // ---- the tap-anywhere layer ---------------------------------------
       //
@@ -1399,14 +1342,13 @@
       // test, because "tap the screen" has to mean a tap. Enter is a
       // destructive key in a menu -- it commits whatever row is selected --
       // and a layer that fired on first contact would commit on a thumb
-      // brushing the glass while the player is reading. 24 px and 700 ms are
-      // the usual click-slop shape; anything longer or further is a drag and
-      // is ignored rather than treated as a press.
+      // brushing the glass while the player is reading. AATouchInput.notATap
+      // has the slop; anything longer or further is a drag and is ignored
+      // rather than treated as a press.
       //
-      // THE CONTEXT IS RE-READ AT pointerup, not trusted from the poll. The
-      // 250 ms timer above only decides what is on screen; a round that ended
-      // between a finger landing and lifting must not send a turn.
-      const TAP_SLOP_PX = 24, TAP_MS = 700;
+      // THE CONTEXT IS RE-READ AT pointerup, not trusted from the tick. The
+      // tick only decides what is on screen; a round that ended between a
+      // finger landing and lifting must not send a turn.
       const taps = new Map();
       const tapzone = document.getElementById('tapzone');
       tapzone.addEventListener('pointerdown', (ev) => {
@@ -1418,11 +1360,9 @@
         if (!t) return;
         taps.delete(ev.pointerId);
         if (!fire) return;
-        const moved = Math.hypot(ev.clientX - t.x, ev.clientY - t.y);
-        const held = Date.now() - t.t;
-        if (moved > TAP_SLOP_PX || held > TAP_MS) {
-          console.log('[TOUCH] tap ignored (moved ' + Math.round(moved) +
-                      'px, held ' + held + 'ms)');
+        const notTap = AATouchInput.notATap(t, ev.clientX, ev.clientY, Date.now());
+        if (notTap) {
+          console.log('[TOUCH] tap ignored (' + notTap + ')');
           return;
         }
         if (game.context().driving) {
@@ -1446,8 +1386,7 @@
           console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
           return;
         }
-        sendKey('keydown', 'Enter');
-        sendKey('keyup', 'Enter');
+        game.press('Enter');
       };
       tapzone.addEventListener('pointerup',     (ev) => endTap(ev, true));
       tapzone.addEventListener('pointercancel', (ev) => endTap(ev, false));
@@ -1658,9 +1597,9 @@
         onField: () => onField,
         toggle: (why) => { if (document.activeElement === ime) close(why); else open(); },
       };
-      setInterval(() => {
+      touchInput.subscribe((state) => {
         if (!game.started()) return;
-        const field = game.textField();
+        const field = state.field;
         const now = field !== 'none';
         // A PASSWORD PROMPT GETS A PASSWORD FIELD: the phone keyboard then
         // offers no suggestions and learns nothing typed. Switched before the
@@ -1681,15 +1620,15 @@
         // watching, between rounds), Enter is the chat key (config/default.cfg). While
         // driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS A
         // MENU KEY ONLY" above); in menus and local games it is plain Enter.
-        const c = game.context();
-        const chat = game.chatPossible() && !c.menu && !c.cycle;
+        const c = state.context;
+        const chat = state.chatPossible && !c.menu && !c.cycle;
         if (chat !== chatLabel) {
           chatLabel = chat;
           padEnter.textContent = chat ? 'Chat' : 'Enter';
           padEnter.setAttribute('aria-label', chat ? 'Chat' : 'Enter');
           console.log('[KBD] pad Enter label: ' + padEnter.textContent);
         }
-      }, 100);
+      });
     })();
 
     // ---- LOOKING AROUND --------------------------------------------------
@@ -1705,14 +1644,9 @@
     (() => {
       if (!window.AA_TOUCH) return;
       const zone = document.getElementById('lookzone');
-      const touchEl = document.getElementById('touch');
       const fingers = new Map();   // pointerId -> bit
       let sent = 0;
-      const bitAt = (x, y) => {
-        const r = zone.getBoundingClientRect();
-        if (y >= r.top + r.height * 0.75) return 4;
-        return x < r.left + r.width / 2 ? 1 : 2;
-      };
+      const bitAt = (x, y) => AATouchInput.lookBitAt(x, y, zone.getBoundingClientRect());
       const send = () => {
         let bits = 0;
         for (const b of fingers.values()) bits |= b;
@@ -1734,13 +1668,20 @@
       const lift = (e) => { fingers.delete(e.pointerId); send(); };
       zone.addEventListener('pointerup', lift);
       zone.addEventListener('pointercancel', lift);
-      new MutationObserver(() => {
-        if (!touchEl.classList.contains('aa-driving') && (fingers.size || sent)) {
+      touchInput.subscribe((state) => {
+        if (!state.context.driving && (fingers.size || sent)) {
           fingers.clear();
           send();
         }
-      }).observe(touchEl, { attributes: true, attributeFilter: ['class'] });
+      });
     })();
+
+    // Every touch surface has subscribed: one reading of the game every
+    // 100 ms from here on, and the first one now.
+    if (touchInput) {
+      setInterval(touchInput.tick, 100);
+      touchInput.tick();
+    }
 
     // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------
     // The maintainer's phone played in silence for 3-7 minutes before the

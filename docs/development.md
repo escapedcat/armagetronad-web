@@ -145,6 +145,9 @@ mechanism.
     `/data/webdefaults/autoexec.cfg` before `main()` (touch camera, cheap
     sparks, no keyboard hints, the wall cut, and their URL overrides), and
     writes them in one go.
+  - `web/page/touch-input.js` holds the keys every touch surface presses (a
+    key goes down once and up once, however many fingers hold it), reads the
+    game once per 100 ms tick for all of them, and has the surfaces' geometry.
   - Their tests run in Node with a fake game, no browser and no build:
     `node --test 'web/test/*.test.mjs'`. CI runs them on every pull request.
 - **Where the history lives:**
