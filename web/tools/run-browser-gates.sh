@@ -28,7 +28,6 @@ shift
 # shellcheck source=web/tools/gate-env.sh
 . web/tools/gate-env.sh
 HTTP=$GATE_HTTP_PORT
-DEV=$GATE_DEVTOOLS_PORT
 GATES=("$@")
 [ ${#GATES[@]} -eq 0 ] && GATES=(touch-gate portrait-boot-gate drive-pad-gate look-gate
   game-keyboard-gate default-name-gate menu-gate touch-hints-gate-phone touch-hints-gate-desk
@@ -46,8 +45,7 @@ PHONE=412,915,3   # --mobile W,H,DPR: a phone in portrait
 run() { # run <name> <steps> <url> [driver args...]
   local name=$1 steps=$2 url=$3; shift 3
   rm -rf "${OUT:?}/$name"
-  node web/tools/drive-browser.mjs --port "$DEV" --out "$OUT/$name" --url "$url" \
-    --script-file "web/tools/$steps.steps" "$@" > "$OUT/$name.driver.log" 2>&1
+  drive_page "$OUT/$name" "$url" "web/tools/$steps.steps" "$@"
   echo "$name driver exit $?" >> "$OUT/exits.txt"
 }
 : > "$OUT/exits.txt"

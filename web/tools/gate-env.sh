@@ -97,13 +97,21 @@ gate_relay() {
     { echo "the relay did not come up" >&2; cat "$OUT/relay.log" >&2; exit 1; }
 }
 
+# drive_page <out-dir> <url> <steps-file> [driver args...]: the browser
+# driver, headless, on GATE_DEVTOOLS_PORT; its own output in <out-dir>/driver.txt.
+drive_page() {
+  _out=$1; _url=$2; _steps=$3; shift 3
+  mkdir -p "$_out"
+  node web/tools/drive-browser.mjs --out "$_out" --port "$GATE_DEVTOOLS_PORT" "$@" \
+    --url "$_url" --script-file "$_steps" > "$_out/driver.txt" 2>&1
+}
+
 # gate_drive [driver args...]: the page, joined to the relay, through the steps.
 # GATE_QUERY is appended to the URL's query (e.g. "&leaveafter=5").
 gate_drive() {
-  node web/tools/drive-browser.mjs --out "$OUT" --port "$GATE_DEVTOOLS_PORT" "$@" \
-    --url "http://localhost:$GATE_HTTP_PORT/armagetronad.html?bridge=ws://127.0.0.1:$GATE_RELAY_PORT$GATE_QUERY" \
-    --script-file "$STEPS" > "$OUT/driver.txt" 2>&1 \
-    || echo "(driver exited non-zero, see $OUT/driver.txt)"
+  drive_page "$OUT" \
+    "http://localhost:$GATE_HTTP_PORT/armagetronad.html?bridge=ws://127.0.0.1:$GATE_RELAY_PORT$GATE_QUERY" \
+    "$STEPS" "$@" || echo "(driver exited non-zero, see $OUT/driver.txt)"
 }
 
 # gate_stop_server [settle-seconds]: the server's log into $OUT/server.log.
