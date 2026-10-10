@@ -82,15 +82,6 @@ counter to survive nested submenus, it has state of its own that can drift from
 the game's, and it still would not see uMenu::Message. A getter has no state,
 cannot drift, and is read at exactly the moment the answer is needed.
 
-CALLING IT FROM A TAP HANDLER IS SAFE, and the reason is specific rather than
-optimistic. The game spends nearly all of its time parked inside an Asyncify
-unwind, so calling into wasm from a DOM event is only safe for a function that
-cannot itself yield. This one reads a static bool and walks at most MAX_PLAYERS
-pointers; it calls nothing that can reach emscripten_sleep, so Asyncify does
-not instrument it and there is no second unwind to start. That is the same
-argument the unload backstop's aa_web_save_config already stands on -- and this
-function is strictly weaker, because it writes nothing at all.
-
 WHY NOT A LINE IN eWebPersist.cpp. That file is about making a changed setting
 durable; this is about input.
 */
@@ -240,28 +231,22 @@ logout or a timeout goes through sn_DisconnectUser without touching the kick
 count. So web/shell.html, once the page has been hidden for a while, asks for
 exactly that disconnect.
 
-WHY A FLAG AND A PER-FRAME TASK, NOT A DIRECT CALL. The page's timer fires in
-a browser event, and the game may be paused inside an Asyncify sleep at that
-moment; running the disconnect from there would re-enter the game in the
-middle of its own stack. aa_web_request_leave() only sets a flag -- the same
-kind of export the touch pad already calls -- and the disconnect runs from the
-game's own frame loop (rPerFrameTask, called from rSysDep::SwapGL), exactly as
-if the player had picked Disconnect.
+The disconnect runs from the game's frame loop (the header says why), exactly
+as if the player had picked Disconnect.
 */
 
 void ret_to_MainMenu(); // src/tron/gGame.cpp -- what the in-game menu's Disconnect calls
 
 static bool sg_leaveRequested = false;
 
-// Called by the page (web/page/game.js, requestLeave). Sets a flag and nothing else: it must not reach
-// anything that could yield, because it runs from a browser timer.
+// Called by the page (web/page/game.js, requestLeave).
 extern "C" EMSCRIPTEN_KEEPALIVE void aa_web_request_leave( void )
 {
     sg_leaveRequested = true;
 }
 
 // 1 while connected to a server, so the page knows whether leaving means
-// anything. Same contract as aa_web_request_leave: reads a value, no yield.
+// anything.
 extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_connected( void )
 {
     return sn_GetNetState() == nCLIENT ? 1 : 0;
@@ -304,18 +289,13 @@ a binding uses, so nothing in the game's source has to change. They are acted
 on through uPlayerPrototype::PlayerConfig(0)->Act, which is exactly what a key
 bound to player 1 calls (uBindPlayer::DoActivate, src/ui/uInput.cpp). The
 tooltip counter is not touched; the touch page switches those hints off.
-
-WHY A FLAG AND A PER-FRAME TASK, NOT A DIRECT CALL. Same reason as the leave
-request above: the page's touch events can fire while the game is paused
-inside an Asyncify sleep, so aa_web_look() only stores the bits, and the
-actions run from the game's own frame loop (rPerFrameTask, from SwapGL).
 */
 
 static int se_lookWanted = 0;   // bits the page asks for: 1 left, 2 right, 4 back
 static int se_lookApplied = 0;  // bits last pressed in the game
 
-// Called by the page from touch events (web/page/game.js, look). Stores the bits and nothing
-// else: it must not reach anything that could yield.
+// Called by the page from touch events (web/page/game.js, look); se_LookApply
+// acts on the bits from the frame loop.
 extern "C" EMSCRIPTEN_KEEPALIVE void aa_web_look( int bits )
 {
     se_lookWanted = bits & 7;
