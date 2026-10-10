@@ -1,6 +1,7 @@
 # Task 2 test: a fresh profile gets a web_NNNN default, not web_user.
 until:1:120000:[BOOT] autostart
-wait:9000
+probe:
+eval:__aa.waitFor(()=>__aa.ctx().menu,30000)
 key:Enter
 wait:3000
 key:Escape

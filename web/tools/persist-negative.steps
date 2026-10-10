@@ -109,7 +109,8 @@ shot:00-boot1-ready
 # What is in /persist before anything has run. Each driver run creates a fresh
 # temp browser profile, so IndexedDB starts empty and this must be an empty
 # mount -- which is also what makes the nonce comparison later meaningful.
-eval:(()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot1-before-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})()
+probe:
+eval:__aa.persistDump('boot1-before-play')
 
 # Watch libidbfs.js's own persist state machine. onAutoPersistStateChanged is
 # called with true when a MEMFS -> IndexedDB sync starts and with false only
@@ -143,7 +144,8 @@ mark:GAME-BOOT-ALONE-TRIGGERED-A-PERSIST
 wait:6000
 shot:01-boot1-language-menu
 
-eval:(()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot1-after-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})()
+probe:
+eval:__aa.persistDump('boot1-after-play')
 
 # THE SENTINEL. A nonce minted in this page load, written through the ordinary
 # FS write path (open/write/close) -- the same path the game's std::ofstream
@@ -178,7 +180,8 @@ shot:02-boot2-ready
 # The whole point of the milestone: /persist in a page that has written
 # nothing. user.cfg's byte count and hash must equal boot 1's, and probe_text
 # must contain boot 1's nonce.
-eval:(()=>{const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:'boot2-before-play',error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));return 'listed'})()
+probe:
+eval:__aa.persistDump('boot2-before-play')
 
 eval:(async()=>{const P='boot2-idb';let names=null;try{if(indexedDB.databases)names=(await indexedDB.databases()).map(d=>d.name)}catch(e){names='ERR:'+e}const R=await new Promise((res)=>{const r=indexedDB.open('/persist',21);r.onupgradeneeded=(e)=>{try{e.target.transaction.abort()}catch(_){}res({db:null,absent:true})};r.onsuccess=()=>res({db:r.result,absent:false});r.onerror=()=>res({db:null,absent:true,err:String(r.error)});r.onblocked=()=>res({db:null,absent:false,err:'blocked'})});let stores=null,count=null,keys=null;if(R.db){stores=[...R.db.objectStoreNames];if(stores.includes('FILE_DATA')){const t=R.db.transaction(['FILE_DATA'],'readonly'),q=t.objectStore('FILE_DATA').getAllKeys();const k=await new Promise((res,rej)=>{q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});count=k.length;keys=k.slice(0,120)}R.db.close()}console.log('[PERSISTIDB] '+JSON.stringify({phase:P,databases:names,absent:!!R.absent,open_error:R.err||null,stores,count,keys}));return 'idb read'})()
 

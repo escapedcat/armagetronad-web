@@ -50,6 +50,34 @@
     return id;
   };
 
+  // What the game would ask: game.context() (menu / cycle / driving), from the
+  // page's own Game module.
+  aa.ctx = () => AA_GAME.context();
+
+  // Resolves once cond() is true, polling every 100 ms, or after ms with
+  // TIMEOUT -- the gate's next check then says whether the thing happened.
+  // A wait on what the gate is waiting FOR, instead of a fixed sleep.
+  aa.waitFor = (cond, ms = 30000) => new Promise((resolve) => {
+    const t0 = Date.now();
+    const poll = () => {
+      let ok = false;
+      try { ok = !!cond(); } catch (e) { ok = false; }
+      if (ok) return resolve('ok after ' + (Date.now() - t0) + 'ms');
+      if (Date.now() - t0 >= ms) return resolve('TIMEOUT after ' + ms + 'ms');
+      setTimeout(poll, 100);
+    };
+    poll();
+  });
+
+  // The M4 persistence probe: every file under /persist with its size, and
+  // user.cfg's length and djb2-xor hash, as one [PERSISTFS] line that
+  // docs/evidence/m4-persist/check-persist-transcript.mjs reads. Byte for
+  // byte the line the persist gates used to paste three times each.
+  aa.persistDump = (phase) => {
+    const F=Module.FS,files=[];const walk=(p)=>{for(const e of F.readdir(p)){if(e==='.'||e==='..')continue;const f=p+'/'+e,s=F.stat(f);if(F.isDir(s.mode)){files.push({path:f+'/',size:null});walk(f)}else{files.push({path:f,size:s.size})}}};let err=null;try{walk('/persist')}catch(e){err=String(e)}const rd=(p)=>{try{return F.readFile(p,{encoding:'utf8'})}catch(e){return null}};const h=(s)=>{if(s===null)return null;let x=5381;for(let i=0;i<s.length;i++)x=((x*33)^s.charCodeAt(i))>>>0;return x.toString(16)};const c=rd('/persist/var/user.cfg'),pr=rd('/persist/m4-probe.txt');console.log('[PERSISTFS] '+JSON.stringify({phase:phase,error:err,entry_count:files.length,entries:files.slice(0,120),user_cfg:{present:c!==null,bytes:c===null?null:c.length,hash:h(c)},probe_text:pr}));
+    return 'listed';
+  };
+
   window.__aa = aa;
   return 'gate probe installed';
 })()

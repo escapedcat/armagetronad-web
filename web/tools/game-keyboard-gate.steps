@@ -16,12 +16,12 @@
 until:1:120000:[BOOT] autostart
 probe:
 eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
-wait:6000
+eval:__aa.waitFor(()=>__aa.ctx().menu,30000)
 key:Enter
 wait:3000
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K1 closed-on-accept '+JSON.stringify({focused:f,PASS:!f}));return 'K1'})()
 key:Down
-wait:1000
+eval:__aa.waitFor(()=>document.activeElement.id==='aa-ime',5000)
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K2 opens-on-name '+JSON.stringify({focused:f,PASS:f}));return 'K2'})()
 eval:(()=>{const i=document.getElementById('aa-ime');window.__nameBefore=__aa.playerName({save:true});i.value=' Zoë';i.dispatchEvent(new InputEvent('input',{inputType:'insertText',data:'Zoë'}));return 'typed Zoë after '+window.__nameBefore})()
 wait:800
@@ -33,13 +33,13 @@ wait:800
 eval:(()=>{const v=__aa.playerName({save:true});const want=window.__nameBefore+'Zoë';console.log('[KBDGATE] K3 typed-into-the-game '+JSON.stringify({saved:v,PASS:!!v&&v.startsWith(want)}));console.log('[KBDGATE] K4 suggestion-exact '+JSON.stringify({PASS:!!v&&v.startsWith(want+'Hi')}));console.log('[KBDGATE] K5 real-key-once '+JSON.stringify({PASS:!!v&&v===want+'Hix'}));return 'K3-K5'})()
 shot:name-typed
 eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'keyboard enter'})()
-wait:1500
+eval:__aa.waitFor(()=>document.activeElement.id!=='aa-ime',5000)
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K6 enter-closes '+JSON.stringify({focused:f,PASS:!f}));return 'K6'})()
 tap:#tapzone
-wait:600
+eval:__aa.waitFor(()=>document.activeElement.id==='aa-ime',5000)
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K8 tap-on-picture-shows-keyboard '+JSON.stringify({focused:f,PASS:f}));return 'K8'})()
 tap:#tapzone
-wait:600
+eval:__aa.waitFor(()=>document.activeElement.id!=='aa-ime',5000)
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K9 tap-on-picture-hides-keyboard '+JSON.stringify({focused:f,PASS:!f}));return 'K9'})()
 tap:#tapzone
 wait:600
