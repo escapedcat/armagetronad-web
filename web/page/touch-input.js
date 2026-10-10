@@ -91,6 +91,42 @@ var AATouchInput = (function () {
     };
   };
 
+  // ---- ENTER IS CHAT IN A ROUND ---------------------------------------------
+  // The game binds Enter to CHAT during a round (config/default.cfg: KEYBOARD
+  // 13 PLAYER_BIND CHAT 1). A mid-round Enter opens the "Say:" line, and every
+  // arrow after it types into the chat instead of steering until Escape --
+  // probed on 2026-09-06: the turn counters froze after one Enter. So Enter
+  // from a touch control follows these rules, all in terms of game.context().
+
+  // The pad's Enter (M7.1): a menu key only. While driving the press shows
+  // and nothing is sent. The cross and Esc are untouched: Escape is how a chat
+  // line gets closed, and the in-game menu needs it.
+  var padSendsEnter = function (context) { return !context.driving; };
+
+  // What a tap on the picture means:
+  //   'steering'  the player is driving: the picture is the steering halves
+  //   'keyboard'  a text field is highlighted: show or hide the phone keyboard
+  //               (Enter there would send the chat line, and folding the
+  //               keyboard is what a tap on the picture means on a phone)
+  //   'pad-chat'  portrait, in a round with no menu: Enter would open chat,
+  //               and the pad's Enter (labelled "Chat" then) is how that is
+  //               done, so a stray tap doesn't. Landscape has no pad.
+  //   'enter'     Enter.
+  var tapMeans = function (context, o) {
+    if (context.driving) return 'steering';
+    if (o.onField) return 'keyboard';
+    if (o.gameboy && !context.menu) return 'pad-chat';
+    return 'enter';
+  };
+
+  // Does Enter open the chat line right now? On a server, in a game
+  // (chatPossible: not while connecting, logging in or loading), with no menu
+  // up and no cycle of ours alive (crashed, watching, between rounds). The
+  // pad's Enter is labelled "Chat" then; in menus and local games it is Enter.
+  var enterOpensChat = function (state) {
+    return !!state.chatPossible && !state.context.menu && !state.context.cycle;
+  };
+
   // ---- geometry ------------------------------------------------------------
   // rects are DOMRect-shaped: { left, top, width, height }.
 
@@ -123,6 +159,7 @@ var AATouchInput = (function () {
     return null;
   };
 
-  return { create: create, driveKeyAt: driveKeyAt, lookBitAt: lookBitAt, notATap: notATap,
+  return { create: create, padSendsEnter: padSendsEnter, tapMeans: tapMeans,
+           enterOpensChat: enterOpensChat, driveKeyAt: driveKeyAt, lookBitAt: lookBitAt, notATap: notATap,
            TAP_SLOP_PX: TAP_SLOP_PX, TAP_MS: TAP_MS };
 })();

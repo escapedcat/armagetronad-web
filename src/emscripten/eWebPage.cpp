@@ -1,12 +1,12 @@
 /*
-Armagetron Advanced -- what web/shell.html asks the game, and what it asks the
+Armagetron Advanced -- what the web page asks the game, and what it asks the
 game to do.
 
 This module is everything the page asks the game (which input a tap means, is
 a text field highlighted, is a chat line open or possible, is it connected)
 and every request the page queues for the game loop (leave the server, look
 around). Each section below is one question or one request; the exports keep
-the names web/shell.html calls.
+the names web/page/game.js calls (the page's one caller).
 
 ONE SAFETY RULE COVERS EVERY EXPORT HERE. The page calls them from browser
 events -- taps, timers, touch handlers, polls -- and the game spends nearly all
@@ -65,11 +65,11 @@ aa_web_input_context() returns a bit field, not a verdict:
 
     bit 0  AA_WEB_CTX_MENU     uMenu::MenuActive() -- a uMenu is on screen and
                                its event loop is the thing reading keys.
-    bit 1  AA_WEB_CTX_DRIVING  a LOCAL player has an object and that object is
+    bit 1  AA_WEB_CTX_CYCLE    a LOCAL player has an object and that object is
                                Alive(), i.e. there is a cycle to steer.
 
-The policy that combines them lives in web/shell.html, where it can be read
-next to the handler it governs and where a gate can assert on it. Keeping the
+The policy that combines them lives in web/page/game.js (context().driving),
+where web/test/game.test.mjs checks it. Keeping the
 two facts separate is also what makes the third state visible: neither bit set
 is the welcome message, the round-end pause and the first frames of a boot --
 places that want Enter and have no cycle, and that a single "is a menu active"
@@ -82,25 +82,14 @@ counter to survive nested submenus, it has state of its own that can drift from
 the game's, and it still would not see uMenu::Message. A getter has no state,
 cannot drift, and is read at exactly the moment the answer is needed.
 
-CALLING IT FROM A TAP HANDLER IS SAFE, and the reason is specific rather than
-optimistic. The game spends nearly all of its time parked inside an Asyncify
-unwind, so calling into wasm from a DOM event is only safe for a function that
-cannot itself yield. This one reads a static bool and walks at most MAX_PLAYERS
-pointers; it calls nothing that can reach emscripten_sleep, so Asyncify does
-not instrument it and there is no second unwind to start. That is the same
-argument the unload backstop's aa_web_save_config already stands on -- and this
-function is strictly weaker, because it writes nothing at all.
-
 WHY NOT A LINE IN eWebPersist.cpp. That file is about making a changed setting
 durable; this is about input.
 */
 
-// Kept in sync by hand with the two constants of the same name in
-// web/shell.html. There is no way to share a number between a C++ file and a
-// --shell-file, so the check is the touch gate: it asserts the context value
-// the page reports against the state it drove the game into.
+// The page's copies are CTX_MENU and CTX_CYCLE in web/page/game.js.
+// web/test/game.test.mjs reads these two lines and fails if they differ.
 #define AA_WEB_CTX_MENU     1
-#define AA_WEB_CTX_DRIVING  2
+#define AA_WEB_CTX_CYCLE    2
 
 // ---------------------------------------------------------------------------
 // EMSCRIPTEN_KEEPALIVE puts it in the export table and, with EXPORT_KEEPALIVE
@@ -141,7 +130,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_input_context( void )
         eNetGameObject * object = net->Object();
         if ( object && object->Alive() )
         {
-            ctx |= AA_WEB_CTX_DRIVING;
+            ctx |= AA_WEB_CTX_CYCLE;
             break;
         }
     }
@@ -160,8 +149,8 @@ THE PHONE KEYBOARD TYPES INTO THE GAME'S OWN TEXT FIELDS.
 A phone has no keyboard until a text field in the page is focused, and the
 game's text fields (Player Setup's name, Custom Connect, the chat line) are
 drawn into the canvas. So the page keeps a hidden <input> for the phone
-keyboard and turns what is typed into key events for SDL (web/shell.html,
-"THE PHONE KEYBOARD"). What the page cannot see is WHEN one of the game's
+keyboard and turns what is typed into key events for SDL
+(web/page/phone-keyboard.js). What the page cannot see is WHEN one of the game's
 text fields is highlighted; this section tells it.
 
 uMenuItemString::Render calls se_WebTextSelected() each time it draws a
@@ -239,41 +228,35 @@ background, or whose phone switched apps, stops sending input and is kicked.
 A regular logout is not a kick: the in-game menu's "Disconnect" runs
 ret_to_MainMenu(), which logs out through sn_SetNetState(nSTANDALONE), and a
 logout or a timeout goes through sn_DisconnectUser without touching the kick
-count. So web/shell.html, once the page has been hidden for a while, asks for
+count. So the page (web/page/page-lifecycle.js), once hidden for a while, asks for
 exactly that disconnect.
 
-WHY A FLAG AND A PER-FRAME TASK, NOT A DIRECT CALL. The page's timer fires in
-a browser event, and the game may be paused inside an Asyncify sleep at that
-moment; running the disconnect from there would re-enter the game in the
-middle of its own stack. aa_web_request_leave() only sets a flag -- the same
-kind of export the touch pad already calls -- and the disconnect runs from the
-game's own frame loop (rPerFrameTask, called from rSysDep::SwapGL), exactly as
-if the player had picked Disconnect.
+The disconnect runs from the game's frame loop (the header says why), exactly
+as if the player had picked Disconnect.
 */
 
 void ret_to_MainMenu(); // src/tron/gGame.cpp -- what the in-game menu's Disconnect calls
 
-static bool sg_leaveRequested = false;
+static bool se_leaveRequested = false;
 
-// Called by web/shell.html. Sets a flag and nothing else: it must not reach
-// anything that could yield, because it runs from a browser timer.
+// Called by the page (web/page/game.js, requestLeave).
 extern "C" EMSCRIPTEN_KEEPALIVE void aa_web_request_leave( void )
 {
-    sg_leaveRequested = true;
+    se_leaveRequested = true;
 }
 
 // 1 while connected to a server, so the page knows whether leaving means
-// anything. Same contract as aa_web_request_leave: reads a value, no yield.
+// anything.
 extern "C" EMSCRIPTEN_KEEPALIVE int aa_web_connected( void )
 {
     return sn_GetNetState() == nCLIENT ? 1 : 0;
 }
 
-static void sg_LeaveIfRequested()
+static void se_LeaveIfRequested()
 {
-    if ( !sg_leaveRequested )
+    if ( !se_leaveRequested )
         return;
-    sg_leaveRequested = false;
+    se_leaveRequested = false;
     if ( sn_GetNetState() != nCLIENT )
         return;
     emscripten_log( EM_LOG_CONSOLE, "[LEAVE] page hidden: leaving the server with a regular logout" );
@@ -284,7 +267,7 @@ static void sg_LeaveIfRequested()
 // Registered before se_lookTask below, as it was when the two lived in
 // eWebLeave.o and eWebLook.o (linked in that order): rPerFrameTask inserts at
 // the head of its list, so the look task still runs first in each frame.
-static rPerFrameTask sg_leaveTask( &sg_LeaveIfRequested );
+static rPerFrameTask se_leaveTask( &se_LeaveIfRequested );
 
 /*
 ===========================================================================
@@ -306,18 +289,13 @@ a binding uses, so nothing in the game's source has to change. They are acted
 on through uPlayerPrototype::PlayerConfig(0)->Act, which is exactly what a key
 bound to player 1 calls (uBindPlayer::DoActivate, src/ui/uInput.cpp). The
 tooltip counter is not touched; the touch page switches those hints off.
-
-WHY A FLAG AND A PER-FRAME TASK, NOT A DIRECT CALL. Same reason as the leave
-request above: the page's touch events can fire while the game is paused
-inside an Asyncify sleep, so aa_web_look() only stores the bits, and the
-actions run from the game's own frame loop (rPerFrameTask, from SwapGL).
 */
 
 static int se_lookWanted = 0;   // bits the page asks for: 1 left, 2 right, 4 back
 static int se_lookApplied = 0;  // bits last pressed in the game
 
-// Called by web/shell.html from touch events. Stores the bits and nothing
-// else: it must not reach anything that could yield.
+// Called by the page from touch events (web/page/game.js, look); se_LookApply
+// acts on the bits from the frame loop.
 extern "C" EMSCRIPTEN_KEEPALIVE void aa_web_look( int bits )
 {
     se_lookWanted = bits & 7;

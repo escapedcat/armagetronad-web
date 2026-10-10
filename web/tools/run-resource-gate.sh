@@ -143,13 +143,13 @@ if [ "$ARM" = download ]; then
   check "no empty file at the save path while downloading" grep -qF '=> "sawEmpty=false"' "$C"
   check "the relay served it" grep -q '^\[bridge\] resource 200 ' "$OUT/relay.log"
   check "the stand-in repository was asked for it" grep -qF "GET /$MAP" "$OUT/repo.log"
-  check "the server saw the player enter the game" grep -q 'web_user entered the game' "$OUT/server.log"
+  check "the server saw the player enter the game" grep -qE 'web_[0-9]{4} entered the game' "$OUT/server.log"
 elif [ "$ARM" = bundled ]; then
   # [console.log] only: the harness's own "until ... <<[RESOURCE]>>" line is
   # in the same transcript and would match a bare [RESOURCE].
   check "the page asked for no download at all" sh -c "! grep -q '\[console.log\] \[RESOURCE\]' '$C'"
   check "the relay was never asked" sh -c "! grep -q '^\[bridge\] resource ' '$OUT/relay.log'"
-  check "the server saw the player enter the game" grep -q 'web_user entered the game' "$OUT/server.log"
+  check "the server saw the player enter the game" grep -qE 'web_[0-9]{4} entered the game' "$OUT/server.log"
 else
   check "server repository URI refused, readable (403)" grep -qF "[RESOURCE] 403 http://127.0.0.1:8009/$MAP" "$C"
   check "official fallback URI refused locally (403)" grep -qF "[RESOURCE] 403 http://resource.armagetronad.net/resource/$MAP" "$C"

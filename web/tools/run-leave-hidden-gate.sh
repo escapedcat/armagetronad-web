@@ -29,7 +29,7 @@ check "arm 1: hidden for 2 s, still connected" grep -qF '=> "connected-after-bri
 check "arm 2: hidden past the timeout, disconnected" grep -qF '=> "connected-after-long-hide=0"' "$C"
 check "arm 2: the page asked for the leave exactly once" sh -c "test \"\$(grep -c '\[console.log\] \[LEAVE\] hidden for' '$C')\" -eq 1"
 check "arm 2: the game logged out" grep -qF '[LEAVE] page hidden: leaving the server with a regular logout' "$C"
-check "the server saw the player leave" grep -q 'web_user left the game' "$OUT/server.log"
+check "the server saw the player leave" grep -qE 'web_[0-9]{4} left the game' "$OUT/server.log"
 # "Killing user N ... <reason>" is the server's line for EVERY disconnect
 # (sn_DisconnectUser); what matters is the reason. A regular logout is not a
 # kick and adds nothing to the autoban count (nMachine::OnKick is only called
@@ -39,6 +39,6 @@ check "the reason is a regular logout" grep -q 'You logged out regularly' "$OUT/
 check "no kick reason anywhere (idle, vote, spam, ban)" sh -c "! grep -qiE 'idle|kicked|autoban|banned' '$OUT/server.log'"
 check_no_abort
 echo "server log, the client's lines:"
-grep -iE 'web_user|login|logout|logged|timed out|kill|kick' "$OUT/server.log" | sed 's/^/  /' || true
+grep -iE 'web_[0-9]{4}|login|logout|logged|timed out|kill|kick' "$OUT/server.log" | sed 's/^/  /' || true
 echo "look at $OUT/after-leave.png: the main menu, with the leave message in the console"
 gate_finish "leave-hidden gate"

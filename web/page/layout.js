@@ -14,21 +14,6 @@
 var AALayout = (function () {
   'use strict';
 
-  // A numeric URL parameter. Out of [min, max] it is IGNORED rather than
-  // clamped, because a typo that silently half-ran an experiment would be
-  // worse than one that visibly did nothing: `ignored` carries the log line.
-  // search: location.search. Returns { value: number|null, ignored: string|null }.
-  var numberParam = function (search, name, min, max) {
-    var raw = new URLSearchParams(search).get(name);
-    if (raw === null) return { value: null, ignored: null };
-    var v = parseFloat(raw);
-    if (!isFinite(v) || v < min || v > max) {
-      return { value: null,
-               ignored: '[DISPLAY] ?' + name + '=' + raw + ' ignored (want ' + min + '..' + max + ')' };
-    }
-    return { value: v, ignored: null };
-  };
-
   // Is the primary input a finger? ?touch=1 / ?touch=0 win (a harness under
   // device emulation, or a visitor on a device the media query gets wrong);
   // otherwise '(hover: none) and (pointer: coarse)', which a touchscreen
@@ -106,6 +91,6 @@ var AALayout = (function () {
              capped: capped, axisClamped: axisClamped };
   };
 
-  return { numberParam: numberParam, decideTouch: decideTouch, layoutParam: layoutParam,
+  return { decideTouch: decideTouch, layoutParam: layoutParam,
            decideGameboy: decideGameboy, isPortrait: isPortrait, canvasSize: canvasSize };
 })();

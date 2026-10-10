@@ -15,33 +15,37 @@
 # fails on main too (touch-gate's T1b/T1c, see its header), and persist-gate is
 # judged by docs/evidence/m4-persist/check-persist-transcript.mjs, run here.
 #
-# Starts its own static server. GATE_HTTP_PORT (8208) and GATE_DEVTOOLS_PORT
-# (9422) are overridable, so it can run beside a run-*-gate.sh.
+# Starts its own static server. The ports are web/tools/gate-env.sh's, with its
+# defaults (GATE_HTTP_PORT 8008, GATE_DEVTOOLS_PORT 9222); to run beside a
+# run-*-gate.sh, give this one others, e.g. GATE_HTTP_PORT=8208
+# GATE_DEVTOOLS_PORT=9422.
 set -u
 OUT=${1:-}
 [ -n "$OUT" ] || { echo "usage: $0 <out-dir> [gate ...]" >&2; exit 2; }
 shift
 [ -f web/tools/drive-browser.mjs ] || { echo "run me from the repository root" >&2; exit 2; }
 [ -f web/dist-m1/armagetronad.html ] || { echo "no build in web/dist-m1 (make -f web/Makefile client)" >&2; exit 2; }
-HTTP=${GATE_HTTP_PORT:-8208}
-DEV=${GATE_DEVTOOLS_PORT:-9422}
+# shellcheck source=web/tools/gate-env.sh
+. web/tools/gate-env.sh
+HTTP=$GATE_HTTP_PORT
 GATES=("$@")
 [ ${#GATES[@]} -eq 0 ] && GATES=(touch-gate portrait-boot-gate drive-pad-gate look-gate
   game-keyboard-gate default-name-gate menu-gate touch-hints-gate-phone touch-hints-gate-desk
   synthetic-key-gate layout-boot-gate persist-gate)
 mkdir -p "$OUT"
+pgrep -f "http.server $HTTP" >/dev/null && { echo "a static server is already on $HTTP; set GATE_HTTP_PORT" >&2; exit 2; }
 python3 -m http.server "$HTTP" --directory web/dist-m1 >/dev/null 2>&1 &
 SRV=$!
 trap 'kill $SRV 2>/dev/null' EXIT
-sleep 1
+wait_for 10 curl -sf -o /dev/null "http://localhost:$HTTP/armagetronad.html" ||
+  { echo "the static server on $HTTP did not answer" >&2; exit 1; }
 U="http://localhost:$HTTP/armagetronad.html"
 PHONE=412,915,3   # --mobile W,H,DPR: a phone in portrait
 
 run() { # run <name> <steps> <url> [driver args...]
   local name=$1 steps=$2 url=$3; shift 3
   rm -rf "${OUT:?}/$name"
-  node web/tools/drive-browser.mjs --port "$DEV" --out "$OUT/$name" --url "$url" \
-    --script-file "web/tools/$steps.steps" "$@" > "$OUT/$name.driver.log" 2>&1
+  drive_page "$OUT/$name" "$url" "web/tools/$steps.steps" "$@"
   echo "$name driver exit $?" >> "$OUT/exits.txt"
 }
 : > "$OUT/exits.txt"

@@ -138,7 +138,7 @@ test('the context bits match the C++ that sets them', () => {
     .map((f) => readRepoFile('src/emscripten/' + f)).join('\n');
   const bit = (name) => Number(new RegExp('#define\\s+' + name + '\\s+(\\d+)').exec(cpp)?.[1]);
   assert.equal(bit('AA_WEB_CTX_MENU'), AAGame.CTX_MENU);
-  assert.equal(bit('AA_WEB_CTX_DRIVING'), AAGame.CTX_CYCLE);
+  assert.equal(bit('AA_WEB_CTX_CYCLE'), AAGame.CTX_CYCLE);
 });
 
 // ---- the seam, checked against the page ------------------------------------
@@ -153,6 +153,13 @@ test('web/shell.html calls no aa_web_* export directly', () => {
 
 test('web/shell.html builds a KeyboardEvent in one place only: the Game module\'s sink', () => {
   assert.equal((shellCode.match(/new KeyboardEvent\(/g) || []).length, 1);
+});
+
+test('the shell\'s <script> tags are balanced', () => {
+  // Lines that ARE tags, not prose about them.
+  const opens = shell.split('\n').filter((l) => /^\s*<script[\s>]/.test(l)).length;
+  const closes = shell.split('\n').filter((l) => /^\s*<\/script>/.test(l)).length;
+  assert.equal(closes, opens);
 });
 
 test('the shell inlines every page module it names, and they exist', () => {

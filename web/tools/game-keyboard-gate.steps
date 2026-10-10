@@ -16,12 +16,12 @@
 until:1:120000:[BOOT] autostart
 probe:
 eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'filter on'})()
-wait:6000
+eval:__aa.waitFor(()=>__aa.ctx().menu,30000)
 key:Enter
 wait:3000
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K1 closed-on-accept '+JSON.stringify({focused:f,PASS:!f}));return 'K1'})()
 key:Down
-wait:1000
+eval:__aa.waitFor(()=>document.activeElement.id==='aa-ime',5000)
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K2 opens-on-name '+JSON.stringify({focused:f,PASS:f}));return 'K2'})()
 eval:(()=>{const i=document.getElementById('aa-ime');window.__nameBefore=__aa.playerName({save:true});i.value=' Zoë';i.dispatchEvent(new InputEvent('input',{inputType:'insertText',data:'Zoë'}));return 'typed Zoë after '+window.__nameBefore})()
 wait:800
@@ -33,17 +33,17 @@ wait:800
 eval:(()=>{const v=__aa.playerName({save:true});const want=window.__nameBefore+'Zoë';console.log('[KBDGATE] K3 typed-into-the-game '+JSON.stringify({saved:v,PASS:!!v&&v.startsWith(want)}));console.log('[KBDGATE] K4 suggestion-exact '+JSON.stringify({PASS:!!v&&v.startsWith(want+'Hi')}));console.log('[KBDGATE] K5 real-key-once '+JSON.stringify({PASS:!!v&&v===want+'Hix'}));return 'K3-K5'})()
 shot:name-typed
 eval:(()=>{document.getElementById('aa-ime').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:13,bubbles:true,cancelable:true}));return 'keyboard enter'})()
-wait:1500
+eval:__aa.waitFor(()=>document.activeElement.id!=='aa-ime',5000)
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K6 enter-closes '+JSON.stringify({focused:f,PASS:!f}));return 'K6'})()
 tap:#tapzone
-wait:600
+eval:__aa.waitFor(()=>document.activeElement.id==='aa-ime',5000)
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K8 tap-on-picture-shows-keyboard '+JSON.stringify({focused:f,PASS:f}));return 'K8'})()
 tap:#tapzone
-wait:600
+eval:__aa.waitFor(()=>document.activeElement.id!=='aa-ime',5000)
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K9 tap-on-picture-hides-keyboard '+JSON.stringify({focused:f,PASS:!f}));return 'K9'})()
 tap:#tapzone
 wait:600
-eval:(()=>{for(const t of ['keydown','keyup'])document.dispatchEvent(new KeyboardEvent(t,{key:'ArrowUp',code:'ArrowUp',keyCode:38,which:38,bubbles:true,cancelable:true}));return 'pad up'})()
+eval:(()=>{AA_GAME.press('ArrowUp');return 'pad up'})()
 wait:1000
 eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K7 up-closes '+JSON.stringify({focused:f,PASS:!f}));return 'K7'})()
 # K10: SWIPED WORDS KEEP THEIR SPACE. Back onto Name, clear it, then two words
@@ -52,7 +52,7 @@ eval:(()=>{const f=document.activeElement.id==='aa-ime';console.log('[KBDGATE] K
 # must still hold " hi" when the second word comes (it is not reset between
 # edits); reset to " ", the keyboard sees a space, adds none, and the game
 # gets "hiyo".
-eval:(()=>{for(const t of ['keydown','keyup'])document.dispatchEvent(new KeyboardEvent(t,{key:'ArrowDown',code:'ArrowDown',keyCode:40,which:40,bubbles:true,cancelable:true}));return 'pad down'})()
+eval:(()=>{AA_GAME.press('ArrowDown');return 'pad down'})()
 wait:1000
 eval:(()=>{const i=document.getElementById('aa-ime');for(let n=0;n<16;n++){i.value='';i.dispatchEvent(new InputEvent('input',{inputType:'deleteContentBackward'}));}return 'cleared'})()
 wait:600

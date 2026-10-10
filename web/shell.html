@@ -692,24 +692,24 @@
   <!-- @page-module web/page/game.js -->
   <!-- @page-module web/page/page-config.js -->
   <!-- @page-module web/page/touch-input.js -->
+  <!-- @page-module web/page/params.js -->
   <!-- @page-module web/page/layout.js -->
   <!-- @page-module web/page/phone-keyboard.js -->
+  <!-- @page-module web/page/page-lifecycle.js -->
+  <!-- @page-module web/page/audio.js -->
+  <!-- @page-module web/page/diag.js -->
 
   <script>
-    // THE PAGE, IN THE ORDER IT STARTS. The modules are web/page/*.js,
-    // inlined above; this script wires them to the DOM, top to bottom:
-    //   1. failure reporting, then `game` (web/page/game.js)
-    //   2. the touch decision, the layout decision, the canvas size
-    //      (web/page/layout.js), then `touchInput` and `keyboard` on a phone
-    //   3. the touch surfaces: pad, driving pad, tap layer, look zone, and the
-    //      first touch tick
-    //   4. the leave timer, the audio resume, `Module` (preRun: /persist and
-    //      the default name; onRuntimeInitialized: the page config
-    //      (web/page/page-config.js), then startGame)
-    //   5. the save backstop and the ?diag readout
-    // Blocks reach each other only through the names declared here, never
-    // through window.*; the window.AA_* names left are for gates and
-    // measurement pages.
+    // THE PAGE. The modules are web/page/*.js, inlined above; this script wires
+    // them to the DOM. It reports failures first, then only DEFINES -- `game`,
+    // the layout and sizing, the touch surfaces, `Module` (preRun: /persist and
+    // the default name; onRuntimeInitialized: the page config, then
+    // startGame) -- and "THE START ORDER" at the bottom runs them, in order.
+    // Blocks reach each other only through the names declared in this script.
+    // window.AA_* is for gates and measurement pages: the page writes
+    // AA_TOUCH, AA_GAMEBOY, AA_DEFAULT_NAME, AA_GAME, AA_START and two
+    // counters, and reads back only the counters (to add to them) and
+    // AA_CANVAS_SIZE, which a measurement page sets.
     const statusEl  = document.getElementById('status');
     const overlayEl = document.getElementById('overlay');
 
@@ -755,6 +755,9 @@
       send: (type, init) => document.dispatchEvent(new KeyboardEvent(type,
         Object.assign({ bubbles: true, cancelable: true }, init))),
     });
+    // The same object for the gates: they ask game.context().menu / .cycle /
+    // .driving and press keys by name, not bits and key codes.
+    window.AA_GAME = game;
 
     // Without preserveDrawingBuffer the canvas renders BLACK -- not "wrong
     // colours", not "flickering", solid black -- while the game underneath is
@@ -789,7 +792,7 @@
     // This is a correctness fix, not a tuning knob: do not "optimise" it away.
     // The real fix is to align rendering to requestAnimationFrame, which is
     // M2/M5's problem; until then this is what makes the picture appear.
-    (() => {
+    function keepTheDrawingBuffer() {
       const canvas = document.getElementById('canvas');
       const realGetContext = canvas.getContext.bind(canvas);
       canvas.getContext = (type, attrs) => realGetContext(
@@ -798,7 +801,7 @@
           ? Object.assign({}, attrs || {}, { preserveDrawingBuffer: true })
           : attrs
       );
-    })();
+    }
 
     // ---- M5: the canvas is sized from the VIEWPORT, before the game boots -
     //
@@ -906,9 +909,9 @@
     // A value out of (0, 8] is ignored rather than clamped, because a typo that
     // silently half-ran the experiment would be worse than one that visibly
     // did nothing -- the [DISPLAY] line says which happened either way.
-    const readNumberParam = (name, min, max) => {
+    const readNumberParam = (tag, name, min, max) => {
       try {
-        const p = AALayout.numberParam(location.search, name, min, max);
+        const p = AAParams.number(location.search, tag, name, min, max);
         if (p.ignored) console.log(p.ignored);
         return p.value;
       } catch (e) { return null; }  // a browser without URLSearchParams
@@ -1008,23 +1011,28 @@
     // diagnostic readout -- ask this decision rather than re-deriving it and
     // risking a different answer. The touch overlay is not one of them: it is in
     // this same scope and reads the lexical touchDecision directly.
-    window.AA_TOUCH = touchDecision.on;
+    function announceTouch() {
+      window.AA_TOUCH = touchDecision.on;
     // One machine-readable line, so a gate can assert which branch ran rather
     // than inferring it from a screenshot.
-    console.log('[TOUCH] enabled=' + touchDecision.on + ' (' + touchDecision.why + ')' +
-                ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
+      console.log('[TOUCH] enabled=' + touchDecision.on + ' (' + touchDecision.why + ')' +
+                  ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
+    }
     // ON A PHONE: TOUCH INPUT (web/page/touch-input.js), the held keys of
     // every touch surface and one reading of the game per tick for all of
     // them, ticked once every surface below has subscribed; and THE PHONE
     // KEYBOARD (web/page/phone-keyboard.js), which types into the game's own
     // text fields. A desktop gets neither.
-    const touchInput = touchDecision.on ?
-      AATouchInput.create(game, (line) => console.log(line)) : null;
-    const keyboard = touchDecision.on ? AAPhoneKeyboard.create({
-      game, ime: document.getElementById('aa-ime'), doc: document,
-      log: (line) => console.log(line),
-      viewport: window.visualViewport || null, innerHeight: () => window.innerHeight,
-    }) : null;
+    let touchInput = null, keyboard = null;
+    function createTouchModules() {
+      if (!touchDecision.on) return;
+      touchInput = AATouchInput.create(game, (line) => console.log(line));
+      keyboard = AAPhoneKeyboard.create({
+        game, ime: document.getElementById('aa-ime'), doc: document,
+        log: (line) => console.log(line),
+        viewport: window.visualViewport || null, innerHeight: () => window.innerHeight,
+      });
+    }
     // GAME BOY = a touch device in portrait when the game STARTS -- or told to
     // be, by ?layout=portrait; ?layout=landscape is the full layout regardless
     // of how the phone is held. A desktop never gets the Game Boy whatever its
@@ -1039,15 +1047,16 @@
       try { return AALayout.layoutParam(location.search); } catch (e) { return null; }
     })();
     const decideGameboy = () =>
-      AALayout.decideGameboy(window.AA_TOUCH, layoutParam, viewportIsPortrait());
+      AALayout.decideGameboy(touchDecision.on, layoutParam, viewportIsPortrait());
+    let gameboy = false;
     const applyLayoutDecision = (why) => {
-      window.AA_GAMEBOY = decideGameboy();
-      document.documentElement.classList.toggle('aa-gameboy', !!window.AA_GAMEBOY);
-      console.log('[DISPLAY] layout=' + (window.AA_GAMEBOY ? 'gameboy' : 'full') +
+      gameboy = decideGameboy();
+      window.AA_GAMEBOY = gameboy;   // for the gates
+      document.documentElement.classList.toggle('aa-gameboy', gameboy);
+      console.log('[DISPLAY] layout=' + (gameboy ? 'gameboy' : 'full') +
                   (layoutParam ? ' (from ?layout=' + layoutParam + ')' : ' (from the orientation)') +
                   ' ' + why);
     };
-    applyLayoutDecision('at parse');
 
     // sizeCanvas() IS CALLED TWICE, BOTH TIMES BEFORE main(), AND NEVER AFTER.
     // Once at parse time (the line right after the function), so the first
@@ -1085,7 +1094,7 @@
                       canvas.width + 'x' + canvas.height);
           return;
         }
-        const dprOverride = readNumberParam('dpr', 0.05, 8);
+        const dprOverride = readNumberParam('[DISPLAY]', 'dpr', 0.05, 8);
         const dpr = dprOverride !== null ? dprOverride
                                          : (window.devicePixelRatio || 1);
         // THE ARITHMETIC IS AALayout.canvasSize (web/page/layout.js). What it
@@ -1110,7 +1119,7 @@
         const axisLimit = gpuAxisLimit();
         const size = AALayout.canvasSize({
           vw: window.innerWidth, vh: window.innerHeight, dpr, layout: layoutParam,
-          gameboy: !!window.AA_GAMEBOY, maxPixels: MAX_CANVAS_PIXELS, axisLimit,
+          gameboy, maxPixels: MAX_CANVAS_PIXELS, axisLimit,
         });
         if (!size) {
           console.log('[DISPLAY] no usable viewport, keeping canvas ' +
@@ -1136,7 +1145,7 @@
         // full layout, whose rules are all html.aa-gameboy-scoped and never
         // read it.
         document.documentElement.style.setProperty('--aa-square',
-          window.AA_GAMEBOY ? squareCss + 'px' : '0px');
+          gameboy ? squareCss + 'px' : '0px');
         console.log('[DISPLAY] ' + why + ': viewport ' + vw + 'x' + vh +
                     ' dpr ' + dpr +
                     (dprOverride !== null ? ' (?dpr override)' : '') +
@@ -1145,7 +1154,7 @@
                     (capped ? ' (capped at ' + MAX_CANVAS_PIXELS + ' px)' : '') +
                     ' gpu-axis-limit ' + (axisLimit || 'unknown') +
                     (axisClamped ? ' (CLAMPED to it)' : '') +
-                    (window.AA_GAMEBOY ? ' gameboy square ' + squareCss + 'css'
+                    (gameboy ? ' gameboy square ' + squareCss + 'css'
                                        : ''));
       } catch (e) {
         // Falling back to the attributes on the element is a working game at
@@ -1155,7 +1164,6 @@
                     canvas.width + 'x' + canvas.height + ': ' + e);
       }
     }
-    sizeCanvas('at load');
     // THE SECOND AND LAST SIZING, from startGame() and nowhere else (M9). The
     // decision first, then the size, in the order the comments above argue.
     const relayoutBeforeMain = () => {
@@ -1169,7 +1177,7 @@
       // The SPAN, not the button: the button also holds the icon, and
       // assigning textContent to it would delete that. The aria-label says
       // the same thing for anything that reads the button rather than sees it.
-      const text = window.AA_GAMEBOY ? 'Landscape layout' : 'Portrait layout';
+      const text = gameboy ? 'Landscape layout' : 'Portrait layout';
       document.getElementById('layoutbtn-label').textContent = text;
       document.getElementById('layoutbtn').setAttribute('aria-label',
         'Switch to the ' + text.toLowerCase());
@@ -1211,7 +1219,7 @@
     // keydown regardless of how long ago it was queued. A timer here would add a
     // real hazard (a deferred keyup overtaking the next press of the same key)
     // to remove an imaginary one.
-    (() => {
+    function setUpTouchControls() {
       const touchEl = document.getElementById('touch');
       // REUSED, NOT RE-DERIVED. The decision, its [TOUCH] line and
       // window.AA_TOUCH all moved above sizeCanvas (see the block there), so
@@ -1239,21 +1247,13 @@
         if (!name || touchInput.holds(owner(ev)) !== undefined) return;
         // preventDefault suppresses the compatibility mouse events and the
         // double-tap-zoom gesture. It does NOT stop propagation, which matters:
-        // resumeAudio() ("SOUND ON A PHONE" below) listens on window for the
+        // the audio resume (web/page/audio.js) listens on window for the
         // pointerup that follows, and a stopped event would never reach it.
         ev.preventDefault();
-        // ENTER ON THE PAD IS A MENU KEY ONLY (M7.1). The game binds Enter to
-        // CHAT in a round (config/default.cfg: KEYBOARD 13 PLAYER_BIND CHAT 1),
-        // so a mid-round Enter opened the "Say:" line and every arrow after it
-        // typed into the chat instead of steering, until Escape -- probed on
-        // 2026-09-06: the turn counters froze after one Enter. The pad's Enter
-        // therefore follows the rule the picture's tap already follows: it is
-        // sent only when the game is not driving (a menu is up, or no cycle is
-        // alive). The press still shows, nothing is sent, and the counter below
-        // is what the gate reads. The cross and Esc are untouched: Escape is
-        // how a chat line gets closed, and the in-game menu needs it.
+        // ENTER ON THE PAD IS A MENU KEY ONLY: AATouchInput.padSendsEnter
+        // ("ENTER IS CHAT IN A ROUND"). The counter below is what the gate reads.
         const suppressed = name === 'Enter' && el.closest('#pad') !== null &&
-                           game.context().driving;
+                           !AATouchInput.padSendsEnter(game.context());
         // A suppressed press is held with no key: it shows, and sends nothing.
         touchInput.press(owner(ev), suppressed ? null : name, el);
         try { el.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
@@ -1338,8 +1338,6 @@
                     ', cycle ' + (c.cycle ? 'alive' : 'no') +
                     ') -> ' + (driving ? 'STEERING' : 'TAP=ENTER'));
       };
-      // The raw bits, for the gates, not for the page.
-      window.AA_INPUT_CONTEXT = () => game.context().raw;
       touchInput.subscribe(applyContext);
 
       // ---- the tap-anywhere layer ---------------------------------------
@@ -1371,28 +1369,20 @@
           console.log('[TOUCH] tap ignored (' + notTap + ')');
           return;
         }
-        if (game.context().driving) {
-          console.log('[TOUCH] tap ignored: the game is asking for steering');
-          return;
+        // What the tap means: AATouchInput.tapMeans ("ENTER IS CHAT IN A ROUND").
+        switch (AATouchInput.tapMeans(game.context(), { onField: keyboard.onField(), gameboy })) {
+          case 'steering':
+            console.log('[TOUCH] tap ignored: the game is asking for steering');
+            return;
+          case 'keyboard':
+            keyboard.toggle('tap on the picture');
+            return;
+          case 'pad-chat':
+            console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
+            return;
+          default:
+            game.press('Enter');
         }
-        // ON A TEXT FIELD (a name, the chat line) A TAP SHOWS OR HIDES THE
-        // PHONE KEYBOARD instead of pressing Enter: Enter there would send the
-        // chat line, and folding the keyboard is what a tap on the picture
-        // means to a phone user. See "THE PHONE KEYBOARD".
-        if (keyboard.onField()) {
-          keyboard.toggle('tap on the picture');
-          return;
-        }
-        // IN A ROUND, THE PICTURE DOESN'T OPEN CHAT IN PORTRAIT. With no menu
-        // up, Enter is the chat key; the pad's Enter (labelled "Chat" then) is
-        // how a portrait player opens chat, so a stray tap on the picture
-        // doesn't. Landscape has no pad, so its tap stays Enter.
-        if (document.documentElement.classList.contains('aa-gameboy') &&
-            !game.context().menu) {
-          console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
-          return;
-        }
-        game.press('Enter');
       };
       tapzone.addEventListener('pointerup',     (ev) => endTap(ev, true));
       tapzone.addEventListener('pointercancel', (ev) => endTap(ev, false));
@@ -1420,7 +1410,7 @@
       try { mq = window.matchMedia('(orientation: portrait)'); } catch (e) { mq = null; }
       const onOrientationChange = (why) => {
         console.log('[TOUCH] orientation portrait=' + viewportIsPortrait() +
-                    ' (layout stays ' + (window.AA_GAMEBOY ? 'gameboy' : 'full') + ')' +
+                    ' (layout stays ' + (gameboy ? 'gameboy' : 'full') + ')' +
                     ' via ' + why);
       };
       if (mq && mq.addEventListener) mq.addEventListener('change', () => onOrientationChange('media query'));
@@ -1430,7 +1420,7 @@
       const layoutBtn = document.getElementById('layoutbtn');
       labelLayoutButton();
       layoutBtn.addEventListener('click', () => {
-        const other = window.AA_GAMEBOY ? 'landscape' : 'portrait';
+        const other = gameboy ? 'landscape' : 'portrait';
         console.log('[TOUCH] layout switch -> ?layout=' + other + ' (reload)');
         try {
           const u = new URL(location.href);
@@ -1440,69 +1430,26 @@
           location.search = '?layout=' + other;
         }
       });
-    })();
+    }
 
     // ---- THE CONFIG THE PAGE WRITES INTO THE GAME ---------------------------
     // The touch camera, cheap sparks, no keyboard hints and the wall cut, and
     // their ?cam= / ?sparks= / ?wallcut= overrides: web/page/page-config.js,
     // applied from onRuntimeInitialized below.
 
-    // ---- LEAVE A SERVER CLEANLY WHEN THE PAGE HAS BEEN HIDDEN ----------------
-    // All browser players reach the servers through the relay, so a server sees
-    // them as ONE address and counts their kicks together; too many and it
-    // autobans that address -- every web player at once (49+ minutes on
-    // 2026-09-30). The usual kick is the idle kick: a tab in the background or
-    // a phone that switched apps stops sending input. A regular logout is not a
-    // kick, so after LEAVE_AFTER seconds hidden while connected, the page asks
-    // the game for exactly the in-game menu's Disconnect
-    // (src/emscripten/eWebPage.cpp). Coming back sooner cancels it. A phone
-    // that freezes the tab outright never gets that far -- the server then
-    // sees a timeout, which is not a kick either.
-    //
-    // ?leaveafter=<seconds> (5..3600) overrides the 60 s, for testing.
-    (() => {
-      const q = readNumberParam('leaveafter', 5, 3600);
-      const LEAVE_AFTER = (q !== null ? q : 60) * 1000;
-      let timer = null;
-      const onVisibility = () => {
-        if (document.visibilityState === 'hidden') {
-          if (timer === null) {
-            timer = setTimeout(() => {
-              timer = null;
-              if (document.visibilityState !== 'hidden' || !game.started()) return;
-              try {
-                if (game.connected()) {
-                  console.log('[LEAVE] hidden for ' + (LEAVE_AFTER / 1000) + ' s while connected: asking the game to disconnect');
-                  game.requestLeave();
-                }
-              } catch (e) { console.log('[LEAVE] could not ask the game to disconnect: ' + e); }
-            }, LEAVE_AFTER);
-          }
-        } else if (timer !== null) {
-          clearTimeout(timer);
-          timer = null;
-        }
-      };
-      document.addEventListener('visibilitychange', onVisibility);
-    })();
-
     // ---- THE PHONE KEYBOARD, AND THE PAD'S "Chat" LABEL ---------------------
     // The keyboard follows the highlighted text field each touch tick
     // (web/page/phone-keyboard.js has how and why).
-    if (keyboard) {
+    function setUpKeyboard() {
+      if (!keyboard) return;
       touchInput.subscribe(keyboard.onState);
-      // THE PAD'S ENTER SAYS "Chat" when that is what it does: on a server, in
-      // a game (game.chatPossible: not while connecting, logging in or
-      // loading), with no menu up and no cycle of ours alive (crashed,
-      // watching, between rounds), Enter is the chat key (config/default.cfg).
-      // While driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS
-      // A MENU KEY ONLY" above); in menus and local games it is plain Enter.
+      // THE PAD'S ENTER SAYS "Chat" when that is what it does
+      // (AATouchInput.enterOpensChat).
       const padEnter = document.querySelector('#pad .pad-a');
       let chatLabel = false;
       touchInput.subscribe((state) => {
         if (!game.started()) return;
-        const c = state.context;
-        const chat = state.chatPossible && !c.menu && !c.cycle;
+        const chat = AATouchInput.enterOpensChat(state);
         if (chat !== chatLabel) {
           chatLabel = chat;
           padEnter.textContent = chat ? 'Chat' : 'Enter';
@@ -1522,8 +1469,8 @@
     // game's own GLANCE_* actions from the game's frame loop. Leaving the
     // driving state (a crash, a menu) lets go of everything, so a finger the
     // page lost track of can't leave the camera looking sideways.
-    (() => {
-      if (!window.AA_TOUCH) return;
+    function setUpLookZone() {
+      if (!touchDecision.on) return;
       const zone = document.getElementById('lookzone');
       const fingers = new Map();   // pointerId -> bit
       let sent = 0;
@@ -1555,45 +1502,19 @@
           send();
         }
       });
-    })();
+    }
 
     // Every touch surface has subscribed: one reading of the game every
     // 100 ms from here on, and the first one now.
-    if (touchInput) {
+    function startTouchTick() {
+      if (!touchInput) return;
       setInterval(touchInput.tick, 100);
       touchInput.tick();
     }
 
-    // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------
-    // The maintainer's phone played in silence for 3-7 minutes before the
-    // sound came on. Emscripten's $autoResumeAudioContext (libcore.js) calls
-    // ctx.resume() ONCE, on the first keydown, mousedown or touchstart. On a
-    // phone none of those is a user gesture when it arrives: the pad's keys
-    // are synthetic, the pad's preventDefault suppresses mousedown, and
-    // Chrome grants activation on pointerup/touchend, not touchstart. So the
-    // one resume() is refused and never retried; sound came on only when a
-    // tap on the picture happened to produce a real mousedown. Measured
-    // (headless Chrome, --mobile 412,915,3, --autoplay-policy=document-user-
-    // activation-required): three pad taps, activation 'sticky' from the first
-    // pointerup, AudioContext still 'suspended' at the end.
-    //
-    // So: on every TRUSTED pointerup, touchend, click or keydown, resume the
-    // context if it is not running -- not once, every time, which also brings
-    // it back after the phone interrupted it (a call, the app backgrounded).
-    // Capture phase on window, so no element's handler can hide it.
-    function resumeAudio(ev) {
-      if (!ev.isTrusted || typeof SDL === 'undefined' || !SDL.audioContext) return;
-      const ctx = SDL.audioContext;
-      if (ctx.state === 'running') return;
-      ctx.resume().then(() => {
-        if (!window.AA_AUDIO_RESUMED) console.log('[AUDIO] resumed on ' + ev.type);
-        window.AA_AUDIO_RESUMED = (window.AA_AUDIO_RESUMED | 0) + 1;
-      }, () => { /* refused; the next gesture tries again */ });
-    }
-    for (const type of ['pointerup', 'touchend', 'click', 'keydown']) {
-      window.addEventListener(type, resumeAudio, { capture: true, passive: true });
-    }
-
+    // This load's default player name, from preRun; onRuntimeInitialized renames
+    // an old saved web_user to it.
+    let defaultName = null;
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
@@ -1725,7 +1646,8 @@
         try {
           Module.ENV.USER = name;
           Module.ENV.LOGNAME = name;
-          window.AA_DEFAULT_NAME = name;
+          defaultName = name;
+          window.AA_DEFAULT_NAME = name;   // for the gates
           console.log('[TEXT] default name ' + name);
         } catch (e) { console.log('[TEXT] default name not set: ' + e); }
       }],
@@ -1750,7 +1672,7 @@
       // resumes a suspended context, and libsdl.js wires it into
       // SDL_OpenAudio. On a keyboard that is enough: the menus need Enter and
       // the arrow keys, so the gesture arrives within seconds. On a phone it
-      // is NOT -- see "SOUND ON A PHONE" above, which is what resumes it there. M3's audio
+      // is NOT -- see web/page/audio.js, which is what resumes it there. M3's audio
       // gate is the check on that claim, not this comment: its A11 asserts
       // every AudioContext state seen in the measured window is 'running', and
       // its A7c asserts the menus before round 1 are exactly silent.
@@ -1784,20 +1706,17 @@
         // the two lines swap order deterministically -- which is how
         // docs/evidence/m4-persist demonstrates that this check can fail.
         console.log('[PERSIST] runtime initialized, starting the game');
-        // Calling a wasm export before this point aborts the page under
-        // ASSERTIONS; the hidden-page leave timer checks this first.
-        window.AA_RUNTIME_READY = true;
         // The preloaded /data tree exists from here on and not one moment
         // earlier: the file packager appends ITS preRun callback after this
         // page's, so a preRun hook cannot read /data at all. That is why the
         // page's config is written here rather than in preRun.
-        AAPageConfig.apply(Module.FS, window.AA_TOUCH, {
-          cam:     readNumberParam('cam', 0.15, 4),
-          sparks:  readNumberParam('sparks', 0, 1),
-          wallcut: readNumberParam('wallcut', 0, 1),
+        AAPageConfig.apply(Module.FS, touchDecision.on, {
+          cam:     readNumberParam('[CAMERA]', 'cam', 0.15, 4),
+          sparks:  readNumberParam('[SPARKS]', 'sparks', 0, 1),
+          wallcut: readNumberParam('[WALLS]', 'wallcut', 0, 1),
         }, (line) => console.log(line));
         AAPageConfig.applyRename(Module.FS,
-          window.AA_DEFAULT_NAME || AAPageConfig.defaultName(), (line) => console.log(line));
+          defaultName || AAPageConfig.defaultName(), (line) => console.log(line));
         let manual = false;
         try {
           manual = new URLSearchParams(location.search).get('autostart') === '0';
@@ -1878,198 +1797,40 @@
     // the shipped flow uses it.
     window.AA_START = startGame;
 
-    // ---- M4 task 2: the unload/visibility BACKSTOP -----------------------
-    //
-    // IT IS A BACKSTOP AND NOTHING IN THE GATE MAY DEPEND ON IT. The primary
-    // mechanism is src/emscripten/eWebPersist.cpp's uCallbackMenuLeave: the
-    // game saves its own config when the player leaves a menu, from inside its
-    // own loop, while the page is fully alive. That is the regime that
-    // measures reliable. Everything below is for the change the player makes
-    // and then never leaves the menu on -- they alt-tab, or close the tab, or
-    // the mobile OS discards the page.
-    //
-    // web/tools/persist-settings-gate.steps is checked against a control page
-    // with this block disabled, and must still PASS 18/18 -- which is what
-    // "not load-bearing" means here as a fact rather than an intention. That
-    // page is armagetronad-nobackstop.html, written by
-    //
-    //     docs/evidence/m4-persist-settings/make-settings-control-pages.mjs
-    //
-    // and NOT by task 1's docs/evidence/m4-persist/make-control-pages.mjs,
-    // which writes an entirely different set (ungated, slowgate, slowungated,
-    // noautopersist) and knows nothing about this block. An earlier version of
-    // this comment cited the wrong one, which sent a reader trying to
-    // re-derive the claim into a directory with no such page -- in the comment
-    // whose whole job is to stop the backstop being promoted to a mechanism.
-    // The committed transcript is nobackstop-chrome-console.log, beside the
-    // tool that made the page.
-    //
-    // WHY beforeunload IS ONLY A BACKSTOP: THE PAYLOAD CLIFF. M4 recon
-    // measured what actually survives a save issued from beforeunload. 50 KB
-    // of changed data survives; 500 KB survives; 2 MB loses THE ENTIRE BATCH
-    // -- including small files written in the same handler, because
-    // libidbfs.js's queuePersist syncs the whole mount in one transaction and
-    // that one transaction is what does not complete. An explicit FS.syncfs
-    // does not rescue it. It is the size of the DELTA that matters, not the
-    // size of the mount, and user.cfg is ~22 KB today -- comfortably on the
-    // safe side, with no guarantee that a future /persist stays there.
-    //
-    // WHY pagehide IS REJECTED, EVEN THOUGH IT IS THE USUAL ADVICE. It is not
-    // safer here, it is strictly worse, and this was measured twice: the
-    // pagehide handler provably runs (proved with sessionStorage), the write
-    // reaches MEMFS -- and the data is LOST, because queuePersist's
-    // setTimeout(0) never gets serviced. beforeunload runs early enough that
-    // the page still has a task loop to run that timer on; pagehide does not.
-    // Do not "improve" this by switching to pagehide.
-    //
-    // WHY visibilitychange IS LISTED FIRST. hidden fires while the page is
-    // still fully alive and still has a normal event loop, so the
-    // setTimeout(0) that carries the write to IndexedDB has somewhere to run
-    // -- and it is the one hook that fires before a mobile tab is discarded
-    // without any unload event at all. That reasoning is REASONED, NOT
-    // MEASURED here; treat it as the weaker of the two claims on this page.
-    //
-    // THE GUARD IS NOT DEFENSIVENESS. Before main() starts, Module's export
-    // getters are makeInvalidEarlyAccess stubs whose body is an abort(), and
-    // `typeof` reports them as functions -- so a bare feature test would pass
-    // and then take the runtime down. And main() is what tells tDirectories
-    // where --userdatadir is, so a save before it would write to the wrong
-    // path. The window in which that matters got SHORTER when M5 removed the
-    // Play button -- it is now boot time rather than however long the page sat
-    // waiting for a click -- but it did not close: the .wasm still has to be
-    // fetched and instantiated, and a visibilitychange in that window is a
-    // perfectly ordinary thing for a player opening the page in a background
-    // tab to produce.
-    const persistBackstop = (why) => {
-      if (!game.started()) return;
-      // aa_web_save_config MUST NOT YIELD -- see the long warning on it in
-      // src/emscripten/eWebPersist.cpp. Calling into wasm from here is safe
-      // only because it does not; a sleep on that path would start a second
-      // Asyncify unwind on top of the live one this page is almost always
-      // parked in.
-      try {
-        game.saveConfig();
-        console.log('[PERSISTBACKSTOP] ' + why);
-      } catch (e) {
-        console.log('[PERSISTBACKSTOP] ' + why + ' FAILED: ' + e);
-      }
-    };
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') persistBackstop('visibilitychange-hidden');
-    });
-    window.addEventListener('beforeunload', () => persistBackstop('beforeunload'));
-
-    // ---- PHONE FEEDBACK: ?diag=1, the readout -----------------------------
-    //
-    // WHY A PANEL AT ALL, when the game already draws "FPS: n" in the corner
-    // (sr_FPSOut defaults to true in src/render/rScreen.cpp). Because frame rate
-    // is the one number this port could already see, and it is not the number
-    // the phone report turned on. The unanswerable questions were about
-    // GEOMETRY -- what dpr is this device, what did the page ask the GPU for,
-    // what did the GPU actually give it -- and there is no way to read those off
-    // a phone screen. This port cannot measure a phone; the maintainer is the
-    // instrument, and this is the dial.
-    //
-    // THE ROW THAT MATTERS IS `gl`. canvas.width/height is what the page asked
-    // for and what the game builds glViewport and glFrustum from;
-    // gl.drawingBufferWidth/Height is what the driver actually allocated. A
-    // WebGL drawing buffer over the driver's limit is silently clamped, and if
-    // that clamp is not proportional the browser scales a wrong-shaped buffer
-    // over the element box -- which is a genuinely stretched picture, and after
-    // the measurements in docs/evidence/phone-feedback it is the ONLY remaining
-    // mechanism on this page that can produce one. That row says MATCH or
-    // CLAMPED, in red.
-    //
-    // `err` is the other half: the displayed box's aspect against the backing
-    // store's. It reads 0.00 % in every configuration Chrome's device emulation
-    // can produce, including a deliberately falsified one, because `height:auto`
-    // on a replaced element makes a stretch unrepresentable in CSS. If a real
-    // phone ever shows a non-zero number there, that is a new fact.
-    //
-    // COSTS NOTHING WHEN OFF. Everything below is inside the `if`, including the
-    // glFlush/glFinish wrappers -- an unconditional prototype patch would put a
-    // function call in front of every buffer swap of the shipped game to serve a
-    // panel nobody asked for.
-    (() => {
-      let on = false;
-      try { on = new URLSearchParams(location.search).get('diag') === '1'; }
-      catch (e) { return; }
-      if (!on) return;
-
-      // The frame counter counts glFlush + glFinish, which is the same quantity
-      // web/tools/fps-resolution-probe.steps and every M2/M5 frame measurement
-      // counts -- i.e. buffer swaps, not requestAnimationFrame callbacks, which
-      // this game does not have. Verified against the game's own on-screen
-      // counter under emulation; if the two ever disagree, the game's is right
-      // and this one is counting something twice.
-      let swaps = 0, swapsPerSec = 0, lastT = performance.now();
-      for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
-        if (!C) continue;
-        for (const m of ['flush', 'finish']) {
-          const orig = C.prototype[m];
-          if (!orig) continue;
-          C.prototype[m] = function () { swaps++; return orig.apply(this, arguments); };
-        }
-      }
-
-      const el = document.getElementById('diag');
-      el.hidden = false;
-      const canvas = document.getElementById('canvas');
-      let gl = null;
-      const R2 = (x) => (Math.round(x * 100) / 100);
-      const tick = () => {
-        try {
-          const now = performance.now();
-          if (now - lastT >= 1000) {
-            swapsPerSec = Math.round(swaps * 1000 / (now - lastT));
-            swaps = 0; lastT = now;
-          }
-          // Fetched lazily and cached: before SDL_SetVideoMode there is no
-          // context, and getContext() on a canvas that already has one returns
-          // the same object rather than making a second.
-          if (!gl) {
-            try { gl = canvas.getContext('webgl') ||
-                       canvas.getContext('experimental-webgl'); } catch (e) { gl = null; }
-          }
-          const r = canvas.getBoundingClientRect();
-          const bsA = canvas.width / canvas.height;
-          const cssA = r.height > 0 ? r.width / r.height : 0;
-          const err = cssA ? (cssA / bsA - 1) * 100 : 0;
-          const vv = window.visualViewport;
-          const dbOK = gl && gl.drawingBufferWidth === canvas.width &&
-                             gl.drawingBufferHeight === canvas.height;
-          const rows = [
-            'dpr ' + (window.devicePixelRatio || 1) +
-              '   vp ' + window.innerWidth + 'x' + window.innerHeight +
-              (vv ? '  vis ' + R2(vv.width) + 'x' + R2(vv.height) : ''),
-            'bs  ' + canvas.width + 'x' + canvas.height + '  a ' + bsA.toFixed(4),
-            'css ' + R2(r.width) + 'x' + R2(r.height) + '  a ' + cssA.toFixed(4) +
-              '  err ' + err.toFixed(2) + '%',
-            'gl  ' + (gl ? gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight +
-                           (dbOK ? '  MATCH' : '  CLAMPED') : '(no context yet)'),
-            'fps ' + swapsPerSec + ' swaps/s' +
-              '   cam x' + (window.AA_TOUCH ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1) +
-              '   touch ' + (window.AA_TOUCH ? 'on' : 'off'),
-            // The two bits src/emscripten/eWebPage.cpp reports and the one
-            // decision the overlay makes from them. On a phone this is the
-            // only way to see WHY a tap did what it did.
-            'ctx ' + (window.AA_TOUCH ?
-                        (() => { const c = game.context();
-                                 return c.raw + ' menu ' + (c.menu ? 'y' : 'n') +
-                                        ' cycle ' + (c.cycle ? 'y' : 'n') +
-                                        ' -> ' + (c.driving ? 'STEER' : 'TAP=ENTER'); })()
-                      : 'n/a (desktop)')
-          ];
-          el.textContent = rows.join('\n');
-          el.className = (gl && !dbOK) || Math.abs(err) > 0.5 ? 'bad' : '';
-        } catch (e) {
-          el.textContent = 'diag failed: ' + e;
-        }
-      };
-      tick();
-      setInterval(tick, 500);
-      console.log('[DIAG] ?diag=1: readout on, glFlush/glFinish counted');
-    })();
+    // ---- THE START ORDER ------------------------------------------------------
+    // Everything above defines; this runs it, top to bottom, while the page is
+    // parsed -- before armagetronad.js is fetched, so before main().
+    keepTheDrawingBuffer();          // before SDL makes its WebGL context
+    announceTouch();                 // the [TOUCH] enabled= line, for the gates too
+    createTouchModules();            // touchInput, keyboard (a phone only)
+    applyLayoutDecision('at parse'); // the layout BEFORE the size: the size reads it
+    sizeCanvas('at load');           // the first paint's shape (again before main())
+    setUpTouchControls();            // pad, driving pad, tap layer, layout switch
+    setUpKeyboard();                 // the phone keyboard and the pad's Chat label
+    setUpLookZone();                 // looking around
+    startTouchTick();                // after every surface above has subscribed
+    for (const type of AAAudio.GESTURES) {   // sound on a phone (web/page/audio.js)
+      window.addEventListener(type, AAAudio.resumer({
+        context: () => (typeof SDL !== 'undefined' && SDL.audioContext) || null,
+        log: (line) => console.log(line),
+        resumed: () => { const n = window.AA_AUDIO_RESUMED | 0; window.AA_AUDIO_RESUMED = n + 1; return n; },
+      }), { capture: true, passive: true });
+    }
+    {                                // hidden or closed: leave the server, save (page-lifecycle.js)
+      const lifecycle = AAPageLifecycle.create({
+        game, doc: document, log: (line) => console.log(line),
+        leaveAfterMs: (readNumberParam('[LEAVE]', 'leaveafter', 5, 3600) || 60) * 1000,
+        setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (t) => clearTimeout(t),
+      });
+      document.addEventListener('visibilitychange', lifecycle.onVisibilityChange);
+      window.addEventListener('beforeunload', lifecycle.onBeforeUnload);
+    }
+    if (AAParams.flag(location.search, 'diag')) {   // ?diag=1 (web/page/diag.js)
+      AADiag.start({ el: document.getElementById('diag'), canvas: document.getElementById('canvas'),
+                     win: window, game, touch: touchDecision.on,
+                     cam: touchDecision.on ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1,
+                     log: (line) => console.log(line) });
+    }
 
   </script>
 

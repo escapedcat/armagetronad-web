@@ -6,14 +6,6 @@ import { loadPageModule, readRepoFile } from './load-page-module.mjs';
 const L = loadPageModule('web/page/layout.js', 'AALayout', { URLSearchParams });
 const MAX = 3840 * 2160;
 
-test('numberParam: absent, in range, out of range (ignored, never clamped)', () => {
-  assert.deepEqual({ ...L.numberParam('', 'dpr', 0.05, 8) }, { value: null, ignored: null });
-  assert.deepEqual({ ...L.numberParam('?dpr=1.5', 'dpr', 0.05, 8) }, { value: 1.5, ignored: null });
-  assert.deepEqual({ ...L.numberParam('?dpr=9', 'dpr', 0.05, 8) },
-    { value: null, ignored: '[DISPLAY] ?dpr=9 ignored (want 0.05..8)' });
-  assert.equal(L.numberParam('?cam=abc', 'cam', 0.15, 4).value, null);
-});
-
 test('decideTouch: the parameter wins, then the media query', () => {
   assert.deepEqual({ ...L.decideTouch('?touch=1', false) }, { on: true, why: '?touch=1' });
   assert.deepEqual({ ...L.decideTouch('?touch=0', true) }, { on: false, why: '?touch=0' });
@@ -72,4 +64,10 @@ test('shell.html no longer does the arithmetic or reaches across blocks through 
   const code = readRepoFile('web/shell.html').split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
   assert.deepEqual(code.match(/Math\.sqrt\(MAX_CANVAS_PIXELS/g) || [], []);
   assert.deepEqual(code.match(/window\.AA_(KBD|LABEL_LAYOUT_BUTTON)\b/g) || [], []);
+});
+
+test('shell.html publishes AA_TOUCH, AA_GAMEBOY and AA_DEFAULT_NAME for gates and never reads them back', () => {
+  const code = readRepoFile('web/shell.html').split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
+  const uses = code.match(/window\.AA_(TOUCH|GAMEBOY|DEFAULT_NAME)\b(\s*=(?!=))?/g) || [];
+  assert.deepEqual(uses.filter((u) => !/=$/.test(u)), [], 'every use is an assignment');
 });
