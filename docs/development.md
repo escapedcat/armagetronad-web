@@ -141,6 +141,10 @@ mechanism.
   HTML file.
   - `web/page/game.js` is the page's one way into the game: every
     `aa_web_*` call and every synthetic key goes through it.
+  - `web/page/page-config.js` decides the config lines the page appends to
+    `/data/webdefaults/autoexec.cfg` before `main()` (touch camera, cheap
+    sparks, no keyboard hints, the wall cut, and their URL overrides), and
+    writes them in one go.
   - Their tests run in Node with a fake game, no browser and no build:
     `node --test 'web/test/*.test.mjs'`. CI runs them on every pull request.
 - **Where the history lives:**

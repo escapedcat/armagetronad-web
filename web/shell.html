@@ -690,6 +690,7 @@
   <div id="diag" hidden></div>
 
   <!-- @page-module web/page/game.js -->
+  <!-- @page-module web/page/page-config.js -->
 
   <script>
     const statusEl  = document.getElementById('status');
@@ -1508,129 +1509,10 @@
       });
     })();
 
-    // ---- PHONE FEEDBACK: "the bike is tiny" -----------------------------
-    //
-    // THE MEASUREMENT FIRST. At a phone's landscape aspect (2745x1050, a
-    // Pixel-class device at dpr 3 with the URL bar showing) the player's own
-    // cycle is 23 x 63 backing-store pixels during the round-start countdown --
-    // 6 % of the screen HEIGHT and 2.2 % of its width. That is not a phone bug:
-    // rViewport::Perspective fixes the vertical field of view for every aspect
-    // above 1.5 and widens only the horizontal, so a cycle occupies the same
-    // fraction of screen height on a phone as on a desktop. The phone's screen
-    // is simply small and at arm's length.
-    //
-    // WHAT WAS MEASURED, at that same geometry, from four full runs
-    // (docs/evidence/phone-feedback/camera/):
-    //
-    //   stock (fov 90)                     23 x 63 px    horizon visible
-    //   START_FOV_1 78                     29 x 75 px    horizon visible
-    //   START_FOV_1 69                     33 x 80 px    horizon at the corners
-    //   camera distance x0.5               47 x 122 px   horizon visible
-    //
-    // Halving the camera distance wins on both counts: 1.94x linear against
-    // 1.27x, AND it keeps the arena rim in frame, which narrowing the field of
-    // view does not -- at fov 69 the horizon is already leaving the top of the
-    // screen, and at 60 the frame is floor and nothing else. So the lever is
-    // the camera, not the fov.
-    //
-    // WHY THIS IS DONE HERE AND NOT AS A COMPILED DEFAULT, which is what M4
-    // task 3 established as the right home for a preference. Because the
-    // compiled default is not reachable for these four settings:
-    // config/settings_visual.cfg NAMES all of them, and st_LoadConfig loads
-    // config/settings.cfg (which includes it) AFTER user.cfg -- so a default in
-    // eCamera.cpp is overwritten on every boot by the shipped config, and so is
-    // anything a player could put in user.cfg. They are also tSettingItem, i.e.
-    // never written back to user.cfg, and there is no menu row for any of them.
-    // The player therefore has NO way to set these today, on any platform,
-    // which is exactly the "there is no player choice for it to overwrite" case
-    // web/webdefaults/autoexec.cfg's own header calls harmless.
-    //
-    // WHY IT IS TOUCH-ONLY AND WHY THAT IS THE POINT. The dispatch's constraint
-    // is "do not break the desktop experience to fix the phone one". Appending
-    // to the preloaded autoexec.cfg from the page -- rather than editing
-    // web/webdefaults/autoexec.cfg on disk -- is what makes the change
-    // conditional on something only the page knows: whether the primary input
-    // is a finger. A desktop visitor's /data/webdefaults/autoexec.cfg is byte
-    // for byte the file the build shipped, and every desktop gate in
-    // web/tools/ therefore measures an unchanged game.
-    //
-    // ?cam=F OVERRIDES IT, ON ANY DEVICE, and that is how the next round of
-    // this conversation gets to be a measurement instead of a preference.
-    // ?cam=1 is stock (nothing is written at all), ?cam=0.35 is closer still.
-    //
-    // THE FOUR BASE VALUES ARE COPIED FROM config/settings_visual.cfg and are
-    // multiplied, not replaced, so the speed-scaling shape of the stock camera
-    // is preserved: at 40 m/s the halved camera sits where the stock one sits
-    // at 14 m/s rather than on top of the cycle. If those base values ever
-    // change in that file, THESE GO STALE SILENTLY -- there is no way for a
-    // page to read them back, since they are not exposed to JS anywhere.
-    const CAMERA_BASE = {                      // config/settings_visual.cfg
-      CAMERA_CUSTOM_BACK: 6,   CAMERA_CUSTOM_RISE: 4,
-      CAMERA_CUSTOM_BACK_FROMSPEED: 0.5, CAMERA_CUSTOM_RISE_FROMSPEED: 0.4,
-      CAMERA_GLANCE_BACK: 6,   CAMERA_GLANCE_RISE: 4,
-      CAMERA_GLANCE_BACK_FROMSPEED: 0.5, CAMERA_GLANCE_RISE_FROMSPEED: 0.4
-    };
-    const CAMERA_TOUCH_FACTOR = 0.5;
-    function applyTouchCameraTuning() {
-      let factor = 1;
-      try {
-        const q = readNumberParam('cam', 0.15, 4);
-        factor = q !== null ? q : (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1);
-        if (factor === 1) {
-          console.log('[CAMERA] stock camera (factor 1' +
-                      (q !== null ? ', from ?cam' : '') + ')');
-          return;
-        }
-        const lines = ['', '# appended at runtime by web/shell.html: camera x' +
-                       factor + (window.AA_TOUCH ? ' (touch device)' : '')];
-        for (const k in CAMERA_BASE) {
-          lines.push(k + ' ' + (Math.round(CAMERA_BASE[k] * factor * 1e4) / 1e4));
-        }
-        lines.push('');
-        const path = '/data/webdefaults/autoexec.cfg';
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[CAMERA] camera distance x' + factor +
-                    ' written to ' + path + ' before main()');
-      } catch (e) {
-        // A failure here is a stock camera, not a broken game. It must never
-        // reach showFailure.
-        console.log('[CAMERA] tuning skipped (factor ' + factor + '): ' + e);
-      }
-    }
-
-    // ---- THE WALL CUT, ON FOR TOUCH DEVICES (2026-09-29) --------------------
-    //
-    // On an Android phone, single frames showed a comb of thin lines in a
-    // wall's colour, shooting to the screen edge. In all five captured events a
-    // wall of that colour -- usually the player's own trail, just after a turn,
-    // as the camera swung over its corner -- passed level with the camera. A
-    // corner at nearly zero distance should be clipped by the GPU before the
-    // perspective divide; this phone's GPU evidently lets one through now and
-    // then, and it is divided out to the screen edge. WALL_CUT 1 makes the game
-    // cut every piece of a player's wall so none of it reaches the GPU closer
-    // than 0.05 units in front of the camera -- inside the near plane, so
-    // nothing visible goes. See src/emscripten/eWebWallCut.cpp and
-    // docs/evidence/phone-wall-comb/ (plain: 4 combs in 112 s of play; with the
-    // cut: 0 in 110 s).
-    //
-    // Touch devices only: the desktop never showed it, and is left exactly as
-    // it was. ?wallcut=0 turns it off on a phone (to compare); ?wallcut=1 turns
-    // it on anywhere.
-    function applyWallCutParam() {
-      const q = readNumberParam('wallcut', 0, 1);
-      const on = q !== null ? q === 1 : !!window.AA_TOUCH;
-      if (!on) { if (window.AA_TOUCH) console.log('[WALLS] wall cut off (?wallcut=0)'); return; }
-      try {
-        const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: wall cut (' + (q !== null ? '?wallcut=1' : 'touch device') + ')', 'WALL_CUT 1', ''];
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[WALLS] WALL_CUT 1 written to ' + path + ' before main()');
-      } catch (e) {
-        console.log('[WALLS] wall cut skipped: ' + e);
-      }
-    }
+    // ---- THE CONFIG THE PAGE WRITES INTO THE GAME ---------------------------
+    // The touch camera, cheap sparks, no keyboard hints and the wall cut, and
+    // their ?cam= / ?sparks= / ?wallcut= overrides: web/page/page-config.js,
+    // applied from onRuntimeInitialized below.
 
     // ---- LEAVE A SERVER CLEANLY WHEN THE PAGE HAS BEEN HIDDEN ----------------
     // All browser players reach the servers through the relay, so a server sees
@@ -1890,193 +1772,6 @@
       window.addEventListener(type, resumeAudio, { capture: true, passive: true });
     }
 
-    // ---- M6: NO CRASH SPARKS ON A TOUCH DEVICE ---------------------------
-    //
-    // THE MEASUREMENT FIRST, AND IT IS ABOUT THE WALL. M6 task 3's grind arm
-    // holds a cycle pressed against the rim for the whole measured window --
-    // which is not a contrived case on a phone, it is what a thumb does by
-    // accident every round. Stock, that frame costs 17.15 ms median and 20.3 ms
-    // in the worst measured second, and the draw count BURSTS to 171 calls in
-    // a frame. Re-run with SPARKS 0, twice: 13.1 and 13.65 ms median, worst 13.8
-    // and 15.0, and the draw count pinned flat at 60. About a quarter of the
-    // frame at the wall is spark bursts, and it is spent exactly when the
-    // player is least able to afford it.
-    //
-    // READ THE 17.15 WITH ITS CONDITION. It is the arm whose cycle sparked in
-    // 29 of its 40 rim seconds. The SECOND stock run of the same arm sparked
-    // in only 11 of 40 and read 14.0 ms median (worst 18.3), so the median win
-    // is 23.6 % in the first and 2.5 % in the second, while the WORST second
-    // falls 32 % and 18 %. The quarter is what a cycle that is actually
-    // sparking gets back, not what every rim second costs.
-    // docs/evidence/m6-lag/task8-sparks/.
-    //
-    // WHAT IS TURNED OFF, EXACTLY. SPARKS is an existing config item --
-    // `static tConfItem<bool> cs2("SPARKS",crash_sparks)` in src/tron/gMenus.cpp
-    // -- and the flag is read at the two `if (crash_sparks && animts>0)` guards
-    // in src/tron/gCycle.cpp (the four `new gSpark` calls live inside them),
-    // both in the WALL-CONTACT block: this is the shower a cycle throws while
-    // it grinds a wall, and nothing else. Dying is EXPLOSION, below, which is a
-    // different flag over a different effect and is not touched. It is drawing
-    // and nothing else: no physics, no timing, no rubber, no score consults it.
-    // The game plays identically; it stops painting sparks. That is also why
-    // this is a settings change and not a C++ one -- there is nothing to patch.
-    //
-    // EXPLOSION EXISTS TOO AND IS DELIBERATELY LEFT ALONE. It is the same kind
-    // of switch over the same kind of effect, and it was NOT measured. Turning
-    // a second thing off on the strength of the first one's number is precisely
-    // the guess this milestone exists to stop making; if the explosion is worth
-    // a quarter of a frame somewhere, that is another arm, with its own runs.
-    //
-    // WHY TOUCH-ONLY, AND WHY THE APPEND RATHER THAN THE SHIPPED FILE. Same
-    // reason as the camera above: the maintainer's constraint is "do not change
-    // the desktop experience to fix the phone one", and the desktop is not the
-    // machine that is short of milliseconds. Appending to the preloaded
-    // autoexec.cfg from the page -- rather than editing
-    // web/webdefaults/autoexec.cfg on disk -- is what makes the change
-    // conditional on something only the page knows: whether the primary input
-    // is a finger. A desktop visitor's /data/webdefaults/autoexec.cfg stays
-    // byte for byte the file the build shipped, and web/tools/menu-gate.steps
-    // reads it back and asserts the word SPARKS does not appear in it.
-    //
-    // ?sparks=0 / ?sparks=1 OVERRIDE IT, ON ANY DEVICE, AND BOTH DIRECTIONS
-    // WRITE. ?sparks=0 appends SPARKS 0 on a desktop, which is how the numbers
-    // above were measured here at all -- the rig has no phone. ?sparks=1
-    // appends SPARKS 1, and why it cannot simply stay quiet is the whole point
-    // of the next paragraph.
-    //
-    // WHY SILENCE IS NOT AN OVERRIDE: SPARKS PERSISTS, AND THE CAMERA DOES NOT.
-    // This first shipped with "?sparks=1 writes nothing, the device default is
-    // simply skipped", and the maintainer found it on his phone: the sparks did
-    // not come back. SPARKS is a tConfItem, and tConfItemBase::Save() returns
-    // true (src/tools/tConfiguration.h:296), so st_SaveConfig() WRITES IT INTO
-    // /persist/var/user.cfg -- and this page saves on every menu leave, 21
-    // times in one gate run. So after the FIRST session with this append in
-    // effect, the player's own saved config holds SPARKS 0. st_LoadConfig
-    // (src/tools/tConfiguration.cpp:959) then reads user.cfg FIRST (line 975)
-    // and the userconfigdir autoexec.cfg near the END (line 992), so the file
-    // this page appends to always wins -- which is exactly why a silent
-    // ?sparks=1 lost: it left the persisted 0 standing and appended nothing to
-    // beat it. An override against a saved setting has to write.
-    //
-    // THE CAMERA NEVER HAD THIS PROBLEM, and the difference is one word in the
-    // type: the CAMERA_* items are tSettingItems, whose Save() returns FALSE
-    // (tConfiguration.h:497), so they never reach user.cfg at all and ?cam=1's
-    // silence really is stock. Do not read the two functions as the same shape.
-    //
-    // AND THE PRICE OF THAT ORDERING, STATED PLAINLY: on a touch device the
-    // append re-applies on EVERY boot, so a player who turns the sparks back on
-    // in the in-game Preferences menu is overridden the next time the page
-    // loads -- the menu writes user.cfg, and user.cfg is read before this file.
-    // ?sparks=1 is the way back, and it is a URL rather than a setting because
-    // a URL is the only thing here that outranks a file loaded after user.cfg.
-    const SPARKS_OFF_LINE = 'SPARKS 0';
-    const SPARKS_ON_LINE  = 'SPARKS 1';
-    // M8: CHEAP SPARKS ARE THE TOUCH DEFAULT NOW, not silence. M6 switched
-    // sparks off on a phone because a grinding cycle threw up to two spark
-    // objects per frame, each alive four seconds and each its own draw call
-    // -- a quarter of the frame at the rim. gSparks.cpp (client-only, the
-    // dedicated pin untouched) gained SPARKS_LIFETIME and SPARKS_INTERVAL,
-    // whose defaults are the upstream 4 s and "every frame", so a desktop
-    // that sets nothing is unchanged; these three lines are what a touch
-    // device sets. The numbers are the M8 rig's, see docs/evidence/m8-cheap-sparks/.
-    // ?sparks=1 is still the stock sparks (for the comparison), ?sparks=0 off.
-    const SPARKS_CHEAP_LINES = ['SPARKS 1', 'SPARKS_LIFETIME 1', 'SPARKS_INTERVAL 0.05'];
-    function applyTouchSparksTuning() {
-      let value = null;   // null = write nothing at all
-      try {
-        // 0 = off, 1 = on, and BOTH are written -- see the paragraph above for
-        // why 1 cannot be silence. SPARKS is a bool, so anything else is a typo
-        // and is ignored out loud rather than silently half-answering the
-        // question. WHICH TAG SAYS SO DEPENDS ON THE VALUE, because
-        // readNumberParam screens the range first: ?sparks=2 is out of range,
-        // so IT logs "[DISPLAY] ?sparks=2 ignored ..." and returns null
-        // (exactly as with ?cam), and the [SPARKS] line below fires only for a
-        // value that is in range but not 0 or 1, e.g. ?sparks=0.5. Either way
-        // the device default stands. Grep for both tags when chasing a
-        // ?sparks= that did nothing.
-        const q = readNumberParam('sparks', 0, 1);
-        const fromParam = (q === 0 || q === 1);
-        if (q !== null && !fromParam) {
-          console.log('[SPARKS] ?sparks=' + q + ' ignored (want 0 or 1)');
-        }
-        value = fromParam ? q : (window.AA_TOUCH ? 'cheap' : null);
-        if (value === null) {
-          // The desktop, with no parameter: the file the build shipped is left
-          // exactly as it is, which web/tools/menu-gate.steps asserts by
-          // reading it back and finding no SPARKS in it.
-          console.log('[SPARKS] stock sparks, nothing written');
-          return;
-        }
-        const why = fromParam ? ' (from ?sparks=' + q + ')' : ' (touch device)';
-        const body = value === 0 ? [SPARKS_OFF_LINE]
-                   : value === 1 ? [SPARKS_ON_LINE]
-                   : SPARKS_CHEAP_LINES;
-        const what = value === 0 ? 'off' : value === 1 ? 'on' : 'on, priced for a phone';
-        const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: crash sparks ' + what + why]
-                      .concat(body, ['']);
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[SPARKS] ' + body.join(' / ') + ' written to ' + path +
-                    ' before main()' + why);
-      } catch (e) {
-        // A failure here is whatever the saved config already says, not a
-        // broken game; like the camera above, it must never reach showFailure.
-        console.log('[SPARKS] tuning skipped (value ' + value + '): ' + e);
-      }
-    }
-
-    // ---- NO KEYBOARD HINTS FOR KEYS A PHONE DOESN'T HAVE --------------------
-    // The game shows a tooltip the first times an action is due: "Press <v> or
-    // <c> to switch camera modes", "... to glance left", and so on. On a phone
-    // those name keys that don't exist, so a touch device switches the camera
-    // and glance tooltips off. Each *_TOOLTIP is a counter of how many more
-    // times to show it (config/default.cfg); all zeros means never. Appended
-    // to the same file and for the same reason as the sparks above: it has to
-    // be conditional on something only the page knows, and the file is read
-    // after user.cfg, so it wins on every boot. A desktop is left alone.
-    // The turn and chat tooltips stay: the touch and portrait gates count them.
-    const TOUCH_HINTS_OFF = ['SWITCH_VIEW_TOOLTIP 0 0 0 0 0', 'GLANCE_BACK_TOOLTIP 0 0 0 0 0',
-                             'GLANCE_LEFT_TOOLTIP 0 0 0 0 0', 'GLANCE_RIGHT_TOOLTIP 0 0 0 0 0'];
-    function applyTouchHints() {
-      if (!window.AA_TOUCH) return;
-      try {
-        const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: no camera or glance hints on a touch device']
-                      .concat(TOUCH_HINTS_OFF, ['']);
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[HINTS] camera and glance hints off (touch device)');
-      } catch (e) {
-        console.log('[HINTS] skipped: ' + e);
-      }
-    }
-
-    // ---- web_user BECOMES web_NNNN, ONCE -----------------------------------
-    // Before new players got a web_NNNN default (THE DEFAULT NAME, preRun),
-    // every browser player started as "web_user", and a saved profile keeps
-    // that name. So on load, a saved Player 1 named exactly web_user is
-    // renamed to this load's fresh web_NNNN before main() reads user.cfg. Any
-    // name the player chose is left alone, and once renamed it is not
-    // web_user any more, so this happens once per profile.
-    function renameOldDefaultName() {
-      try {
-        const path = '/persist/var/user.cfg';
-        if (!Module.FS.analyzePath(path).exists) return;
-        let cfg = '';
-        for (const b of Module.FS.readFile(path)) cfg += String.fromCharCode(b);   // latin-1
-        const line = /^(\s*PLAYER_1\s+)web_user[ \t]*$/m;
-        if (!line.test(cfg)) return;
-        const name = window.AA_DEFAULT_NAME ||
-                     'web_' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-        cfg = cfg.replace(line, '$1' + name);
-        Module.FS.writeFile(path, Uint8Array.from(cfg, (ch) => ch.charCodeAt(0)));
-        console.log('[NAME] the old default web_user is now ' + name);
-      } catch (e) {
-        console.log('[NAME] web_user rename skipped: ' + e);
-      }
-    }
-
     var Module = {
       canvas: document.getElementById('canvas'),
       // The game reads its data from the preloaded /data tree and writes user
@@ -2204,7 +1899,7 @@
       // every browser player was "web_user". A saved name (user.cfg) still
       // wins; this is only what a first visit starts from.
       () => {
-        const name = 'web_' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        const name = AAPageConfig.defaultName();
         try {
           Module.ENV.USER = name;
           Module.ENV.LOGNAME = name;
@@ -2273,12 +1968,14 @@
         // The preloaded /data tree exists from here on and not one moment
         // earlier: the file packager appends ITS preRun callback after this
         // page's, so a preRun hook cannot read /data at all. That is why the
-        // touch camera tuning below is here rather than in preRun.
-        applyTouchCameraTuning();
-        applyTouchSparksTuning();
-        applyTouchHints();
-        renameOldDefaultName();
-        applyWallCutParam();
+        // page's config is written here rather than in preRun.
+        AAPageConfig.apply(Module.FS, window.AA_TOUCH, {
+          cam:     readNumberParam('cam', 0.15, 4),
+          sparks:  readNumberParam('sparks', 0, 1),
+          wallcut: readNumberParam('wallcut', 0, 1),
+        }, (line) => console.log(line));
+        AAPageConfig.applyRename(Module.FS,
+          window.AA_DEFAULT_NAME || AAPageConfig.defaultName(), (line) => console.log(line));
         let manual = false;
         try {
           manual = new URLSearchParams(location.search).get('autostart') === '0';
@@ -2529,7 +2226,7 @@
             'gl  ' + (gl ? gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight +
                            (dbOK ? '  MATCH' : '  CLAMPED') : '(no context yet)'),
             'fps ' + swapsPerSec + ' swaps/s' +
-              '   cam x' + (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1) +
+              '   cam x' + (window.AA_TOUCH ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1) +
               '   touch ' + (window.AA_TOUCH ? 'on' : 'off'),
             // The two bits src/emscripten/eWebInput.cpp reports and the one
             // decision the overlay makes from them. On a phone this is the
