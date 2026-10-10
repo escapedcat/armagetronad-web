@@ -228,7 +228,7 @@ background, or whose phone switched apps, stops sending input and is kicked.
 A regular logout is not a kick: the in-game menu's "Disconnect" runs
 ret_to_MainMenu(), which logs out through sn_SetNetState(nSTANDALONE), and a
 logout or a timeout goes through sn_DisconnectUser without touching the kick
-count. So web/shell.html, once the page has been hidden for a while, asks for
+count. So the page (web/page/page-lifecycle.js), once hidden for a while, asks for
 exactly that disconnect.
 
 The disconnect runs from the game's frame loop (the header says why), exactly

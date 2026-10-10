@@ -153,8 +153,12 @@ mechanism.
   - `web/page/params.js` reads the numeric URL parameters (`?dpr=`, `?cam=`,
     …); an out-of-range value is ignored and logged under the feature's tag.
   - `web/page/phone-keyboard.js` types into the game's own text fields.
-  - What is left in `web/shell.html`'s script wires these to the DOM in the
-    order the page starts, written out at the top of the script.
+  - `web/page/page-lifecycle.js` is what happens when the page is hidden or
+    closed: the leave timer and the save backstop.
+  - `web/page/audio.js` resumes sound on a phone; `web/page/diag.js` is the
+    `?diag=1` readout.
+  - What is left in `web/shell.html`'s script defines how these are wired to
+    the DOM, and "THE START ORDER" at its bottom runs them, in order.
   - Their tests run in Node with a fake game, no browser and no build:
     `node --test 'web/test/*.test.mjs'`. CI runs them on every pull request.
 - **Where the history lives:**

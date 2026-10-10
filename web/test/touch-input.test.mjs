@@ -105,7 +105,7 @@ test('shell.html keeps no key state of its own, and watches the game in one plac
   const code = readRepoFile('web/shell.html').split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
   assert.deepEqual(code.match(/classList\.(add|remove)\('aa-down'\)/g) || [], []);
   assert.deepEqual(code.match(/MutationObserver/g) || [], []);
-  assert.equal((code.match(/setInterval\(/g) || []).length, 2, 'the touch tick and the ?diag readout');
+  assert.equal((code.match(/setInterval\(/g) || []).length, 1, 'the touch tick (the ?diag readout is web/page/diag.js)');
 });
 
 test('Enter is chat in a round: the pad, the tap and the label follow one rule', () => {

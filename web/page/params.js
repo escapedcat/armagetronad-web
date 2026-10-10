@@ -23,5 +23,10 @@ var AAParams = (function () {
     return { value: v, ignored: null };
   };
 
-  return { number: number };
+  // An on/off parameter: true only for ?name=1.
+  var flag = function (search, name) {
+    return new URLSearchParams(search).get(name) === '1';
+  };
+
+  return { number: number, flag: flag };
 })();
