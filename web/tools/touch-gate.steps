@@ -168,7 +168,7 @@ shot:00-language-menu-with-touch-controls
 # the change on its own; the pair does.
 # ===========================================================================
 until:1:30000:[SPARKS] SPARKS 1 / SPARKS_LIFETIME 1 / SPARKS_INTERVAL 0.05 written to /data/webdefaults/autoexec.cfg
-eval:(()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 1\nSPARKS_LIFETIME 1\nSPARKS_INTERVAL 0.05\n$/.test(t);return '[SPARKSGATE] T1b cheap-sparks-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,ends_with_cheap_block:ends,tail:ok?t.slice(-128):null,PASS:ok&&n===1&&ends})})()
+eval:(()=>{const p='/data/webdefaults/autoexec.cfg';let t=null,err=null;try{t=Module.FS.readFile(p,{encoding:'utf8'})}catch(e){err=String(e)}const ok=typeof t==='string';const n=ok?(t.match(/^SPARKS\b/gm)||[]).length:-1;const ends=ok&&/\nSPARKS 1\nSPARKS_LIFETIME 1\nSPARKS_INTERVAL 0.05\n/.test(t);return '[SPARKSGATE] T1b cheap-sparks-on-touch '+JSON.stringify({read:ok,err:err,bytes:ok?t.length:0,sparks_lines:n,has_cheap_block:ends,tail:ok?t.slice(-128):null,PASS:ok&&n===1&&ends})})()
 
 # ===========================================================================
 # T2: THE MENUS, BY TAPPING ONLY. No key: step appears anywhere below.
@@ -353,7 +353,7 @@ wait:8000
 # the persisted 0 had won (the defect), the live value would be 0 and this line
 # would say so. Forcing the save also makes the check deterministic: the game
 # saves on its own schedule, on menu leaves, and a gate must not race it.
-eval:(()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=t!==null&&/\nSPARKS 0\n$/.test(t);return '[SPARKSGATE] T1c sparks-0-overrides-the-saved-1 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,ends_with_sparks_0:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 0'&&ends&&sv==='saved'&&!!um&&um[1]==='0'})})()
+eval:(()=>{const a='/data/webdefaults/autoexec.cfg',u='/persist/var/user.cfg';const rd=(p)=>{try{return Module.FS.readFile(p,{encoding:'utf8'})}catch(e){return null}};let sv='not attempted';try{Module._aa_web_save_config();sv='saved'}catch(e){sv='SAVE FAILED: '+e}const t=rd(a),c=rd(u);const lines=t===null?null:(t.match(/^SPARKS\b.*$/gm)||[]);const um=c===null?null:/^[ \t]*SPARKS[ \t]+(\S+)[ \t]*$/m.exec(c);const ends=!!lines&&lines[lines.length-1]==='SPARKS 0';return '[SPARKSGATE] T1c sparks-0-overrides-the-saved-1 '+JSON.stringify({save:sv,autoexec_read:t!==null,autoexec_bytes:t===null?0:t.length,autoexec_sparks_lines:lines,last_sparks_line_is_0:ends,live_sparks_in_user_cfg:um?um[1]:null,tail:t===null?null:t.slice(-92),PASS:t!==null&&lines!==null&&lines.length===1&&lines[0]==='SPARKS 0'&&ends&&sv==='saved'&&!!um&&um[1]==='0'})})()
 shot:15-booted-with-sparks-0
 
 # CONTROL: can this transcript see a browser-reported JS error at all?
