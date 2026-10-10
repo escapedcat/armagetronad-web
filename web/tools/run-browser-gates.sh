@@ -34,10 +34,12 @@ GATES=("$@")
   game-keyboard-gate default-name-gate menu-gate touch-hints-gate-phone touch-hints-gate-desk
   synthetic-key-gate layout-boot-gate persist-gate)
 mkdir -p "$OUT"
+pgrep -f "http.server $HTTP" >/dev/null && { echo "a static server is already on $HTTP; set GATE_HTTP_PORT" >&2; exit 2; }
 python3 -m http.server "$HTTP" --directory web/dist-m1 >/dev/null 2>&1 &
 SRV=$!
 trap 'kill $SRV 2>/dev/null' EXIT
-sleep 1
+wait_for 10 curl -sf -o /dev/null "http://localhost:$HTTP/armagetronad.html" ||
+  { echo "the static server on $HTTP did not answer" >&2; exit 1; }
 U="http://localhost:$HTTP/armagetronad.html"
 PHONE=412,915,3   # --mobile W,H,DPR: a phone in portrait
 
