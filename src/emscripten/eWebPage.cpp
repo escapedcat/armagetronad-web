@@ -1,12 +1,12 @@
 /*
-Armagetron Advanced -- what web/shell.html asks the game, and what it asks the
+Armagetron Advanced -- what the web page asks the game, and what it asks the
 game to do.
 
 This module is everything the page asks the game (which input a tap means, is
 a text field highlighted, is a chat line open or possible, is it connected)
 and every request the page queues for the game loop (leave the server, look
 around). Each section below is one question or one request; the exports keep
-the names web/shell.html calls.
+the names web/page/game.js calls (the page's one caller).
 
 ONE SAFETY RULE COVERS EVERY EXPORT HERE. The page calls them from browser
 events -- taps, timers, touch handlers, polls -- and the game spends nearly all
@@ -68,8 +68,8 @@ aa_web_input_context() returns a bit field, not a verdict:
     bit 1  AA_WEB_CTX_DRIVING  a LOCAL player has an object and that object is
                                Alive(), i.e. there is a cycle to steer.
 
-The policy that combines them lives in web/shell.html, where it can be read
-next to the handler it governs and where a gate can assert on it. Keeping the
+The policy that combines them lives in web/page/game.js (context().driving),
+where web/test/game.test.mjs checks it. Keeping the
 two facts separate is also what makes the third state visible: neither bit set
 is the welcome message, the round-end pause and the first frames of a boot --
 places that want Enter and have no cycle, and that a single "is a menu active"
@@ -95,10 +95,8 @@ WHY NOT A LINE IN eWebPersist.cpp. That file is about making a changed setting
 durable; this is about input.
 */
 
-// Kept in sync by hand with the two constants of the same name in
-// web/shell.html. There is no way to share a number between a C++ file and a
-// --shell-file, so the check is the touch gate: it asserts the context value
-// the page reports against the state it drove the game into.
+// The page's copies are CTX_MENU and CTX_CYCLE in web/page/game.js.
+// web/test/game.test.mjs reads these two lines and fails if they differ.
 #define AA_WEB_CTX_MENU     1
 #define AA_WEB_CTX_DRIVING  2
 
@@ -160,8 +158,8 @@ THE PHONE KEYBOARD TYPES INTO THE GAME'S OWN TEXT FIELDS.
 A phone has no keyboard until a text field in the page is focused, and the
 game's text fields (Player Setup's name, Custom Connect, the chat line) are
 drawn into the canvas. So the page keeps a hidden <input> for the phone
-keyboard and turns what is typed into key events for SDL (web/shell.html,
-"THE PHONE KEYBOARD"). What the page cannot see is WHEN one of the game's
+keyboard and turns what is typed into key events for SDL
+(web/page/phone-keyboard.js). What the page cannot see is WHEN one of the game's
 text fields is highlighted; this section tells it.
 
 uMenuItemString::Render calls se_WebTextSelected() each time it draws a
@@ -255,7 +253,7 @@ void ret_to_MainMenu(); // src/tron/gGame.cpp -- what the in-game menu's Disconn
 
 static bool sg_leaveRequested = false;
 
-// Called by web/shell.html. Sets a flag and nothing else: it must not reach
+// Called by the page (web/page/game.js, requestLeave). Sets a flag and nothing else: it must not reach
 // anything that could yield, because it runs from a browser timer.
 extern "C" EMSCRIPTEN_KEEPALIVE void aa_web_request_leave( void )
 {
@@ -316,7 +314,7 @@ actions run from the game's own frame loop (rPerFrameTask, from SwapGL).
 static int se_lookWanted = 0;   // bits the page asks for: 1 left, 2 right, 4 back
 static int se_lookApplied = 0;  // bits last pressed in the game
 
-// Called by web/shell.html from touch events. Stores the bits and nothing
+// Called by the page from touch events (web/page/game.js, look). Stores the bits and nothing
 // else: it must not reach anything that could yield.
 extern "C" EMSCRIPTEN_KEEPALIVE void aa_web_look( int bits )
 {
