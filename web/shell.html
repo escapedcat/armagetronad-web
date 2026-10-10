@@ -689,8 +689,27 @@
   -->
   <div id="diag" hidden></div>
 
+  <!-- @page-module web/page/game.js -->
+  <!-- @page-module web/page/page-config.js -->
+  <!-- @page-module web/page/touch-input.js -->
+  <!-- @page-module web/page/layout.js -->
+  <!-- @page-module web/page/phone-keyboard.js -->
 
   <script>
+    // THE PAGE, IN THE ORDER IT STARTS. The modules are web/page/*.js,
+    // inlined above; this script wires them to the DOM, top to bottom:
+    //   1. failure reporting, then `game` (web/page/game.js)
+    //   2. the touch decision, the layout decision, the canvas size
+    //      (web/page/layout.js), then `touchInput` and `keyboard` on a phone
+    //   3. the touch surfaces: pad, driving pad, tap layer, look zone, and the
+    //      first touch tick
+    //   4. the leave timer, the audio resume, `Module` (preRun: /persist and
+    //      the default name; onRuntimeInitialized: the page config
+    //      (web/page/page-config.js), then startGame)
+    //   5. the save backstop and the ?diag readout
+    // Blocks reach each other only through the names declared here, never
+    // through window.*; the window.AA_* names left are for gates and
+    // measurement pages.
     const statusEl  = document.getElementById('status');
     const overlayEl = document.getElementById('overlay');
 
@@ -727,6 +746,15 @@
     }
     window.onerror = (message) => showFailure(String(message));
     window.onunhandledrejection = (event) => showFailure(String(event.reason));
+
+    // THE GAME, AS THE PAGE SEES IT: web/page/game.js. Every call into the
+    // wasm and every synthetic key goes through this one object. `Module` is
+    // the `var` declared further down, so this asks for it at call time.
+    const game = AAGame.create({
+      module: () => (typeof Module !== 'undefined' ? Module : undefined),
+      send: (type, init) => document.dispatchEvent(new KeyboardEvent(type,
+        Object.assign({ bubbles: true, cancelable: true }, init))),
+    });
 
     // Without preserveDrawingBuffer the canvas renders BLACK -- not "wrong
     // colours", not "flickering", solid black -- while the game underneath is
@@ -880,15 +908,9 @@
     // did nothing -- the [DISPLAY] line says which happened either way.
     const readNumberParam = (name, min, max) => {
       try {
-        const raw = new URLSearchParams(location.search).get(name);
-        if (raw === null) return null;
-        const v = parseFloat(raw);
-        if (!isFinite(v) || v < min || v > max) {
-          console.log('[DISPLAY] ?' + name + '=' + raw + ' ignored (want ' +
-                      min + '..' + max + ')');
-          return null;
-        }
-        return v;
+        const p = AALayout.numberParam(location.search, name, min, max);
+        if (p.ignored) console.log(p.ignored);
+        return p.value;
       } catch (e) { return null; }  // a browser without URLSearchParams
     };
 
@@ -949,10 +971,11 @@
     // query alone therefore leaves a page's own idea of which way up it is
     // depending on something else repainting it.
     const viewportIsPortrait = () => {
-      const w = window.innerWidth, h = window.innerHeight;
-      if (w > 0 && h > 0) return h > w;
-      try { return window.matchMedia('(orientation: portrait)').matches; }
-      catch (e) { return false; }
+      let media = false;
+      if (!(window.innerWidth > 0 && window.innerHeight > 0)) {
+        try { media = window.matchMedia('(orientation: portrait)').matches; } catch (e) { media = false; }
+      }
+      return AALayout.isPortrait(window.innerWidth, window.innerHeight, media);
     };
 
     // ---- is this a touch device? ------------------------------------
@@ -968,15 +991,11 @@
     // visitor on a device this query gets wrong needs a way out. Nothing in
     // the shipped flow sets either.
     const decideTouch = () => {
-      try {
-        const q = new URLSearchParams(location.search).get('touch');
-        if (q === '1') return { on:true,  why:'?touch=1' };
-        if (q === '0') return { on:false, why:'?touch=0' };
-      } catch (e) { /* a browser without URLSearchParams falls through */ }
-      try {
-        const m = window.matchMedia('(hover: none) and (pointer: coarse)');
-        return { on: m.matches, why: 'media query -> ' + m.matches };
-      } catch (e) { return { on:false, why:'matchMedia threw: ' + e }; }
+      let coarse;
+      try { coarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches; }
+      catch (e) { coarse = e; }
+      try { return AALayout.decideTouch(location.search, coarse); }
+      catch (e) { return AALayout.decideTouch('', coarse); }  // a browser without URLSearchParams
     };
 
     // THE TOUCH DECISION IS MADE HERE, BEFORE SIZING, because the Game Boy
@@ -994,6 +1013,18 @@
     // than inferring it from a screenshot.
     console.log('[TOUCH] enabled=' + touchDecision.on + ' (' + touchDecision.why + ')' +
                 ' maxTouchPoints=' + (navigator.maxTouchPoints || 0));
+    // ON A PHONE: TOUCH INPUT (web/page/touch-input.js), the held keys of
+    // every touch surface and one reading of the game per tick for all of
+    // them, ticked once every surface below has subscribed; and THE PHONE
+    // KEYBOARD (web/page/phone-keyboard.js), which types into the game's own
+    // text fields. A desktop gets neither.
+    const touchInput = touchDecision.on ?
+      AATouchInput.create(game, (line) => console.log(line)) : null;
+    const keyboard = touchDecision.on ? AAPhoneKeyboard.create({
+      game, ime: document.getElementById('aa-ime'), doc: document,
+      log: (line) => console.log(line),
+      viewport: window.visualViewport || null, innerHeight: () => window.innerHeight,
+    }) : null;
     // GAME BOY = a touch device in portrait when the game STARTS -- or told to
     // be, by ?layout=portrait; ?layout=landscape is the full layout regardless
     // of how the phone is held. A desktop never gets the Game Boy whatever its
@@ -1005,13 +1036,10 @@
     // mid-game changes nothing, and the switch is #layoutbtn, a reload with the
     // parameter, offered in menus only.
     const layoutParam = (() => {
-      try {
-        const v = new URLSearchParams(location.search).get('layout');
-        return (v === 'portrait' || v === 'landscape') ? v : null;
-      } catch (e) { return null; }
+      try { return AALayout.layoutParam(location.search); } catch (e) { return null; }
     })();
     const decideGameboy = () =>
-      window.AA_TOUCH && (layoutParam ? layoutParam === 'portrait' : viewportIsPortrait());
+      AALayout.decideGameboy(window.AA_TOUCH, layoutParam, viewportIsPortrait());
     const applyLayoutDecision = (why) => {
       window.AA_GAMEBOY = decideGameboy();
       document.documentElement.classList.toggle('aa-gameboy', !!window.AA_GAMEBOY);
@@ -1060,54 +1088,37 @@
         const dprOverride = readNumberParam('dpr', 0.05, 8);
         const dpr = dprOverride !== null ? dprOverride
                                          : (window.devicePixelRatio || 1);
-        // ?layout= SIZES FOR THE LAYOUT ASKED FOR, NOT FOR THE VIEWPORT HELD:
-        // a phone held landscape that asked for the Game Boy gets a square
-        // sized as if it were upright (and the player turns it), a phone held
-        // upright that asked for landscape gets the wide backing store it will
-        // have once turned. Without the parameter the viewport is the truth.
-        let vw = window.innerWidth, vh = window.innerHeight;
-        if ((layoutParam === 'landscape' && vh > vw) || (layoutParam === 'portrait' && vw > vh)) {
-          const t = vw; vw = vh; vh = t;
-        }
-        let w = Math.floor(vw * dpr);
-        let h = Math.floor(vh * dpr);
-        if (!(w > 0 && h > 0)) {
+        // THE ARITHMETIC IS AALayout.canvasSize (web/page/layout.js). What it
+        // does, in order:
+        //  - ?layout= SIZES FOR THE LAYOUT ASKED FOR, NOT FOR THE VIEWPORT
+        //    HELD: a phone held landscape that asked for the Game Boy gets a
+        //    square sized as if it were upright (and the player turns it), a
+        //    phone held upright that asked for landscape gets the wide backing
+        //    store it will have once turned. Without the parameter the
+        //    viewport is the truth.
+        //  - THE GAME BOY SQUARE. Side = the CSS width, capped at 60 % of the
+        //    CSS height so the pad below keeps at least 40 % on a
+        //    tall-but-wide tablet. Aspect 1 is the best of the three shapes
+        //    this game gets on a phone: rViewport::Perspective makes it 90 x 90
+        //    degrees (landscape ~111 x 67, full portrait ~131 vertical).
+        //    docs/evidence/phone-round2/fov/README.md.
+        //  - The area cap, then the GPU's per-axis limit. Both scale the two
+        //    axes by the SAME factor: the aspect ratio is what
+        //    rViewport::Perspective builds the frustum from, so clamping the
+        //    axes independently would hand the game a shape the window does
+        //    not have -- i.e. it would CAUSE the defect the clamp avoids.
+        const axisLimit = gpuAxisLimit();
+        const size = AALayout.canvasSize({
+          vw: window.innerWidth, vh: window.innerHeight, dpr, layout: layoutParam,
+          gameboy: !!window.AA_GAMEBOY, maxPixels: MAX_CANVAS_PIXELS, axisLimit,
+        });
+        if (!size) {
           console.log('[DISPLAY] no usable viewport, keeping canvas ' +
                       canvas.width + 'x' + canvas.height);
           publishAspect();
           return;
         }
-        // THE GAME BOY SQUARE. Side = the CSS width, capped at 60 % of the CSS
-        // height so the pad below keeps at least 40 % on a tall-but-wide tablet.
-        // Aspect 1 is the best of the three shapes this game gets on a phone:
-        // rViewport::Perspective makes it 90 x 90 degrees (landscape ~111 x 67,
-        // full portrait ~131 vertical). docs/evidence/phone-round2/fov/README.md.
-        let squareCss = 0;
-        if (window.AA_GAMEBOY) {
-          squareCss = Math.min(vw, Math.floor(vh * 0.6));
-          w = h = Math.floor(squareCss * dpr);
-        }
-        const px = w * h;
-        let capped = false;
-        if (px > MAX_CANVAS_PIXELS) {
-          const k = Math.sqrt(MAX_CANVAS_PIXELS / px);
-          w = Math.max(1, Math.round(w * k));
-          h = Math.max(1, Math.round(h * k));
-          capped = true;
-        }
-        // Both axes are scaled by the SAME factor, for the same reason the area
-        // cap is: the aspect ratio is what rViewport::Perspective builds the
-        // frustum from, so clamping the axes independently would hand the game
-        // a shape the window does not have -- i.e. it would CAUSE the defect
-        // this clamp exists to avoid.
-        const axisLimit = gpuAxisLimit();
-        let axisClamped = false;
-        if (axisLimit && (w > axisLimit || h > axisLimit)) {
-          const k = Math.min(axisLimit / w, axisLimit / h);
-          w = Math.max(1, Math.floor(w * k));
-          h = Math.max(1, Math.floor(h * k));
-          axisClamped = true;
-        }
+        const { w, h, vw, vh, squareCss, capped, axisClamped } = size;
         canvas.width  = w;
         canvas.height = h;
         publishAspect();
@@ -1151,6 +1162,18 @@
       applyLayoutDecision('before main');
       sizeCanvas('before main');
     };
+    // #layoutbtn's label names the layout the tap GOES TO. Set on a phone at
+    // parse time and again by startGame once it has made the final decision;
+    // before that the button is behind the loading overlay anyway.
+    const labelLayoutButton = () => {
+      // The SPAN, not the button: the button also holds the icon, and
+      // assigning textContent to it would delete that. The aria-label says
+      // the same thing for anything that reads the button rather than sees it.
+      const text = window.AA_GAMEBOY ? 'Landscape layout' : 'Portrait layout';
+      document.getElementById('layoutbtn-label').textContent = text;
+      document.getElementById('layoutbtn').setAttribute('aria-label',
+        'Switch to the ' + text.toLowerCase());
+    };
 
     // ---- PHASE 3: TOUCH INPUT ------------------------------------------
     //
@@ -1189,21 +1212,6 @@
     // real hazard (a deferred keyup overtaking the next press of the same key)
     // to remove an imaginary one.
     (() => {
-      const KEYCODES = { ArrowLeft:37, ArrowRight:39, ArrowUp:38, ArrowDown:40,
-                         Enter:13, Escape:27 };
-      // `key` and `code` are the same string for all six of these, which is a
-      // property of the six and not a general rule. They are set because they
-      // cost nothing and because receiveEvent does consult event.key (only to
-      // decide whether to preventDefault on Backspace and Tab); keyCode is the
-      // one that decides which action the game performs.
-      const sendKey = (type, name) => {
-        const kc = KEYCODES[name];
-        document.dispatchEvent(new KeyboardEvent(type, {
-          key: name, code: name, keyCode: kc, which: kc,
-          bubbles: true, cancelable: true,
-        }));
-      };
-
       const touchEl = document.getElementById('touch');
       // REUSED, NOT RE-DERIVED. The decision, its [TOUCH] line and
       // window.AA_TOUCH all moved above sizeCanvas (see the block there), so
@@ -1221,13 +1229,14 @@
       // even when the finger slides off the element it started on -- which on a
       // half-screen steering zone it constantly does.
       //
-      // The map is keyed by pointerId so two thumbs work: pressing both halves
-      // holds both turn keys, and lifting one releases only that one.
-      const active = new Map();
+      // Each finger is its own owner in touchInput, so two thumbs work:
+      // pressing both halves holds both turn keys, and lifting one releases
+      // only that one.
+      const owner = (ev) => 'btn:' + ev.pointerId;
       const down = (ev) => {
         const el = ev.currentTarget;
         const name = el.dataset.aakey;
-        if (!name || active.has(ev.pointerId)) return;
+        if (!name || touchInput.holds(owner(ev)) !== undefined) return;
         // preventDefault suppresses the compatibility mouse events and the
         // double-tap-zoom gesture. It does NOT stop propagation, which matters:
         // resumeAudio() ("SOUND ON A PHONE" below) listens on window for the
@@ -1244,24 +1253,16 @@
         // is what the gate reads. The cross and Esc are untouched: Escape is
         // how a chat line gets closed, and the in-game menu needs it.
         const suppressed = name === 'Enter' && el.closest('#pad') !== null &&
-                           isDriving(readContext());
-        active.set(ev.pointerId, { name, el, sent: !suppressed });
-        el.classList.add('aa-down');
+                           game.context().driving;
+        // A suppressed press is held with no key: it shows, and sends nothing.
+        touchInput.press(owner(ev), suppressed ? null : name, el);
         try { el.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
         if (suppressed) {
           window.AA_PAD_ENTER_SUPPRESSED = (window.AA_PAD_ENTER_SUPPRESSED | 0) + 1;
           console.log('[TOUCH] pad Enter suppressed while driving (Enter is CHAT in a round)');
-          return;
         }
-        sendKey('keydown', name);
       };
-      const up = (ev) => {
-        const a = active.get(ev.pointerId);
-        if (!a) return;
-        active.delete(ev.pointerId);
-        a.el.classList.remove('aa-down');
-        if (a.sent) sendKey('keyup', a.name);
-      };
+      const up = (ev) => { touchInput.release(owner(ev)); };
       for (const el of touchEl.querySelectorAll('[data-aakey]')) {
         el.addEventListener('pointerdown', down);
         el.addEventListener('pointerup', up);
@@ -1273,65 +1274,33 @@
       // (CSS "THE DRIVING PAD"). A finger's key follows where it IS, not where
       // it landed: sliding from one half into the other releases the first
       // turn and presses the second, so a thumb can rock instead of lifting.
-      // The keys are the cross's own (ArrowLeft/Right/Down), counted per key
-      // so two thumbs on one half hold it until both lift.
+      // The keys are the cross's own (ArrowLeft/Right/Down); touchInput
+      // counts them, so two thumbs on one half hold it until both lift.
       const dp = document.getElementById('drivepad');
       const dpEls = { ArrowLeft: document.getElementById('dp-left'),
                       ArrowRight: document.getElementById('dp-right'),
                       ArrowDown: document.getElementById('dp-brake') };
-      const dpFingers = new Map();   // pointerId -> key
-      const dpHeld = new Map();      // key -> fingers on it
-      const dpKeyAt = (x, y) => {
-        if (y >= dpEls.ArrowDown.getBoundingClientRect().top - 6) return 'ArrowDown';
-        const r = dp.getBoundingClientRect();
-        return x < r.left + r.width / 2 ? 'ArrowLeft' : 'ArrowRight';
-      };
-      const dpPress = (key) => {
-        const n = (dpHeld.get(key) || 0) + 1;
-        dpHeld.set(key, n);
-        if (n > 1) return;
-        dpEls[key].classList.add('aa-down');
-        sendKey('keydown', key);
-      };
-      const dpRelease = (key) => {
-        const n = (dpHeld.get(key) || 0) - 1;
-        if (n > 0) { dpHeld.set(key, n); return; }
-        dpHeld.delete(key);
-        dpEls[key].classList.remove('aa-down');
-        sendKey('keyup', key);
-      };
+      const dpOwner = (ev) => 'dp:' + ev.pointerId;
+      const dpKeyAt = (ev) => AATouchInput.driveKeyAt(ev.clientX, ev.clientY,
+        dp.getBoundingClientRect(), dpEls.ArrowDown.getBoundingClientRect().top);
       dp.addEventListener('pointerdown', (ev) => {
         if (ev.target.closest('#dp-esc')) return;
         ev.preventDefault();
         try { dp.setPointerCapture(ev.pointerId); } catch (e) { /* not fatal */ }
-        const key = dpKeyAt(ev.clientX, ev.clientY);
-        dpFingers.set(ev.pointerId, key);
-        dpPress(key);
+        const key = dpKeyAt(ev);
+        touchInput.press(dpOwner(ev), key, dpEls[key]);
       });
       dp.addEventListener('pointermove', (ev) => {
-        const was = dpFingers.get(ev.pointerId);
+        const was = touchInput.holds(dpOwner(ev));
         if (!was) return;
-        const key = dpKeyAt(ev.clientX, ev.clientY);
+        const key = dpKeyAt(ev);
         if (key === was) return;
-        dpFingers.set(ev.pointerId, key);
-        dpRelease(was);
-        dpPress(key);
+        touchInput.press(dpOwner(ev), key, dpEls[key]);   // lets go of `was` first
         console.log('[TOUCH] slid from ' + was + ' to ' + key);
       });
-      const dpLift = (ev) => {
-        const key = dpFingers.get(ev.pointerId);
-        if (!key) return;
-        dpFingers.delete(ev.pointerId);
-        dpRelease(key);
-      };
+      const dpLift = (ev) => { touchInput.release(dpOwner(ev)); };
       dp.addEventListener('pointerup', dpLift);
       dp.addEventListener('pointercancel', dpLift);
-      const dpReleaseAll = (why) => {
-        if (!dpFingers.size) return;
-        for (const key of dpFingers.values()) dpRelease(key);
-        dpFingers.clear();
-        console.log('[TOUCH] driving pad released: ' + why);
-      };
       // Esc on the driving pad is an ordinary pad key (data-aakey="Escape",
       // the generic handlers above): it reacts on press like every other
       // button. It was a 500 ms long press at first, against accidental
@@ -1345,91 +1314,33 @@
 
       // ---- PHONE FEEDBACK ROUND 2: which key does a tap on the screen mean?
       //
-      // THE GAME ANSWERS, NOT THE PAGE. src/emscripten/eWebInput.cpp exports
-      // aa_web_input_context(), two bits: a uMenu is on screen, and a local
-      // player has a cycle that is Alive(). The page cannot derive either --
-      // a menu item can start the game, a round can end by itself, and Escape
-      // mid-round opens the in-game menu, none of which reaches this script.
-      //
-      // THE POLICY IS HERE AND THE FACTS ARE THERE, deliberately. "Driving"
-      // means a live cycle AND no menu: the in-game menu is reached with
-      // Escape in the middle of a round, so the cycle is still alive while a
-      // menu is asking for Enter, and a rule that looked only at the cycle
-      // would put the turn zones over the top of that menu.
-      //
-      // CALLING INTO WASM FROM HERE IS SAFE FOR ONE SPECIFIC REASON, not as a
-      // general licence: aa_web_input_context() reads a static bool and walks
-      // at most four pointers, so it cannot reach emscripten_sleep, so
-      // Asyncify does not instrument it and there is no second stack unwind to
-      // start on top of the one the game is nearly always parked in. The same
-      // argument the unload backstop stands on, and this one is weaker still
-      // because it writes nothing. Before main() has run the export is a
-      // makeInvalidEarlyAccess stub whose body is abort(), which is what the
-      // gameStarted test guards -- `typeof` would report it as a function.
-      const AA_CTX_MENU = 1, AA_CTX_DRIVING = 2;    // src/emscripten/eWebInput.cpp
-      const readContext = () => {
-        try {
-          // gameStarted IS INSIDE THE try ON PURPOSE. It is a `let` declared
-          // further down this same script, so the first applyContext() below
-          // -- which runs while this IIFE is still executing -- reads it
-          // inside its temporal dead zone and throws a ReferenceError. That
-          // is a correct answer, not an error: before main() there is no
-          // context, and 0 is what this returns. Moving the test outside the
-          // try would make the page fail to load.
-          if (!gameStarted) return 0;
-          return Module._aa_web_input_context() | 0;
-        } catch (e) { return 0; }
-      };
-      // 0 is the honest answer for "the game has not started" and for any
-      // throw, and 0 means NOT driving, i.e. a tap is Enter. That is the safe
-      // side of the failure: a tap that confirms nothing during a round the
-      // player is not in costs a tap, while a tap that TURNS THEM inside a
-      // menu changes a setting they never chose.
-      const isDriving = (ctx) => (ctx & AA_CTX_DRIVING) !== 0 &&
-                                 (ctx & AA_CTX_MENU) === 0;
-
-      // RELEASING THE HELD KEYS ON EVERY CHANGE IS A BUG FIX, NOT TIDINESS. A
-      // player holding a turn when their cycle dies would otherwise have the
-      // zone go display:none under their thumb, and a pointerup on an element
-      // with no box is not guaranteed to arrive -- so ArrowLeft would stay
-      // down for ever, from the game's point of view, and steer the next
-      // round. Pointer capture does not save this: the specification releases
-      // it implicitly on removal from the document, and browsers differ on
-      // whether display:none counts.
-      const releaseAllKeys = (why) => {
-        if (!active.size) return;
-        for (const [, a] of active) {
-          a.el.classList.remove('aa-down');
-          sendKey('keyup', a.name);
-        }
-        console.log('[TOUCH] released ' + active.size + ' held key(s): ' + why);
-        active.clear();
-      };
-
+      // THE GAME ANSWERS: game.context() (web/page/game.js has the bits, the
+      // "driving" policy and why calling into the wasm from here is safe). A
+      // tap is Enter unless the player is driving; before main() and on any
+      // failure the answer is "not driving". When driving starts or stops,
+      // every held key is let go (touch-input.js says why that is a bug fix).
       let lastCtx = -1;
-      const applyContext = () => {
-        const ctx = readContext();
+      const applyContext = (state) => {
+        const c = state.context;
+        const ctx = c.raw;
         if (ctx === lastCtx) return;
-        const wasDriving = lastCtx >= 0 && isDriving(lastCtx);
+        const wasDriving = lastCtx >= 0 && AAGame.readContext(lastCtx).driving;
         lastCtx = ctx;
-        const driving = isDriving(ctx);
-        if (driving !== wasDriving) { releaseAllKeys('input context changed'); dpReleaseAll('input context changed'); }
+        const driving = c.driving;
+        if (driving !== wasDriving) touchInput.releaseAll('input context changed');
         touchEl.classList.toggle('aa-driving', driving);
         // One machine-readable line per transition, so the touch gate can
         // assert the state the game was in rather than inferring it from a
         // screenshot. It is per TRANSITION, not per poll: at 4 Hz for a whole
         // round the latter would bury the transcript it is meant to explain.
         console.log('[TOUCH] context ' + ctx +
-                    ' (menu ' + ((ctx & AA_CTX_MENU) ? 'yes' : 'no') +
-                    ', cycle ' + ((ctx & AA_CTX_DRIVING) ? 'alive' : 'no') +
+                    ' (menu ' + (c.menu ? 'yes' : 'no') +
+                    ', cycle ' + (c.cycle ? 'alive' : 'no') +
                     ') -> ' + (driving ? 'STEERING' : 'TAP=ENTER'));
       };
-      window.AA_INPUT_CONTEXT = readContext;   // for the gate, not for the page
-      // 250 ms is the appearance only -- a control that is a quarter-second
-      // late to appear is invisible to a player, and every tap re-reads the
-      // context itself, so nothing acts on a stale value.
-      setInterval(applyContext, 250);
-      applyContext();
+      // The raw bits, for the gates, not for the page.
+      window.AA_INPUT_CONTEXT = () => game.context().raw;
+      touchInput.subscribe(applyContext);
 
       // ---- the tap-anywhere layer ---------------------------------------
       //
@@ -1437,14 +1348,13 @@
       // test, because "tap the screen" has to mean a tap. Enter is a
       // destructive key in a menu -- it commits whatever row is selected --
       // and a layer that fired on first contact would commit on a thumb
-      // brushing the glass while the player is reading. 24 px and 700 ms are
-      // the usual click-slop shape; anything longer or further is a drag and
-      // is ignored rather than treated as a press.
+      // brushing the glass while the player is reading. AATouchInput.notATap
+      // has the slop; anything longer or further is a drag and is ignored
+      // rather than treated as a press.
       //
-      // THE CONTEXT IS RE-READ AT pointerup, not trusted from the poll. The
-      // 250 ms timer above only decides what is on screen; a round that ended
-      // between a finger landing and lifting must not send a turn.
-      const TAP_SLOP_PX = 24, TAP_MS = 700;
+      // THE CONTEXT IS RE-READ AT pointerup, not trusted from the tick. The
+      // tick only decides what is on screen; a round that ended between a
+      // finger landing and lifting must not send a turn.
       const taps = new Map();
       const tapzone = document.getElementById('tapzone');
       tapzone.addEventListener('pointerdown', (ev) => {
@@ -1456,14 +1366,12 @@
         if (!t) return;
         taps.delete(ev.pointerId);
         if (!fire) return;
-        const moved = Math.hypot(ev.clientX - t.x, ev.clientY - t.y);
-        const held = Date.now() - t.t;
-        if (moved > TAP_SLOP_PX || held > TAP_MS) {
-          console.log('[TOUCH] tap ignored (moved ' + Math.round(moved) +
-                      'px, held ' + held + 'ms)');
+        const notTap = AATouchInput.notATap(t, ev.clientX, ev.clientY, Date.now());
+        if (notTap) {
+          console.log('[TOUCH] tap ignored (' + notTap + ')');
           return;
         }
-        if (isDriving(readContext())) {
+        if (game.context().driving) {
           console.log('[TOUCH] tap ignored: the game is asking for steering');
           return;
         }
@@ -1471,8 +1379,8 @@
         // PHONE KEYBOARD instead of pressing Enter: Enter there would send the
         // chat line, and folding the keyboard is what a tap on the picture
         // means to a phone user. See "THE PHONE KEYBOARD".
-        if (window.AA_KBD && window.AA_KBD.onField()) {
-          window.AA_KBD.toggle('tap on the picture');
+        if (keyboard.onField()) {
+          keyboard.toggle('tap on the picture');
           return;
         }
         // IN A ROUND, THE PICTURE DOESN'T OPEN CHAT IN PORTRAIT. With no menu
@@ -1480,12 +1388,11 @@
         // how a portrait player opens chat, so a stray tap on the picture
         // doesn't. Landscape has no pad, so its tap stays Enter.
         if (document.documentElement.classList.contains('aa-gameboy') &&
-            (readContext() & AA_CTX_MENU) === 0) {
+            !game.context().menu) {
           console.log('[TOUCH] tap ignored: in a round, the pad opens chat');
           return;
         }
-        sendKey('keydown', 'Enter');
-        sendKey('keyup', 'Enter');
+        game.press('Enter');
       };
       tapzone.addEventListener('pointerup',     (ev) => endTap(ev, true));
       tapzone.addEventListener('pointercancel', (ev) => endTap(ev, false));
@@ -1521,19 +1428,7 @@
       window.addEventListener('resize', () => onOrientationChange('resize'));
       window.addEventListener('orientationchange', () => onOrientationChange('orientationchange'));
       const layoutBtn = document.getElementById('layoutbtn');
-      // The label names the layout the tap GOES TO, set once startGame has made
-      // the final decision; before that the parse-time one is shown, and the
-      // button is behind the loading overlay anyway.
-      const labelLayoutButton = () => {
-        // The SPAN, not the button: the button also holds the icon, and
-        // assigning textContent to it would delete that. The aria-label says
-        // the same thing for anything that reads the button rather than sees it.
-        const text = window.AA_GAMEBOY ? 'Landscape layout' : 'Portrait layout';
-        document.getElementById('layoutbtn-label').textContent = text;
-        layoutBtn.setAttribute('aria-label', 'Switch to the ' + text.toLowerCase());
-      };
       labelLayoutButton();
-      window.AA_LABEL_LAYOUT_BUTTON = labelLayoutButton;   // startGame calls it after its relayout
       layoutBtn.addEventListener('click', () => {
         const other = window.AA_GAMEBOY ? 'landscape' : 'portrait';
         console.log('[TOUCH] layout switch -> ?layout=' + other + ' (reload)');
@@ -1547,129 +1442,10 @@
       });
     })();
 
-    // ---- PHONE FEEDBACK: "the bike is tiny" -----------------------------
-    //
-    // THE MEASUREMENT FIRST. At a phone's landscape aspect (2745x1050, a
-    // Pixel-class device at dpr 3 with the URL bar showing) the player's own
-    // cycle is 23 x 63 backing-store pixels during the round-start countdown --
-    // 6 % of the screen HEIGHT and 2.2 % of its width. That is not a phone bug:
-    // rViewport::Perspective fixes the vertical field of view for every aspect
-    // above 1.5 and widens only the horizontal, so a cycle occupies the same
-    // fraction of screen height on a phone as on a desktop. The phone's screen
-    // is simply small and at arm's length.
-    //
-    // WHAT WAS MEASURED, at that same geometry, from four full runs
-    // (docs/evidence/phone-feedback/camera/):
-    //
-    //   stock (fov 90)                     23 x 63 px    horizon visible
-    //   START_FOV_1 78                     29 x 75 px    horizon visible
-    //   START_FOV_1 69                     33 x 80 px    horizon at the corners
-    //   camera distance x0.5               47 x 122 px   horizon visible
-    //
-    // Halving the camera distance wins on both counts: 1.94x linear against
-    // 1.27x, AND it keeps the arena rim in frame, which narrowing the field of
-    // view does not -- at fov 69 the horizon is already leaving the top of the
-    // screen, and at 60 the frame is floor and nothing else. So the lever is
-    // the camera, not the fov.
-    //
-    // WHY THIS IS DONE HERE AND NOT AS A COMPILED DEFAULT, which is what M4
-    // task 3 established as the right home for a preference. Because the
-    // compiled default is not reachable for these four settings:
-    // config/settings_visual.cfg NAMES all of them, and st_LoadConfig loads
-    // config/settings.cfg (which includes it) AFTER user.cfg -- so a default in
-    // eCamera.cpp is overwritten on every boot by the shipped config, and so is
-    // anything a player could put in user.cfg. They are also tSettingItem, i.e.
-    // never written back to user.cfg, and there is no menu row for any of them.
-    // The player therefore has NO way to set these today, on any platform,
-    // which is exactly the "there is no player choice for it to overwrite" case
-    // web/webdefaults/autoexec.cfg's own header calls harmless.
-    //
-    // WHY IT IS TOUCH-ONLY AND WHY THAT IS THE POINT. The dispatch's constraint
-    // is "do not break the desktop experience to fix the phone one". Appending
-    // to the preloaded autoexec.cfg from the page -- rather than editing
-    // web/webdefaults/autoexec.cfg on disk -- is what makes the change
-    // conditional on something only the page knows: whether the primary input
-    // is a finger. A desktop visitor's /data/webdefaults/autoexec.cfg is byte
-    // for byte the file the build shipped, and every desktop gate in
-    // web/tools/ therefore measures an unchanged game.
-    //
-    // ?cam=F OVERRIDES IT, ON ANY DEVICE, and that is how the next round of
-    // this conversation gets to be a measurement instead of a preference.
-    // ?cam=1 is stock (nothing is written at all), ?cam=0.35 is closer still.
-    //
-    // THE FOUR BASE VALUES ARE COPIED FROM config/settings_visual.cfg and are
-    // multiplied, not replaced, so the speed-scaling shape of the stock camera
-    // is preserved: at 40 m/s the halved camera sits where the stock one sits
-    // at 14 m/s rather than on top of the cycle. If those base values ever
-    // change in that file, THESE GO STALE SILENTLY -- there is no way for a
-    // page to read them back, since they are not exposed to JS anywhere.
-    const CAMERA_BASE = {                      // config/settings_visual.cfg
-      CAMERA_CUSTOM_BACK: 6,   CAMERA_CUSTOM_RISE: 4,
-      CAMERA_CUSTOM_BACK_FROMSPEED: 0.5, CAMERA_CUSTOM_RISE_FROMSPEED: 0.4,
-      CAMERA_GLANCE_BACK: 6,   CAMERA_GLANCE_RISE: 4,
-      CAMERA_GLANCE_BACK_FROMSPEED: 0.5, CAMERA_GLANCE_RISE_FROMSPEED: 0.4
-    };
-    const CAMERA_TOUCH_FACTOR = 0.5;
-    function applyTouchCameraTuning() {
-      let factor = 1;
-      try {
-        const q = readNumberParam('cam', 0.15, 4);
-        factor = q !== null ? q : (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1);
-        if (factor === 1) {
-          console.log('[CAMERA] stock camera (factor 1' +
-                      (q !== null ? ', from ?cam' : '') + ')');
-          return;
-        }
-        const lines = ['', '# appended at runtime by web/shell.html: camera x' +
-                       factor + (window.AA_TOUCH ? ' (touch device)' : '')];
-        for (const k in CAMERA_BASE) {
-          lines.push(k + ' ' + (Math.round(CAMERA_BASE[k] * factor * 1e4) / 1e4));
-        }
-        lines.push('');
-        const path = '/data/webdefaults/autoexec.cfg';
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[CAMERA] camera distance x' + factor +
-                    ' written to ' + path + ' before main()');
-      } catch (e) {
-        // A failure here is a stock camera, not a broken game. It must never
-        // reach showFailure.
-        console.log('[CAMERA] tuning skipped (factor ' + factor + '): ' + e);
-      }
-    }
-
-    // ---- THE WALL CUT, ON FOR TOUCH DEVICES (2026-09-29) --------------------
-    //
-    // On an Android phone, single frames showed a comb of thin lines in a
-    // wall's colour, shooting to the screen edge. In all five captured events a
-    // wall of that colour -- usually the player's own trail, just after a turn,
-    // as the camera swung over its corner -- passed level with the camera. A
-    // corner at nearly zero distance should be clipped by the GPU before the
-    // perspective divide; this phone's GPU evidently lets one through now and
-    // then, and it is divided out to the screen edge. WALL_CUT 1 makes the game
-    // cut every piece of a player's wall so none of it reaches the GPU closer
-    // than 0.05 units in front of the camera -- inside the near plane, so
-    // nothing visible goes. See src/emscripten/eWebWallCut.cpp and
-    // docs/evidence/phone-wall-comb/ (plain: 4 combs in 112 s of play; with the
-    // cut: 0 in 110 s).
-    //
-    // Touch devices only: the desktop never showed it, and is left exactly as
-    // it was. ?wallcut=0 turns it off on a phone (to compare); ?wallcut=1 turns
-    // it on anywhere.
-    function applyWallCutParam() {
-      const q = readNumberParam('wallcut', 0, 1);
-      const on = q !== null ? q === 1 : !!window.AA_TOUCH;
-      if (!on) { if (window.AA_TOUCH) console.log('[WALLS] wall cut off (?wallcut=0)'); return; }
-      try {
-        const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: wall cut (' + (q !== null ? '?wallcut=1' : 'touch device') + ')', 'WALL_CUT 1', ''];
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[WALLS] WALL_CUT 1 written to ' + path + ' before main()');
-      } catch (e) {
-        console.log('[WALLS] wall cut skipped: ' + e);
-      }
-    }
+    // ---- THE CONFIG THE PAGE WRITES INTO THE GAME ---------------------------
+    // The touch camera, cheap sparks, no keyboard hints and the wall cut, and
+    // their ?cam= / ?sparks= / ?wallcut= overrides: web/page/page-config.js,
+    // applied from onRuntimeInitialized below.
 
     // ---- LEAVE A SERVER CLEANLY WHEN THE PAGE HAS BEEN HIDDEN ----------------
     // All browser players reach the servers through the relay, so a server sees
@@ -1688,19 +1464,16 @@
       const q = readNumberParam('leaveafter', 5, 3600);
       const LEAVE_AFTER = (q !== null ? q : 60) * 1000;
       let timer = null;
-      const exported = () => typeof Module !== 'undefined' &&
-        typeof Module._aa_web_request_leave === 'function' &&
-        typeof Module._aa_web_connected === 'function' && window.AA_RUNTIME_READY === true;
       const onVisibility = () => {
         if (document.visibilityState === 'hidden') {
           if (timer === null) {
             timer = setTimeout(() => {
               timer = null;
-              if (document.visibilityState !== 'hidden' || !exported()) return;
+              if (document.visibilityState !== 'hidden' || !game.started()) return;
               try {
-                if (Module._aa_web_connected()) {
+                if (game.connected()) {
                   console.log('[LEAVE] hidden for ' + (LEAVE_AFTER / 1000) + ' s while connected: asking the game to disconnect');
-                  Module._aa_web_request_leave();
+                  game.requestLeave();
                 }
               } catch (e) { console.log('[LEAVE] could not ask the game to disconnect: ' + e); }
             }, LEAVE_AFTER);
@@ -1713,168 +1486,31 @@
       document.addEventListener('visibilitychange', onVisibility);
     })();
 
-    // ---- THE PHONE KEYBOARD TYPES INTO THE GAME'S OWN TEXT FIELDS ----------
-    // A phone opens its keyboard only for a focused field in the page, and the
-    // game's text fields (Player Setup's name, Custom Connect, the chat line
-    // that Enter opens during a round) are drawn into the canvas. So:
-    //  - The game says when one is highlighted: aa_web_text_selected()
-    //    (src/emscripten/eWebKeyboard.cpp). Polled here; moving onto one
-    //    focuses #aa-ime, which opens the keyboard (the tap that moved there
-    //    is the user activation the phone asks for), and moving off blurs it.
-    //  - What is typed into #aa-ime goes to the game as key events: the change
-    //    since last time, as backspaces for what went and characters for what
-    //    came. Word suggestions and autocorrect rewrite whole words, and this
-    //    handles that the same way. A character is a keydown and a keypress
-    //    carrying charCode; Emscripten's SDL 1 copies that into
-    //    keysym.unicode, and uMenuItemString::Event inserts 32-255 (latin-1;
-    //    anything above becomes "?"). The keydown says "a" (keyCode 65): the
-    //    text field reads only unicode, and SDL ignores key codes it doesn't
-    //    know.
-    //  - The field's own key events stop at the field, so SDL (listening on
-    //    document) sees each character once: the synthetic copy.
-    //  - A known edge: the game's text fields have a length limit and refuse
-    //    characters past it without telling the page. A suggestion that
-    //    rewrites a word which ran into the limit then sends one backspace
-    //    per character the page sent, not per character the game kept, and
-    //    can delete one too many.
-    //  - The keyboard's Enter is the game's Enter and closes the keyboard.
-    //    Folding the keyboard away releases the field, or the next tap would
-    //    bring it back. A tap on the picture shows or hides the keyboard while
-    //    a text field is still highlighted; on the chat line, putting the
-    //    keyboard away (folded, or a tap on the picture) closes the line
-    //    unsent. An empty chat line is closed, not sent (src/engine/ePlayer.cpp,
-    //    eMenuItemChat::Event).
-    // Touch devices only: a desktop has a keyboard.
-    (() => {
-      if (!window.AA_TOUCH) return;
-      const ime = document.getElementById('aa-ime');
-      const REST = ' ';   // what the field starts with: backspace always has something to delete
-      let prev = REST, composing = false, onField = false;
+    // ---- THE PHONE KEYBOARD, AND THE PAD'S "Chat" LABEL ---------------------
+    // The keyboard follows the highlighted text field each touch tick
+    // (web/page/phone-keyboard.js has how and why).
+    if (keyboard) {
+      touchInput.subscribe(keyboard.onState);
+      // THE PAD'S ENTER SAYS "Chat" when that is what it does: on a server, in
+      // a game (game.chatPossible: not while connecting, logging in or
+      // loading), with no menu up and no cycle of ours alive (crashed,
+      // watching, between rounds), Enter is the chat key (config/default.cfg).
+      // While driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS
+      // A MENU KEY ONLY" above); in menus and local games it is plain Enter.
       const padEnter = document.querySelector('#pad .pad-a');
       let chatLabel = false;
-      const fire = (type, init) => document.dispatchEvent(
-        new KeyboardEvent(type, Object.assign({ bubbles: true, cancelable: true }, init)));
-      const press = (key, kc) => {
-        fire('keydown', { key, code: key, keyCode: kc, which: kc });
-        fire('keyup', { key, code: key, keyCode: kc, which: kc });
-      };
-      const typeChar = (ch) => {
-        let c = ch.codePointAt(0);
-        if (c < 32 || (c >= 127 && c < 160)) return;
-        if (c > 255) c = 63;   // "?": the game's names and chat are latin-1
-        fire('keydown', { key: ch, keyCode: 65, which: 65 });
-        fire('keypress', { key: ch, charCode: c, keyCode: c, which: c });
-        fire('keyup', { key: ch, keyCode: 65, which: 65 });
-      };
-      const sync = () => {
-        const cur = ime.value;
-        let p = 0;
-        while (p < prev.length && p < cur.length && prev[p] === cur[p]) p++;
-        const gone = Array.from(prev.slice(p)).length, came = Array.from(cur.slice(p));
-        for (let i = 0; i < gone; i++) press('Backspace', 8);
-        for (const ch of came) typeChar(ch);
-        prev = cur;
-        // THE FIELD KEEPS WHAT WAS TYPED while it is open (it is cleared on
-        // open): a keyboard reads the text before the cursor to decide on the
-        // space before a swiped word, and on capitals and suggestions. Reset
-        // to the bare REST space after every edit, it saw a space and added
-        // none, and swiped words ran together. Only a deleted REST is put back.
-        if (!composing && !cur.startsWith(REST)) { ime.value = REST; prev = REST; }
-      };
-      const open = () => {
-        ime.value = REST; prev = REST; composing = false;
-        ime.focus();
-        try { ime.setSelectionRange(1, 1); } catch (e) {}
-        console.log('[KBD] open');
-      };
-      const chatOpen = () => {
-        try { return Module._aa_web_chat_open() === 1; } catch (e) { return false; }
-      };
-      const close = (why) => {
-        if (document.activeElement !== ime) return;
-        ime.blur();
-        console.log('[KBD] closed: ' + why);
-        // PUTTING THE KEYBOARD AWAY ENDS A CHAT. Folded by the player, or
-        // hidden by a tap on the picture: an open "Say:" line with no keyboard
-        // is a dead end, so Escape closes it, unsent, as on a desktop. A name
-        // field just loses the keyboard.
-        if ((why === 'folded' || why === 'tap on the picture') && chatOpen()) {
-          press('Escape', 27);
-          console.log('[KBD] chat line closed: the keyboard was put away');
-        }
-      };
-      ime.addEventListener('compositionstart', () => { composing = true; });
-      ime.addEventListener('compositionend', () => { composing = false; sync(); });
-      ime.addEventListener('input', sync);
-      for (const t of ['keydown', 'keypress', 'keyup']) {
-        ime.addEventListener(t, (e) => {
-          // Arrow keys (a tablet's hardware keyboard) go on to the game as
-          // they are; they type nothing, so they can't arrive twice.
-          if (e.key && e.key.startsWith('Arrow')) { e.preventDefault(); return; }
-          e.stopPropagation();
-          if (t !== 'keydown') return;
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            if (composing) { composing = false; sync(); }
-            press('Return', 13);
-            close('enter');
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            close('escape');
-            press('Escape', 27);
-          }
-        });
-      }
-      let shrunk = false;
-      if (window.visualViewport) {
-        visualViewport.addEventListener('resize', () => {
-          const small = visualViewport.height < window.innerHeight * 0.85;
-          if (small) shrunk = true;
-          else if (shrunk) { shrunk = false; close('folded'); }
-        });
-      }
-      // A tap on the picture shows or hides the keyboard while a text field is
-      // highlighted (the tap layer's handler, "ON A TEXT FIELD", calls this).
-      window.AA_KBD = {
-        onField: () => onField,
-        toggle: (why) => { if (document.activeElement === ime) close(why); else open(); },
-      };
-      setInterval(() => {
-        if (window.AA_RUNTIME_READY !== true) return;
-        let sel = 0;   // 0 no text field, 1 a text field, 2 a password field
-        try { sel = typeof Module._aa_web_text_selected === 'function' ? Module._aa_web_text_selected() : 0; } catch (e) {}
-        const now = sel > 0;
-        // A PASSWORD PROMPT GETS A PASSWORD FIELD: the phone keyboard then
-        // offers no suggestions and learns nothing typed. Switched before the
-        // keyboard opens, or reopened on the spot if the highlight moves
-        // between a name and a password with the keyboard up.
-        const kind = sel === 2 ? 'password' : 'text';
-        if (ime.type !== kind) {
-          const up = document.activeElement === ime;
-          ime.type = kind;
-          if (up && now) open();
-        }
-        if (now && !onField) open();
-        if (!now && onField) close('left the field');
-        onField = now;
-        // THE PAD'S ENTER SAYS "Chat" when that is what it does: on a server,
-        // in a game (aa_web_chat_possible: not while connecting, logging in or
-        // loading), with no menu up and no cycle of ours alive (crashed,
-        // watching, between rounds), Enter is the chat key (config/default.cfg). While
-        // driving the pad doesn't send Enter at all ("ENTER ON THE PAD IS A
-        // MENU KEY ONLY" above); in menus and local games it is plain Enter.
-        let chat = false;
-        try {
-          chat = Module._aa_web_chat_possible() === 1 && (Module._aa_web_input_context() & 3) === 0;
-        } catch (e) {}
+      touchInput.subscribe((state) => {
+        if (!game.started()) return;
+        const c = state.context;
+        const chat = state.chatPossible && !c.menu && !c.cycle;
         if (chat !== chatLabel) {
           chatLabel = chat;
           padEnter.textContent = chat ? 'Chat' : 'Enter';
           padEnter.setAttribute('aria-label', chat ? 'Chat' : 'Enter');
           console.log('[KBD] pad Enter label: ' + padEnter.textContent);
         }
-      }, 100);
-    })();
+      });
+    }
 
     // ---- LOOKING AROUND --------------------------------------------------
     // A finger held on the game picture while driving (portrait) looks the way
@@ -1889,20 +1525,15 @@
     (() => {
       if (!window.AA_TOUCH) return;
       const zone = document.getElementById('lookzone');
-      const touchEl = document.getElementById('touch');
       const fingers = new Map();   // pointerId -> bit
       let sent = 0;
-      const bitAt = (x, y) => {
-        const r = zone.getBoundingClientRect();
-        if (y >= r.top + r.height * 0.75) return 4;
-        return x < r.left + r.width / 2 ? 1 : 2;
-      };
+      const bitAt = (x, y) => AATouchInput.lookBitAt(x, y, zone.getBoundingClientRect());
       const send = () => {
         let bits = 0;
         for (const b of fingers.values()) bits |= b;
         if (bits === sent) return;
         sent = bits;
-        try { Module._aa_web_look(bits); } catch (e) {}
+        game.look(bits);
       };
       zone.addEventListener('pointerdown', (e) => {
         e.preventDefault();
@@ -1918,13 +1549,20 @@
       const lift = (e) => { fingers.delete(e.pointerId); send(); };
       zone.addEventListener('pointerup', lift);
       zone.addEventListener('pointercancel', lift);
-      new MutationObserver(() => {
-        if (!touchEl.classList.contains('aa-driving') && (fingers.size || sent)) {
+      touchInput.subscribe((state) => {
+        if (!state.context.driving && (fingers.size || sent)) {
           fingers.clear();
           send();
         }
-      }).observe(touchEl, { attributes: true, attributeFilter: ['class'] });
+      });
     })();
+
+    // Every touch surface has subscribed: one reading of the game every
+    // 100 ms from here on, and the first one now.
+    if (touchInput) {
+      setInterval(touchInput.tick, 100);
+      touchInput.tick();
+    }
 
     // ---- SOUND ON A PHONE: RESUME ON THE GESTURE THAT COUNTS ---------------
     // The maintainer's phone played in silence for 3-7 minutes before the
@@ -1954,193 +1592,6 @@
     }
     for (const type of ['pointerup', 'touchend', 'click', 'keydown']) {
       window.addEventListener(type, resumeAudio, { capture: true, passive: true });
-    }
-
-    // ---- M6: NO CRASH SPARKS ON A TOUCH DEVICE ---------------------------
-    //
-    // THE MEASUREMENT FIRST, AND IT IS ABOUT THE WALL. M6 task 3's grind arm
-    // holds a cycle pressed against the rim for the whole measured window --
-    // which is not a contrived case on a phone, it is what a thumb does by
-    // accident every round. Stock, that frame costs 17.15 ms median and 20.3 ms
-    // in the worst measured second, and the draw count BURSTS to 171 calls in
-    // a frame. Re-run with SPARKS 0, twice: 13.1 and 13.65 ms median, worst 13.8
-    // and 15.0, and the draw count pinned flat at 60. About a quarter of the
-    // frame at the wall is spark bursts, and it is spent exactly when the
-    // player is least able to afford it.
-    //
-    // READ THE 17.15 WITH ITS CONDITION. It is the arm whose cycle sparked in
-    // 29 of its 40 rim seconds. The SECOND stock run of the same arm sparked
-    // in only 11 of 40 and read 14.0 ms median (worst 18.3), so the median win
-    // is 23.6 % in the first and 2.5 % in the second, while the WORST second
-    // falls 32 % and 18 %. The quarter is what a cycle that is actually
-    // sparking gets back, not what every rim second costs.
-    // docs/evidence/m6-lag/task8-sparks/.
-    //
-    // WHAT IS TURNED OFF, EXACTLY. SPARKS is an existing config item --
-    // `static tConfItem<bool> cs2("SPARKS",crash_sparks)` in src/tron/gMenus.cpp
-    // -- and the flag is read at the two `if (crash_sparks && animts>0)` guards
-    // in src/tron/gCycle.cpp (the four `new gSpark` calls live inside them),
-    // both in the WALL-CONTACT block: this is the shower a cycle throws while
-    // it grinds a wall, and nothing else. Dying is EXPLOSION, below, which is a
-    // different flag over a different effect and is not touched. It is drawing
-    // and nothing else: no physics, no timing, no rubber, no score consults it.
-    // The game plays identically; it stops painting sparks. That is also why
-    // this is a settings change and not a C++ one -- there is nothing to patch.
-    //
-    // EXPLOSION EXISTS TOO AND IS DELIBERATELY LEFT ALONE. It is the same kind
-    // of switch over the same kind of effect, and it was NOT measured. Turning
-    // a second thing off on the strength of the first one's number is precisely
-    // the guess this milestone exists to stop making; if the explosion is worth
-    // a quarter of a frame somewhere, that is another arm, with its own runs.
-    //
-    // WHY TOUCH-ONLY, AND WHY THE APPEND RATHER THAN THE SHIPPED FILE. Same
-    // reason as the camera above: the maintainer's constraint is "do not change
-    // the desktop experience to fix the phone one", and the desktop is not the
-    // machine that is short of milliseconds. Appending to the preloaded
-    // autoexec.cfg from the page -- rather than editing
-    // web/webdefaults/autoexec.cfg on disk -- is what makes the change
-    // conditional on something only the page knows: whether the primary input
-    // is a finger. A desktop visitor's /data/webdefaults/autoexec.cfg stays
-    // byte for byte the file the build shipped, and web/tools/menu-gate.steps
-    // reads it back and asserts the word SPARKS does not appear in it.
-    //
-    // ?sparks=0 / ?sparks=1 OVERRIDE IT, ON ANY DEVICE, AND BOTH DIRECTIONS
-    // WRITE. ?sparks=0 appends SPARKS 0 on a desktop, which is how the numbers
-    // above were measured here at all -- the rig has no phone. ?sparks=1
-    // appends SPARKS 1, and why it cannot simply stay quiet is the whole point
-    // of the next paragraph.
-    //
-    // WHY SILENCE IS NOT AN OVERRIDE: SPARKS PERSISTS, AND THE CAMERA DOES NOT.
-    // This first shipped with "?sparks=1 writes nothing, the device default is
-    // simply skipped", and the maintainer found it on his phone: the sparks did
-    // not come back. SPARKS is a tConfItem, and tConfItemBase::Save() returns
-    // true (src/tools/tConfiguration.h:296), so st_SaveConfig() WRITES IT INTO
-    // /persist/var/user.cfg -- and this page saves on every menu leave, 21
-    // times in one gate run. So after the FIRST session with this append in
-    // effect, the player's own saved config holds SPARKS 0. st_LoadConfig
-    // (src/tools/tConfiguration.cpp:959) then reads user.cfg FIRST (line 975)
-    // and the userconfigdir autoexec.cfg near the END (line 992), so the file
-    // this page appends to always wins -- which is exactly why a silent
-    // ?sparks=1 lost: it left the persisted 0 standing and appended nothing to
-    // beat it. An override against a saved setting has to write.
-    //
-    // THE CAMERA NEVER HAD THIS PROBLEM, and the difference is one word in the
-    // type: the CAMERA_* items are tSettingItems, whose Save() returns FALSE
-    // (tConfiguration.h:497), so they never reach user.cfg at all and ?cam=1's
-    // silence really is stock. Do not read the two functions as the same shape.
-    //
-    // AND THE PRICE OF THAT ORDERING, STATED PLAINLY: on a touch device the
-    // append re-applies on EVERY boot, so a player who turns the sparks back on
-    // in the in-game Preferences menu is overridden the next time the page
-    // loads -- the menu writes user.cfg, and user.cfg is read before this file.
-    // ?sparks=1 is the way back, and it is a URL rather than a setting because
-    // a URL is the only thing here that outranks a file loaded after user.cfg.
-    const SPARKS_OFF_LINE = 'SPARKS 0';
-    const SPARKS_ON_LINE  = 'SPARKS 1';
-    // M8: CHEAP SPARKS ARE THE TOUCH DEFAULT NOW, not silence. M6 switched
-    // sparks off on a phone because a grinding cycle threw up to two spark
-    // objects per frame, each alive four seconds and each its own draw call
-    // -- a quarter of the frame at the rim. gSparks.cpp (client-only, the
-    // dedicated pin untouched) gained SPARKS_LIFETIME and SPARKS_INTERVAL,
-    // whose defaults are the upstream 4 s and "every frame", so a desktop
-    // that sets nothing is unchanged; these three lines are what a touch
-    // device sets. The numbers are the M8 rig's, see docs/evidence/m8-cheap-sparks/.
-    // ?sparks=1 is still the stock sparks (for the comparison), ?sparks=0 off.
-    const SPARKS_CHEAP_LINES = ['SPARKS 1', 'SPARKS_LIFETIME 1', 'SPARKS_INTERVAL 0.05'];
-    function applyTouchSparksTuning() {
-      let value = null;   // null = write nothing at all
-      try {
-        // 0 = off, 1 = on, and BOTH are written -- see the paragraph above for
-        // why 1 cannot be silence. SPARKS is a bool, so anything else is a typo
-        // and is ignored out loud rather than silently half-answering the
-        // question. WHICH TAG SAYS SO DEPENDS ON THE VALUE, because
-        // readNumberParam screens the range first: ?sparks=2 is out of range,
-        // so IT logs "[DISPLAY] ?sparks=2 ignored ..." and returns null
-        // (exactly as with ?cam), and the [SPARKS] line below fires only for a
-        // value that is in range but not 0 or 1, e.g. ?sparks=0.5. Either way
-        // the device default stands. Grep for both tags when chasing a
-        // ?sparks= that did nothing.
-        const q = readNumberParam('sparks', 0, 1);
-        const fromParam = (q === 0 || q === 1);
-        if (q !== null && !fromParam) {
-          console.log('[SPARKS] ?sparks=' + q + ' ignored (want 0 or 1)');
-        }
-        value = fromParam ? q : (window.AA_TOUCH ? 'cheap' : null);
-        if (value === null) {
-          // The desktop, with no parameter: the file the build shipped is left
-          // exactly as it is, which web/tools/menu-gate.steps asserts by
-          // reading it back and finding no SPARKS in it.
-          console.log('[SPARKS] stock sparks, nothing written');
-          return;
-        }
-        const why = fromParam ? ' (from ?sparks=' + q + ')' : ' (touch device)';
-        const body = value === 0 ? [SPARKS_OFF_LINE]
-                   : value === 1 ? [SPARKS_ON_LINE]
-                   : SPARKS_CHEAP_LINES;
-        const what = value === 0 ? 'off' : value === 1 ? 'on' : 'on, priced for a phone';
-        const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: crash sparks ' + what + why]
-                      .concat(body, ['']);
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[SPARKS] ' + body.join(' / ') + ' written to ' + path +
-                    ' before main()' + why);
-      } catch (e) {
-        // A failure here is whatever the saved config already says, not a
-        // broken game; like the camera above, it must never reach showFailure.
-        console.log('[SPARKS] tuning skipped (value ' + value + '): ' + e);
-      }
-    }
-
-    // ---- NO KEYBOARD HINTS FOR KEYS A PHONE DOESN'T HAVE --------------------
-    // The game shows a tooltip the first times an action is due: "Press <v> or
-    // <c> to switch camera modes", "... to glance left", and so on. On a phone
-    // those name keys that don't exist, so a touch device switches the camera
-    // and glance tooltips off. Each *_TOOLTIP is a counter of how many more
-    // times to show it (config/default.cfg); all zeros means never. Appended
-    // to the same file and for the same reason as the sparks above: it has to
-    // be conditional on something only the page knows, and the file is read
-    // after user.cfg, so it wins on every boot. A desktop is left alone.
-    // The turn and chat tooltips stay: the touch and portrait gates count them.
-    const TOUCH_HINTS_OFF = ['SWITCH_VIEW_TOOLTIP 0 0 0 0 0', 'GLANCE_BACK_TOOLTIP 0 0 0 0 0',
-                             'GLANCE_LEFT_TOOLTIP 0 0 0 0 0', 'GLANCE_RIGHT_TOOLTIP 0 0 0 0 0'];
-    function applyTouchHints() {
-      if (!window.AA_TOUCH) return;
-      try {
-        const path = '/data/webdefaults/autoexec.cfg';
-        const lines = ['', '# appended at runtime by web/shell.html: no camera or glance hints on a touch device']
-                      .concat(TOUCH_HINTS_OFF, ['']);
-        Module.FS.writeFile(
-          path, Module.FS.readFile(path, { encoding: 'utf8' }) + lines.join('\n'));
-        console.log('[HINTS] camera and glance hints off (touch device)');
-      } catch (e) {
-        console.log('[HINTS] skipped: ' + e);
-      }
-    }
-
-    // ---- web_user BECOMES web_NNNN, ONCE -----------------------------------
-    // Before new players got a web_NNNN default (THE DEFAULT NAME, preRun),
-    // every browser player started as "web_user", and a saved profile keeps
-    // that name. So on load, a saved Player 1 named exactly web_user is
-    // renamed to this load's fresh web_NNNN before main() reads user.cfg. Any
-    // name the player chose is left alone, and once renamed it is not
-    // web_user any more, so this happens once per profile.
-    function renameOldDefaultName() {
-      try {
-        const path = '/persist/var/user.cfg';
-        if (!Module.FS.analyzePath(path).exists) return;
-        let cfg = '';
-        for (const b of Module.FS.readFile(path)) cfg += String.fromCharCode(b);   // latin-1
-        const line = /^(\s*PLAYER_1\s+)web_user[ \t]*$/m;
-        if (!line.test(cfg)) return;
-        const name = window.AA_DEFAULT_NAME ||
-                     'web_' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-        cfg = cfg.replace(line, '$1' + name);
-        Module.FS.writeFile(path, Uint8Array.from(cfg, (ch) => ch.charCodeAt(0)));
-        console.log('[NAME] the old default web_user is now ' + name);
-      } catch (e) {
-        console.log('[NAME] web_user rename skipped: ' + e);
-      }
     }
 
     var Module = {
@@ -2270,7 +1721,7 @@
       // every browser player was "web_user". A saved name (user.cfg) still
       // wins; this is only what a first visit starts from.
       () => {
-        const name = 'web_' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        const name = AAPageConfig.defaultName();
         try {
           Module.ENV.USER = name;
           Module.ENV.LOGNAME = name;
@@ -2339,12 +1790,14 @@
         // The preloaded /data tree exists from here on and not one moment
         // earlier: the file packager appends ITS preRun callback after this
         // page's, so a preRun hook cannot read /data at all. That is why the
-        // touch camera tuning below is here rather than in preRun.
-        applyTouchCameraTuning();
-        applyTouchSparksTuning();
-        applyTouchHints();
-        renameOldDefaultName();
-        applyWallCutParam();
+        // page's config is written here rather than in preRun.
+        AAPageConfig.apply(Module.FS, window.AA_TOUCH, {
+          cam:     readNumberParam('cam', 0.15, 4),
+          sparks:  readNumberParam('sparks', 0, 1),
+          wallcut: readNumberParam('wallcut', 0, 1),
+        }, (line) => console.log(line));
+        AAPageConfig.applyRename(Module.FS,
+          window.AA_DEFAULT_NAME || AAPageConfig.defaultName(), (line) => console.log(line));
         let manual = false;
         try {
           manual = new URLSearchParams(location.search).get('autostart') === '0';
@@ -2400,12 +1853,11 @@
     // THE COST, STATED: a visitor who types ?autostart=0 gets a page that loads
     // and then sits there. It is a demo, the parameter is not linked from
     // anywhere, and window.AA_START() starts it. That is the whole surface.
-    let gameStarted = false;
     function startGame() {
-      if (gameStarted) return;
-      gameStarted = true;             // also arms the backstop below
+      if (game.started()) return;
+      game.markStarted();             // also arms the backstop and every game.* call
       relayoutBeforeMain();           // M9: the orientation held NOW, see sizeCanvas
-      if (window.AA_LABEL_LAYOUT_BUTTON) window.AA_LABEL_LAYOUT_BUTTON();
+      if (touchDecision.on) labelLayoutButton();
       overlayEl.remove();
       Module.canvas.focus();          // so the menu receives key events
       console.log('[BOOT] autostart: calling main');
@@ -2489,14 +1941,14 @@
     // perfectly ordinary thing for a player opening the page in a background
     // tab to produce.
     const persistBackstop = (why) => {
-      if (!gameStarted) return;
+      if (!game.started()) return;
       // aa_web_save_config MUST NOT YIELD -- see the long warning on it in
       // src/emscripten/eWebPersist.cpp. Calling into wasm from here is safe
       // only because it does not; a sleep on that path would start a second
       // Asyncify unwind on top of the live one this page is almost always
       // parked in.
       try {
-        Module._aa_web_save_config();
+        game.saveConfig();
         console.log('[PERSISTBACKSTOP] ' + why);
       } catch (e) {
         console.log('[PERSISTBACKSTOP] ' + why + ' FAILED: ' + e);
@@ -2596,17 +2048,16 @@
             'gl  ' + (gl ? gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight +
                            (dbOK ? '  MATCH' : '  CLAMPED') : '(no context yet)'),
             'fps ' + swapsPerSec + ' swaps/s' +
-              '   cam x' + (window.AA_TOUCH ? CAMERA_TOUCH_FACTOR : 1) +
+              '   cam x' + (window.AA_TOUCH ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1) +
               '   touch ' + (window.AA_TOUCH ? 'on' : 'off'),
             // The two bits src/emscripten/eWebInput.cpp reports and the one
             // decision the overlay makes from them. On a phone this is the
             // only way to see WHY a tap did what it did.
-            'ctx ' + (window.AA_INPUT_CONTEXT ?
-                        (() => { const c = window.AA_INPUT_CONTEXT();
-                                 return c + ' menu ' + ((c & 1) ? 'y' : 'n') +
-                                        ' cycle ' + ((c & 2) ? 'y' : 'n') +
-                                        ' -> ' + (((c & 2) && !(c & 1)) ?
-                                                  'STEER' : 'TAP=ENTER'); })()
+            'ctx ' + (window.AA_TOUCH ?
+                        (() => { const c = game.context();
+                                 return c.raw + ' menu ' + (c.menu ? 'y' : 'n') +
+                                        ' cycle ' + (c.cycle ? 'y' : 'n') +
+                                        ' -> ' + (c.driving ? 'STEER' : 'TAP=ENTER'); })()
                       : 'n/a (desktop)')
           ];
           el.textContent = rows.join('\n');

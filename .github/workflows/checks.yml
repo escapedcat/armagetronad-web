@@ -236,3 +236,8 @@ jobs:
             echo "-- $f"
             node --check "$f"
           done
+
+      # The page's own modules (web/page/*.js), tested in Node with a fake
+      # game; see web/test/. No install needed: node:test and node:vm only.
+      - name: node --test web/test (the page's modules)
+        run: node --test 'web/test/*.test.mjs'

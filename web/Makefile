@@ -151,6 +151,9 @@ $(OBJDIR)/%.o: src/%.cpp web/Makefile
 # (native hides them in a .a) would add glCallList, glPushClientAttrib and
 # glPopClientAttrib as undefined symbols for no benefit.
 CLIENT_OBJDIR := web/build-m1
+# The shell page with web/page/*.js inlined; see "The page's own modules".
+PAGE_SHELL := $(CLIENT_OBJDIR)/shell.html
+PAGE_MODULES := $(wildcard web/page/*.js)
 # ...plus two translation units the dedicated build does not have:
 #
 #   src/emscripten/eCompat.cpp     the compatibility shims for the symbols
@@ -451,7 +454,7 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
                   --js-library web/library_bridge.js \
                   --js-library web/library_resource.js \
                   -sOFFSCREEN_FRAMEBUFFER=1 --js-library web/library_present.js \
-                  --shell-file web/shell.html
+                  --shell-file $(PAGE_SHELL)
 
 # The primary output is the .html page (Task 6's actual deliverable); the
 # .js loader, .wasm binary and .data archive are generated alongside it by
@@ -502,8 +505,30 @@ CLIENT_LDFLAGS := -O2 -sASSERTIONS=1 \
 # developing this task only because those files already existed from an
 # earlier milestone's build; verify after touching this rule by running
 # `clean-data` first.
+# ---- The page's own modules, inlined into the shell -----------------------
+#
+# web/page/*.js are the page's modules (web/page/game.js: everything the page
+# knows about the game). The shell names each one with a marker line,
+#
+#     <!-- @page-module web/page/game.js -->
+#
+# and this rule writes a copy of web/shell.html with each marker replaced by a
+# <script> holding that file, which is what --shell-file gets. The published
+# set is unchanged: still one armagetronad.html, no extra requests, nothing
+# for check-publish-set.mjs to learn. The modules stay separate files so Node
+# can load them for web/test/ (`node --test 'web/test/*.test.mjs'`). A marker naming a
+# missing or empty file fails the build rather than shipping a page without
+# it.
+
+$(PAGE_SHELL): web/shell.html $(PAGE_MODULES) web/Makefile
+	@mkdir -p $(dir $@)
+	awk '/<!-- @page-module [^ ]+ -->/ { f = $$3; n = 0; print "  <script>"; \
+	       while ((r = (getline l < f)) > 0) { print l; n++ } \
+	       if (r < 0 || n == 0) { print "page-module: cannot read " f > "/dev/stderr"; exit 1 } \
+	       close(f); print "  </script>"; next } { print }' $< > $@ || { rm -f $@; exit 1; }
+
 web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
+                                $(PAGE_SHELL) web/library_bridge.js web/library_resource.js web/library_present.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
@@ -555,7 +580,7 @@ $(CLIENT_OBJDIR)/emscripten/eWebPersist-nomenusave.o: src/emscripten/eWebPersist
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_NO_MENU_SAVE -c $< -o $@
 
 web/dist-m1/armagetronad-nomenusave.html: $(CONTROL_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
+                                $(PAGE_SHELL) web/library_bridge.js web/library_resource.js web/library_present.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
@@ -601,7 +626,7 @@ $(CLIENT_OBJDIR)/render/rSysdep-oldyield.o: src/render/rSysdep.cpp web/Makefile
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_YIELD_BEFORE_PERFRAME -c $< -o $@
 
 web/dist-m1/armagetronad-oldyield.html: $(OLDYIELD_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
+                                $(PAGE_SHELL) web/library_bridge.js web/library_resource.js web/library_present.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
@@ -644,7 +669,7 @@ $(CLIENT_OBJDIR)/tron/gMenus-fstoggle.o: src/tron/gMenus.cpp web/Makefile
 	$(EMXX) $(CLIENT_CXXFLAGS) -DAA_WEB_KEEP_FULLSCREEN_TOGGLE -c $< -o $@
 
 web/dist-m1/armagetronad-fstoggle.html: $(FSTOGGLE_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
+                                $(PAGE_SHELL) web/library_bridge.js web/library_resource.js web/library_present.js \
                                 web/webdefaults/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
@@ -699,7 +724,7 @@ $(OLDCFG_DIR)/autoexec.cfg: web/webdefaults/autoexec.cfg web/Makefile
 	@printf 'SOUND_BUFFER_SHIFT 1\n' >> $@
 
 web/dist-m1/armagetronad-oldautoexec.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
-                                web/shell.html web/library_bridge.js web/library_resource.js web/library_present.js \
+                                $(PAGE_SHELL) web/library_bridge.js web/library_resource.js web/library_present.js \
                                 $(OLDCFG_DIR)/autoexec.cfg \
                                 language/languages.txt config/aiplayers.cfg \
                                 resource/included/.mapversion \
