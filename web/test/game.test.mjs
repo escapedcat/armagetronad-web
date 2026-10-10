@@ -155,6 +155,13 @@ test('web/shell.html builds a KeyboardEvent in one place only: the Game module\'
   assert.equal((shellCode.match(/new KeyboardEvent\(/g) || []).length, 1);
 });
 
+test('the shell\'s <script> tags are balanced', () => {
+  // Lines that ARE tags, not prose about them.
+  const opens = shell.split('\n').filter((l) => /^\s*<script[\s>]/.test(l)).length;
+  const closes = shell.split('\n').filter((l) => /^\s*<\/script>/.test(l)).length;
+  assert.equal(closes, opens);
+});
+
 test('the shell inlines every page module it names, and they exist', () => {
   const named = [...shell.matchAll(/<!-- @page-module (\S+) -->/g)].map((m) => m[1]);
   assert.ok(named.includes('web/page/game.js'));
