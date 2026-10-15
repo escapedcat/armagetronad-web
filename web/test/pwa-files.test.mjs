@@ -1,7 +1,7 @@
 // The installable app's files: manifest, icons, publish set, page links.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { readRepoFile, repoPath } from './load-page-module.mjs';
 import { PRECACHED } from '../tools/stamp-sw.mjs';
@@ -33,6 +33,15 @@ test('the publish set has the offline files and every file the worker saves', ()
   const list = execFileSync(process.execPath, [repoPath('web/tools/check-publish-set.mjs'), '--list'],
                             { encoding: 'utf8' }).trim().split('\n');
   for (const f of [...OFFLINE_FILES, ...PRECACHED]) assert.ok(list.includes(f), f);
+});
+
+test('every file in web/pwa is copied by the build (web/Makefile PWA_FILES)', () => {
+  // Adding an offline file touches four lists: web/pwa, PWA_FILES, the publish
+  // set and the deploy's FILES. This test and the two below keep them equal.
+  const pwa = /^PWA_FILES := (.+)$/m.exec(readRepoFile('web/Makefile'))[1].trim().split(/\s+/)
+    .map((p) => p.replace('web/dist-m1/', ''));
+  assert.deepEqual(pwa.sort(), readdirSync(repoPath('web/pwa')).sort());
+  for (const f of pwa) assert.ok(OFFLINE_FILES.includes(f), f + ' is in OFFLINE_FILES');
 });
 
 test('the deploy waits for the offline files too', () => {
