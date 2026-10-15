@@ -157,7 +157,8 @@ mechanism.
     closed: the leave timer and the save backstop.
   - `web/page/audio.js` resumes sound on a phone; `web/page/diag.js` is the
     `?diag=1` readout.
-  - `web/page/offline.js` registers the offline copy (`web/sw.js`), see "Offline play".
+  - `web/page/offline.js` registers the offline copy (`web/sw.js`), see
+    "Offline play".
   - What is left in `web/shell.html`'s script defines how these are wired to
     the DOM, and "THE START ORDER" at its bottom runs them, in order.
   - Their tests run in Node with a fake game, no browser and no build:
