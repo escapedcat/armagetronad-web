@@ -534,8 +534,21 @@ $(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
 
 -include $(CLIENT_OBJS:.o=.d)
 
+# ---- Offline play (docs/development.md "Offline play") -------------------
+# sw.js is web/sw.js stamped with the hashes of the four files it saves, so it
+# is rebuilt whenever the link step rewrites them (they are written together
+# with armagetronad.html). The manifest and icons are copied as they are.
+PWA_FILES := web/dist-m1/manifest.json web/dist-m1/icon-192.png web/dist-m1/icon-512.png
+
+web/dist-m1/sw.js: web/dist-m1/armagetronad.html web/sw.js web/tools/stamp-sw.mjs
+	node web/tools/stamp-sw.mjs web/dist-m1
+
+$(PWA_FILES): web/dist-m1/%: web/pwa/%
+	@mkdir -p web/dist-m1
+	cp $< $@
+
 .PHONY: client
-client: data web/dist-m1/armagetronad.html
+client: data web/dist-m1/armagetronad.html web/dist-m1/sw.js $(PWA_FILES)
 
 # ---- M4 Task 2: the CONTROL client ---------------------------------------
 #
