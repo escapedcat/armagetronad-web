@@ -43,7 +43,11 @@ const EXPECTED = [
   'armagetronad.html',   // emcc's page -- the entry point the gates name
   'armagetronad.js',     // emcc's glue
   'armagetronad.wasm',   // the engine
+  'icon-192.png',        // the installed app's icon (web/pwa)
+  'icon-512.png',        // the installed app's icon (web/pwa)
   'index.html',          // the site-root redirect; copied in by `npm run deploy`
+  'manifest.json',       // makes the page installable (web/pwa)
+  'sw.js',               // the offline copy, stamped per build (web/sw.js)
 ];
 
 const here = dirname(fileURLToPath(import.meta.url));

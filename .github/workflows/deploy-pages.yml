@@ -234,7 +234,7 @@ jobs:
         run: |
           set -euo pipefail
           BASE=https://escapedcat.github.io/armagetronad-web
-          FILES="armagetronad.html armagetronad.js armagetronad.wasm armagetronad.data index.html"
+          FILES="armagetronad.html armagetronad.js armagetronad.wasm armagetronad.data index.html sw.js manifest.json icon-192.png icon-512.png"
           for f in $FILES; do echo "want $f sha256 $(sha256sum web/dist-m1/$f | cut -d' ' -f1)"; done
           END=$((SECONDS + 900))
           while true; do

@@ -31,3 +31,11 @@ Post-Demo phase adding minimal mobile play: a JavaScript overlay in the shell pa
 
 **Upstream**:
 The Armagetron Advanced GitLab project this repo is cloned from. Offering the port upstream is a discipline (guarded patches), not a goal.
+
+**The installed app**:
+The game added to a phone's home screen ("Install app" / "Add to Home Screen"), started from the manifest as `armagetronad.html?app=1`. The only form of the page that plays offline; a plain browser tab always loads from the network.
+_Avoid_: the PWA (it says how, not what), offline mode (a tab has none)
+
+**The offline copy**:
+The one saved build (the four game files) the installed app starts from when there is no network. Saved on every visit, replaced by the next deploy's copy once no window of the game is open.
+_Avoid_: the cache (there are several), the offline version

@@ -54,6 +54,13 @@ Scan the code to open it on a phone. It needs no install and no account.
 </tr>
 </table>
 
+### Play offline
+
+On a phone, install the page as an app: in Chrome, the menu's "Install app"
+(or "Add to Home screen"); in Safari, Share → "Add to Home Screen". Open the
+app once while online; after that it plays local games against the AI with
+no network. Online play still needs a connection.
+
 ### Controls
 
 **Desktop:**

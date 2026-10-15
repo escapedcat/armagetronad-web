@@ -78,6 +78,32 @@
     return 'listed';
   };
 
+  // Logs `line` once the async cond() is true (polled every 250 ms), so a
+  // step can `until:` it. For waits on worker and cache state, which are
+  // async and so beyond waitFor.
+  aa.logWhen = (cond, line) => {
+    const t = setInterval(async () => {
+      let ok = false;
+      try { ok = !!(await cond()); } catch (e) { ok = false; }
+      if (ok) { clearInterval(t); console.log(line); }
+    }, 250);
+    return 'waiting: ' + line;
+  };
+
+  // The offline gate (offline-gate.steps). Its server's switch listens on the
+  // page's port + 1 (web/tools/serve-switchable.mjs).
+  aa.GAME_FILES = ['armagetronad.html', 'armagetronad.js', 'armagetronad.wasm', 'armagetronad.data'];
+  aa.serverSwitch = async (path) => (await fetch('http://127.0.0.1:' + (+location.port + 1) + path)).text();
+  aa.hits = async () => JSON.parse(await aa.serverSwitch('/hits'));
+  // The game files the server was asked for between two hits() readings.
+  aa.fromNetwork = (before, after) => aa.GAME_FILES.filter((f) => (after[f] | 0) > (before[f] | 0));
+  // The offline copy's cache name as the served sw.js is stamped with it
+  // (web/tools/stamp-sw.mjs), or null when there is no stamped sw.js.
+  aa.copyName = async () => {
+    const m = /"prefix":"([^"]+)","version":"([0-9a-f]{12})"/.exec(await (await fetch('sw.js')).text());
+    return m ? m[1] + m[2] : null;
+  };
+
   window.__aa = aa;
   return 'gate probe installed';
 })()

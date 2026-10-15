@@ -49,6 +49,11 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
   <title>Armagetron Advanced</title>
+  <!-- Installable as an app that plays offline once launched online:
+       web/pwa/manifest.json, web/sw.js, web/page/offline.js. -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#111111">
   <style>
     html, body { height:100%; }
     /* The touch overlay's elements carry the `hidden` attribute when they are
@@ -698,6 +703,7 @@
   <!-- @page-module web/page/page-lifecycle.js -->
   <!-- @page-module web/page/audio.js -->
   <!-- @page-module web/page/diag.js -->
+  <!-- @page-module web/page/offline.js -->
 
   <script>
     // THE PAGE. The modules are web/page/*.js, inlined above; this script wires
@@ -1831,6 +1837,8 @@
                      cam: touchDecision.on ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1,
                      log: (line) => console.log(line) });
     }
+    AAOffline.start({ nav: navigator, win: window, doc: document,   // the installed app's offline copy (web/page/offline.js)
+                      caches: window.caches, log: (line) => console.log(line) });
 
   </script>
 
