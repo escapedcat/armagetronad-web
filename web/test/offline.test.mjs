@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPageModule, readRepoFile } from './load-page-module.mjs';
+import { PREFIX } from '../tools/stamp-sw.mjs';
 
 const Offline = loadPageModule('web/page/offline.js', 'AAOffline');
 const settle = () => new Promise((r) => setTimeout(r, 0));
@@ -77,4 +78,8 @@ test('the page inlines the module and starts it in THE START ORDER', () => {
   assert.ok(s.includes('<!-- @page-module web/page/offline.js -->'));
   const order = s.slice(s.indexOf('---- THE START ORDER'));
   assert.match(order, /AAOffline\.start\(\{ nav: navigator, win: window, doc: document,/);
+});
+
+test('the page names the offline copy by the prefix the worker is stamped with', () => {
+  assert.equal(Offline.PREFIX, PREFIX);
 });

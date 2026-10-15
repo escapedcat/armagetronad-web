@@ -13,6 +13,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// The cache names: PREFIX + version. Stamped into sw.js with the hashes, so the
+// worker has no copy of its own; web/page/offline.js has one, and
+// web/test/offline.test.mjs checks it against this.
+export const PREFIX = 'aa-offline-';
 export const PRECACHED = ['armagetronad.html', 'armagetronad.js', 'armagetronad.wasm', 'armagetronad.data'];
 const PLACEHOLDER = '/* @precache */ null';
 
@@ -21,7 +25,7 @@ const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 export function precacheFor(dir) {
   const files = {};
   for (const f of PRECACHED) files[f] = sha256(readFileSync(join(dir, f)));
-  return { version: sha256(PRECACHED.map((f) => files[f]).join('\n')).slice(0, 12), files };
+  return { prefix: PREFIX, version: sha256(PRECACHED.map((f) => files[f]).join('\n')).slice(0, 12), files };
 }
 
 export function stamp(template, precache) {
@@ -37,5 +41,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const template = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'sw.js'), 'utf8');
   const precache = precacheFor(dir);
   writeFileSync(join(dir, 'sw.js'), stamp(template, precache));
-  console.log('sw.js: offline copy aa-offline-' + precache.version);
+  console.log('sw.js: offline copy ' + PREFIX + precache.version);
 }

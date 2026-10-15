@@ -7,14 +7,14 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readRepoFile } from './load-page-module.mjs';
-import { PRECACHED, precacheFor, stamp } from '../tools/stamp-sw.mjs';
+import { PREFIX, PRECACHED, precacheFor, stamp } from '../tools/stamp-sw.mjs';
 
 const SCOPE = 'https://aa.test/game/';
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 const BUILD = { 'armagetronad.html': 'html v2', 'armagetronad.js': 'js v2',
                 'armagetronad.wasm': 'wasm v2', 'armagetronad.data': 'data v2' };
 const VERSION = 'abc123abc123';
-const CACHE = 'aa-offline-' + VERSION;
+const CACHE = PREFIX + VERSION;
 
 // The worker in a vm with fake caches/fetch/clients. `served` is what the
 // network answers (file -> body); `clientUrls` maps a clientId to its page URL.
@@ -44,7 +44,7 @@ function worker({ served = BUILD, clientUrls = {} } = {}) {
     self, caches, fetch, URL, Response, console, crypto: globalThis.crypto,
     clients: { get: async (id) => (id in clientUrls ? { url: clientUrls[id] } : undefined) },
   });
-  vm.runInContext(stamp(readRepoFile('web/sw.js'), { version: VERSION, files }), context,
+  vm.runInContext(stamp(readRepoFile('web/sw.js'), { prefix: PREFIX, version: VERSION, files }), context,
                   { filename: 'web/sw.js' });
   // Dispatches one event; returns what the worker handed to waitUntil/respondWith.
   const dispatch = (type, fields = {}) => {
@@ -68,6 +68,7 @@ test('stamp: per-file sha256, a 12-hex version, and exactly one placeholder', ()
   const dir = mkdtempSync(join(tmpdir(), 'aa-stamp-'));
   for (const [f, b] of Object.entries(BUILD)) writeFileSync(join(dir, f), b);
   const p = precacheFor(dir);
+  assert.equal(p.prefix, PREFIX, 'the worker gets its cache prefix from the stamp');
   assert.deepEqual(Object.keys(p.files), PRECACHED);
   assert.equal(p.files['armagetronad.wasm'], sha('wasm v2'));
   assert.equal(p.version, sha(PRECACHED.map((f) => sha(BUILD[f])).join('\n')).slice(0, 12));
@@ -99,7 +100,7 @@ test('install fails on a missing file', async () => {
 
 test('activate deletes older offline copies and nothing else', async () => {
   const w = await installed();
-  await w.caches.open('aa-offline-000000000000');
+  await w.caches.open(PREFIX + '000000000000');
   await w.caches.open('someone-else');
   await w.dispatch('activate').waited;
   assert.deepEqual((await w.caches.keys()).sort(), [CACHE, 'someone-else']);

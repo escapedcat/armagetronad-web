@@ -18,7 +18,7 @@
 var AAOffline = (function () {
   'use strict';
 
-  var PREFIX = 'aa-offline-';
+  var PREFIX = 'aa-offline-';   // web/tools/stamp-sw.mjs PREFIX (the test checks they match)
 
   // env: { nav (navigator), win (window), doc (document), caches (window.caches),
   // log }. Logs one [PWA] line per outcome; the offline gate waits on "ready".
@@ -54,5 +54,5 @@ var AAOffline = (function () {
     else env.win.addEventListener('load', go, { once: true });
   };
 
-  return { start: start };
+  return { start: start, PREFIX: PREFIX };
 })();

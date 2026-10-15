@@ -26,7 +26,7 @@
 
 const AA_PRECACHE = /* @precache */ null;
 
-const PREFIX = 'aa-offline-';
+const PREFIX = AA_PRECACHE.prefix;
 const CACHE = PREFIX + AA_PRECACHE.version;
 const owns = (file) => Object.prototype.hasOwnProperty.call(AA_PRECACHE.files, file);
 const hex = (buf) => Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
