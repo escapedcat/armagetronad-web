@@ -80,7 +80,7 @@ async function dropOlderCopies() {
   }
 }
 
-async function answer(event, file) {
+async function fromCopyOrNetwork(event, file) {
   let app;
   if (event.request.mode === 'navigate') {
     app = isApp(event.request.url);
@@ -101,6 +101,6 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const file = fileOf(event.request.url);
   if (file === null || !owns(file)) return;
-  event.respondWith(answer(event, file));
+  event.respondWith(fromCopyOrNetwork(event, file));
   refillIfMissing(event);
 });

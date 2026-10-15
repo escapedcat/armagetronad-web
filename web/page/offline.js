@@ -37,7 +37,7 @@ var AAOffline = (function () {
         }
       });
     };
-    var go = function () {
+    var register = function () {
       sw.register('sw.js', { updateViaCache: 'none' })
         .then(function (reg) { watchInstall(reg); return sw.ready; })
         .then(function () { return env.caches.keys(); })
@@ -50,8 +50,8 @@ var AAOffline = (function () {
                                 : '[PWA] registration failed: ' + e);
         });
     };
-    if (env.doc.readyState === 'complete') go();
-    else env.win.addEventListener('load', go, { once: true });
+    if (env.doc.readyState === 'complete') register();
+    else env.win.addEventListener('load', register, { once: true });
   };
 
   return { start: start, PREFIX: PREFIX };
