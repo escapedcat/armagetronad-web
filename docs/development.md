@@ -911,7 +911,8 @@ has been launched online once.
 - **The copy is one build or nothing:** `web/tools/stamp-sw.mjs` writes each
   build's `sw.js` with the SHA-256 of the four files; the worker refuses a
   download that does not match (Pages publishes a deploy file by file) and
-  tries again on the next visit.
+  tries again on the next visit. A copy that goes missing later (a cache
+  cleared on its own) is saved again by the next visit.
 - **Updates:** a deploy changes `sw.js`; the app saves the new copy in the
   background and switches to it once every window of the game is closed. No
   prompt, and a running game never has its files swapped.

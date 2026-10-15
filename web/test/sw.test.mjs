@@ -127,7 +127,7 @@ test('the app falls back to the network when the copy is missing', async () => {
   await w.caches.delete(CACHE);
   const wasm = w.get(SCOPE + 'armagetronad.wasm', { clientId: 'c1' });
   assert.equal(await (await wasm.response).text(), 'wasm v2');
-  assert.deepEqual(w.net, [SCOPE + 'armagetronad.wasm']);
+  assert.ok(w.net.includes(SCOPE + 'armagetronad.wasm'), 'answered by the network (the refill is tested below)');
 });
 
 test('requests it does not own are left alone', async () => {
@@ -141,4 +141,25 @@ test('requests it does not own are left alone', async () => {
     w.get('https://aa.test/elsewhere/armagetronad.wasm'),
   ];
   for (const u of untouched) assert.equal(u.response, null);
+});
+
+test('a copy that went missing is saved again by the next visit, tab or app', async () => {
+  const w = await installed();
+  await w.caches.delete(CACHE);
+  const tab = w.get(SCOPE + 'armagetronad.wasm');
+  assert.equal(await (await tab.response).text(), 'wasm v2', 'the tab is answered by the network as usual');
+  await tab.waited;
+  assert.deepEqual([...w.store.get(CACHE).keys()].sort(), [...PRECACHED].sort());
+});
+
+test('a complete copy is not downloaded again, and a missing one only once at a time', async () => {
+  const w = await installed();
+  await w.get(SCOPE + 'armagetronad.wasm').waited;
+  assert.deepEqual(w.net, [SCOPE + 'armagetronad.wasm'], 'only the tab\'s own request');
+  w.net.length = 0;
+  await w.caches.delete(CACHE);
+  const a = w.get(SCOPE + 'armagetronad.js');
+  const b = w.get(SCOPE + 'armagetronad.data');
+  await Promise.all([a.waited, b.waited]);
+  assert.equal(w.net.length, 2 + PRECACHED.length, 'two own requests and one refill');
 });

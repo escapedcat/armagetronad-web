@@ -14,6 +14,9 @@
 // EVERY VISIT FILLS THE COPY, tab or app, so an installed app is ready
 // offline from its first launch. A copy is one build or nothing: install
 // hashes each download against the stamped hash and fails on a mismatch.
+// A copy that goes missing later (a cache cleared on its own, the worker
+// kept) is saved again in the background by the next request for a game
+// file, once at a time.
 //
 // UPDATES: a new deploy changes this file; the browser installs the new
 // worker in the background and lets it take over once no window of the game
@@ -55,6 +58,22 @@ async function saveCopy() {
   }
 }
 
+async function copyIsComplete() {
+  const cache = await caches.open(CACHE);
+  return (await cache.keys()).length === Object.keys(AA_PRECACHE.files).length;
+}
+
+let refilling = null;
+function refillIfMissing(event) {
+  if (!refilling) {
+    refilling = copyIsComplete()
+      .then((complete) => (complete ? null : saveCopy()))
+      .catch(() => {})   // saveCopy has already deleted a partial copy; the next visit tries again
+      .finally(() => { refilling = null; });
+  }
+  event.waitUntil(refilling);
+}
+
 async function dropOlderCopies() {
   for (const name of await caches.keys()) {
     if (name.startsWith(PREFIX) && name !== CACHE) await caches.delete(name);
@@ -83,4 +102,5 @@ self.addEventListener('fetch', (event) => {
   const file = fileOf(event.request.url);
   if (file === null || !owns(file)) return;
   event.respondWith(answer(event, file));
+  refillIfMissing(event);
 });
