@@ -8,7 +8,7 @@
 # stamped sw.js, is the "newer build" O5 switches to.
 #
 # --no-sw is the negative control: the same run with sw.js not served. O1, O3,
-# O4 and O5 must FAIL and O2 must PASS -- the proof the gate can fail.
+# O4, O5 and O6 must FAIL and O2 must PASS -- the proof the gate can fail.
 set -u
 OUT=${1:-}
 [ -n "$OUT" ] || { echo "usage: $0 <out-dir> [--no-sw]" >&2; exit 2; }
@@ -46,5 +46,6 @@ check "O2 a tab reload still uses the network"           passed O2
 check "O3 the app online uses the copy"                  passed O3
 check "O4 the app offline boots and drives"              passed O4
 check "O5 a newer build waits; the running copy is kept" passed O5
+check "O6 the newer copy takes over; the older is deleted" passed O6
 check_no_abort
 gate_finish "offline-gate${MODE:+ $MODE}"

@@ -921,7 +921,7 @@ has been launched online once.
   Safari: its name and settings start fresh.
 - **Verify:** `bash web/tools/run-offline-gate.sh /tmp/offline-gate` (headless,
   a phone; needs a `make -f web/Makefile client` build). Its negative control
-  is `--no-sw`, which must fail O1, O3, O4 and O5.
+  is `--no-sw`, which must fail O1, O3, O4, O5 and O6.
 - **Reset in a desktop browser:** DevTools → Application → Storage → Clear site
   data.
 

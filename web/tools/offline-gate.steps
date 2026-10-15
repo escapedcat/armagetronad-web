@@ -12,6 +12,8 @@
 # O1 a tab visit saves the copy      O2 a tab reload still uses the network
 # O3 the app online uses the copy    O4 the app offline boots and plays
 # O5 a newer build is saved as a waiting update; the running copy is kept
+# O6 once no window of the game is open, the newer copy takes over and the
+#    older one is deleted (the page leaves for about:blank, then comes back)
 
 until:1:60000:[PWA] ready
 eval:(async()=>{const t=await (await fetch('sw.js')).text();const v=(/"version":"([0-9a-f]{12})"/.exec(t)||[])[1];const keys=await caches.keys();const n=v?(await (await caches.open('aa-offline-'+v)).keys()).length:0;sessionStorage.setItem('v',v||'');console.log('[OFFGATE] O1 tab-visit-saves-the-offline-copy '+JSON.stringify({version:v,keys,entries:n,PASS:!!v&&keys.includes('aa-offline-'+v)&&n===4}));return 'O1'})()
@@ -38,3 +40,9 @@ eval:(async()=>{const t=await (await fetch('http://127.0.0.1:'+(+location.port+1
 eval:(()=>{const go=async()=>{const r=await navigator.serviceWorker.getRegistration();if(r&&r.waiting&&r.waiting.state==='installed'){clearInterval(t);console.log('[OFFGATE-READY] update waiting');}};const t=setInterval(go,250);return 'waiting for the update'})()
 until:1:60000:[OFFGATE-READY] update waiting
 eval:(async()=>{const old='aa-offline-'+sessionStorage.getItem('v');const t=await (await fetch('sw.js')).text();const nv='aa-offline-'+((/"version":"([0-9a-f]{12})"/.exec(t)||[])[1]);const keys=await caches.keys();const r=await navigator.serviceWorker.getRegistration();const activeIsOld=!!r.active&&!!r.waiting&&r.active!==r.waiting;console.log('[OFFGATE] O5 newer-build-waits-old-copy-kept '+JSON.stringify({old,new:nv,keys,activeIsOld,PASS:nv!==old&&keys.includes(old)&&keys.includes(nv)&&activeIsOld}));return 'O5'})()
+eval:(()=>{sessionStorage.setItem('back',location.href);location.href='about:blank';return 'leaving: no window of the game open'})()
+wait:3000
+eval:(()=>{location.href=sessionStorage.getItem('back');return 'relaunch'})()
+eval:(()=>{const old='aa-offline-'+sessionStorage.getItem('v');const go=async()=>{const keys=await caches.keys();if(navigator.serviceWorker.controller&&!keys.includes(old)){clearInterval(t);console.log('[OFFGATE-READY] newer copy in use');}};const t=setInterval(go,250);return 'waiting for the takeover'})()
+until:1:60000:[OFFGATE-READY] newer copy in use
+eval:(async()=>{const old='aa-offline-'+sessionStorage.getItem('v');const keys=(await caches.keys()).filter(k=>k.startsWith('aa-offline-'));const page=await (await fetch('armagetronad.html')).text();const servedNext=page.includes('the next build');console.log('[OFFGATE] O6 newer-copy-takes-over-older-deleted '+JSON.stringify({old,keys,servedNext,PASS:keys.length===1&&!keys.includes(old)&&servedNext}));return 'O6'})()
