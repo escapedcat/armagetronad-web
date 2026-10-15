@@ -21,6 +21,19 @@
 
 **Spec:** the Design section below. It was agreed in chat on 2026-10-15; there is no separate spec file.
 
+## Amendments after review
+
+The tasks below are as built, including these changes made after the
+reviews (each its own commit):
+- Gate check O6: the newer copy takes over once no window is open.
+- `sw.js` saves the copy again when it has gone missing (before, only an
+  install saved it, so a copy cleared alone stayed empty until the next deploy).
+- The cache prefix is stamped into `sw.js` by `stamp-sw.mjs` (one source).
+- The Makefile runs the stamp with emsdk's node (`$(NODE)`, from
+  `EMSDK_NODE`); CI failed with "make: node: Permission denied" on a bare
+  `node`. Task 2's Makefile block below still shows the first version.
+- The gate's repeated snippets are helpers in `web/tools/gate-probe.js`.
+
 ## Design
 
 ### What it does
@@ -867,15 +880,16 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `bash web/tools/run-offline-gate.sh <out-dir> [--no-sw]`, which ends with `--- offline-gate: ALL PASSED ---`.
   - The control server listens on `GATE_HTTP_PORT + 1` and answers `/down`, `/up` and `/hits`.
 
-The gate is a single browser run, because `drive-browser.mjs` uses a fresh profile per run. It is a phone (`--mobile 412,915,3`) and goes through five checks:
+The gate is a single browser run, because `drive-browser.mjs` uses a fresh profile per run. It is a phone (`--mobile 412,915,3`) and goes through six checks:
 
 - **O1:** a tab visit saves the copy.
 - **O2:** a tab reload still reaches the server for the game files.
 - **O3:** the app (`?app=1`) online does not reach the server for them.
 - **O4:** with the site server switched off, the app boots, the menu works, and a local game starts with the cycle driving, with no red banner.
 - **O5:** with the server back up serving a newer build, the app notices it, saves the new copy as a waiting update, and keeps the old one in use.
+- **O6:** once no window of the game is open (the page leaves for `about:blank` and comes back), the newer copy takes over and the older one is deleted. Added after the final review.
 
-Its negative control is `--no-sw`: the same run, with `sw.js` removed from what is served. O1, O3, O4 and O5 must then FAIL, and O2 must still PASS.
+Its negative control is `--no-sw`: the same run, with `sw.js` removed from what is served. O1, O3, O4, O5 and O6 must then FAIL, and O2 must still PASS.
 
 - [ ] **Step 1: Write `web/tools/serve-switchable.mjs`**
 
@@ -980,22 +994,32 @@ Expected, in this order:
 # profile, and the offline copy lives in the profile. Navigations are
 # location.href in an eval; the console transcript carries on across them, so
 # every `until:N` below counts [PWA] ready lines across all pages so far.
-# Hit counts survive the navigations in sessionStorage.
+# Hit counts and the first copy's name survive the navigations in
+# sessionStorage; `probe:` (web/tools/gate-probe.js, the __aa helpers) is
+# installed again after each one.
+# The [PWA] ready counts include the offline launch's: Chrome's register()
+# resolves offline too (its update check fails quietly).
 #
 # O1 a tab visit saves the copy      O2 a tab reload still uses the network
 # O3 the app online uses the copy    O4 the app offline boots and plays
 # O5 a newer build is saved as a waiting update; the running copy is kept
+# O6 once no window of the game is open, the newer copy takes over and the
+#    older one is deleted (the page leaves for about:blank, then comes back)
 
 until:1:60000:[PWA] ready
-eval:(async()=>{const t=await (await fetch('sw.js')).text();const v=(/"version":"([0-9a-f]{12})"/.exec(t)||[])[1];const keys=await caches.keys();const n=v?(await (await caches.open('aa-offline-'+v)).keys()).length:0;sessionStorage.setItem('v',v||'');console.log('[OFFGATE] O1 tab-visit-saves-the-offline-copy '+JSON.stringify({version:v,keys,entries:n,PASS:!!v&&keys.includes('aa-offline-'+v)&&n===4}));return 'O1'})()
-eval:(async()=>{const h=await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/hits')).text();sessionStorage.setItem('h0',h);location.href='armagetronad.html?autostart=0';return 'tab reload'})()
+probe:
+eval:(async()=>{const name=await __aa.copyName();sessionStorage.setItem('first',name||'');const keys=await caches.keys();const n=name?(await (await caches.open(name)).keys()).length:0;console.log('[OFFGATE] O1 tab-visit-saves-the-offline-copy '+JSON.stringify({copy:name,keys,entries:n,PASS:!!name&&keys.includes(name)&&n===4}));return 'O1'})()
+eval:(async()=>{sessionStorage.setItem('h0',JSON.stringify(await __aa.hits()));location.href='armagetronad.html?autostart=0';return 'tab reload'})()
 until:2:60000:[PWA] ready
-eval:(async()=>{const h0=JSON.parse(sessionStorage.getItem('h0'));const h1=JSON.parse(await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/hits')).text());sessionStorage.setItem('h1',JSON.stringify(h1));const F=['armagetronad.html','armagetronad.js','armagetronad.wasm','armagetronad.data'];const more=F.filter(f=>(h1[f]|0)>(h0[f]|0));console.log('[OFFGATE] O2 tab-reload-uses-the-network '+JSON.stringify({fromNetwork:more,PASS:more.length===4}));return 'O2'})()
+probe:
+eval:(async()=>{const h1=await __aa.hits();sessionStorage.setItem('h1',JSON.stringify(h1));const more=__aa.fromNetwork(JSON.parse(sessionStorage.getItem('h0')),h1);console.log('[OFFGATE] O2 tab-reload-uses-the-network '+JSON.stringify({fromNetwork:more,PASS:more.length===4}));return 'O2'})()
 eval:(()=>{location.href='armagetronad.html?app=1&autostart=0';return 'app, online'})()
 until:3:60000:[PWA] ready
-eval:(async()=>{const h1=JSON.parse(sessionStorage.getItem('h1'));const h2=JSON.parse(await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/hits')).text());const F=['armagetronad.html','armagetronad.js','armagetronad.wasm','armagetronad.data'];const more=F.filter(f=>(h2[f]|0)>(h1[f]|0));console.log('[OFFGATE] O3 app-online-uses-the-copy '+JSON.stringify({fromNetwork:more,controlled:!!navigator.serviceWorker.controller,PASS:more.length===0&&!!navigator.serviceWorker.controller}));return 'O3'})()
-eval:(async()=>{const t=await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/down')).text();console.log('[OFFGATE-CTL] '+t);location.href='armagetronad.html?app=1';return 'app, offline'})()
+probe:
+eval:(async()=>{const more=__aa.fromNetwork(JSON.parse(sessionStorage.getItem('h1')),await __aa.hits());const c=!!navigator.serviceWorker.controller;console.log('[OFFGATE] O3 app-online-uses-the-copy '+JSON.stringify({fromNetwork:more,controlled:c,PASS:more.length===0&&c}));return 'O3'})()
+eval:(async()=>{console.log('[OFFGATE-CTL] '+await __aa.serverSwitch('/down'));location.href='armagetronad.html?app=1';return 'app, offline'})()
 until:1:120000:[BOOT] autostart
+probe:
 eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'headless key flood filtered'})()
 wait:9000
 key:Enter
@@ -1003,14 +1027,24 @@ wait:2500
 key:Escape
 wait:2500
 key:Space
-eval:(()=>{const go=()=>{if(window.AA_GAME&&AA_GAME.context().driving){clearInterval(t);console.log('[OFFGATE-READY] driving');}};const t=setInterval(go,250);return 'waiting for the cycle'})()
+eval:__aa.logWhen(async()=>window.AA_GAME&&AA_GAME.context().driving,'[OFFGATE-READY] driving')
 until:1:60000:[OFFGATE-READY] driving
 eval:(async()=>{const down=await fetch('offline-probe.txt').then(()=>false,()=>true);const banner=document.body.innerText.includes('Failed to load');const driving=!!(window.AA_GAME&&AA_GAME.context().driving);console.log('[OFFGATE] O4 app-offline-boots-and-plays '+JSON.stringify({serverDown:down,driving,banner,PASS:down&&driving&&!banner}));return 'O4'})()
 shot:offline-driving
-eval:(async()=>{const t=await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/up?next=1')).text();console.log('[OFFGATE-CTL] '+t);location.href='armagetronad.html?app=1&autostart=0';return 'app, newer build out'})()
-eval:(()=>{const go=async()=>{const r=await navigator.serviceWorker.getRegistration();if(r&&r.waiting&&r.waiting.state==='installed'){clearInterval(t);console.log('[OFFGATE-READY] update waiting');}};const t=setInterval(go,250);return 'waiting for the update'})()
+eval:(async()=>{console.log('[OFFGATE-CTL] '+await __aa.serverSwitch('/up?next=1'));location.href='armagetronad.html?app=1&autostart=0';return 'app, newer build out'})()
+until:5:60000:[PWA] ready
+probe:
+eval:__aa.logWhen(async()=>{const r=await navigator.serviceWorker.getRegistration();return r&&r.waiting&&r.waiting.state==='installed'},'[OFFGATE-READY] update waiting')
 until:1:60000:[OFFGATE-READY] update waiting
-eval:(async()=>{const old='aa-offline-'+sessionStorage.getItem('v');const t=await (await fetch('sw.js')).text();const nv='aa-offline-'+((/"version":"([0-9a-f]{12})"/.exec(t)||[])[1]);const keys=await caches.keys();const r=await navigator.serviceWorker.getRegistration();const activeIsOld=!!r.active&&!!r.waiting&&r.active!==r.waiting;console.log('[OFFGATE] O5 newer-build-waits-old-copy-kept '+JSON.stringify({old,new:nv,keys,activeIsOld,PASS:nv!==old&&keys.includes(old)&&keys.includes(nv)&&activeIsOld}));return 'O5'})()
+eval:(async()=>{const old=sessionStorage.getItem('first');const nv=await __aa.copyName();const keys=await caches.keys();const r=await navigator.serviceWorker.getRegistration();const activeIsOld=!!r.active&&!!r.waiting&&r.active!==r.waiting;console.log('[OFFGATE] O5 newer-build-waits-old-copy-kept '+JSON.stringify({old,new:nv,keys,activeIsOld,PASS:!!nv&&nv!==old&&keys.includes(old)&&keys.includes(nv)&&activeIsOld}));return 'O5'})()
+eval:(()=>{sessionStorage.setItem('back',location.href);location.href='about:blank';return 'leaving: no window of the game open'})()
+wait:3000
+eval:(()=>{location.href=sessionStorage.getItem('back');return 'relaunch'})()
+until:6:60000:[PWA] ready
+probe:
+eval:__aa.logWhen(async()=>navigator.serviceWorker.controller&&!(await caches.keys()).includes(sessionStorage.getItem('first')),'[OFFGATE-READY] newer copy in use')
+until:1:60000:[OFFGATE-READY] newer copy in use
+eval:(async()=>{const old=sessionStorage.getItem('first');const nv=await __aa.copyName();const copies=(await caches.keys()).filter(k=>k.startsWith(old.slice(0,-12)));const page=await (await fetch('armagetronad.html')).text();const servedNext=page.includes('the next build');console.log('[OFFGATE] O6 newer-copy-takes-over-older-deleted '+JSON.stringify({old,copies,servedNext,PASS:!!old&&copies.length===1&&copies[0]===nv&&servedNext}));return 'O6'})()
 ```
 
 - [ ] **Step 4: Write `web/tools/run-offline-gate.sh`**
@@ -1026,7 +1060,7 @@ eval:(async()=>{const old='aa-offline-'+sessionStorage.getItem('v');const t=awai
 # stamped sw.js, is the "newer build" O5 switches to.
 #
 # --no-sw is the negative control: the same run with sw.js not served. O1, O3,
-# O4 and O5 must FAIL and O2 must PASS -- the proof the gate can fail.
+# O4, O5 and O6 must FAIL and O2 must PASS -- the proof the gate can fail.
 set -u
 OUT=${1:-}
 [ -n "$OUT" ] || { echo "usage: $0 <out-dir> [--no-sw]" >&2; exit 2; }
@@ -1064,6 +1098,7 @@ check "O2 a tab reload still uses the network"           passed O2
 check "O3 the app online uses the copy"                  passed O3
 check "O4 the app offline boots and drives"              passed O4
 check "O5 a newer build waits; the running copy is kept" passed O5
+check "O6 the newer copy takes over; the older is deleted" passed O6
 check_no_abort
 gate_finish "offline-gate${MODE:+ $MODE}"
 ```
@@ -1080,7 +1115,7 @@ Expected: `shellcheck exit 0`, `syntax ok`.
 - [ ] **Step 5: Run the gate**
 
 Run: `bash web/tools/run-offline-gate.sh /tmp/offline-gate`
-Expected: five `PASS O…` lines, `PASS no Emscripten abort`, and `--- offline-gate: ALL PASSED ---`. `/tmp/offline-gate/offline-driving.png` shows the arena from the cycle.
+Expected: six `PASS O…` lines, `PASS no Emscripten abort`, and `--- offline-gate: ALL PASSED ---`. `/tmp/offline-gate/offline-driving.png` shows the arena from the cycle.
 
 If a check fails, read `/tmp/offline-gate/console.log` around its `[OFFGATE]` line before changing anything, and use superpowers:systematic-debugging. The likeliest causes:
 
@@ -1091,11 +1126,11 @@ If a check fails, read `/tmp/offline-gate/console.log` around its `[OFFGATE]` li
 
 Run: `bash web/tools/run-offline-gate.sh /tmp/offline-gate-nosw --no-sw`
 Expected:
-- `PASS O2`, `FAIL` for O1, O3, O4 and O5, and `PASS no Emscripten abort`;
-- the run ends `--- offline-gate --no-sw: 4 FAILED ---`;
+- `PASS O2`, `FAIL` for O1, O3, O4, O5 and O6, and `PASS no Emscripten abort`;
+- the run ends `--- offline-gate --no-sw: 5 FAILED ---`;
 - exit status 1.
 
-Why O5 fails: with no worker there is no registration, so its eval throws before it logs anything, and `check` finds no `[OFFGATE] O5` line.
+Why O5 and O6 fail: with no worker there is no registration and no copy, so O5's eval throws before it logs anything and O6 finds no copy.
 
 This proves each check can fail. It is slow, because the `until` steps time out.
 
@@ -1139,7 +1174,7 @@ has been launched online once.
   Safari: its name and settings start fresh.
 - **Verify:** `bash web/tools/run-offline-gate.sh /tmp/offline-gate` (headless,
   a phone; needs a `make -f web/Makefile client` build). Its negative control
-  is `--no-sw`, which must fail O1, O3, O4 and O5.
+  is `--no-sw`, which must fail O1, O3, O4, O5 and O6.
 - **Reset in a desktop browser:** DevTools → Application → Storage → Clear site
   data.
 ````
