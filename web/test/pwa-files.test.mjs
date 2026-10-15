@@ -14,14 +14,13 @@ const pngSize = (rel) => {
   return b.readUInt32BE(16) + 'x' + b.readUInt32BE(20);
 };
 
-test('the manifest starts the app in app mode, the mode web/sw.js serves offline', () => {
+test('the manifest starts the app in app mode (sw.test checks the worker serves it)', () => {
   const m = manifest();
   const start = new URL(m.start_url, 'https://aa.test/game/');
   assert.equal(start.pathname, '/game/armagetronad.html');
   assert.equal(start.searchParams.get('app'), '1');
   assert.equal(m.scope, './');
   assert.equal(m.display, 'fullscreen');
-  assert.match(readRepoFile('web/sw.js'), /searchParams\.get\('app'\) === '1'/);
 });
 
 test('every manifest icon is in web/pwa at the size it claims', () => {

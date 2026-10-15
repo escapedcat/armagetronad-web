@@ -164,3 +164,11 @@ test('a complete copy is not downloaded again, and a missing one only once at a 
   await Promise.all([a.waited, b.waited]);
   assert.equal(w.net.length, 2 + PRECACHED.length, 'two own requests and one refill');
 });
+
+test('the manifest\'s start_url is what the worker serves from the copy', async () => {
+  const start = JSON.parse(readRepoFile('web/pwa/manifest.json')).start_url;
+  const w = await installed();
+  const page = w.get(new URL(start, SCOPE).href, { request: { mode: 'navigate' } });
+  assert.equal(await (await page.response).text(), 'html v2');
+  assert.deepEqual(w.net, [], 'nothing came from the network');
+});
