@@ -539,9 +539,13 @@ $(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
 # is rebuilt whenever the link step rewrites them (they are written together
 # with armagetronad.html). The manifest and icons are copied as they are.
 PWA_FILES := web/dist-m1/manifest.json web/dist-m1/icon-192.png web/dist-m1/icon-512.png
+# The node that runs the stamp is emsdk's own (emsdk_env.sh exports it as
+# EMSDK_NODE), the one the link step has just run: on CI a bare `node` here
+# failed under GNU make with "make: node: Permission denied".
+NODE ?= $(or $(EMSDK_NODE),node)
 
 web/dist-m1/sw.js: web/dist-m1/armagetronad.html web/sw.js web/tools/stamp-sw.mjs
-	node web/tools/stamp-sw.mjs web/dist-m1
+	$(NODE) web/tools/stamp-sw.mjs web/dist-m1
 
 $(PWA_FILES): web/dist-m1/%: web/pwa/%
 	@mkdir -p web/dist-m1

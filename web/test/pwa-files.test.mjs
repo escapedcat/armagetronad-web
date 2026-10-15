@@ -47,3 +47,11 @@ test('the page links the manifest and the home-screen icon', () => {
   assert.match(head, /<link rel="apple-touch-icon" href="icon-192.png">/);
   assert.match(head, /<meta name="theme-color" content="#111111">/);
 });
+
+test('the build runs the stamp with emsdk\'s own node, not a PATH lookup of `node`', () => {
+  // CI (GNU make 4, emsdk_env.sh sourced) failed with "make: node: Permission
+  // denied" on a bare `node`; the link step just before it runs emsdk's node.
+  const mk = readRepoFile('web/Makefile');
+  assert.match(mk, /^NODE \?= \$\(or \$\(EMSDK_NODE\),node\)$/m);
+  assert.match(mk, /^\t\$\(NODE\) web\/tools\/stamp-sw\.mjs web\/dist-m1$/m);
+});
