@@ -897,6 +897,34 @@ The browser gate for all of this is `web/tools/run-resource-gate.sh`
 (`download`, `refused` and `bundled` arms); evidence in
 `docs/evidence/map-downloads/`.
 
+## Offline play
+
+The page can be installed to a home screen ("Install app" / "Add to Home
+Screen"), and the installed app plays local games with no network once it
+has been launched online once.
+
+- **Who gets offline:** only the installed app. Its manifest
+  (`web/pwa/manifest.json`) starts it as `armagetronad.html?app=1`, and the
+  service worker (`web/sw.js`) serves the four game files from its copy only
+  to a page opened with `app=1`. A plain browser tab always uses the network,
+  so a deploy reaches website visitors immediately.
+- **The copy is one build or nothing:** `web/tools/stamp-sw.mjs` writes each
+  build's `sw.js` with the SHA-256 of the four files; the worker refuses a
+  download that does not match (Pages publishes a deploy file by file) and
+  tries again on the next visit.
+- **Updates:** a deploy changes `sw.js`; the app saves the new copy in the
+  background and switches to it once every window of the game is closed. No
+  prompt, and a running game never has its files swapped.
+- **The page's half:** `web/page/offline.js` registers the worker after the
+  load event and logs `[PWA] ...` lines.
+- **iOS:** an app added to the home screen has its own storage, separate from
+  Safari: its name and settings start fresh.
+- **Verify:** `bash web/tools/run-offline-gate.sh /tmp/offline-gate` (headless,
+  a phone; needs a `make -f web/Makefile client` build). Its negative control
+  is `--no-sw`, which must fail O1, O3, O4 and O5.
+- **Reset in a desktop browser:** DevTools → Application → Storage → Clear site
+  data.
+
 ## Deploying to GitHub Pages
 
 **Live at <https://escapedcat.github.io/armagetronad-web/>.**

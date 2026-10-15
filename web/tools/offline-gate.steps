@@ -1,0 +1,40 @@
+# The offline gate: install the app's offline copy, switch the server off,
+# launch the app, play. Run by web/tools/run-offline-gate.sh, which starts
+# web/tools/serve-switchable.mjs (site on P, its switch on P+1) and opens
+# armagetronad.html?autostart=0 -- a plain browser tab -- as a phone.
+#
+# One browser run on purpose: drive-browser.mjs gives every run a fresh
+# profile, and the offline copy lives in the profile. Navigations are
+# location.href in an eval; the console transcript carries on across them, so
+# every `until:N` below counts [PWA] ready lines across all pages so far.
+# Hit counts survive the navigations in sessionStorage.
+#
+# O1 a tab visit saves the copy      O2 a tab reload still uses the network
+# O3 the app online uses the copy    O4 the app offline boots and plays
+# O5 a newer build is saved as a waiting update; the running copy is kept
+
+until:1:60000:[PWA] ready
+eval:(async()=>{const t=await (await fetch('sw.js')).text();const v=(/"version":"([0-9a-f]{12})"/.exec(t)||[])[1];const keys=await caches.keys();const n=v?(await (await caches.open('aa-offline-'+v)).keys()).length:0;sessionStorage.setItem('v',v||'');console.log('[OFFGATE] O1 tab-visit-saves-the-offline-copy '+JSON.stringify({version:v,keys,entries:n,PASS:!!v&&keys.includes('aa-offline-'+v)&&n===4}));return 'O1'})()
+eval:(async()=>{const h=await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/hits')).text();sessionStorage.setItem('h0',h);location.href='armagetronad.html?autostart=0';return 'tab reload'})()
+until:2:60000:[PWA] ready
+eval:(async()=>{const h0=JSON.parse(sessionStorage.getItem('h0'));const h1=JSON.parse(await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/hits')).text());sessionStorage.setItem('h1',JSON.stringify(h1));const F=['armagetronad.html','armagetronad.js','armagetronad.wasm','armagetronad.data'];const more=F.filter(f=>(h1[f]|0)>(h0[f]|0));console.log('[OFFGATE] O2 tab-reload-uses-the-network '+JSON.stringify({fromNetwork:more,PASS:more.length===4}));return 'O2'})()
+eval:(()=>{location.href='armagetronad.html?app=1&autostart=0';return 'app, online'})()
+until:3:60000:[PWA] ready
+eval:(async()=>{const h1=JSON.parse(sessionStorage.getItem('h1'));const h2=JSON.parse(await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/hits')).text());const F=['armagetronad.html','armagetronad.js','armagetronad.wasm','armagetronad.data'];const more=F.filter(f=>(h2[f]|0)>(h1[f]|0));console.log('[OFFGATE] O3 app-online-uses-the-copy '+JSON.stringify({fromNetwork:more,controlled:!!navigator.serviceWorker.controller,PASS:more.length===0&&!!navigator.serviceWorker.controller}));return 'O3'})()
+eval:(async()=>{const t=await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/down')).text();console.log('[OFFGATE-CTL] '+t);location.href='armagetronad.html?app=1';return 'app, offline'})()
+until:1:120000:[BOOT] autostart
+eval:(()=>{for(const t of ['keydown','keyup','keypress'])window.addEventListener(t,e=>{if(e.key==='Unidentified'){e.stopImmediatePropagation();e.preventDefault();}},true);return 'headless key flood filtered'})()
+wait:9000
+key:Enter
+wait:2500
+key:Escape
+wait:2500
+key:Space
+eval:(()=>{const go=()=>{if(window.AA_GAME&&AA_GAME.context().driving){clearInterval(t);console.log('[OFFGATE-READY] driving');}};const t=setInterval(go,250);return 'waiting for the cycle'})()
+until:1:60000:[OFFGATE-READY] driving
+eval:(async()=>{const down=await fetch('offline-probe.txt').then(()=>false,()=>true);const banner=document.body.innerText.includes('Failed to load');const driving=!!(window.AA_GAME&&AA_GAME.context().driving);console.log('[OFFGATE] O4 app-offline-boots-and-plays '+JSON.stringify({serverDown:down,driving,banner,PASS:down&&driving&&!banner}));return 'O4'})()
+shot:offline-driving
+eval:(async()=>{const t=await (await fetch('http://127.0.0.1:'+(+location.port+1)+'/up?next=1')).text();console.log('[OFFGATE-CTL] '+t);location.href='armagetronad.html?app=1&autostart=0';return 'app, newer build out'})()
+eval:(()=>{const go=async()=>{const r=await navigator.serviceWorker.getRegistration();if(r&&r.waiting&&r.waiting.state==='installed'){clearInterval(t);console.log('[OFFGATE-READY] update waiting');}};const t=setInterval(go,250);return 'waiting for the update'})()
+until:1:60000:[OFFGATE-READY] update waiting
+eval:(async()=>{const old='aa-offline-'+sessionStorage.getItem('v');const t=await (await fetch('sw.js')).text();const nv='aa-offline-'+((/"version":"([0-9a-f]{12})"/.exec(t)||[])[1]);const keys=await caches.keys();const r=await navigator.serviceWorker.getRegistration();const activeIsOld=!!r.active&&!!r.waiting&&r.active!==r.waiting;console.log('[OFFGATE] O5 newer-build-waits-old-copy-kept '+JSON.stringify({old,new:nv,keys,activeIsOld,PASS:nv!==old&&keys.includes(old)&&keys.includes(nv)&&activeIsOld}));return 'O5'})()
