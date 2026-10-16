@@ -540,6 +540,21 @@ hits a wall, at a different moment every run, so the only way to express "wait
 for the third round to finish" in `wait:` alone is a sleep long enough for the
 worst case — and that cannot tell a finished round from a hung one.
 
+Two rules for running gates on macOS:
+
+- **Use a separate browser.** `GATE_CHROME` sets the binary `drive-browser.mjs`
+  launches (`--chrome` still wins). A headless run of
+  `/Applications/Google Chrome.app` takes over that app's Dock icon, so the
+  real Chrome stops opening windows. Run gates with
+  `GATE_CHROME=/Applications/Chromium.app/Contents/MacOS/Chromium`.
+  `chrome-headless-shell` is no substitute: the `key:` steps need `--headed`.
+- **One gate browser at a time.** A headless browser renders WebGL in software
+  at about 630 % CPU, and two gate suites in parallel once crashed the machine.
+  `drive-browser.mjs` takes a machine-wide lock (`web/tools/browser-lock.mjs`)
+  and exits with code 2 while another driver holds it. A driver that was
+  killed leaves the lock behind; the next one sees its pid is dead and takes
+  it over.
+
 ### Re-running the M2 gate
 
 `web/tools/gameplay-gate.steps` is the **M2** gate: the first-run flow, then

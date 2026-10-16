@@ -29,7 +29,7 @@
 //                      REQUIRED for the key: steps -- see the warning below.
 //   --port N           devtools port (default 9222)
 //   --width/--height N canvas/window size (default 1024x768)
-//   --chrome PATH      Chrome binary (default: macOS Google Chrome)
+//   --chrome PATH      Chrome binary (default: $GATE_CHROME, else macOS Google Chrome)
 //   --chrome-flag F    extra Chrome command-line flag; repeatable. Used by the
 //                      https rig for --ignore-certificate-errors-spki-list.
 //   --keep-open        leave the browser running after the script (for poking at it)
@@ -108,6 +108,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, appendFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { takeBrowserLock, DEFAULT_LOCK } from './browser-lock.mjs';
 
 // The `probe:` step's source: the helpers every gate shares (web/tools/gate-probe.js).
 const PROBE_SOURCE = readFileSync(new URL('./gate-probe.js', import.meta.url), 'utf8');
@@ -126,7 +127,12 @@ function parseArgs(argv) {
     port: 9222,
     width: 1024,
     height: 768,
-    chrome: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    // GATE_CHROME picks another binary for every gate at once. Headless runs
+    // of /Applications/Google Chrome.app register as com.google.Chrome in
+    // LaunchServices and break the Dock icon of the real browser, so point it
+    // at e.g. /Applications/Chromium.app/Contents/MacOS/Chromium. Not
+    // chrome-headless-shell: the key: steps need --headed (see above).
+    chrome: process.env.GATE_CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     keepOpen: false,
     chromeFlags: [],
     // null = desktop, the behaviour every gate before Phase 3 measured.
@@ -262,6 +268,15 @@ function argToString(a) {
 
 async function main() {
   const opt = parseArgs(process.argv.slice(2));
+  // One gate browser at a time on this machine -- see browser-lock.mjs.
+  const lock = takeBrowserLock({ out: opt.out });
+  if (!lock.ok) {
+    const h = lock.holder;
+    console.error(`another gate browser is running (driver pid ${h.pid}, out ${h.out}, since ${h.started}).\n` +
+                  `Gates must run one at a time; wait for it, or delete ${DEFAULT_LOCK} if that pid is not a driver.`);
+    process.exit(2);
+  }
+  process.on('exit', () => lock.release());
   mkdirSync(opt.out, { recursive: true });
   const logPath = join(opt.out, 'console.log');
   writeFileSync(logPath, '');
