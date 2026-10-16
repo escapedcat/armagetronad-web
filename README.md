@@ -3,7 +3,8 @@
 <img src="docs/screenshots/phone-portrait-play.gif" alt="A round on a phone in portrait: the cycle drives, turns with the two big pad halves, and crashes into a wall" width="200" align="right">
 
 **▶ Play now: <https://escapedcat.github.io/armagetronad-web/>** on a
-desktop or a phone, with no install and no account.
+desktop or a phone, with no install and no account. On a phone you can also
+[install it as an app](#play-offline) and play against the AI offline.
 Something wrong? [Report a problem](https://github.com/escapedcat/armagetronad-web/issues/new?template=bug-report.yml).
 
 This is a fork of [Armagetron Advanced](https://www.armagetronad.org/), the
@@ -15,6 +16,7 @@ compiled to WebAssembly with [Emscripten](https://emscripten.org/).
 **Contents**
 - **Players**
   - [Play it](#play-it)
+  - [Play offline](#play-offline)
   - [Controls](#controls)
   - [How online play works](#how-online-play-works)
   - [Log in with a Global ID](#log-in-with-a-global-id-recommended)
@@ -36,8 +38,10 @@ compiled to WebAssembly with [Emscripten](https://emscripten.org/).
 
 Scan the code to open it on a phone. It needs no install and no account.
 
-- **First visit:** about **1.7 MiB**. After that the game is cached, and your
-  settings and key bindings are kept in the browser.
+- **First visit:** about **1.7 MiB**. Later visits load faster from the browser
+  cache (a tab still needs a connection; for offline, see
+  [Play offline](#play-offline)). Your settings and key bindings are kept in
+  the browser.
 - **Starting:** the game starts on load; there is no Play button.
 - **Desktop and Android:** tested in Chrome and Firefox on desktop, and in
   Chrome and Brave on Android.
