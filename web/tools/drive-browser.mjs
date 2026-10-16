@@ -108,6 +108,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, appendFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { takeBrowserLock, DEFAULT_LOCK } from './browser-lock.mjs';
 
 // The `probe:` step's source: the helpers every gate shares (web/tools/gate-probe.js).
 const PROBE_SOURCE = readFileSync(new URL('./gate-probe.js', import.meta.url), 'utf8');
@@ -267,6 +268,15 @@ function argToString(a) {
 
 async function main() {
   const opt = parseArgs(process.argv.slice(2));
+  // One gate browser at a time on this machine -- see browser-lock.mjs.
+  const lock = takeBrowserLock({ out: opt.out });
+  if (!lock.ok) {
+    const h = lock.holder;
+    console.error(`another gate browser is running (driver pid ${h.pid}, out ${h.out}, since ${h.started}).\n` +
+                  `Gates must run one at a time; wait for it, or delete ${DEFAULT_LOCK} if that pid is not a driver.`);
+    process.exit(2);
+  }
+  process.on('exit', () => lock.release());
   mkdirSync(opt.out, { recursive: true });
   const logPath = join(opt.out, 'console.log');
   writeFileSync(logPath, '');
