@@ -159,6 +159,11 @@ mechanism.
     `?diag=1` readout.
   - `web/page/offline.js` registers the offline copy (`web/sw.js`), see
     "Offline play".
+  - `web/page/loading.js` fills the loading bar: it counts the bytes of the
+    `.wasm` and the `.data` package as they stream in, against their real
+    sizes, which `web/tools/stamp-sizes.mjs` writes into the built page after
+    the link step. Emscripten's own progress covers only the `.data`, and
+    takes its total from a gzipped `Content-Length`.
   - What is left in `web/shell.html`'s script defines how these are wired to
     the DOM, and "THE START ORDER" at its bottom runs them, in order.
   - Their tests run in Node with a fake game, no browser and no build:
