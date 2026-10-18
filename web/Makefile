@@ -538,7 +538,7 @@ $(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
 # sw.js is web/sw.js stamped with the hashes of the four files it saves, so it
 # is rebuilt whenever the link step rewrites them (they are written together
 # with armagetronad.html). The manifest and icons are copied as they are.
-PWA_FILES := web/dist-m1/manifest.json web/dist-m1/icon-192.png web/dist-m1/icon-512.png
+PWA_FILES := web/dist-m1/manifest.json web/dist-m1/icon-192.png web/dist-m1/icon-512.png web/dist-m1/icon-maskable-512.png web/dist-m1/apple-touch-icon.png
 # The node that runs the stamp is emsdk's own (emsdk_env.sh exports it as
 # EMSDK_NODE), the one the link step has just run: on CI a bare `node` here
 # failed under GNU make with "make: node: Permission denied".
