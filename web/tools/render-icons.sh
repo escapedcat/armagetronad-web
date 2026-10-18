@@ -1,8 +1,11 @@
 #!/bin/sh
-# Render the installed app's icons from web/tools/app-icon.svg into web/pwa/.
-# The PNGs are committed, so the build and CI need neither tool; run this only
-# after editing the SVG. Needs rsvg-convert (librsvg) and ImageMagick 7:
-#   brew install librsvg imagemagick
+# Render the installed app's icons from web/tools/app-icon.png into web/pwa/.
+# app-icon.png is a 1024 px render of the game's own lightcycle (models/*.mod
+# with textures/cycle_*.png, tinted the way gTextureCycle does), on the grid
+# with its wall. Keep the bike inside the centre circle of radius 40 %: that
+# is all Android's adaptive-icon masks are sure to show.
+# The PNGs are committed, so the build and CI don't need this; run it only
+# after replacing app-icon.png. Needs ImageMagick 7 (brew install imagemagick).
 #
 #   icon-192.png, icon-512.png  "any": rounded corners, for desktop installs and
 #                               launchers that show the icon as drawn
@@ -11,12 +14,12 @@
 #                               corners itself and fills transparency with black
 set -eu
 cd "$(dirname "$0")/../.."
-SVG=web/tools/app-icon.svg
+SRC=web/tools/app-icon.png
 OUT=web/pwa
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-rsvg-convert -w 512 -h 512 "$SVG" -o "$tmp/full.png"
+magick "$SRC" -alpha off -resize 512x512 "$tmp/full.png"
 magick "$tmp/full.png" -alpha off "$OUT/icon-maskable-512.png"
 magick "$tmp/full.png" -alpha off -resize 180x180 "$OUT/apple-touch-icon.png"
 # A rounded square (corner radius 22 %) with transparent corners.
