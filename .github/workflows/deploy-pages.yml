@@ -138,7 +138,7 @@ jobs:
 
       # The gate inside `npm run deploy` runs on every event; the publish itself
       # only off PRs. On a PR this step therefore proves the release set is exactly
-      # the five declared files and stops -- which is what a PR check should do.
+      # the declared files and stops -- which is what a PR check should do.
       - name: Publish-set gate (PR)
         if: github.event_name == 'pull_request'
         working-directory: web
@@ -234,7 +234,7 @@ jobs:
         run: |
           set -euo pipefail
           BASE=https://escapedcat.github.io/armagetronad-web
-          FILES="armagetronad.html armagetronad.js armagetronad.wasm armagetronad.data index.html sw.js manifest.json icon-192.png icon-512.png"
+          FILES="armagetronad.html armagetronad.js armagetronad.wasm armagetronad.data index.html sw.js manifest.json icon-192.png icon-512.png icon-maskable-512.png apple-touch-icon.png"
           for f in $FILES; do echo "want $f sha256 $(sha256sum web/dist-m1/$f | cut -d' ' -f1)"; done
           END=$((SECONDS + 900))
           while true; do

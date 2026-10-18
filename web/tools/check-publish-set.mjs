@@ -45,6 +45,8 @@ const EXPECTED = [
   'armagetronad.wasm',   // the engine
   'icon-192.png',        // the installed app's icon (web/pwa)
   'icon-512.png',        // the installed app's icon (web/pwa)
+  'icon-maskable-512.png', // the same, full bleed, for Android's own shapes
+  'apple-touch-icon.png',  // the iOS home-screen icon
   'index.html',          // the site-root redirect; copied in by `npm run deploy`
   'manifest.json',       // makes the page installable (web/pwa)
   'sw.js',               // the offline copy, stamped per build (web/sw.js)

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- The installed app's icon. Rendered to web/pwa/*.png by
+       web/tools/render-icons.sh; edit this file, then re-run that script.
+       Full bleed: everything that matters stays inside the centre circle of
+       radius 205 (40 %), the part Android's adaptive-icon masks always keep. -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="72%">
+      <stop offset="0" stop-color="#0f2a3d"/><stop offset="1" stop-color="#04080c"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g stroke="#2a86b0" stroke-opacity=".28" stroke-width="2">
+    <path d="M0 96H512M0 176H512M0 256H512M0 336H512M0 416H512M96 0V512M176 0V512M256 0V512M336 0V512M416 0V512"/>
+  </g>
+  <!-- Two lightcycles, orange and blue, each trailing its wall, about to meet. -->
+  <g filter="url(#glow)" fill="none" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="22">
+    <path d="M146 408 V196 H234" stroke="#ff9a1f"/>
+    <path d="M366 104 V316 H278" stroke="#37d3ff"/>
+  </g>
+  <g filter="url(#glow)">
+    <rect x="228" y="181" width="46" height="30" rx="6" fill="#fff1d6"/>
+    <rect x="238" y="301" width="46" height="30" rx="6" fill="#e3faff"/>
+  </g>
+</svg>

@@ -936,6 +936,13 @@ has been launched online once.
   load event and logs `[PWA] ...` lines.
 - **iOS:** an app added to the home screen has its own storage, separate from
   Safari: its name and settings start fresh.
+- **Icons:** drawn once in `web/tools/app-icon.svg`; `sh web/tools/render-icons.sh`
+  renders the four PNGs in `web/pwa/` (needs `rsvg-convert` and ImageMagick;
+  the PNGs are committed, so the build doesn't). Android uses the full-bleed
+  `icon-maskable-512.png` and cuts its own shape, so keep the artwork inside
+  the centre circle (40 % radius). iOS uses `apple-touch-icon.png` (180 px,
+  opaque; iOS rounds the corners itself). Desktop installs use the rounded
+  `icon-192/512.png`.
 - **Verify:** `bash web/tools/run-offline-gate.sh /tmp/offline-gate` (headless,
   a phone; needs a `make -f web/Makefile client` build). Its negative control
   is `--no-sw`, which must fail O1, O3, O4, O5 and O6.
