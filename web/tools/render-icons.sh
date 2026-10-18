@@ -25,4 +25,4 @@ magick "$tmp/full.png" -alpha set \
   -compose CopyOpacity -composite "$tmp/any.png"
 cp "$tmp/any.png" "$OUT/icon-512.png"
 magick "$tmp/any.png" -resize 192x192 "$OUT/icon-192.png"
-echo "rendered: $(cd "$OUT" && ls ./*.png | tr '\n' ' ')"
+echo "rendered into $OUT:" icon-192.png icon-512.png icon-maskable-512.png apple-touch-icon.png
