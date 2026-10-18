@@ -705,6 +705,7 @@
   <!-- @page-module web/page/audio.js -->
   <!-- @page-module web/page/diag.js -->
   <!-- @page-module web/page/offline.js -->
+  <!-- @page-module web/page/loading.js -->
 
   <script>
     // THE PAGE. The modules are web/page/*.js, inlined above; this script wires
@@ -731,6 +732,24 @@
     // Without handling both, the failure mode looks identical to a slow
     // load: the page just sits on "Loading..." forever with the button
     // disabled and nothing else visible anywhere in the UI.
+    // The loading bar (web/page/loading.js reports). Until the first report
+    // the bar has no value and shows the browser's own "busy" animation; with
+    // the build's sizes it fills with the bytes of both downloads. Once both
+    // are in, the game still compiles and starts, which on a slow phone takes
+    // a while: the words say so, instead of "Loading..." on a full bar.
+    function showLoading(loaded, total, done) {
+      const bar = document.getElementById('progress');
+      if (!bar || !document.body.contains(overlayEl) || statusEl.classList.contains('error')) return;
+      if (done) {
+        bar.max = 1;
+        bar.value = 1;
+        statusEl.textContent = 'Starting\u2026';
+      } else if (total) {
+        bar.max = total;
+        bar.value = loaded;
+      }
+    }
+
     function showFailure(message) {
       const text = 'Failed to load: ' + message +
         '. If you opened this page directly from disk (a file:// URL), ' +
@@ -1684,20 +1703,15 @@
       // every AudioContext state seen in the measured window is 'running', and
       // its A7c asserts the menus before round 1 are exactly silent.
       noInitialRun: true,
-      // M9: the bar reads the numbers, the text does not show them. Emscripten's
-      // file packager reports "Downloading data... (loaded/total)" in bytes as
-      // the .data package streams; anything else ("Running...", an error) is
-      // shown as words. The bar is removed with the overlay when main() runs.
+      // The bar and its words belong to web/page/loading.js (showLoading in
+      // THE START ORDER). Emscripten's own progress lines are not shown: its
+      // "Downloading data... (loaded/total)" covers only the .data package,
+      // with a gzipped Content-Length for a total, and "Preparing... (n/m)"
+      // counts run dependencies, not bytes. Anything else (an error) is shown
+      // as words. The bar is removed with the overlay when main() runs.
       setStatus: (text) => {
-        const m = /^([^(]*)\((\d+)\/(\d+)\)/.exec(text || '');
-        const bar = document.getElementById('progress');
-        if (m && bar) {
-          bar.max = Number(m[3]) || 1;
-          bar.value = Number(m[2]) || 0;
-          statusEl.textContent = 'Loading\u2026';
-        } else {
-          statusEl.textContent = text || 'Ready';
-        }
+        if (!text || /^(Downloading data|Preparing|Running)\b/.test(text)) return;
+        statusEl.textContent = text;
       },
       print:    (text) => console.log(text),
       printErr: (text) => console.error(text),
@@ -1840,6 +1854,8 @@
     }
     AAOffline.start({ nav: navigator, win: window, doc: document,   // the installed app's offline copy (web/page/offline.js)
                       caches: window.caches, log: (line) => console.log(line) });
+    AALoading.watch({ win: window, sizes: '@AA_SIZES@',   // the bar counts the downloads (web/page/loading.js);
+                      onProgress: showLoading });          // the sizes are stamped by web/tools/stamp-sizes.mjs
 
   </script>
 

@@ -527,6 +527,7 @@ web/dist-m1/armagetronad.html: $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a \
                                 $(RESOURCE_BUNDLE) web/resource-bundle.txt
 	@mkdir -p web/dist-m1
 	$(EMXX) $(CLIENT_OBJS) $(LIBXML2)/lib/libxml2.a $(CLIENT_LDFLAGS) -o $@
+	$(NODE) web/tools/stamp-sizes.mjs web/dist-m1
 
 $(CLIENT_OBJDIR)/%.o: src/%.cpp web/Makefile
 	@mkdir -p $(dir $@)
