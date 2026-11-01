@@ -513,6 +513,23 @@
        and the aria-label in step, but only the icon is shown; the aria-label
        still names the layout the tap goes to. */
     #layoutbtn-label { display:none; }
+    /* ---- THE UPDATE CHIP (web/page/offline.js) --------------------------
+       The installed app only, once a new deploy has downloaded in the
+       background; shown only while a menu is up and no cycle is alive. Fixed
+       and outside #touch, so a desktop install gets it too. Top-right, next
+       to the layout button (44 px + gaps), and level with it in the Game Boy
+       layout, where that button sits below the picture. z-index 30: above the
+       touch layer (10) and the overlay (20), under the ?diag readout (40). */
+    #updatechip { position:fixed; z-index:30;
+                  top:calc(.6rem + env(safe-area-inset-top, 0px));
+                  right:calc(.6rem + 44px + .5rem + env(safe-area-inset-right, 0px));
+                  min-height:44px; padding:.35rem .8rem;
+                  color:#04141a; background:#5ee7ff; border:0; border-radius:999px;
+                  font:600 .85rem/1.2 system-ui, sans-serif;
+                  -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+    #updatechip[hidden] { display:none; }
+    #updatechip:disabled { opacity:.7; }
+    html.aa-gameboy #updatechip { top:calc(var(--aa-square, 100vw) + .5rem); }
     /* ---- PHONE FEEDBACK: the diagnostic readout (?diag=1) ---------------
        z-index 40 puts it above everything, the reload chip included, because
        the numbers are most interesting exactly when something on the screen
@@ -686,6 +703,12 @@
     the game starts and a rotation after that changes nothing; the switch is
     the layout button (id layoutbtn) inside the touch overlay, in menus only.
   -->
+
+  <!--
+    THE UPDATE CHIP. Hidden until the installed app has a new build waiting;
+    web/page/offline.js says when, THE START ORDER wires the tap.
+  -->
+  <button type="button" id="updatechip" hidden>Update ready &middot; restart</button>
 
   <!--
     ?diag=1 ONLY. Empty, display:none and untouched unless the query parameter is
@@ -1852,8 +1875,13 @@
                      cam: touchDecision.on ? AAPageConfig.CAMERA_TOUCH_FACTOR : 1,
                      log: (line) => console.log(line) });
     }
+    let installedApp = false;
+    try { installedApp = AAParams.flag(location.search, 'app'); } catch (e) { /* no URLSearchParams: no chip */ }
     AAOffline.start({ nav: navigator, win: window, doc: document,   // the installed app's offline copy (web/page/offline.js)
-                      caches: window.caches, log: (line) => console.log(line) });
+                      caches: window.caches, log: (line) => console.log(line),
+                      app: installedApp,
+                      onUpdateReady: AAOffline.chip({ el: document.getElementById('updatechip'),
+                                                      win: window, context: () => game.context() }) });
     AALoading.watch({ win: window, sizes: '@AA_SIZES@',   // the bar counts the downloads (web/page/loading.js);
                       onProgress: showLoading });          // the sizes are stamped by web/tools/stamp-sizes.mjs
 

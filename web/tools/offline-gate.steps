@@ -16,8 +16,11 @@
 # O1 a tab visit saves the copy      O2 a tab reload still uses the network
 # O3 the app online uses the copy    O4 the app offline boots and plays
 # O5 a newer build is saved as a waiting update; the running copy is kept
-# O6 once no window of the game is open, the newer copy takes over and the
-#    older one is deleted (the page leaves for about:blank, then comes back)
+# O7 the update chip: hidden before the game runs, shown in its menu, and
+#    a tap switches to the newer build and reloads the app into it
+# O6 the newer copy takes over and the older one is deleted. Reached by the
+#    chip's tap (O7); without it the browser waits until no window of the
+#    game is open, which web/test/sw.test.mjs pins (no skipWaiting otherwise).
 
 until:1:60000:[PWA] ready
 probe:
@@ -50,10 +53,16 @@ probe:
 eval:__aa.logWhen(async()=>{const r=await navigator.serviceWorker.getRegistration();return r&&r.waiting&&r.waiting.state==='installed'},'[OFFGATE-READY] update waiting')
 until:1:60000:[OFFGATE-READY] update waiting
 eval:(async()=>{const old=sessionStorage.getItem('first');const nv=await __aa.copyName();const keys=await caches.keys();const r=await navigator.serviceWorker.getRegistration();const activeIsOld=!!r.active&&!!r.waiting&&r.active!==r.waiting;console.log('[OFFGATE] O5 newer-build-waits-old-copy-kept '+JSON.stringify({old,new:nv,keys,activeIsOld,PASS:!!nv&&nv!==old&&keys.includes(old)&&keys.includes(nv)&&activeIsOld}));return 'O5'})()
-eval:(()=>{sessionStorage.setItem('back',location.href);location.href='about:blank';return 'leaving: no window of the game open'})()
-wait:3000
-eval:(()=>{location.href=sessionStorage.getItem('back');return 'relaunch'})()
+until:1:20000:[PWA] a new build is ready
+eval:(async()=>{await new Promise(r=>setTimeout(r,1200));sessionStorage.setItem('chipHeld',String(document.getElementById('updatechip').hidden));AA_START();return 'start the game'})()
+eval:__aa.logWhen(async()=>window.AA_GAME&&AA_GAME.context().menu&&!AA_GAME.context().cycle,'[OFFGATE-READY] menu')
+until:1:120000:[OFFGATE-READY] menu
+eval:__aa.logWhen(async()=>!document.getElementById('updatechip').hidden,'[OFFGATE-READY] chip shown')
+until:1:10000:[OFFGATE-READY] chip shown
+shot:update-chip
+eval:(()=>{sessionStorage.setItem('chipShown','true');document.getElementById('updatechip').click();return 'tap the chip'})()
 until:6:60000:[PWA] ready
+eval:(async()=>{const held=sessionStorage.getItem('chipHeld')==='true';const shown=sessionStorage.getItem('chipShown')==='true';const page=await (await fetch('armagetronad.html')).text();const servedNext=page.includes('the next build');console.log('[OFFGATE] O7 update-chip-in-menu-tap-switches '+JSON.stringify({hiddenBeforeStart:held,shownInMenu:shown,servedNext,PASS:held&&shown&&servedNext}));return 'O7'})()
 probe:
 eval:__aa.logWhen(async()=>navigator.serviceWorker.controller&&!(await caches.keys()).includes(sessionStorage.getItem('first')),'[OFFGATE-READY] newer copy in use')
 until:1:60000:[OFFGATE-READY] newer copy in use
