@@ -180,9 +180,25 @@ mechanism.
 
 ## Merging upstream
 
-`web/tools/check-upstream.mjs` (and the scheduled workflow that opens an
-"Upstream drift" issue) reports when upstream's `legacy_0.2.9` has moved and
-which new commits touch files the port patches. To merge:
+`web/tools/check-upstream.mjs` reports when upstream's `legacy_0.2.9` has
+moved: security-relevant commits first (anything in `src/network/`, or a
+message about security, cheating, crashes or overflows, wherever the file is),
+then commits in files the port patches, then the rest, plus new `v0.2.9.*`
+release tags and whether the merge conflicts.
+
+Every Monday, `upstream-watch.yml` turns that report into one PR from the
+`upstream-merge` branch (`web/tools/upstream-pr.sh`) and asks the repo owner
+to review it:
+- **Clean merge:** the branch is `main` with upstream merged, and the checks
+  build it. Expect the dedicated byte pin to fail until it is re-recorded.
+- **Conflicts:** a draft PR on the plain upstream head that names the
+  conflicted files. Merge locally as below and push to `upstream-merge`.
+- It needs the secret `UPSTREAM_PR_TOKEN`: a fine-grained token for this repo
+  only, with Contents and Pull requests read/write. The job fails loudly when
+  it is missing or expired. The repo setting "Allow GitHub Actions to create
+  and approve pull requests" must stay on.
+
+To merge:
 
 1. **Get the commits.** `git fetch upstream legacy_0.2.9`. If git can't reach
    GitLab (seen in October 2026: an SSL error from git while the website
