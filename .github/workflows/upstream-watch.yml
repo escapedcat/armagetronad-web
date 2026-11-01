@@ -6,11 +6,14 @@
 # for tracking at all is that the port "could one day be offered upstream as a
 # merge request", which only stays true if the drift is known.
 #
-# WHY IT REPORTS CONFLICTS RATHER THAN COUNTS. A bare "N commits behind" on a
-# maintenance branch is noise nobody reads. web/tools/check-upstream.mjs
-# classifies: it recomputes which files this port has patched (18 shared with
-# upstream today, plus 4 of our own under src/emscripten/ that cannot conflict)
-# and reports only the upstream commits landing on the shared ones.
+# WHY A PULL REQUEST, NOT AN ISSUE. Until 2026-11 this job kept one issue
+# (#92) and commented on it weekly. Nobody saw it: the owner does not watch the
+# repo, and a bot's issue notifies no one else. The same reports also left out
+# upstream's netobject owner check because it was in a file the port never
+# patched. Now the job opens one PR that merges upstream into main, asks the
+# owner for review (a review request always notifies), and lists security-
+# relevant commits first wherever they land. web/tools/upstream-pr.sh has the
+# details, including why it needs two tokens.
 #
 # NOTE ON FILE PLACEMENT. This repo's convention is that new files live under
 # src/emscripten/, web/, deps/ or docs/. A GitHub Actions workflow has to live
@@ -29,8 +32,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  issues: write
+  contents: write        # push the upstream-merge branch
+  pull-requests: write   # open, edit and comment on its PR
+
+# One run at a time: two would race for the same branch and PR.
+concurrency:
+  group: upstream-watch
 
 jobs:
   check:
@@ -40,31 +47,23 @@ jobs:
         with:
           # merge-base against upstream needs real history, not a shallow clone.
           fetch-depth: 0
+          # Pushes name their token explicitly (upstream-pr.sh); a stored
+          # credential header would override that and push as the workflow.
+          persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
 
-      - name: Compare against upstream
-        id: check
-        run: |
-          set +e
-          node web/tools/check-upstream.mjs --json > /tmp/upstream.json
-          echo "conflicts=$?" >> "$GITHUB_OUTPUT"
-          set -e
-          node web/tools/check-upstream.mjs > /tmp/upstream.txt || true
-          cat /tmp/upstream.txt
-
-      - name: Open or update the drift issue
-        if: steps.check.outputs.conflicts == '1'
+      - name: Open or refresh the upstream-merge PR
         env:
           GH_TOKEN: ${{ github.token }}
+          PUSH_TOKEN: ${{ secrets.UPSTREAM_PR_TOKEN }}
+          REVIEWER: ${{ github.repository_owner }}
+          OUT: ${{ runner.temp }}
         run: |
-          BODY=$(printf 'Upstream has commits touching files this port has patched.\n\n```\n%s\n```\n\nRun `node web/tools/check-upstream.mjs` locally for the same report.\n\nThis is not automatically a problem — it is the set of commits a merge would\nmake someone read. Files under `src/emscripten/` are ours alone and never appear here.\n' "$(cat /tmp/upstream.txt)")
-          EXISTING=$(gh issue list --label upstream-drift --state open --json number --jq '.[0].number')
-          if [ -n "$EXISTING" ]; then
-            gh issue comment "$EXISTING" --body "$BODY"
-          else
-            gh label create upstream-drift --description "Upstream commits touching patched files" --color FBCA04 2>/dev/null || true
-            gh issue create --title "Upstream drift: commits touching patched files" --label upstream-drift --body "$BODY"
+          if [ -z "$PUSH_TOKEN" ]; then
+            echo "::error::secret UPSTREAM_PR_TOKEN is missing or expired; see web/tools/upstream-pr.sh"
+            exit 1
           fi
+          bash web/tools/upstream-pr.sh
