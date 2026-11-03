@@ -951,8 +951,12 @@ has been launched online once.
   tries again on the next visit. A copy that goes missing later (a cache
   cleared on its own) is saved again by the next visit.
 - **Updates:** a deploy changes `sw.js`; the app saves the new copy in the
-  background and switches to it once every window of the game is closed. No
-  prompt, and a running game never has its files swapped.
+  background and switches to it once every window of the game is closed. On
+  a phone an app sent to the background still counts as open, so once the
+  new copy is saved the app also shows an **update chip** ("Update ready ·
+  restart"). It shows only in a menu with no cycle alive, never in a round or
+  behind the in-game menu. Tapping it switches to the new build and reloads.
+  A running game never has its files swapped.
 - **The page's half:** `web/page/offline.js` registers the worker after the
   load event and logs `[PWA] ...` lines.
 - **iOS:** an app added to the home screen has its own storage, separate from
@@ -967,7 +971,8 @@ has been launched online once.
   `icon-192/512.png`.
 - **Verify:** `bash web/tools/run-offline-gate.sh /tmp/offline-gate` (headless,
   a phone; needs a `make -f web/Makefile client` build). Its negative control
-  is `--no-sw`, which must fail O1, O3, O4, O5 and O6.
+  is `--no-sw`, which must fail O1, O3, O4, O5, O6 and O7. O7 checks the
+  update chip.
 - **Reset in a desktop browser:** DevTools → Application → Storage → Clear site
   data.
 

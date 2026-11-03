@@ -20,8 +20,11 @@
 //
 // UPDATES: a new deploy changes this file; the browser installs the new
 // worker in the background and lets it take over once no window of the game
-// is open, and activate deletes the older copy. No skipWaiting: a running
-// game never has its files swapped under it.
+// is open, and activate deletes the older copy. Never skipWaiting by itself:
+// a running game never has its files swapped under it. The one exception is
+// the player's own tap on the update chip (web/page/offline.js), which posts
+// 'aa-update' to the waiting worker from a menu; the page reloads as soon as
+// the new worker takes over.
 'use strict';
 
 const AA_PRECACHE = /* @precache */ null;
@@ -97,6 +100,7 @@ async function fromCopyOrNetwork(event, file) {
 
 self.addEventListener('install', (event) => event.waitUntil(saveCopy()));
 self.addEventListener('activate', (event) => event.waitUntil(dropOlderCopies()));
+self.addEventListener('message', (event) => { if (event.data === 'aa-update') self.skipWaiting(); });
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const file = fileOf(event.request.url);

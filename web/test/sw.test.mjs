@@ -39,7 +39,9 @@ function worker({ served = BUILD, clientUrls = {} } = {}) {
     const f = new URL(url).pathname.slice(new URL(SCOPE).pathname.length);
     return f in served ? new Response(served[f]) : new Response('nope', { status: 404 });
   };
-  const self = { registration: { scope: SCOPE }, addEventListener: (t, h) => { handlers[t] = h; } };
+  const skips = [];
+  const self = { registration: { scope: SCOPE }, addEventListener: (t, h) => { handlers[t] = h; },
+                 skipWaiting: async () => { skips.push(true); } };
   const context = vm.createContext({
     self, caches, fetch, URL, Response, console, crypto: globalThis.crypto,
     clients: { get: async (id) => (id in clientUrls ? { url: clientUrls[id] } : undefined) },
@@ -54,7 +56,7 @@ function worker({ served = BUILD, clientUrls = {} } = {}) {
     return out;
   };
   const get = (url, more = {}) => dispatch('fetch', { request: { url, method: 'GET', mode: 'cors', ...more.request }, clientId: more.clientId || '' });
-  return { store, net, caches, dispatch, get };
+  return { store, net, caches, dispatch, get, skips };
 }
 
 async function installed(opts) {
@@ -171,4 +173,14 @@ test('the manifest\'s start_url is what the worker serves from the copy', async 
   const page = w.get(new URL(start, SCOPE).href, { request: { mode: 'navigate' } });
   assert.equal(await (await page.response).text(), 'html v2');
   assert.deepEqual(w.net, [], 'nothing came from the network');
+});
+
+test('a new build takes over only when the player asks (the update chip), never by itself', async () => {
+  const w = await installed();
+  await w.dispatch('activate').waited;
+  assert.equal(w.skips.length, 0, 'install and activate must not skip waiting: a running game keeps its files');
+  w.dispatch('message', { data: 'something else' });
+  assert.equal(w.skips.length, 0);
+  w.dispatch('message', { data: 'aa-update' });
+  assert.equal(w.skips.length, 1);
 });
